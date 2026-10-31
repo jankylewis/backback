@@ -8,7 +8,7 @@ use bb_dotnet::bb_project::{EnvValue, EnvVar, RunSettings};
 use bb_dotnet::testing::TestPlatform;
 use bb_dotnet::{Capability, ProjectError, ProjectInfo, Solution, SolutionPath};
 
-use super::CommandError;
+use crate::bb_commands::CommandError;
 
 pub(crate) fn run(solution: &Path) -> Result<(), CommandError> {
     let sln: SolutionPath = SolutionPath::new(solution.to_path_buf())?;
@@ -94,7 +94,7 @@ pub(crate) fn describe(info: &ProjectInfo, width: usize) -> String {
     )
 }
 
-fn runsettings_line(rs: &RunSettings) -> String {
+pub(crate) fn runsettings_line(rs: &RunSettings) -> String {
     let file: String = rs
         .path
         .file_name()

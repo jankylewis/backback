@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = ".NET SDK discovery, solution/project model, build-run-test runner"
+description = ".NET SDK discovery and the solution/project model"
 
 [dependencies]
 roxmltree.workspace = true

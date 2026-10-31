@@ -1,8 +1,10 @@
-//! Argument parsing. Standard library only; the surface is seven commands.
+//! Argument parsing. Standard library only; the surface is eight commands.
 
 mod bb_probe;
+mod test_args;
 
 pub use bb_probe::{Feature, Probe, MAX_REPEAT};
+pub use test_args::{BackendChoice, TestAction, TestArgs};
 
 use std::path::PathBuf;
 
@@ -22,7 +24,12 @@ pub const USAGE: &str = "usage:
   bb probe <file.cs> <line:col> <feature> [--sln <solution>] [--repeat N]
                             ask Roslyn one feature at a 1-based line:col (restore off);
                             feature: completion, hover, definition, references,
-                            rename=<NewName>, actions, diagnostics";
+                            rename=<NewName>, actions, diagnostics
+  bb test list <solution|project> [--backend apex|dotnet] [--apex-command CMD] [-c CONFIG]
+                            list specs as Project > Namespace > Class > Spec (no build)
+  bb test run <project> [--specs A,B] [--category X] [--settings FILE] [--build]
+                            [--backend apex|dotnet] [--apex-command CMD] [-c CONFIG]
+                            run specs and print each outcome and time from the TRX";
 
 /// Default measured runs per bench item.
 pub const DEFAULT_RUNS: usize = 5;
@@ -65,6 +72,8 @@ pub enum Command {
     },
     /// Ask Roslyn one feature at one position.
     Probe(Probe),
+    /// List or run tests.
+    Test(TestArgs),
 }
 
 /// Parse errors.
@@ -91,6 +100,9 @@ pub enum CliError {
     /// An unknown probe feature.
     #[error("unknown feature {0}: use completion, hover, definition, references, rename=<NewName>, actions or diagnostics")]
     BadFeature(String),
+    /// A `--specs` entry is not a test name.
+    #[error("--specs: {0}")]
+    BadSpec(String),
     /// `--repeat` needs a whole number from 1 to [`MAX_REPEAT`].
     #[error("--repeat needs a number from 1 to {MAX_REPEAT}, got {0}")]
     BadRepeat(String),
@@ -109,6 +121,9 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     }
     if word == "probe" {
         return bb_probe::parse(it.as_slice()).map(Command::Probe);
+    }
+    if word == "test" {
+        return test_args::parse(it.as_slice()).map(Command::Test);
     }
     let path: Option<PathBuf> = it.next().map(PathBuf::from);
     let flag: Option<&String> = it.next();

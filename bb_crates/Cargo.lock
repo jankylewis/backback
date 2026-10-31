@@ -27,6 +27,7 @@ dependencies = [
  "bb-intel",
  "bb-lsp",
  "bb-syntax",
+ "bb-testkit",
  "bb-text",
  "bb-ui",
  "lsp-types",
@@ -108,6 +109,19 @@ dependencies = [
  "thiserror",
  "tree-sitter",
  "tree-sitter-c-sharp",
+]
+
+[[package]]
+name = "bb-testkit"
+version = "0.0.1"
+dependencies = [
+ "bb-dotnet",
+ "proptest",
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

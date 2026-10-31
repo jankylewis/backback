@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "backback command line: doctor, scan, open, outline, audit, bench (the M0 proof path)"
+description = "backback command line: doctor, scan, open, outline, audit, bench, probe, test (the M0 proof path)"
 
 [[bin]]
 name = "bb"
@@ -17,6 +17,7 @@ bb-dotnet.workspace = true
 bb-intel.workspace = true
 bb-lsp.workspace = true
 bb-syntax.workspace = true
+bb-testkit.workspace = true
 bb-text.workspace = true
 bb-ui.workspace = true
 lsp-types.workspace = true
