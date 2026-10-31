@@ -1,0 +1,25 @@
+[package]
+name = "bb"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "backback command line: doctor, open, outline (the M0 proof path)"
+
+[[bin]]
+name = "bb"
+path = "src/main.rs"
+
+[dependencies]
+bb-audit.workspace = true
+bb-dap.workspace = true
+bb-dotnet.workspace = true
+bb-lsp.workspace = true
+bb-syntax.workspace = true
+bb-ui.workspace = true
+lsp-types.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,19 @@
+[package]
+name = "bb-lsp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "LSP client over stdio, plus the Roslyn language server specifics"
+
+[dependencies]
+bb-framing.workspace = true
+lsp-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+url.workspace = true
+
+[lints]
+workspace = true

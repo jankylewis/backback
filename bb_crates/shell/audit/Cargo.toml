@@ -1,0 +1,13 @@
+[package]
+name = "bb-audit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Convention audit: HD taxonomy, underscore rule, size caps, explicit types (Rust + C#)"
+
+[dependencies]
+thiserror.workspace = true
+
+[lints]
+workspace = true

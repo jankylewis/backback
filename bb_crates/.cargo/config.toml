@@ -1,0 +1,3 @@
+[build]
+# Keep build output hidden and out of the HD count.
+target-dir = "../.target"

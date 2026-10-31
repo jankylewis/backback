@@ -1,0 +1,75 @@
+[workspace]
+resolver = "2"
+members = [
+  "bb_core/bb_text",
+  "bb_core/syntax",
+  "edge/bb_lsp",
+  "edge/framing",
+  "edge/dap",
+  "edge/dotnet",
+  "shell/bb_cli",
+  "shell/ui",
+  "shell/audit",
+]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+repository = "https://github.com/jankylewis/backback"
+description = "backback: a very lightweight, dark-by-default, open-source C# IDE shell"
+
+[workspace.dependencies]
+# internal crates (one place for paths; crates use `bb-x.workspace = true`)
+bb-text = { path = "bb_core/bb_text" }
+bb-syntax = { path = "bb_core/syntax" }
+bb-lsp = { path = "edge/bb_lsp" }
+bb-framing = { path = "edge/framing" }
+bb-dap = { path = "edge/dap" }
+bb-dotnet = { path = "edge/dotnet" }
+bb-ui = { path = "shell/ui" }
+bb-audit = { path = "shell/audit" }
+# text
+ropey = "1.6"
+# syntax
+tree-sitter = "0.25"
+tree-sitter-c-sharp = "0.23"
+# protocols
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# 0.95 still uses url::Url; 0.96+ switched to its own Uri type (migrate deliberately, with tests)
+lsp-types = "0.95"
+url = "2"
+# async + processes (every call carries a timeout; see crates/protocol)
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "sync", "time"] }
+# errors
+thiserror = "2"
+# .slnx is XML
+roxmltree = "0.20"
+# dev
+proptest = "1"
+
+# One lint set for every crate. unwrap/expect/panic are allowed only under #[cfg(test)].
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+indexing_slicing = "deny"
+as_conversions = "deny"
+wildcard_enum_match_arm = "deny"
+dbg_macro = "deny"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
