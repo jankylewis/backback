@@ -143,6 +143,20 @@ impl LspClient {
         method: &str,
         params: P,
     ) -> Result<R, LspError> {
+        self.request_within(method, params, self.timeout).await
+    }
+
+    /// Send a request and wait at most `deadline` for its result. A request
+    /// that times out is forgotten, so a late answer cannot reach a new waiter.
+    ///
+    /// # Errors
+    /// Timeout, closed connection, server error, or a result of the wrong shape.
+    pub async fn request_within<P: Serialize, R: DeserializeOwned>(
+        &self,
+        method: &str,
+        params: P,
+        deadline: Duration,
+    ) -> Result<R, LspError> {
         let id: i64 = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (tx, rx): (oneshot::Sender<Reply>, oneshot::Receiver<Reply>) = oneshot::channel();
         if let Ok(mut map) = self.pending.lock() {
@@ -151,14 +165,20 @@ impl LspClient {
         let message: Value =
             json!({ "jsonrpc": "2.0", "id": id, "method": method, "params": params });
         self.send(&message).await?;
-        let timeout: LspError = LspError::Timeout {
-            method: method.to_owned(),
-            after: self.timeout,
+        let waited: Result<Result<Reply, oneshot::error::RecvError>, tokio::time::error::Elapsed> =
+            tokio::time::timeout(deadline, rx).await;
+        let Ok(received): Result<
+            Result<Reply, oneshot::error::RecvError>,
+            tokio::time::error::Elapsed,
+        > = waited
+        else {
+            self.forget(id);
+            return Err(LspError::Timeout {
+                method: method.to_owned(),
+                after: deadline,
+            });
         };
-        let reply: Value = tokio::time::timeout(self.timeout, rx)
-            .await
-            .map_err(|_: tokio::time::error::Elapsed| timeout)?
-            .map_err(|_: oneshot::error::RecvError| LspError::Closed)??;
+        let reply: Value = received.map_err(|_: oneshot::error::RecvError| LspError::Closed)??;
         Ok(serde_json::from_value::<R>(reply)?)
     }
 
@@ -184,6 +204,22 @@ impl LspClient {
             tokio::time::error::Elapsed,
         > = tokio::time::timeout(self.timeout, self.child.wait()).await;
         Ok(())
+    }
+
+    /// Requests still waiting for an answer.
+    #[cfg(test)]
+    pub(crate) fn pending_len(&self) -> usize {
+        self.pending.lock().map_or(
+            0,
+            |map: std::sync::MutexGuard<'_, HashMap<i64, oneshot::Sender<Reply>>>| map.len(),
+        )
+    }
+
+    /// Drop the waiter of a request that will not be awaited any more.
+    fn forget(&self, id: i64) {
+        if let Ok(mut map) = self.pending.lock() {
+            map.remove(&id);
+        }
     }
 
     async fn send(&self, message: &Value) -> Result<(), LspError> {

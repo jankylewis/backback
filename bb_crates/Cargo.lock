@@ -24,8 +24,10 @@ dependencies = [
  "bb-audit",
  "bb-dap",
  "bb-dotnet",
+ "bb-intel",
  "bb-lsp",
  "bb-syntax",
+ "bb-text",
  "bb-ui",
  "lsp-types",
  "proptest",
@@ -68,6 +70,22 @@ dependencies = [
  "proptest",
  "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "bb-intel"
+version = "0.0.1"
+dependencies = [
+ "bb-dotnet",
+ "bb-lsp",
+ "bb-text",
+ "lsp-types",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "url",
 ]
 
 [[package]]

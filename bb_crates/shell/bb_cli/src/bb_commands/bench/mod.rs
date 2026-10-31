@@ -2,7 +2,7 @@
 //! measured runs; one table and one JSON line per item report median and p95.
 
 mod bb_items;
-mod stats;
+pub(crate) mod stats;
 
 use std::path::{Path, PathBuf};
 

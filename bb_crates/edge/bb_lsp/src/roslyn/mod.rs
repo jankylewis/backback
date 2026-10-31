@@ -73,9 +73,16 @@ pub enum RoslynError {
     /// A path could not be turned into a URI.
     #[error("path is not absolute or not valid as a URI: {0}")]
     BadPath(PathBuf),
-    /// The server did not report initialization within the deadline.
-    #[error("solution did not finish loading within {0:?}")]
-    LoadTimeout(Duration),
+    /// The solution did not finish loading within the deadline.
+    #[error("solution did not finish loading within {after:?}: {loaded} of {expected} projects")]
+    LoadTimeout {
+        /// The deadline.
+        after: Duration,
+        /// Projects the server reported loaded.
+        loaded: usize,
+        /// Projects the solution declares.
+        expected: usize,
+    },
     /// The notification channel was already taken from the client.
     #[error("incoming channel already taken")]
     NoIncoming,

@@ -137,6 +137,7 @@ pub(crate) fn response_outcome(message: &Value) -> Result<Value, LspError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn result_and_error_responses_map_to_outcomes() {
@@ -147,6 +148,19 @@ mod tests {
         let err: Result<Value, LspError> =
             response_outcome(&json!({"id": 3, "error": {"code": -32601, "message": "nope"}}));
         assert!(matches!(err, Err(LspError::Server { code: -32601, .. })));
+    }
+
+    #[tokio::test]
+    async fn a_timed_out_request_leaves_no_waiter_behind() {
+        let mut command: tokio::process::Command = tokio::process::Command::new("sleep");
+        command.arg("5");
+        let client: crate::LspClient =
+            crate::LspClient::spawn(command, Duration::from_secs(5), Settings::new()).unwrap();
+        let reply: Result<Value, LspError> = client
+            .request_within("never/answered", Value::Null, Duration::from_millis(50))
+            .await;
+        assert!(matches!(reply, Err(LspError::Timeout { .. })));
+        assert_eq!(client.pending_len(), 0);
     }
 
     #[test]

@@ -70,6 +70,12 @@ impl Buffer {
         self.rope.to_string()
     }
 
+    /// The char at `at`; `None` past the end.
+    #[must_use]
+    pub fn char_at(&self, at: CharIdx) -> Option<char> {
+        self.rope.get_char(at.raw())
+    }
+
     /// Insert `text` at `at`.
     ///
     /// # Errors

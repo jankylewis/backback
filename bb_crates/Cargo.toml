@@ -7,6 +7,7 @@ members = [
   "edge/framing",
   "edge/dap",
   "edge/dotnet",
+  "edge/intel",
   "shell/bb_cli",
   "shell/ui",
   "shell/audit",
@@ -30,6 +31,7 @@ bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
 bb-framing = { path = "edge/framing", version = "0.0.1" }
 bb-dap = { path = "edge/dap", version = "0.0.1" }
 bb-dotnet = { path = "edge/dotnet", version = "0.0.1" }
+bb-intel = { path = "edge/intel", version = "0.0.1" }
 bb-ui = { path = "shell/ui", version = "0.0.1" }
 bb-audit = { path = "shell/audit", version = "0.0.1" }
 # text
