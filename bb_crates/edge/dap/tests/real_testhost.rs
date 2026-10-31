@@ -22,7 +22,8 @@ async fn greeter_testhost_stops_reads_locals_steps_and_finishes() {
         .canonicalize()
         .unwrap();
     let (mut child, _lines, process_id): (Child, Lines, u32) = start_testhost(&root).await;
-    let source: PathBuf = root.join("fixtures/_Harness/_NUnitApex/GreeterSpec.cs");
+    let source: PathBuf =
+        root.join("bb_crates/shell/desktop/fixtures/_Harness/_NUnitApex/GreeterSpec.cs");
     let mut session: DapSession = DapSession::spawn(DEADLINE).unwrap();
     let mut events: mpsc::Receiver<Event> = session.take_events().unwrap();
     configure(&session, process_id, &source).await;
@@ -39,7 +40,8 @@ async fn greeter_testhost_stops_reads_locals_steps_and_finishes() {
 }
 
 async fn start_testhost(root: &std::path::Path) -> (Child, Lines, u32) {
-    let project: PathBuf = root.join("fixtures/_Harness/_NUnitApex/_NUnitApex.csproj");
+    let project: PathBuf =
+        root.join("bb_crates/shell/desktop/fixtures/_Harness/_NUnitApex/_NUnitApex.csproj");
     let artifacts: PathBuf =
         std::env::temp_dir().join(format!("backback-testhost-{}", std::process::id()));
     let mut child: Child = Command::new("dotnet")
@@ -71,7 +73,10 @@ async fn start_testhost(root: &std::path::Path) -> (Child, Lines, u32) {
 
 async fn configure(session: &DapSession, process_id: u32, source: &std::path::Path) {
     let caps: bb_dap::Capabilities = session.initialize().await.unwrap();
-    assert!(!caps.supports_goto_targets_request);
+    assert_eq!(
+        session.can_set_next_statement(),
+        caps.supports_goto_targets_request
+    );
     session.attach(process_id).await.unwrap();
     let breakpoints: Value = session
         .set_breakpoints(

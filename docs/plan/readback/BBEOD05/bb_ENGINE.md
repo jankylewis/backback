@@ -34,3 +34,10 @@ A source breakpoint may be pending before `configurationDone`. Confirm it from
 the later `stopped` event at the requested source line. A real adapter exit
 must close current and future request waiters; testing only an in-flight map
 misses future requests that would otherwise time out.
+
+## Merged ship readback
+
+The merged branch moved the test fixture under `bb_crates/shell/desktop/fixtures/`.
+The first full gate failed when the attach test still used the old path. The
+same real test then passed after the path fix: first stop 676 ms, step 15 ms.
+The full patched-adapter gate passed 131 tests with no ignored tests.

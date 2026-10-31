@@ -207,18 +207,22 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn real_adapter_hides_unsupported_goto_and_closes_waiters() {
+    async fn real_adapter_respects_goto_capability_and_closes_waiters() {
         if crate::locate().is_err() {
             return;
         }
         let mut session: DapSession = DapSession::spawn(Duration::from_secs(10)).unwrap();
         let caps: crate::Capabilities = session.initialize().await.unwrap();
-        assert!(!caps.supports_goto_targets_request);
-        assert!(!session.can_set_next_statement());
-        assert!(matches!(
-            session.goto(1, 1).await,
-            Err(DapError::Unsupported(_))
-        ));
+        assert_eq!(
+            session.can_set_next_statement(),
+            caps.supports_goto_targets_request
+        );
+        if !caps.supports_goto_targets_request {
+            assert!(matches!(
+                session.goto(1, 1).await,
+                Err(DapError::Unsupported(_))
+            ));
+        }
         session.child.start_kill().unwrap();
         session.wait_exit().await.unwrap();
         assert!(matches!(session.threads().await, Err(DapError::Closed)));

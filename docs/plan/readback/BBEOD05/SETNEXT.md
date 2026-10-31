@@ -1,6 +1,6 @@
 # BBEOD05-B Set Next readback
 
-Date: 2026-11-01. Seat: backback_2. Local only.
+Date: 2026-11-01. Seat: backback_2. The netcoredbg patch is LOCAL and unpublished pending the headmate ruling.
 
 ## Family
 
@@ -34,3 +34,10 @@ cover these cases.
 - Source lines without precise symbols or `CanSetIP` approval have no target.
 - Only the local macOS arm64 build was exercised. No fork or upstream change
   was published.
+
+## Merged ship instrument
+
+- Stock netcoredbg: initialize omitted the goto capability; Set Next stayed
+  hidden and the guarded client returned `Unsupported` before sending `goto`.
+- Local patched netcoredbg: initialize advertised goto; live N to N-2
+  readback, two steps, and count `4` passed. Both runs: 1 passed, 0 ignored.

@@ -1,5 +1,4 @@
 //! Live DAP instrument test for Set Next Statement.
-// The test fails fast on malformed or missing DAP evidence.
 #![allow(
     clippy::unwrap_used,
     clippy::indexing_slicing,
@@ -12,6 +11,8 @@ mod bb_session;
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+
+use bb_dap::{DapError, DapSession};
 
 use bb_session::Session;
 use serde_json::{json, Value};
@@ -187,12 +188,23 @@ async fn exception_exits_fail(session: &mut Session, source: &Path, content: &st
 
 #[tokio::test]
 async fn setnext_reexecutes_and_refuses_unsafe_targets() {
-    let binary: Option<String> = std::env::var(bb_dap::ENV_OVERRIDE).ok();
-    if binary.is_none() {
-        eprintln!("setnext live instrument skipped: BACKBACK_NETCOREDBG is unset");
+    let binary: PathBuf = bb_dap::locate().expect("netcoredbg must be installed for this gate");
+    let capability_session: DapSession = DapSession::spawn(Duration::from_secs(15)).unwrap();
+    let capabilities: bb_dap::Capabilities = capability_session.initialize().await.unwrap();
+    assert_eq!(
+        capability_session.can_set_next_statement(),
+        capabilities.supports_goto_targets_request
+    );
+    if !capabilities.supports_goto_targets_request {
+        assert!(matches!(
+            capability_session.goto(1, 1).await,
+            Err(DapError::Unsupported("Set Next Statement"))
+        ));
+        eprintln!("adapter_variant=stock; Set Next hidden; goto not sent");
         return;
     }
-    let binary: String = binary.unwrap();
+    eprintln!("adapter_variant=patched; goto readback required");
+    let binary: String = binary.to_string_lossy().into_owned();
     let (scratch, source, content): (PathBuf, PathBuf, String) = build_fixture().await;
     let mut session: Session = Session::start(&binary);
     let thread: i64 = first_stop(&mut session, &source, &content).await;

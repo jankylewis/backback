@@ -31,7 +31,7 @@ The A/A control at load1 6.66 to 6.37 showed same-binary paired ranges of
 beyond the same-binary variation. The scan and audit code did not change.
 There is no supported performance defect to profile or fix from these runs.
 
-- Command: release `bb bench /Users/vinh.tranmodec.com/Documents/se/dna_engineering_dx/MbTx/MbTx.slnx --runs 5`.
+- Command: release `bb bench <MbTx root>/MbTx.slnx --runs 5`.
 - Set: one warm-up and five measured runs per item.
 - Load1: 5.02 throughout. The required quiet condition, load1 below 3, did not hold.
 - The BBEOD01 baseline was also marked noisy and used seven measured runs.
