@@ -38,6 +38,9 @@ pub enum RoslynError {
     /// The notification channel was already taken from the client.
     #[error("incoming channel already taken")]
     NoIncoming,
+    /// The run log could not be written.
+    #[error("cannot write the server log: {0}")]
+    Log(#[source] std::io::Error),
     /// Underlying client error.
     #[error(transparent)]
     Client(#[from] LspError),
@@ -117,11 +120,16 @@ pub async fn open_solution(client: &LspClient, solution: &Path) -> Result<(), Ro
 
 /// Drain incoming messages until `projectInitializationComplete`. Returns how long it took.
 ///
+/// Every `window/logMessage` and `window/showMessage` on the way is written to
+/// `log` as one line, so the run leaves the server's own account behind.
+///
 /// # Errors
-/// [`RoslynError::LoadTimeout`] past `deadline`, or the server closes.
-pub async fn wait_for_load(
+/// [`RoslynError::LoadTimeout`] past `deadline`, the server closes, or `log`
+/// cannot be written.
+pub async fn wait_for_load<W: std::io::Write>(
     incoming: &mut tokio::sync::mpsc::Receiver<Incoming>,
     deadline: Duration,
+    log: &mut W,
 ) -> Result<Duration, RoslynError> {
     let started: Instant = Instant::now();
     loop {
@@ -135,12 +143,82 @@ pub async fn wait_for_load(
             Some(Incoming::Notification { method, .. }) if method == PROJECT_INIT_COMPLETE => {
                 return Ok(started.elapsed());
             }
-            Some(Incoming::Notification { .. } | Incoming::ServerRequest { .. }) => {}
+            Some(Incoming::Notification { method, params }) => {
+                log_message(&method, params.as_ref(), log)?;
+            }
+            Some(Incoming::ServerRequest { .. }) => {}
             None => return Err(RoslynError::Client(LspError::Closed)),
         }
     }
 }
 
+/// Write one `window/logMessage` or `window/showMessage` as `[level] text`.
+fn log_message<W: std::io::Write>(
+    method: &str,
+    params: Option<&serde_json::Value>,
+    log: &mut W,
+) -> Result<(), RoslynError> {
+    if method != "window/logMessage" && method != "window/showMessage" {
+        return Ok(());
+    }
+    let text: &str = params
+        .and_then(|p: &serde_json::Value| p.get("message"))
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or_default();
+    let level: &str = match params
+        .and_then(|p: &serde_json::Value| p.get("type"))
+        .and_then(serde_json::Value::as_u64)
+    {
+        Some(1) => "error",
+        Some(2) => "warn",
+        Some(3) => "info",
+        Some(_) | None => "log",
+    };
+    writeln!(log, "[{level}] {text}").map_err(RoslynError::Log)
+}
+
 fn file_url(path: &Path) -> Result<Url, RoslynError> {
     Url::from_file_path(path).map_err(|(): ()| RoslynError::BadPath(path.to_path_buf()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::sync::mpsc;
+
+    fn note(method: &str, params: serde_json::Value) -> Incoming {
+        Incoming::Notification {
+            method: method.to_owned(),
+            params: Some(params),
+        }
+    }
+
+    #[tokio::test]
+    async fn wait_for_load_keeps_every_server_message_in_the_log() {
+        let (tx, mut rx): (mpsc::Sender<Incoming>, mpsc::Receiver<Incoming>) = mpsc::channel(8);
+        tx.send(note(
+            "window/logMessage",
+            json!({"type": 3, "message": "loading A.csproj"}),
+        ))
+        .await
+        .unwrap();
+        tx.send(note(
+            "window/showMessage",
+            json!({"type": 1, "message": "restore failed"}),
+        ))
+        .await
+        .unwrap();
+        tx.send(note("$/progress", json!({"token": 1})))
+            .await
+            .unwrap();
+        tx.send(note(PROJECT_INIT_COMPLETE, json!({})))
+            .await
+            .unwrap();
+        let mut log: Vec<u8> = Vec::new();
+        wait_for_load(&mut rx, Duration::from_secs(5), &mut log)
+            .await
+            .unwrap();
+        let text: String = String::from_utf8(log).unwrap();
+        assert_eq!(text, "[info] loading A.csproj\n[error] restore failed\n");
+    }
 }

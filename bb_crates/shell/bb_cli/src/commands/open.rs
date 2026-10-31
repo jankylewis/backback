@@ -43,16 +43,31 @@ pub(crate) async fn run(solution: &Path) -> Result<(), CommandError> {
         .unwrap_or_default();
     println!("initialize: {:?} (server {server})", started.elapsed());
     roslyn::open_solution(&client, sln.as_path()).await?;
-    let loaded_in: Duration = roslyn::wait_for_load(&mut incoming, SOLUTION_LOAD_TIMEOUT).await?;
+    let log_path: PathBuf = log_dir.join(log_name());
+    let mut log: std::fs::File =
+        std::fs::File::create(&log_path).map_err(|source: std::io::Error| CommandError::Read {
+            path: log_path.clone(),
+            source,
+        })?;
+    let loaded_in: Duration =
+        roslyn::wait_for_load(&mut incoming, SOLUTION_LOAD_TIMEOUT, &mut log).await?;
     println!(
         "loaded    : {loaded_in:?} until {}",
         roslyn::PROJECT_INIT_COMPLETE
     );
     println!("total     : {:?}", started.elapsed());
-    println!("logs      : {}", log_dir.display());
+    println!("log       : {}", log_path.display());
     client
         .shutdown()
         .await
         .map_err(roslyn::RoslynError::Client)?;
     Ok(())
+}
+
+/// `open-<unix ms>.log`, so every run keeps its own server log.
+fn log_name() -> String {
+    let millis: u128 = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d: Duration| d.as_millis());
+    format!("open-{millis}.log")
 }
