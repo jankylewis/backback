@@ -1,11 +1,8 @@
 //! `bb scan` and `bb outline` end to end on the desktop shell's C# fixture.
 
-#[cfg(test)]
-mod common;
-
 use std::path::PathBuf;
 
-use common::{bb, harness, Run};
+use crate::common::{bb, harness, Run};
 use scan_run::{line_of, scan};
 
 #[cfg(test)]
@@ -40,7 +37,7 @@ fn scan_lists_capabilities_per_project() {
         ("_NUnitApex", &["test exe", "VsTest", "NUnit", "Apex"][..]),
         (
             "_XunitPlaywright",
-            &["test dll", "Mtp", "XUnit", "Playwright"][..],
+            &["test exe", "Mtp", "XUnit", "Playwright"][..],
         ),
         ("_McpServer", &["lib  exe", "Mcp"][..]),
         ("_Core", &["lib  dll"][..]),

@@ -3,7 +3,10 @@
 
 mod bb_open;
 mod bench;
-mod scan;
+mod dotnet;
+mod probe;
+
+pub(crate) use dotnet::scan;
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -49,6 +52,12 @@ pub enum CommandError {
     /// `bb bench` problem.
     #[error(transparent)]
     Bench(#[from] bench::BenchError),
+    /// `bb probe` problem.
+    #[error(transparent)]
+    Probe(#[from] probe::ProbeError),
+    /// `bb test` problem.
+    #[error(transparent)]
+    Test(#[from] dotnet::TestError),
     /// `bb doctor` found a required tool missing or broken (already printed).
     #[error("required tools not usable: {}", .0.join(", "))]
     Doctor(Vec<&'static str>),
@@ -78,6 +87,8 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
         Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
+        Command::Probe(probe) => probe::run(&probe).await,
+        Command::Test(args) => dotnet::test(&args).await,
     }
 }
 

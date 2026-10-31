@@ -435,8 +435,11 @@ dependencies = [
  "bb-audit",
  "bb-dap",
  "bb-dotnet",
+ "bb-intel",
  "bb-lsp",
  "bb-syntax",
+ "bb-testkit",
+ "bb-text",
  "bb-ui",
  "lsp-types",
  "proptest",
@@ -493,6 +496,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "bb-intel"
+version = "0.0.1"
+dependencies = [
+ "bb-dotnet",
+ "bb-lsp",
+ "bb-text",
+ "lsp-types",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "bb-lsp"
 version = "0.0.1"
 dependencies = [
@@ -515,6 +534,19 @@ dependencies = [
  "thiserror",
  "tree-sitter",
  "tree-sitter-c-sharp",
+]
+
+[[package]]
+name = "bb-testkit"
+version = "0.0.1"
+dependencies = [
+ "bb-dotnet",
+ "proptest",
+ "roxmltree 0.20.0",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
