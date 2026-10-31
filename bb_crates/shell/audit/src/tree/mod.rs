@@ -1,27 +1,45 @@
-//! Folder rules (HD taxonomy, underscore) and file line caps.
+//! Folder rules (HD taxonomy, backbone marker) and file line caps.
+
+mod marker;
 
 use std::path::{Path, PathBuf};
 
 use crate::{caps, csharp, rust, AuditError, Finding, Rule, Violation};
+use marker::{Dialect, Dialects};
 
 /// Folders that are never audited: VCS, build output, dependencies.
 const SKIP_DIRS: [&str; 6] = [".git", ".target", "target", "bin", "obj", "node_modules"];
-/// File endings that mark a C# tree.
-const CSHARP_MARKERS: [&str; 4] = [".cs", ".csproj", ".slnx", ".sln"];
+/// Agent instruction files: present by law, so outside the HD count.
+const AGENT_FILES: [&str; 2] = ["AGENTS.md", "CLAUDE.md"];
 /// Generated or legal files that are exempt from line caps.
 const SKIP_FILES: [&str; 2] = ["Cargo.lock", "LICENSE"];
 
+/// One folder to audit, and whether it sits in (or is) a Cargo crate.
+struct Folder {
+    dir: PathBuf,
+    in_crate: bool,
+}
+
 pub(crate) fn walk(root: &Path) -> Result<Vec<Violation>, AuditError> {
+    let dialects: Dialects = Dialects::scan(root)?;
     let mut out: Vec<Violation> = Vec::new();
-    let mut stack: Vec<PathBuf> = vec![root.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        let entries: Vec<PathBuf> = read_dir(&dir)?;
-        check_folder(root, &dir, &entries, &mut out);
+    let mut stack: Vec<Folder> = vec![Folder {
+        dir: root.to_path_buf(),
+        in_crate: false,
+    }];
+    while let Some(folder) = stack.pop() {
+        let in_crate: bool = folder.in_crate || marker::is_crate_root(&folder.dir)?;
+        let entries: Vec<PathBuf> = read_dir(&folder.dir)?;
+        let dialect: Dialect = dialects.of(&folder.dir);
+        check_folder(root, &folder.dir, &entries, (dialect, in_crate), &mut out);
         for entry in entries {
             let name: String = file_name(&entry);
             if entry.is_dir() {
                 if !SKIP_DIRS.contains(&name.as_str()) {
-                    stack.push(entry);
+                    stack.push(Folder {
+                        dir: entry,
+                        in_crate,
+                    });
                 }
             } else if !SKIP_FILES.contains(&name.as_str()) {
                 check_file(root, &entry, &mut out)?;
@@ -51,48 +69,34 @@ fn read_error(path: &Path, source: std::io::Error) -> AuditError {
     }
 }
 
-fn check_folder(root: &Path, dir: &Path, entries: &[PathBuf], out: &mut Vec<Violation>) {
+fn check_folder(
+    root: &Path,
+    dir: &Path,
+    entries: &[PathBuf],
+    (dialect, exempt): (Dialect, bool),
+    out: &mut Vec<Violation>,
+) {
     let visible: Vec<String> = entries
         .iter()
         .map(|p: &PathBuf| file_name(p))
         .filter(|n: &String| !n.starts_with('.'))
         .collect();
-    if visible.len() > caps::FOLDER_ENTRIES {
+    let counted: Vec<&String> = visible
+        .iter()
+        .filter(|n: &&String| !AGENT_FILES.contains(&n.as_str()))
+        .collect();
+    if counted.len() > caps::FOLDER_ENTRIES {
+        let names: Vec<&str> = counted.iter().map(|n: &&String| n.as_str()).collect();
         let detail: String = format!(
             "{} entries (max {}): {}",
-            visible.len(),
+            counted.len(),
             caps::FOLDER_ENTRIES,
-            visible.join(", ")
+            names.join(", ")
         );
         out.push(violation(root, dir, 0, Rule::FolderEntries, detail));
     }
-    if let Some(detail) = underscore_problem(dir, entries, &visible) {
-        out.push(violation(root, dir, 0, Rule::Underscore, detail));
-    }
-}
-
-/// C# trees: at most one `_` entry, and one is required once there are 2+
-/// subfolders. Everywhere else (Rust, docs): no `_` entries at all.
-fn underscore_problem(dir: &Path, entries: &[PathBuf], visible: &[String]) -> Option<String> {
-    let marked: Vec<&String> = visible
-        .iter()
-        .filter(|n: &&String| n.starts_with('_'))
-        .collect();
-    if !is_csharp_tree(dir) {
-        return marked
-            .first()
-            .map(|first: &&String| format!("`_` is for C# trees only: {first}"));
-    }
-    let subdirs: usize = entries
-        .iter()
-        .filter(|p: &&PathBuf| is_visible_dir(p))
-        .count();
-    if marked.len() > 1 {
-        Some(format!("{} `_` entries, max 1", marked.len()))
-    } else if subdirs >= 2 && marked.is_empty() {
-        Some("C# folder with 2+ subfolders needs one `_` entry".to_owned())
-    } else {
-        None
+    if let Some(detail) = marker::problem(entries, &visible, dialect, exempt) {
+        out.push(violation(root, dir, 0, Rule::Marker, detail));
     }
 }
 
@@ -138,30 +142,6 @@ fn check_file(root: &Path, file: &Path, out: &mut Vec<Violation>) -> Result<(), 
         out.push(violation(root, file, f.line, f.rule, f.detail));
     }
     Ok(())
-}
-
-/// A folder is a C# tree when it holds C# project files and nothing Rust.
-/// Mixed folders (a Rust repo carrying C# fixtures) belong to neither.
-fn is_csharp_tree(dir: &Path) -> bool {
-    let mut has_csharp: bool = false;
-    let mut stack: Vec<PathBuf> = vec![dir.to_path_buf()];
-    while let Some(d) = stack.pop() {
-        let Ok(read): std::io::Result<std::fs::ReadDir> = std::fs::read_dir(&d) else {
-            continue;
-        };
-        for entry in read.flatten() {
-            let path: PathBuf = entry.path();
-            let name: String = file_name(&path);
-            if path.is_dir() && !SKIP_DIRS.contains(&name.as_str()) {
-                stack.push(path);
-            } else if name == "Cargo.toml" || name.ends_with(".rs") {
-                return false;
-            } else if CSHARP_MARKERS.iter().any(|e: &&str| name.ends_with(e)) {
-                has_csharp = true;
-            }
-        }
-    }
-    has_csharp
 }
 
 fn is_visible_dir(p: &Path) -> bool {

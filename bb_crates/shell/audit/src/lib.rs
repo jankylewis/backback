@@ -38,8 +38,8 @@ pub mod caps {
 pub enum Rule {
     /// More than [`caps::FOLDER_ENTRIES`] visible entries in a folder.
     FolderEntries,
-    /// Underscore rule broken (C# trees: one `_` per folder; elsewhere none).
-    Underscore,
+    /// Backbone marker rule broken (`_` in C# trees, `bb_` in Rust and neutral trees).
+    Marker,
     /// A file is over its line cap.
     FileLines,
     /// A function or method is over [`caps::FUNCTION_LINES`].
