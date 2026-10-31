@@ -46,3 +46,21 @@ Compared against the headmate screenshot criteria in the BBEOD02 brief:
 The exact headmate image is unavailable in this pane, so this compares its
 stated criteria. A path tooltip remains bound to rows; its live appearance
 was not visible in the captured hover state.
+
+## Review round 2
+
+`BBEOD02_MBTX.png` was recaptured with
+`MbAuto/RgvMbDesktop/Tests/Documents/Pdf` expanded. `Pdf` is at depth 6;
+`_HvFvFromTableFvStandalone` and its four sibling folders are at depth 7.
+The child chevron, icon, and label begin one guide cell (16 px) to the right
+of `Pdf`; the guides stay vertical instead of stacking. A row layout test was
+red before the fix and now checks fixed guide offsets for depths 0 through 12.
+
+| Headmate review item | Live readback |
+| --- | --- |
+| Pdf descendants | `_HvFvFromTableFvStandalone`, `FromTableFv`, `Fv`, `Hv`, and `Standalone` all appear one level below `Pdf`. |
+| Long name at 300 px | The first child ends with an ellipsis at the panel edge; no partial glyph is visible. |
+| Drag edge | `BBEOD02_RESIZED.png` in `docs/bb_design/` shows the same rows after dragging the edge from 300 to 500 px; the long name fits. |
+| Project icon | `_RgvMbDesktop.csproj` has a distinct authored project SVG. |
+| Icon colours | `AssemblyInfo.cs` is blue; folders are neutral; the project icon is violet. Markdown uses a blue-grey token (fixture capture). |
+| Ignored rows | `bin`, `obj`, and an ignored runsettings file remain dim. |

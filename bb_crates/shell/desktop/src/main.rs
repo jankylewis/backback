@@ -2,6 +2,7 @@
 
 mod icons;
 mod navigation;
+mod row_view;
 mod tooltip;
 
 use std::{path::PathBuf, time::Instant};
@@ -10,10 +11,10 @@ use bb_explorer::{Entry, Explorer};
 use bb_ui::{theme::DARK, Rgb};
 use gpui::{
     div, prelude::*, px, rgb, size, App, Bounds, Context, FocusHandle, InteractiveElement,
-    IntoElement, KeyBinding, Render, StatefulInteractiveElement, Window, WindowBounds,
+    IntoElement, KeyBinding, MouseButton, Render, StatefulInteractiveElement, Window, WindowBounds,
     WindowOptions,
 };
-use icons::chevron;
+use row_view::{row, RowState};
 
 /// Select the preceding Explorer row.
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
@@ -40,9 +41,31 @@ struct ExplorerView {
     tree: Explorer,
     selected: usize,
     focus: FocusHandle,
+    panel_width: f32,
+    resizing: bool,
 }
 
 impl ExplorerView {
+    fn move_resize(
+        &mut self,
+        event: &gpui::MouseMoveEvent,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.resizing && event.dragging() {
+            self.panel_width = f32::from(event.position.x).clamp(180.0, 800.0);
+            cx.notify();
+        }
+    }
+
+    fn finish_resize(&mut self, _: &gpui::MouseUpEvent, _: &mut Window, _: &mut Context<Self>) {
+        self.resizing = false;
+    }
+
+    fn start_resize(&mut self, _: &gpui::MouseDownEvent, _: &mut Window, _: &mut Context<Self>) {
+        self.resizing = true;
+    }
+
     fn move_up(&mut self, _: &MoveUp, _: &mut Window, cx: &mut Context<Self>) {
         self.selected = self.selected.saturating_sub(1);
         cx.notify();
@@ -98,10 +121,12 @@ impl Render for ExplorerView {
             .size_full()
             .flex()
             .bg(color(DARK.bg))
+            .on_mouse_move(cx.listener(Self::move_resize))
+            .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .child(
                 div()
                     .id("explorer-panel")
-                    .w(px(300.0))
+                    .w(px(self.panel_width))
                     .h_full()
                     .flex()
                     .flex_col()
@@ -123,68 +148,32 @@ impl Render for ExplorerView {
                     )
                     .children(rows.into_iter().enumerate().map(
                         |(index, (depth, entry)): (usize, (usize, &Entry))| {
-                            row(index, depth, entry, index == self.selected, cx)
+                            row(
+                                index,
+                                depth,
+                                entry,
+                                RowState {
+                                    selected: index == self.selected,
+                                    panel_width: self.panel_width,
+                                },
+                                cx,
+                            )
                         },
                     )),
             )
+            .child(resize_edge(cx))
             .child(div().flex_1().h_full().child(""))
     }
 }
 
-fn row(
-    index: usize,
-    depth: usize,
-    entry: &Entry,
-    selected: bool,
-    cx: &mut Context<ExplorerView>,
-) -> impl IntoElement {
-    let path: PathBuf = entry.path().to_path_buf();
-    let tooltip_path: String = path.display().to_string();
-    let expandable: bool = entry.expandable();
-    let name: String = entry.name().to_owned();
-    let text_color: gpui::Rgba = color(if entry.dimmed() {
-        DARK.text_dim
-    } else {
-        DARK.text
-    });
+fn resize_edge(cx: &mut Context<ExplorerView>) -> impl IntoElement {
     div()
-        .id(index)
-        .pl_2()
-        .h(px(30.0))
-        .flex()
-        .items_center()
-        .gap_2()
-        .text_color(text_color)
-        .border_1()
-        .border_color(color(if selected { DARK.accent } else { DARK.surface }))
-        .hover(|style: gpui::StyleRefinement| style.bg(color(DARK.overlay)))
-        .tooltip(tooltip::path(tooltip_path))
-        .on_click(cx.listener(
-            move |view: &mut ExplorerView,
-                  _: &gpui::ClickEvent,
-                  _: &mut Window,
-                  cx: &mut Context<ExplorerView>| {
-                view.selected = index;
-                if expandable {
-                    if let Err(error) = view.tree.toggle(&path) {
-                        eprintln!("{error}");
-                    }
-                }
-                cx.notify();
-            },
-        ))
-        .children((0..depth).map(|_: usize| indent_guide()))
-        .child(chevron(entry))
-        .child(icons::icon(entry, text_color))
-        .child(name)
-}
-
-fn indent_guide() -> impl IntoElement {
-    div()
-        .w(px(16.0))
+        .id("explorer-resize-edge")
+        .w(px(6.0))
         .h_full()
-        .border_l_1()
-        .border_color(color(DARK.border))
+        .flex_shrink_0()
+        .bg(color(DARK.border))
+        .on_mouse_down(MouseButton::Left, cx.listener(ExplorerView::start_resize))
 }
 
 fn color(value: Rgb) -> gpui::Rgba {
@@ -224,6 +213,8 @@ fn main() {
                         tree,
                         selected: 0,
                         focus: cx.focus_handle(),
+                        panel_width: 300.0,
+                        resizing: false,
                     });
                 let focus: FocusHandle = view.read(cx).focus.clone();
                 window.focus(&focus, cx);

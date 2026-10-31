@@ -23,3 +23,10 @@
   was 576 ms for 8,758 folders. The +15.3% indicative cost is recorded.
 - Reopened full workspace gate passed: fmt, clippy, 65 tests, and deny; repo audit clean.
 - Hub X path named in `AGENTS.md` was absent on disk at session start.
+- Review round 2: fixed depth-7 guide shrink with a failing-first row layout
+  test covering depths 0–12; added ellipsis, draggable 180–800 px panel edge,
+  distinct project SVG, and semantic per-kind icon colours.
+- Live MbTx recheck at `MbAuto/RgvMbDesktop/Tests/Documents/Pdf`: child rows
+  indent one 16 px cell; 300 px truncates with an ellipsis, and 500 px shows
+  the full `_HvFvFromTableFvStandalone` name. Captures are `BBEOD02_MBTX.png`
+  and `docs/bb_design/BBEOD02_RESIZED.png`.
