@@ -1,5 +1,14 @@
 # BBEOD02 progress
 
+- BBEOD05-B Set Next (`backback_2`, 2026-11-01): local netcoredbg
+  `3.2.0-1092` clone at `backback_wt/netcoredbg`, branch `local-setnext`.
+  Backback instrument branch `bbeod-05-setnext` starts at origin/master.
+  Local DAP goto patch built and installed. Upstream-style fixture passed for
+  same-method re-execution, stale IDs, cross-method, catch, and finally gates.
+  Backback live DAP instrument passed. Backback gate: fmt, Clippy, 126 tests,
+  deny, and `bb audit` passed. Full netcoredbg build and 6 CTest tests passed.
+  Direct upstream-style runner passed; no publication.
+
 - BBEOD02-FIX (backback_1, 2026-11-01): fixes for verification bugs B1-B3.
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
   -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),
