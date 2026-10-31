@@ -123,8 +123,9 @@ pub(crate) fn editor_body(
                 cx.processor(
                     |view: &mut ExplorerView,
                      range: std::ops::Range<usize>,
-                     _: &mut Window,
+                     window: &mut Window,
                      row_cx: &mut Context<ExplorerView>| {
+                        follow_view(view, &range, window, row_cx);
                         range
                             .map(|index: usize| editor_line(view, index, row_cx))
                             .collect::<Vec<_>>()
@@ -139,6 +140,22 @@ pub(crate) fn editor_body(
                 element.child(super::prompt::close_prompt(theme, cx))
             },
         )
+}
+
+/// A large file parses only lines near the view: move the window with it.
+fn follow_view(
+    view: &mut ExplorerView,
+    visible: &std::ops::Range<usize>,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let moved: Option<std::path::PathBuf> = view
+        .tabs
+        .active_tab_mut()
+        .and_then(|tab: &mut Tab| tab.show_lines(visible).then(|| tab.path.clone()));
+    if let Some(path) = moved {
+        super::input::schedule_parse(view, path, window, cx);
+    }
 }
 
 fn editor_line(

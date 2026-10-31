@@ -132,7 +132,7 @@ fn text_key(
 
 /// Start a background parse for the tab at `path` when edits wait and none
 /// runs; on completion install it and start the next one if typing went on.
-fn schedule_parse(
+pub(super) fn schedule_parse(
     view: &mut ExplorerView,
     path: std::path::PathBuf,
     window: &mut Window,
@@ -141,7 +141,9 @@ fn schedule_parse(
     let Some(tab): Option<&mut super::Tab> = view.tabs.tab_mut(&path) else {
         return;
     };
-    let Some(job): Option<bb_syntax::ParseJob> = tab.live.start_parse(tab.document.rope()) else {
+    let scope: Option<(bb_text::BytePoint, bb_text::BytePoint)> = tab.parse_window();
+    let Some(job): Option<bb_syntax::ParseJob> = tab.live.start_parse(tab.document.rope(), scope)
+    else {
         return;
     };
     let parse: gpui::Task<(bb_syntax::Parsed, std::time::Duration)> =

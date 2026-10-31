@@ -1,5 +1,9 @@
 # BBEOD02 progress
 
+- BBEOD02-MEM (backback_1, 2026-11-01): 20 MB file RSS 1,008 -> 166 MB; the
+  holder was the whole-file tree-sitter tree (862 MB). Large files now parse
+  a window around the view. Record: `bench/BBEOD02_FIX.md`.
+
 - BBEOD02-FIX (backback_1, 2026-11-01): fixes for verification bugs B1-B3.
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
   -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),

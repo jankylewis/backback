@@ -4,12 +4,19 @@ use std::time::Instant;
 use bb_syntax::{CSharpSyntax, LiveTree, SyntaxError, Tree};
 use bb_text::{Document, DocumentError, TextChange};
 
+mod window;
+
+#[cfg(test)]
+pub(crate) use window::LARGE_FILE_BYTES;
+
 pub(crate) struct Tab {
     pub(crate) path: PathBuf,
     pub(crate) document: Document,
     /// Highlight queries; parsing uses the parser inside `live`.
     pub(crate) highlighter: CSharpSyntax,
     pub(crate) live: LiveTree,
+    /// Lines the tree covers; `None` for a file parsed whole.
+    pub(crate) window_lines: Option<std::ops::Range<usize>>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -27,8 +34,13 @@ impl Tab {
     pub(crate) fn load(path: PathBuf) -> Result<Self, TabError> {
         let started: Instant = Instant::now();
         let document: Document = Document::open(&path)?;
+        let window_lines: Option<std::ops::Range<usize>> = window::first_window(&document);
         let mut syntax: CSharpSyntax = CSharpSyntax::new()?;
-        let tree: Tree = syntax.parse_rope(document.rope(), None)?;
+        let tree: Tree = syntax.parse_rope_in(
+            document.rope(),
+            None,
+            window::points(&document, window_lines.as_ref()),
+        )?;
         let highlighter: CSharpSyntax = CSharpSyntax::new()?;
         eprintln!(
             "editor_open_ms={:.3}",
@@ -39,6 +51,7 @@ impl Tab {
             document,
             highlighter,
             live: LiveTree::new(syntax, tree),
+            window_lines,
         })
     }
 
@@ -53,7 +66,8 @@ impl Tab {
     #[cfg(test)]
     pub(crate) fn reparse(&mut self) -> Result<(), TabError> {
         self.sync_edits();
-        self.live.parse_now(self.document.rope())?;
+        self.live
+            .parse_now(self.document.rope(), self.parse_window())?;
         Ok(())
     }
 }

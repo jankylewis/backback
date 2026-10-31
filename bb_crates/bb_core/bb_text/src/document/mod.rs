@@ -190,6 +190,16 @@ impl Document {
         self.buffer.line_start_byte(index)
     }
 
+    /// Byte offset, LF row and column of a line start; a line past the last
+    /// one gives the end of the text. Same row rule as [`TextChange`].
+    #[must_use]
+    pub fn line_point(&self, line: usize) -> Option<BytePoint> {
+        let at: CharIdx = self
+            .line_start(line)
+            .unwrap_or(CharIdx::new(self.len_chars()));
+        self.byte_point(at).ok()
+    }
+
     /// Edits since the last call, oldest first. The caller applies them in order.
     pub fn take_changes(&mut self) -> Vec<TextChange> {
         std::mem::take(&mut self.changes)

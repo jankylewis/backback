@@ -44,7 +44,40 @@ Launch only, RSS after 10 s. Six alternating runs; run 1 is warm-up.
 - After stays 45 ms above the MbTx baseline: the model reads 10,000
   entries (41 ms in the verifier harness) before the first frame.
 
+## Memory with the 20 MB file open (branch bbeod-02-mem)
+
+Heap profile (`heap`, library harness, same file):
+
+| stage | live heap | malloc nodes | RSS |
+| --- | --- | --- | --- |
+| file opened (rope) | 23.8 MB | 23,535 | 54 MB |
+| full tree-sitter parse | 886.3 MB | 8,796,177 | 883 MB |
+| tree dropped | 24.1 MB | 23,551 | 859 MB |
+
+- Biggest holder: the syntax tree, 862 MB (97% of heap): 6,892,780 x 96 B,
+  1,253,232 x 112 B (one per line), 417,746 x 80 B, 208,874 x 128 B. About
+  41 tree bytes per source byte. Freed pages also stay in RSS.
+- One change: files over 4 MiB parse only the lines around the view (+-1,000
+  lines, tree-sitter included ranges, absolute offsets kept); the window
+  follows scrolling. Smaller files are unchanged.
+- A = e45b4d2 release, B = change. Six alternating runs, run 1 warm-up,
+  medians of runs 2-6; 200 keys mid-file via `BB_KEYBENCH`:
+
+| measure | A | B | change |
+| --- | --- | --- | --- |
+| RSS after open (8 s), KiB | 1,008,144 | 165,904 | -83.5% |
+| RSS after 200 keys, KiB | 1,008,112 | 165,904 | -83.5% |
+| live heap after 200 keys, bytes | 905,310,529 | 43,950,929 | -95.1% |
+| open (load + parse), ms | 2,706 | 95.7 | -96.5% |
+| UI work per key p99, us | 2,466 | 230 | -90.7% |
+
+- Keys mid-file fall outside B's window (the view stays at the top), so 3
+  more runs typed 200 keys at line 1, inside the window: A p99 2,435-2,540
+  us, RSS ~1,008 MB; B p99 230-236 us, RSS 166-168 MB, parse < 1 ms per key.
+- Load was 4.2-17.8 (logged per run); the RSS gap is far above the noise.
+- Kept: smaller and faster, gate green.
+
 ## Open
 
-- RSS with the 20 MB file open and edited: 1,008,592 KiB (one sample).
-  No before value exists (the old build cannot open a file without a click).
+- Large-file mode: lines outside the window show plain until the next parse;
+  a construct that starts above the window can colour its first lines wrong.

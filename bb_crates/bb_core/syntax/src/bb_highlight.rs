@@ -49,6 +49,31 @@ impl CSharpSyntax {
             .ok_or(SyntaxError::NoTree)
     }
 
+    /// Parse only `window` (start and end of a byte range) of the rope, or the
+    /// whole rope when `None`. Node offsets stay those of the whole text.
+    ///
+    /// # Errors
+    /// [`SyntaxError::Window`] for a bad window, [`SyntaxError::NoTree`] when
+    /// the parser returns nothing.
+    pub fn parse_rope_in(
+        &mut self,
+        rope: &Rope,
+        old: Option<&Tree>,
+        window: Option<(BytePoint, BytePoint)>,
+    ) -> Result<Tree, SyntaxError> {
+        let ranges: Vec<tree_sitter::Range> = window
+            .map(|(start, end): (BytePoint, BytePoint)| tree_sitter::Range {
+                start_byte: start.byte,
+                end_byte: end.byte,
+                start_point: point(start),
+                end_point: point(end),
+            })
+            .into_iter()
+            .collect();
+        self.parser.set_included_ranges(&ranges)?;
+        self.parse_rope(rope, old)
+    }
+
     /// Tell `tree` about one text edit, so the next parse reuses it. O(depth).
     pub fn edit(tree: &mut Tree, change: &TextChange) {
         tree.edit(&InputEdit {

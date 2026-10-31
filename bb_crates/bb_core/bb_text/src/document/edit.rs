@@ -194,7 +194,7 @@ impl Document {
         Ok(removed)
     }
 
-    fn byte_point(&self, at: CharIdx) -> Result<BytePoint, DocumentError> {
+    pub(super) fn byte_point(&self, at: CharIdx) -> Result<BytePoint, DocumentError> {
         let (byte, row, column): (usize, usize, usize) = self
             .buffer
             .byte_point(at, !self.format.other_breaks)
