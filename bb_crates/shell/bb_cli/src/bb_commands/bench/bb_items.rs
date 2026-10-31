@@ -10,7 +10,7 @@ use bb_syntax::{CSharpSyntax, OutlineItem, Tree};
 
 use super::stats::{repeat, timed, Summary};
 use super::{BenchError, Row, Unit};
-use crate::commands::{read, scan, CommandError};
+use crate::bb_commands::{read, scan, CommandError};
 
 /// Deadline for one `bb doctor` run.
 const COLD_START_TIMEOUT: Duration = Duration::from_secs(30);

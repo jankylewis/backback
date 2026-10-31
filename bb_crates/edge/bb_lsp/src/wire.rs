@@ -11,7 +11,7 @@ use bb_framing::{Decoder, FrameError};
 
 use std::sync::Arc;
 
-use crate::client::{Incoming, LspError, Pending, Settings};
+use crate::bb_client::{Incoming, LspError, Pending, Settings};
 
 /// Everything the reader task needs.
 pub(crate) struct Reader {

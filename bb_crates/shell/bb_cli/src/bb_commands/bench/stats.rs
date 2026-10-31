@@ -3,7 +3,7 @@
 use std::time::{Duration, Instant};
 
 use super::RUNS;
-use crate::commands::CommandError;
+use crate::bb_commands::CommandError;
 
 /// Median and p95 (nearest rank) of one item's samples.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -2,7 +2,7 @@
 //! closure-parameter types. Scans run on stripped text (no literals, no comments).
 
 use crate::lexer::{strip, Lang};
-mod types;
+mod bb_types;
 
 use crate::{caps, line_of, matching_brace, Finding, Rule};
 
@@ -20,8 +20,8 @@ pub(crate) fn check(src: &str) -> Vec<Finding> {
     let text: String = strip(src, Lang::Rust);
     let mut out: Vec<Finding> = Vec::new();
     check_blocks(&text, &mut out);
-    types::check_lets(&text, &mut out);
-    types::check_closures(&text, &mut out);
+    bb_types::check_lets(&text, &mut out);
+    bb_types::check_closures(&text, &mut out);
     out
 }
 

@@ -3,7 +3,7 @@
 use std::time::{Duration, Instant};
 
 use super::{RoslynError, PROJECT_INIT_COMPLETE};
-use crate::client::{Incoming, LspError};
+use crate::bb_client::{Incoming, LspError};
 
 /// Drain incoming messages until `projectInitializationComplete`. Returns how long it took.
 ///

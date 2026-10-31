@@ -17,11 +17,11 @@ use serde_json::json;
 use tokio::process::Command;
 use url::Url;
 
-use crate::client::{LspClient, LspError, Settings};
+use crate::bb_client::{LspClient, LspError, Settings};
 
-mod load;
+mod bb_load;
 
-pub use load::wait_for_load;
+pub use bb_load::wait_for_load;
 
 /// Binary name of the official server (installed with `dotnet tool install -g roslyn-language-server --prerelease`).
 pub const BINARY: &str = "roslyn-language-server";

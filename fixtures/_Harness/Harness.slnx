@@ -1,8 +1,8 @@
 <Solution>
   <Folder Name="/tests/">
-    <Project Path="_NUnitApex/NUnitApex.csproj" />
-    <Project Path="XunitPlaywright\XunitPlaywright.csproj" />
+    <Project Path="_NUnitApex/_NUnitApex.csproj" />
+    <Project Path="XunitPlaywright\_XunitPlaywright.csproj" />
   </Folder>
-  <Project Path="McpServer/McpServer.csproj" />
-  <Project Path="Core/Core.csproj" />
+  <Project Path="McpServer/_McpServer.csproj" />
+  <Project Path="Core/_Core.csproj" />
 </Solution>

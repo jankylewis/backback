@@ -37,13 +37,13 @@ fn scan_lists_capabilities_per_project() {
     let run: Run = scan();
     assert!(run.out.contains("(Slnx, 4 projects)"), "{}", run.out);
     for (name, wants) in [
-        ("NUnitApex", &["test exe", "VsTest", "NUnit", "Apex"][..]),
+        ("_NUnitApex", &["test exe", "VsTest", "NUnit", "Apex"][..]),
         (
-            "XunitPlaywright",
+            "_XunitPlaywright",
             &["test dll", "Mtp", "XUnit", "Playwright"][..],
         ),
-        ("McpServer", &["lib  exe", "Mcp"][..]),
-        ("Core", &["lib  dll"][..]),
+        ("_McpServer", &["lib  exe", "Mcp"][..]),
+        ("_Core", &["lib  dll"][..]),
     ] {
         let line: &str = line_of(&run, name);
         for want in wants {
@@ -64,7 +64,7 @@ fn scan_counts_secrets_shows_unset_and_never_prints_a_value() {
     assert!(!secret.is_empty(), "fixture must carry a secret value");
     let run: Run = scan();
     assert!(!run.all().contains(secret), "secret value printed");
-    let line: &str = line_of(&run, "NUnitApex");
+    let line: &str = line_of(&run, "_NUnitApex");
     assert!(line.contains("3 vars (1 secret"), "{line}");
     assert!(line.contains("UNSET HARNESS_TOTP_KEY"), "{line}");
 }

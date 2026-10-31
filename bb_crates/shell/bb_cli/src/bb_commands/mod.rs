@@ -1,8 +1,8 @@
 //! Command implementations. Each prints plain lines so the output can be
 //! pasted into docs as evidence.
 
+mod bb_open;
 mod bench;
-mod open;
 mod scan;
 
 use std::path::{Path, PathBuf};
@@ -60,7 +60,7 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
     match command {
         Command::Doctor => doctor().await,
         Command::Scan { solution } => scan::run(&solution),
-        Command::Open { solution, restore } => open::run(&solution, restore).await,
+        Command::Open { solution, restore } => bb_open::run(&solution, restore).await,
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
         Command::Bench { solution } => bench::run(solution.as_deref()),

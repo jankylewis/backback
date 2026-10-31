@@ -1,7 +1,7 @@
 //! Unit tests for the Roslyn specifics.
 
 use super::*;
-use crate::client::Incoming;
+use crate::bb_client::Incoming;
 use tokio::sync::mpsc;
 
 fn note(method: &str, params: serde_json::Value) -> Incoming {

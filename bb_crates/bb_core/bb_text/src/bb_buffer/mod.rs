@@ -199,4 +199,4 @@ fn from_u32(value: u32) -> usize {
 }
 
 #[cfg(test)]
-mod tests;
+mod bb_tests;

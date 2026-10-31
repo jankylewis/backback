@@ -1,7 +1,7 @@
 //! `bb bench`: the fixed benchmark set. Each item gets one warm-up and five
 //! measured runs; one table and one JSON line per item report median and p95.
 
-mod items;
+mod bb_items;
 mod stats;
 
 use std::path::{Path, PathBuf};
@@ -117,14 +117,14 @@ pub(crate) fn run(solution: Option<&Path>) -> Result<(), CommandError> {
             source,
         })?;
     let repo: RepoRoot = RepoRoot::find(&cwd)?;
-    let mut rows: Vec<Row> = vec![items::cold_start()?];
-    rows.extend(items::outlines(&repo.fixtures())?);
-    rows.push(items::scan("scan-harness", &repo.harness())?);
+    let mut rows: Vec<Row> = vec![bb_items::cold_start()?];
+    rows.extend(bb_items::outlines(&repo.fixtures())?);
+    rows.push(bb_items::scan("scan-harness", &repo.harness())?);
     if let Some(sln) = solution {
-        rows.push(items::scan("scan-solution", sln)?);
+        rows.push(bb_items::scan("scan-solution", sln)?);
     }
-    rows.push(items::audit(repo.path())?);
-    rows.push(items::binary_size()?);
+    rows.push(bb_items::audit(repo.path())?);
+    rows.push(bb_items::binary_size()?);
     println!(
         "{:<16} {:>10} {:>10}  {:<5}  detail",
         "item", "median", "p95", "unit"

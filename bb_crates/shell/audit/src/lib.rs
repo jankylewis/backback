@@ -4,10 +4,10 @@
 //! the underscore rule (C# trees only), size caps per file, function and type,
 //! and explicit types (every Rust `let` and closure parameter, no C# `var`).
 
+mod bb_tree;
 mod csharp;
 mod lexer;
 mod rust;
-mod tree;
 
 use std::path::{Path, PathBuf};
 
@@ -101,7 +101,7 @@ pub enum AuditError {
 /// # Errors
 /// Returns [`AuditError::Read`] when a folder or file cannot be read.
 pub fn audit(root: &Path) -> Result<Vec<Violation>, AuditError> {
-    let mut found: Vec<Violation> = tree::walk(root)?;
+    let mut found: Vec<Violation> = bb_tree::walk(root)?;
     found.sort();
     Ok(found)
 }

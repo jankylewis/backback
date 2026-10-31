@@ -1,6 +1,6 @@
-//! Backbone marker rules: `_` in C# trees, `bb_` in Rust and neutral trees,
-//! at most one per folder, one required with 2+ visible subfolders, and a
-//! Cargo crate root (with everything under it) exempt from the requirement.
+//! Backbone marker rules: `_` in C# trees, `bb_` in Rust and neutral trees.
+//! Every folder with 2+ visible entries (files and folders) carries exactly
+//! one marker on a non-fixed entry; a folder of fixed names only needs none.
 
 #[cfg(test)]
 mod common;
@@ -76,13 +76,50 @@ fn neutral_folder_follows_the_repo_dialect() {
 }
 
 #[test]
-fn cargo_crate_root_and_its_folders_are_exempt() {
-    let s: Scratch = Scratch::new("m-crate");
-    s.file("Cargo.toml", PACKAGE);
-    s.file("src/a/x.rs", "fn f() {}\n");
-    s.file("src/b/y.rs", "fn g() {}\n");
-    s.file("tests/t.rs", "fn t() {}\n");
+fn files_only_folder_without_a_marker_is_a_violation() {
+    let s: Scratch = Scratch::new("m-files");
+    s.file("k/client.rs", "fn f() {}\n");
+    s.file("k/wire.rs", "fn g() {}\n");
+    assert_eq!(s.rules(), only("k", Rule::Marker));
+    s.rename("k/client.rs", "k/bb_client.rs");
     assert!(s.rules().is_empty(), "{:?}", s.rules());
-    s.rename("src/a", "src/_a");
-    assert_eq!(s.rules(), only("src", Rule::Marker), "exempt, not lawless");
+}
+
+#[test]
+fn folder_with_two_markers_is_a_violation() {
+    let s: Scratch = Scratch::new("m-two");
+    s.file("k/bb_client.rs", "fn f() {}\n");
+    s.file("k/bb_wire.rs", "fn g() {}\n");
+    assert_eq!(s.rules(), only("k", Rule::Marker));
+}
+
+#[test]
+fn crate_folder_of_fixed_names_needs_no_marker() {
+    let s: Scratch = Scratch::new("m-crate");
+    s.file("k/Cargo.toml", PACKAGE);
+    s.file("k/README.md", "x\n");
+    s.file("k/src/lib.rs", "fn f() {}\n");
+    s.file("k/tests/t.rs", "fn t() {}\n");
+    assert!(s.rules().is_empty(), "{:?}", s.rules());
+}
+
+#[test]
+fn fixed_names_never_count_toward_the_marker() {
+    let s: Scratch = Scratch::new("m-fixed");
+    s.file("k/Cargo.toml", PACKAGE);
+    s.file("k/src/lib.rs", "fn f() {}\n");
+    s.file("k/src/position.rs", "fn g() {}\n");
+    assert_eq!(s.rules(), only("k/src", Rule::Marker));
+    s.rename("k/src/position.rs", "k/src/bb_position.rs");
+    assert!(s.rules().is_empty(), "{:?}", s.rules());
+}
+
+#[test]
+fn csharp_project_folder_needs_underscore_on_one_entry() {
+    let s: Scratch = Scratch::new("m-csproj");
+    s.file("App/App.csproj", "<Project />\n");
+    s.file("App/Program.cs", "class P {}\n");
+    assert_eq!(s.rules(), only("App", Rule::Marker));
+    s.rename("App/App.csproj", "App/_App.csproj");
+    assert!(s.rules().is_empty(), "{:?}", s.rules());
 }

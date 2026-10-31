@@ -2,7 +2,7 @@
 //! files above it: test framework, browser stack (Apex, Playwright), MCP server,
 //! test platform, output kind, runsettings.
 
-mod capability;
+mod bb_capability;
 mod runsettings;
 
 use std::path::{Path, PathBuf};
@@ -88,7 +88,7 @@ impl ProjectInfo {
         for file in msbuild_chain(project.as_path()) {
             read_facts(&file, &mut facts)?;
         }
-        let capabilities: Vec<Capability> = capability::capabilities_of(&facts);
+        let capabilities: Vec<Capability> = bb_capability::capabilities_of(&facts);
         let test_framework: bool = capabilities.iter().any(|c: &Capability| {
             matches!(
                 c,
