@@ -12,11 +12,16 @@ bb-text.workspace = true
 bb-syntax.workspace = true
 thiserror.workspace = true
 bb-ui.workspace = true
+bb-dotnet.workspace = true
+bb-mcp.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
 gpui = { workspace = true, features = ["profiler"] }
 gpui_platform.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
+gpui = { workspace = true, features = ["test-support"] }
 
 [lints]
 workspace = true

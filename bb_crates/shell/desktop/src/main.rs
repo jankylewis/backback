@@ -3,8 +3,10 @@
 #[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
 mod editor;
+mod harness;
 #[path = "bb_explorer/icons.rs"]
 mod icons;
+#[path = "launch/latency.rs"]
 mod latency;
 mod launch;
 #[path = "bb_explorer/navigation.rs"]
@@ -26,6 +28,7 @@ use gpui::{
     div, prelude::*, rgb, AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton,
     Render, ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
 };
+use harness::HarnessVisibility;
 
 use navigation::{MoveDown, MoveLeft, MoveRight, MoveUp, Open};
 
@@ -34,6 +37,9 @@ struct ExplorerView {
     selected: usize,
     focus: FocusHandle,
     editor_focus: FocusHandle,
+    harness_focus: FocusHandle,
+    harness: harness::Harness,
+    show_harness: HarnessVisibility,
     tabs: Tabs,
     keypresses: usize,
     latency_before: Option<gpui::profiler::InputLatencySnapshot>,
@@ -52,6 +58,14 @@ struct ExplorerView {
 }
 
 impl ExplorerView {
+    fn harness_key_down(
+        &mut self,
+        event: &gpui::KeyDownEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        harness::view_key_down(self, event, window, cx);
+    }
     fn editor_key_down(
         &mut self,
         event: &gpui::KeyDownEvent,
@@ -198,6 +212,7 @@ impl Render for ExplorerView {
             .bg(color(self.theme.bg))
             .on_action(cx.listener(ExplorerView::toggle_theme))
             .on_action(cx.listener(ExplorerView::follow_appearance))
+            .on_action(cx.listener(ExplorerView::toggle_harness))
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
@@ -217,6 +232,10 @@ impl Render for ExplorerView {
                         cx,
                     ))
                     .child(editor::status_bar(self.status.as_deref(), self.theme)),
+            )
+            .when(
+                matches!(self.show_harness, HarnessVisibility::Visible),
+                |element: gpui::Div| element.child(harness::panel(self, cx)),
             )
     }
 }

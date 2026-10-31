@@ -5,7 +5,7 @@
 - MCP fixture: one warm-up, then five `Greet` calls. Final cold start through `tools/list`: 1,309 ms. Warm call p50: 135 µs.
 - Earlier diagnostic run before log-stream fix: 1,650 ms cold, 172 µs warm p50.
 - No earlier MCP baseline exists, so no MCP regression percentage can be verified.
-- Fixed set: release `bb bench /Users/vinh.tranmodec.com/Documents/se/dna_engineering_dx/MbTx/MbTx.slnx --runs 5`.
+- Fixed set: release `bb bench <MbTx>/MbTx.slnx --runs 5`.
 - Read-only scan of MbTx; no real MCP server started.
 
 | Item | BBEOD01 noisy baseline | BBEOD06 noisy median | Delta |

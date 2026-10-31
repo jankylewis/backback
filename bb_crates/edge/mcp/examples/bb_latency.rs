@@ -9,7 +9,7 @@ use serde_json::json;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let project: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../fixtures/_Harness/McpServer/_McpServer.csproj");
+        .join("../../shell/desktop/fixtures/_Harness/McpServer/_McpServer.csproj");
     let started: Instant = Instant::now();
     let mut session: Session = Session::start(&project).await?;
     let tools: Vec<bb_mcp::Tool> = session.tools().await?;

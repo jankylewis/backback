@@ -1,12 +1,26 @@
+mod bb_menu;
+use bb_menu::menus;
+#[path = "config/bb_path.rs"]
+mod path;
+use path::split_argument;
+#[path = "config/theme.rs"]
+mod theme;
 use crate::editor::{Quit, Tabs};
-use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open};
+use crate::harness::Harness;
+use crate::{ExplorerView, HarnessVisibility, MoveDown, MoveLeft, MoveRight, MoveUp, Open};
 use bb_explorer::Explorer;
 use bb_ui::bb_theme::{Theme, ThemeKind};
 use gpui::{
-    px, size, App, AppContext, Bounds, FocusHandle, KeyBinding, Menu, MenuItem, Window,
-    WindowAppearance, WindowBounds, WindowOptions,
+    px, size, App, AppContext, Bounds, FocusHandle, KeyBinding, Window, WindowAppearance,
+    WindowBounds, WindowOptions,
 };
+use std::time::Duration;
 use std::{path::PathBuf, time::Instant};
+use theme::resolved_theme;
+
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct ToggleHarness;
 
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
 #[action(namespace = backback)]
@@ -18,17 +32,7 @@ pub(crate) struct FollowAppearance;
 
 pub(crate) fn launch() {
     let start: Instant = Instant::now();
-    let argument: PathBuf = std::env::args_os()
-        .nth(1)
-        .map_or_else(|| PathBuf::from("."), PathBuf::from);
-    let (root, file): (PathBuf, Option<PathBuf>) = split_argument(argument);
-    let tree: Explorer = match Explorer::open(&root) {
-        Ok(tree) => tree,
-        Err(error) => {
-            eprintln!("{error}");
-            std::process::exit(1);
-        }
-    };
+    let (tree, harness, file): (Explorer, Harness, Option<PathBuf>) = initial_state();
     gpui_platform::application().run(move |cx: &mut App| {
         bind_keys(cx);
         cx.set_menus(menus());
@@ -39,11 +43,15 @@ pub(crate) fn launch() {
                 ..Default::default()
             },
             |window: &mut Window, cx: &mut App| {
-                let view: gpui::Entity<ExplorerView> = new_view(tree, window.appearance(), cx);
+                let view: gpui::Entity<ExplorerView> =
+                    new_view(tree, harness, window.appearance(), cx);
                 let focus: FocusHandle = view.read(cx).focus.clone();
                 window.focus(&focus, cx);
                 install_close_guard(window, &view, cx);
                 install_appearance_observer(window, &view, cx);
+                install_harness_poll(window, &view, cx);
+                #[cfg(debug_assertions)]
+                crate::harness::demo::start(&view, window, cx);
                 if let Some(file) = &file {
                     view.update(
                         cx,
@@ -66,31 +74,31 @@ pub(crate) fn launch() {
     });
 }
 
-/// A file argument opens its folder in the Explorer and the file in a tab.
-fn split_argument(argument: PathBuf) -> (PathBuf, Option<PathBuf>) {
-    if argument.is_file() {
-        let folder: PathBuf = argument
-            .parent()
-            .filter(|parent: &&std::path::Path| !parent.as_os_str().is_empty())
-            .map_or_else(|| PathBuf::from("."), std::path::Path::to_path_buf);
-        (folder, Some(argument))
-    } else {
-        (argument, None)
-    }
+fn initial_state() -> (Explorer, Harness, Option<PathBuf>) {
+    let argument: PathBuf = std::env::args_os()
+        .nth(1)
+        .map_or_else(|| PathBuf::from("."), PathBuf::from);
+    let (root, file): (PathBuf, Option<PathBuf>) = split_argument(argument);
+    let tree: Explorer = match Explorer::open(&root) {
+        Ok(tree) => tree,
+        Err(error) => {
+            eprintln!("{error}");
+            std::process::exit(1);
+        }
+    };
+    let harness: Harness = match Harness::load(&root) {
+        Ok(harness) => harness,
+        Err(error) => {
+            eprintln!("{error}");
+            Harness::empty()
+        }
+    };
+    (tree, harness, file)
 }
 
-fn menus() -> Vec<Menu> {
-    vec![
-        Menu::new("Backback").items([MenuItem::action("Quit Backback", Quit)]),
-        Menu::new("View").items([
-            MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
-            MenuItem::action("Follow macOS Appearance", FollowAppearance),
-        ]),
-    ]
-}
-
-fn new_view(
+pub(crate) fn new_view(
     tree: Explorer,
+    harness: Harness,
     appearance: WindowAppearance,
     cx: &mut App,
 ) -> gpui::Entity<ExplorerView> {
@@ -99,6 +107,9 @@ fn new_view(
         selected: 0,
         focus: cx.focus_handle(),
         editor_focus: cx.focus_handle(),
+        harness_focus: cx.focus_handle(),
+        harness,
+        show_harness: HarnessVisibility::Visible,
         tabs: Tabs::new(),
         keypresses: 0,
         latency_before: None,
@@ -115,14 +126,6 @@ fn new_view(
         explorer_scroll: gpui::UniformListScrollHandle::new(),
         quit_after_close: false,
     })
-}
-
-fn resolved_theme(override_kind: Option<ThemeKind>, appearance: Option<WindowAppearance>) -> Theme {
-    let system_kind: Option<ThemeKind> = appearance.map(|value: WindowAppearance| match value {
-        WindowAppearance::Light | WindowAppearance::VibrantLight => ThemeKind::Light,
-        WindowAppearance::Dark | WindowAppearance::VibrantDark => ThemeKind::Dark,
-    });
-    Theme::for_kind(override_kind.or(system_kind))
 }
 
 fn install_appearance_observer(window: &Window, view: &gpui::Entity<ExplorerView>, cx: &mut App) {
@@ -147,6 +150,18 @@ fn install_appearance_observer(window: &Window, view: &gpui::Entity<ExplorerView
 }
 
 impl ExplorerView {
+    pub(crate) fn toggle_harness(
+        &mut self,
+        _: &ToggleHarness,
+        _: &mut Window,
+        cx: &mut gpui::Context<Self>,
+    ) {
+        self.show_harness = match self.show_harness {
+            HarnessVisibility::Hidden => HarnessVisibility::Visible,
+            HarnessVisibility::Visible => HarnessVisibility::Hidden,
+        };
+        cx.notify();
+    }
     pub(crate) fn toggle_theme(
         &mut self,
         _: &ToggleTheme,
@@ -179,6 +194,31 @@ impl ExplorerView {
     }
 }
 
+fn install_harness_poll(window: &mut Window, view: &gpui::Entity<ExplorerView>, cx: &mut App) {
+    let weak: gpui::WeakEntity<ExplorerView> = view.downgrade();
+    view.update(
+        cx,
+        |_: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            cx.spawn_in(
+                window,
+                async move |_: gpui::WeakEntity<ExplorerView>,
+                            cx: &mut gpui::AsyncWindowContext| {
+                    loop {
+                        cx.background_executor()
+                            .timer(Duration::from_millis(100))
+                            .await;
+                        if weak.update_in(cx, |state: &mut ExplorerView, _: &mut Window,
+                    cx: &mut gpui::Context<ExplorerView>| {
+                    if state.harness.poll() { cx.notify(); }
+                }).is_err() { break; }
+                    }
+                },
+            )
+            .detach();
+        },
+    );
+}
+
 fn install_close_guard(window: &Window, view: &gpui::Entity<ExplorerView>, cx: &App) {
     let close_view: gpui::Entity<ExplorerView> = view.clone();
     window.on_window_should_close(cx, move |_: &mut Window, cx: &mut App| {
@@ -203,45 +243,5 @@ fn bind_keys(cx: &mut App) {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_file_argument_opens_its_folder_and_the_file() {
-        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let (folder, file): (PathBuf, PathBuf) =
-            (dir.path().to_path_buf(), dir.path().join("A.cs"));
-        std::fs::write(&file, "class A {}").unwrap();
-        assert_eq!(split_argument(file.clone()), (folder.clone(), Some(file)));
-        assert_eq!(split_argument(folder.clone()), (folder, None));
-    }
-
-    #[test]
-    fn absent_preference_is_dark_and_system_light_is_live_source() {
-        assert_eq!(resolved_theme(None, None).kind, ThemeKind::Dark);
-        assert_eq!(
-            resolved_theme(None, Some(WindowAppearance::Light)).kind,
-            ThemeKind::Light
-        );
-        assert_eq!(
-            resolved_theme(None, Some(WindowAppearance::Dark)).kind,
-            ThemeKind::Dark
-        );
-        assert_eq!(
-            resolved_theme(Some(ThemeKind::Dark), Some(WindowAppearance::Light)).kind,
-            ThemeKind::Dark
-        );
-    }
-
-    #[test]
-    fn view_is_a_separate_mac_menu_after_application_menu() {
-        let configured: Vec<Menu> = menus();
-        assert_eq!(configured[0].name.as_ref(), "Backback");
-        assert!(matches!(
-            configured[0].items.first(),
-            Some(MenuItem::Action { name, .. }) if name.as_ref() == "Quit Backback"
-        ));
-        assert_eq!(configured[1].name.as_ref(), "View");
-        assert_eq!(configured[1].items.len(), 2);
-    }
-}
+#[path = "tests.rs"]
+mod bb_tests;

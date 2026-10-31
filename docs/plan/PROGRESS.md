@@ -1,4 +1,12 @@
-# BBEOD02 progress
+# Backback progress
+
+## BBEOD06-B ready for review (backback_2, 2026-11-01)
+
+- Branch `bbeod-06-gui`, claimed worktree `backback_wt/bbeod-06-gui`.
+- Engine merge `123d9e2`; fixture path, plan text, and stale fixture consumers resolved.
+- Full gate: fmt, Clippy, 136 tests, deny, and `bb audit ..` green.
+- Window-ID screenshots show stopped and Greet result. Quiet median-of-five bench remains unverified at load1 4.97.
+- Hub X path from `AGENTS.md` is absent on disk; advisory rules apply.
 
 - Hygiene-ctx (`backback_2`, 2026-11-01): moved five tracked ctx summaries
   unchanged to the external rawctxhub; removed the repo copies and added an
@@ -9,14 +17,14 @@
 - BBEOD02-FIX (backback_1, 2026-11-01): fixes for verification bugs B1-B3.
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
   -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),
-  status bar, natural sort, Quit. Evidence: `bench/BBEOD02_FIX.md`,
+  status bar, natural sort, Quit. Evidence: `bench/editor/BBEOD02_FIX.md`,
   `readback/BBEOD02_FIX/`. Open: FS watcher, 1 GB RSS on 20 MB file.
 
 - BBEOD02-B follow-up opened after acceptance: add light theme that follows
   macOS appearance, live View toggle, and screenshots of both modes.
 - One rapid-typing performance round remains: compare one change against the
   accepted 500-key release baseline on the same 5,000-line fixture. Keep only
-  a faster, green change; record the result in `docs/plan/bench/EDITOR.md`.
+  a faster, green change; record the result in `docs/plan/bench/editor/EDITOR.md`.
 - State first: branch `bbeod-02-editor`, last accepted SHA `7c35450`, no push.
 - Theme live readback passed: separate View menu, light toggle, return to the
   current macOS dark appearance through Follow, no restart; both PNGs saved.
@@ -38,7 +46,7 @@
   above the 16 ms budget on this configuration; quiet-host check remains open.
 - Three live editor screenshots were saved and inspected under
   `docs/plan/readback/BBEOD02/EDITOR/`.
-- Editor evidence: `docs/plan/bench/EDITOR.md` and
+- Editor evidence: `docs/plan/bench/editor/EDITOR.md` and
   `docs/plan/readback/BBEOD02/EDITOR/bb_EDITOR.md`.
 
 - BBEOD02-B start: merged `origin/master` into `bbeod-02-editor`; resolved four
@@ -82,17 +90,8 @@
 
 - BBEOD01-E: renamed plan marker to `bb_roadmap/`; independent frozen worktree gate pending.
 
-## BBEOD06-A in progress (backback_2, 2026-11-01)
+## BBEOD06-A engine (backback_2, 2026-11-01)
 
-- Branch: `bbeod-06-mcp`, based on `978f75f`; owned worktree: `backback_wt/bbeod-06-mcp`.
-- Scope: discover MCP projects, fixture-only stdio process/client, CLI, tests, readback, bench.
-- Risk families: absent projects and invalid arguments (typed errors); mixed project/solution paths (distinct path types); JSON-RPC mismatched IDs and malformed frames (envelope validation tests); child exit and stuck calls (deadlines and process-tree stop); shared process state (single owner); secret-bearing stderr (do not persist live server logs).
-- Initial discovery: `_Harness/McpServer` had a project and Greet tool, but no executable entry point.
-- Implemented: MCP discovery, owned stdio client and process, CLI, fixture server, crash and orphan tests.
-- Final gate observed: fmt, clippy, 90 tests passed, deny checks passed; `bb audit ..` clean.
-- Readback: MbTx 0, NmcTx 1, SI 1 MCP projects; no real MCP launch.
-- Final fixture timing: cold start to tools list 1,309 ms; warm call p50 135 µs.
-- Log defect: startup stderr was lost by a late subscriber; failing test first, then fixed.
-- Benchmark: final-tree fixed set ran under load1 11.28; quiet re-run remains open.
-- `cargo kani` and `cargo mutants` are unavailable on this seat; the project gate does not include them.
-- Handoff: implementation and gate are ready on `bbeod-06-mcp`. Quiet re-benchmark remains open because load1 stayed above 3.
+- `bbeod-06-mcp` merged into BBEOD06-B. Discovery, stdio client, CLI, fixture, tests, and guards are in the merge.
+- Engine gate: fmt, Clippy, 90 tests, deny; `bb audit ..` clean. Fixture cold tools 1,309 ms; warm call p50 135 µs.
+- Readback: MbTx 0, NmcTx 1, SI 1 MCP projects; no real MCP launch. Quiet benchmark remains open.

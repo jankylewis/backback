@@ -177,7 +177,7 @@ mod tests {
         sources(&root, &mut files);
         let stderr_only: Vec<String> = files
             .iter()
-            .filter(|path: &&std::path::PathBuf| !path.ends_with("launch.rs"))
+            .filter(|path: &&std::path::PathBuf| !path.ends_with("launch/mod.rs"))
             .filter(|path: &&std::path::PathBuf| {
                 std::fs::read_to_string(path)
                     .unwrap()

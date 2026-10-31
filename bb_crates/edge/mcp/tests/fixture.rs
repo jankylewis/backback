@@ -9,7 +9,7 @@ use serde_json::json;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../fixtures/_Harness/McpServer/_McpServer.csproj")
+        .join("../../shell/desktop/fixtures/_Harness/McpServer/_McpServer.csproj")
 }
 
 fn group_alive(pid: u32) -> bool {
