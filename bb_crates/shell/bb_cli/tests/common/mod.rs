@@ -27,7 +27,7 @@ impl Run {
 
 /// The `_Harness` fixture solution folder.
 pub fn harness() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/_Harness")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../desktop/fixtures/_Harness")
 }
 
 /// Run `bb` with `args`; kill it and fail the test after [`DEADLINE`].

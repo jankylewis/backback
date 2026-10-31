@@ -1,0 +1,18 @@
+[package]
+name = "bb-explorer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Lazy C# solution and folder explorer model"
+
+[dependencies]
+bb-dotnet.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+tempfile = "3"
+
+[lints]
+workspace = true

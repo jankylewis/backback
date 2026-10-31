@@ -23,6 +23,16 @@ crates.io), iced (stable-ish, wgpu, cosmic-text), Floem (Lapce; moved to parley
 **Decision.** GPUI pinned by git revision for M1, isolated in `bb-ui`'s
 `Frontend` trait; core crates stay GUI-free. `gpui-component`'s editor is the
 reference for a 200K-line text view.
+**Pin.** `ba63a022c9a22ca66d68ef2a8f0bb9b5b0a9984d` from
+`zed-industries/zed`. This fixes GPUI and `gpui_platform` to one source tree;
+the API changes between upstream revisions. `.deny.toml` permits that git
+source only for this pin.
+**Shader build.** Enable `gpui_platform/runtime_shaders` on macOS because this
+host lacks full Xcode's `metal` compiler. Metal compiles shaders at runtime;
+five fresh MbTx launches after warm-up reached the first frame in
+`146, 151, 152, 157, 156 ms` (median `152 ms`). This total includes runtime
+shader work. The isolated shader overhead cannot be measured here without a
+precompiled-shader build from full Xcode.
 **Consequences.** Breaking upstream changes are absorbed in one crate; `Headless`
 keeps the CLI and tests running without a window.
 **Revisit when.** GPUI 1.0 ships (drop the pin) or its API churn costs more than
