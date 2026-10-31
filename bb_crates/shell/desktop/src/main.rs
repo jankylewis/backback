@@ -1,19 +1,26 @@
 //! macOS desktop shell for the backback Explorer.
 
+#[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
+mod editor;
+#[path = "bb_explorer/icons.rs"]
 mod icons;
+mod latency;
+mod launch;
+#[path = "bb_explorer/navigation.rs"]
 mod navigation;
+#[path = "bb_explorer/tooltip.rs"]
 mod tooltip;
 
-use std::{path::PathBuf, time::Instant};
+use std::path::PathBuf;
 
 use bb_explorer::{Entry, Explorer};
 use bb_row_view::{row, RowState};
 use bb_ui::{bb_theme::DARK, Rgb};
+use editor::Tabs;
 use gpui::{
-    div, prelude::*, px, rgb, size, App, Bounds, Context, FocusHandle, InteractiveElement,
-    IntoElement, KeyBinding, MouseButton, Render, StatefulInteractiveElement, Window, WindowBounds,
-    WindowOptions,
+    div, prelude::*, px, rgb, Context, FocusHandle, InteractiveElement, IntoElement, MouseButton,
+    Render, StatefulInteractiveElement, Window,
 };
 
 /// Select the preceding Explorer row.
@@ -41,11 +48,25 @@ struct ExplorerView {
     tree: Explorer,
     selected: usize,
     focus: FocusHandle,
+    editor_focus: FocusHandle,
+    tabs: Tabs,
+    keypresses: usize,
+    latency_before: Option<gpui::profiler::InputLatencySnapshot>,
+    closing_window: bool,
     panel_width: f32,
     resizing: bool,
 }
 
 impl ExplorerView {
+    fn editor_key_down(
+        &mut self,
+        event: &gpui::KeyDownEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        editor::handle_key(self, event, window, cx);
+    }
+
     fn move_resize(
         &mut self,
         event: &gpui::MouseMoveEvent,
@@ -95,20 +116,32 @@ impl ExplorerView {
         cx.notify();
     }
 
-    fn open(&mut self, _: &Open, _: &mut Window, cx: &mut Context<Self>) {
-        self.open_selected(cx);
+    fn open(&mut self, _: &Open, window: &mut Window, cx: &mut Context<Self>) {
+        self.open_selected(window, cx);
     }
 
-    fn open_selected(&mut self, cx: &mut Context<Self>) {
-        let path: Option<PathBuf> = self
+    fn open_selected(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let row: Option<(PathBuf, bool)> = self
             .tree
             .visible()
             .get(self.selected)
-            .map(|(_, entry): &(usize, &Entry)| entry.path().to_path_buf());
-        if let Some(path) = path {
-            if let Err(error) = self.tree.toggle(&path) {
-                eprintln!("{error}");
+            .map(|(_, entry): &(usize, &Entry)| (entry.path().to_path_buf(), entry.expandable()));
+        if let Some((path, folder)) = row {
+            if folder {
+                if let Err(error) = self.tree.toggle(&path) {
+                    eprintln!("{error}");
+                }
+            } else {
+                self.open_file(&path, window, cx);
             }
+        }
+        cx.notify();
+    }
+
+    fn open_file(&mut self, path: &std::path::Path, window: &mut Window, cx: &mut Context<Self>) {
+        match self.tabs.open(path) {
+            Ok(()) => window.focus(&self.editor_focus, cx),
+            Err(error) => eprintln!("{error}"),
         }
         cx.notify();
     }
@@ -116,54 +149,64 @@ impl ExplorerView {
 
 impl Render for ExplorerView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let rows: Vec<(usize, &Entry)> = self.tree.visible();
         div()
             .size_full()
             .flex()
             .bg(color(DARK.bg))
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
+            .child(explorer_panel(self, cx))
+            .child(resize_edge(cx))
             .child(
                 div()
-                    .id("explorer-panel")
-                    .w(px(self.panel_width))
+                    .flex_1()
                     .h_full()
                     .flex()
                     .flex_col()
-                    .bg(color(DARK.surface))
-                    .overflow_y_scroll()
-                    .key_context("Explorer")
-                    .track_focus(&self.focus)
-                    .on_action(cx.listener(Self::move_up))
-                    .on_action(cx.listener(Self::move_down))
-                    .on_action(cx.listener(Self::move_left))
-                    .on_action(cx.listener(Self::move_right))
-                    .on_action(cx.listener(Self::open))
-                    .child(
-                        div()
-                            .px_3()
-                            .py_2()
-                            .text_color(color(DARK.text))
-                            .child("EXPLORER"),
-                    )
-                    .children(rows.into_iter().enumerate().map(
-                        |(index, (depth, entry)): (usize, (usize, &Entry))| {
-                            row(
-                                index,
-                                depth,
-                                entry,
-                                RowState {
-                                    selected: index == self.selected,
-                                    panel_width: self.panel_width,
-                                },
-                                cx,
-                            )
-                        },
-                    )),
+                    .child(editor::tab_bar(&self.tabs, cx))
+                    .child(editor::editor_body(&self.tabs, &self.editor_focus, cx)),
             )
-            .child(resize_edge(cx))
-            .child(div().flex_1().h_full().child(""))
     }
+}
+
+fn explorer_panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
+    let rows: Vec<(usize, &Entry)> = view.tree.visible();
+    div()
+        .id("explorer-panel")
+        .w(px(view.panel_width))
+        .h_full()
+        .flex()
+        .flex_col()
+        .bg(color(DARK.surface))
+        .overflow_y_scroll()
+        .key_context("Explorer")
+        .track_focus(&view.focus)
+        .on_action(cx.listener(ExplorerView::move_up))
+        .on_action(cx.listener(ExplorerView::move_down))
+        .on_action(cx.listener(ExplorerView::move_left))
+        .on_action(cx.listener(ExplorerView::move_right))
+        .on_action(cx.listener(ExplorerView::open))
+        .child(
+            div()
+                .px_3()
+                .py_2()
+                .text_color(color(DARK.text))
+                .child("EXPLORER"),
+        )
+        .children(rows.into_iter().enumerate().map(
+            |(index, (depth, entry)): (usize, (usize, &Entry))| {
+                row(
+                    index,
+                    depth,
+                    entry,
+                    RowState {
+                        selected: index == view.selected,
+                        panel_width: view.panel_width,
+                    },
+                    cx,
+                )
+            },
+        ))
 }
 
 fn resize_edge(cx: &mut Context<ExplorerView>) -> impl IntoElement {
@@ -182,52 +225,5 @@ fn color(value: Rgb) -> gpui::Rgba {
 }
 
 fn main() {
-    let start: Instant = Instant::now();
-    let path: PathBuf = std::env::args_os()
-        .nth(1)
-        .map_or_else(|| PathBuf::from("."), PathBuf::from);
-    let tree: Explorer = match Explorer::open(&path) {
-        Ok(tree) => tree,
-        Err(error) => {
-            eprintln!("{error}");
-            std::process::exit(1);
-        }
-    };
-    gpui_platform::application().run(move |cx: &mut App| {
-        cx.bind_keys([
-            KeyBinding::new("up", MoveUp, Some("Explorer")),
-            KeyBinding::new("down", MoveDown, Some("Explorer")),
-            KeyBinding::new("left", MoveLeft, Some("Explorer")),
-            KeyBinding::new("right", MoveRight, Some("Explorer")),
-            KeyBinding::new("enter", Open, Some("Explorer")),
-        ]);
-        let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(1000.0), px(700.0)), cx);
-        let result: gpui::Result<gpui::WindowHandle<ExplorerView>> = cx.open_window(
-            WindowOptions {
-                window_bounds: Some(WindowBounds::Windowed(bounds)),
-                ..Default::default()
-            },
-            |window: &mut Window, cx: &mut App| {
-                let view: gpui::Entity<ExplorerView> =
-                    cx.new(|cx: &mut gpui::Context<ExplorerView>| ExplorerView {
-                        tree,
-                        selected: 0,
-                        focus: cx.focus_handle(),
-                        panel_width: 300.0,
-                        resizing: false,
-                    });
-                let focus: FocusHandle = view.read(cx).focus.clone();
-                window.focus(&focus, cx);
-                window.on_next_frame(move |_: &mut Window, _: &mut App| {
-                    eprintln!("first_frame_ms={}", start.elapsed().as_millis());
-                });
-                view
-            },
-        );
-        if let Err(error) = result {
-            eprintln!("{error}");
-            cx.quit();
-        }
-        cx.activate(true);
-    });
+    launch::launch();
 }

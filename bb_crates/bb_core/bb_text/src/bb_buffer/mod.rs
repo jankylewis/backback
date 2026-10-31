@@ -70,6 +70,40 @@ impl Buffer {
         self.rope.to_string()
     }
 
+    /// One char, if the index exists.
+    #[must_use]
+    pub fn char_at(&self, at: CharIdx) -> Option<char> {
+        self.rope.get_char(at.raw())
+    }
+
+    /// Text in a checked char range.
+    #[must_use]
+    pub fn slice(&self, from: CharIdx, to: CharIdx) -> Option<String> {
+        self.rope
+            .get_slice(from.raw()..to.raw())
+            .map(|part: ropey::RopeSlice<'_>| part.to_string())
+    }
+
+    /// One line, including its line break if present.
+    #[must_use]
+    pub fn line(&self, line: usize) -> Option<String> {
+        self.rope
+            .get_line(line)
+            .map(|part: ropey::RopeSlice<'_>| part.to_string())
+    }
+
+    /// Start char index of a line.
+    #[must_use]
+    pub fn line_start_char(&self, line: usize) -> Option<CharIdx> {
+        self.rope.try_line_to_char(line).ok().map(CharIdx::new)
+    }
+
+    /// Line containing a char index.
+    #[must_use]
+    pub fn line_of_char(&self, at: CharIdx) -> Option<usize> {
+        self.rope.try_char_to_line(at.raw()).ok()
+    }
+
     /// Insert `text` at `at`.
     ///
     /// # Errors

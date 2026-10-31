@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use bb_explorer::Entry;
 use bb_ui::bb_theme::DARK;
@@ -13,6 +13,12 @@ pub(crate) struct RowState {
     pub(crate) panel_width: f32,
 }
 
+struct RowAction {
+    index: usize,
+    path: PathBuf,
+    expandable: bool,
+}
+
 pub(crate) fn row(
     index: usize,
     depth: usize,
@@ -20,9 +26,12 @@ pub(crate) fn row(
     state: RowState,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
-    let path: PathBuf = entry.path().to_path_buf();
-    let tooltip_path: String = path.display().to_string();
-    let expandable: bool = entry.expandable();
+    let action: RowAction = RowAction {
+        index,
+        path: entry.path().to_path_buf(),
+        expandable: entry.expandable(),
+    };
+    let tooltip_path: String = action.path.display().to_string();
     let name: String = entry.name().to_owned();
     let text_color: gpui::Rgba = color(if entry.dimmed() {
         DARK.text_dim
@@ -50,9 +59,9 @@ pub(crate) fn row(
         .on_click(cx.listener(
             move |view: &mut ExplorerView,
                   _: &gpui::ClickEvent,
-                  _: &mut Window,
+                  window: &mut Window,
                   cx: &mut Context<ExplorerView>| {
-                activate(view, index, expandable, &path, cx);
+                activate(view, &action, window, cx);
             },
         ))
         .children(layout.guide_offsets.iter().map(|_: &f32| indent_guide()))
@@ -63,16 +72,17 @@ pub(crate) fn row(
 
 fn activate(
     view: &mut ExplorerView,
-    index: usize,
-    expandable: bool,
-    path: &Path,
+    action: &RowAction,
+    window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    view.selected = index;
-    if expandable {
-        if let Err(error) = view.tree.toggle(path) {
+    view.selected = action.index;
+    if action.expandable {
+        if let Err(error) = view.tree.toggle(&action.path) {
             eprintln!("{error}");
         }
+    } else {
+        view.open_file(&action.path, window, cx);
     }
     cx.notify();
 }

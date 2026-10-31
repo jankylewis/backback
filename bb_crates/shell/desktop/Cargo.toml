@@ -8,8 +8,11 @@ description = "macOS desktop window and Explorer for backback"
 
 [dependencies]
 bb-explorer.workspace = true
+bb-text.workspace = true
+bb-syntax.workspace = true
+thiserror.workspace = true
 bb-ui.workspace = true
-gpui.workspace = true
+gpui = { workspace = true, features = ["profiler"] }
 gpui_platform.workspace = true
 
 [dev-dependencies]

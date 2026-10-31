@@ -1,8 +1,24 @@
 # BBEOD02-A progress
 
+- BBEOD02-B editor implemented on `bbeod-02-editor`: rope document, guarded
+  tabs and window close, atomic save, visible-line C# highlighting, and input
+  latency capture from GPUI's input-to-present histogram.
+- Full post-editor gate passed: fmt, clippy, 107 tests, deny. Focused Unicode
+  incremental-reparse and short-line vertical cursor regressions passed.
+- Live fixture, MbTx, and Apex readbacks passed for tab open and rendering;
+  temporary fixture save and dirty window close prompt were verified.
+- Performance remains open: debug p99 124.781 ms, release p99 41.222 ms on
+  the 5,000-line fixture, both above the 16 ms target. Host load was >5.
+- Editor evidence: `docs/plan/bench/EDITOR.md` and
+  `docs/plan/readback/BBEOD02/EDITOR.md`.
+
 - BBEOD02-B start: merged `origin/master` into `bbeod-02-editor`; resolved four
   fixture project rename conflicts in favor of the `_*.csproj` backbone names.
-- Pre-editor full gate is running before tab, text, and syntax work.
+- Pre-editor full gate passed: fmt, clippy, 95 tests, deny. Merge `f99746f`.
+- Editor risk families: path identity (typed paths and tab dedup); encoding loss
+  (BOM/CRLF round-trip test); undo grouping (word-boundary test); stale syntax
+  (edit/reparse span test); cursor bounds (checked rope indices); partial save
+  (same-directory temporary file plus rename and failure tests).
 
 - Seat: `backback_2`; branch: `bbeod-02-editor`.
 - Own worktree: `backback_wt/bbeod-02-editor` (AgentFarm claim held).
