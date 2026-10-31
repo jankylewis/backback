@@ -1,7 +1,7 @@
 use crate::args::Start;
 use crate::editor::{Quit, Tabs};
 use crate::theme::{install_appearance_observer, resolved_theme, FollowAppearance, ToggleTheme};
-use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open};
+use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open, RestartServer};
 use bb_explorer::Explorer;
 use gpui::{
     px, size, App, AppContext, Bounds, FocusHandle, KeyBinding, Menu, MenuItem, Window,
@@ -73,6 +73,7 @@ fn menus() -> Vec<Menu> {
             MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
             MenuItem::action("Follow macOS Appearance", FollowAppearance),
         ]),
+        Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
     ]
 }
 
@@ -143,6 +144,7 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("right", MoveRight, Some("Explorer")),
         KeyBinding::new("enter", Open, Some("Explorer")),
         KeyBinding::new("cmd-q", Quit, None),
+        KeyBinding::new("cmd-shift-r", RestartServer, None),
     ]);
 }
 

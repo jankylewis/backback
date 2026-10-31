@@ -1,6 +1,10 @@
 //! The server thread against the real roslyn-language-server on a copy of
 //! the harness: load progress, sync, answers, stage times.
 
+#[path = "bb_death.rs"]
+mod death;
+mod trace;
+
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -74,6 +78,7 @@ async fn wait_ready(events: &mut UnboundedReceiver<Event>) -> Vec<(usize, usize)
         match next(events).await {
             Event::Progress { loaded, total } => progress.push((loaded, total)),
             Event::Ready { .. } => return progress,
+            Event::Stopped => panic!("server stopped before ready"),
             other @ (Event::Failed(_)
             | Event::Diagnostics { .. }
             | Event::Answer { .. }

@@ -3,6 +3,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
+use std::time::{Duration, SystemTime};
 
 use crate::common::{bb, harness, Run};
 
@@ -58,6 +59,95 @@ fn apex_command() -> String {
 
 fn path_of(relative: &str) -> String {
     built().join(relative).to_string_lossy().into_owned()
+}
+
+#[test]
+fn list_leaves_the_built_solution_tree_unchanged() {
+    let root: PathBuf = std::env::temp_dir().join(format!(
+        "bb-list-trace-{}-{:?}",
+        std::process::id(),
+        std::thread::current().id()
+    ));
+    copy_tree(&harness(), &root);
+    for project in [NUNIT, "XunitPlaywright/_XunitPlaywright.csproj"] {
+        let built: std::process::ExitStatus = std::process::Command::new("dotnet")
+            .args(["build", project, "-c", "Debug", "-nologo", "-v", "q"])
+            .current_dir(&root)
+            .status()
+            .unwrap();
+        assert!(built.success(), "build of {project}");
+    }
+    let marker: PathBuf = root.join("bb-list-marker");
+    std::fs::write(&marker, "before list").unwrap();
+    std::thread::sleep(Duration::from_millis(100));
+    let before: SystemTime = SystemTime::now();
+    let nunit: String = root.join(NUNIT).to_string_lossy().into_owned();
+    let xunit: String = root
+        .join("XunitPlaywright/_XunitPlaywright.csproj")
+        .to_string_lossy()
+        .into_owned();
+    let apex: String = apex_command();
+    for args in [
+        vec!["test", "list", &nunit, "--backend", "dotnet"],
+        vec!["test", "list", &xunit, "--backend", "dotnet"],
+        vec!["test", "list", &nunit, "--apex-command", &apex],
+    ] {
+        let listed: Run = bb(&args);
+        assert_eq!(listed.code, Some(0), "{}", listed.all());
+    }
+    let changed: Vec<PathBuf> = newer_files(&root, before);
+    assert!(changed.is_empty(), "list wrote in solution: {changed:?}");
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn run_puts_runner_output_only_in_temp() {
+    let root: PathBuf = std::env::temp_dir().join(format!(
+        "bb-run-trace-{}-{:?}",
+        std::process::id(),
+        std::thread::current().id()
+    ));
+    copy_tree(&harness(), &root);
+    let built: std::process::ExitStatus = std::process::Command::new("dotnet")
+        .args(["build", NUNIT, "-c", "Debug", "-nologo", "-v", "q"])
+        .current_dir(&root)
+        .status()
+        .unwrap();
+    assert!(built.success());
+    let marker: PathBuf = root.join("bb-run-marker");
+    std::fs::write(&marker, "before run").unwrap();
+    std::thread::sleep(Duration::from_millis(100));
+    let before: SystemTime = SystemTime::now();
+    let project: String = root.join(NUNIT).to_string_lossy().into_owned();
+    let run: Run = bb(&[
+        "test",
+        "run",
+        &project,
+        "--backend",
+        "dotnet",
+        "--category",
+        "Smoke",
+    ]);
+    assert_eq!(run.code, Some(0), "{}", run.all());
+    let changed: Vec<PathBuf> = newer_files(&root, before);
+    assert!(
+        changed.is_empty(),
+        "run output entered solution: {changed:?}"
+    );
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+fn newer_files(root: &Path, before: SystemTime) -> Vec<PathBuf> {
+    let mut changed: Vec<PathBuf> = Vec::new();
+    for entry in std::fs::read_dir(root).unwrap() {
+        let path: PathBuf = entry.unwrap().path();
+        if path.is_dir() {
+            changed.extend(newer_files(&path, before));
+        } else if path.metadata().unwrap().modified().unwrap() > before {
+            changed.push(path);
+        }
+    }
+    changed
 }
 
 #[test]

@@ -158,6 +158,21 @@ fn probe_definition_finds_the_class_in_core_and_times_warm_requests() {
 }
 
 #[test]
+fn probe_leaves_the_solution_tree_unchanged() {
+    let dir: PathBuf = fresh_copy("probe-trace");
+    let before: BTreeMap<PathBuf, (u64, SystemTime)> = snapshot(&dir);
+    let file: String = dir
+        .join("_NUnitApex/GreeterSpec.cs")
+        .to_string_lossy()
+        .into_owned();
+    let run: Run = bb(&["probe", &file, "13:10", "definition"]);
+    let after: BTreeMap<PathBuf, (u64, SystemTime)> = snapshot(&dir);
+    let _gone: std::io::Result<()> = std::fs::remove_dir_all(&dir);
+    assert_eq!(run.code, Some(0), "{}", run.all());
+    assert_eq!(after, before);
+}
+
+#[test]
 fn probe_rename_lists_three_files_and_changes_none() {
     let core: PathBuf = harness().join("Core/Greeter.cs");
     let before: String = std::fs::read_to_string(&core).unwrap();

@@ -61,6 +61,8 @@ impl Ask {
 /// question is always in the server's text when it answers.
 #[derive(Clone, Debug)]
 pub(crate) enum Request {
+    #[cfg(test)]
+    KillForTest,
     /// `didOpen` with the buffer's text.
     Open { path: PathBuf, text: String },
     /// Incremental `didChange` from the buffer's char log.
@@ -130,6 +132,8 @@ impl Stages {
 /// Server thread to UI.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Event {
+    /// The active server closed its connection.
+    Stopped,
     /// Projects loaded so far, of all in the solution.
     Progress { loaded: usize, total: usize },
     /// Every project has loaded.

@@ -12,6 +12,7 @@ use lsp_types::PublishDiagnosticsParams;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tokio::sync::mpsc;
+use tokio::sync::watch;
 
 use crate::model::bb_doc::{DocVersion, OpenDoc};
 use crate::model::{DocPath, DocUri};
@@ -107,6 +108,20 @@ impl Session {
     #[must_use]
     pub fn loaded_in(&self) -> Duration {
         self.loaded_in
+    }
+
+    /// Signal when the server closes its connection.
+    #[must_use]
+    pub fn closed_signal(&self) -> watch::Receiver<bool> {
+        self.client.closed_signal()
+    }
+
+    /// Stop the server child for an instrument test.
+    ///
+    /// # Errors
+    /// The child cannot be stopped within the request deadline.
+    pub async fn stop_child(&mut self) -> Result<(), IntelError> {
+        Ok(self.client.stop_child().await?)
     }
 
     /// The mirror text of an open document.

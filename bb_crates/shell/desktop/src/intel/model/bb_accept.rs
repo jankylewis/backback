@@ -89,6 +89,10 @@ pub(crate) struct Question {
 }
 
 impl InFlight {
+    /// Fail every pending question after the server connection closes.
+    pub(crate) fn clear(&mut self) {
+        self.slots.clear();
+    }
     /// Record a new question; any older one of the same kind is forgotten.
     pub(crate) fn ask(&mut self, question: Question) -> Ticket {
         self.next = self.next.saturating_add(1);

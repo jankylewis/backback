@@ -5,11 +5,14 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use bb_intel::{Config, DocPath, DocUri, IntelError, Location, Session, Span};
+use bb_intel::{Config, DocPath, IntelError, Session, Span};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
+mod bb_helpers;
+
 use super::progress::ProgressLog;
-use super::protocol::{Answer, Ask, Event, Place, Request, Stages, Ticket};
+use super::protocol::{Answer, Ask, Event, Request, Stages, Ticket};
+use bb_helpers::{doc, places, send};
 
 /// How long the request queue must stay quiet before changed documents get
 /// their diagnostics pulled again.
@@ -60,7 +63,22 @@ async fn serve(
         },
     );
     let mut changed: BTreeSet<PathBuf> = BTreeSet::new();
-    while let Some(request) = next(&mut requests, &mut session, &mut changed, events).await {
+    let mut closed: tokio::sync::watch::Receiver<bool> = session.closed_signal();
+    loop {
+        if *closed.borrow() {
+            send(events, Event::Stopped);
+            return;
+        }
+        let request: Option<Request> = tokio::select! {
+            request = next(&mut requests, &mut session, &mut changed, events) => request,
+            changed = closed.changed() => {
+                if changed.is_ok() { send(events, Event::Stopped); }
+                return;
+            }
+        };
+        let Some(request): Option<Request> = request else {
+            break;
+        };
         handle(&mut session, request, &mut changed, events).await;
     }
     // The UI is gone; a failed shutdown only leaves a dead server behind.
@@ -95,6 +113,12 @@ async fn handle(
     events: &UnboundedSender<Event>,
 ) {
     match request {
+        #[cfg(test)]
+        Request::KillForTest => {
+            if let Err(error) = session.stop_child().await {
+                send(events, Event::SyncFailed(error.to_string()));
+            }
+        }
         Request::Open { path, text } => {
             let opened: Result<Vec<bb_intel::Diagnostic>, IntelError> = match doc(&path) {
                 Ok(at) => session.open_text(&at, &text).await,
@@ -205,40 +229,4 @@ async fn ask_server(session: &Session, at: &DocPath, ask: Ask) -> Result<Answer,
                 .await?,
         ),
     })
-}
-
-/// Each location with its line: from the server's mirror when the document
-/// is open (it may hold unsaved text), else read from disk without blocking.
-async fn places(session: &Session, found: Vec<Location>) -> Vec<Place> {
-    let mut out: Vec<Place> = Vec::with_capacity(found.len());
-    for location in found {
-        let text: Option<String> = match &location.uri {
-            DocUri::File(path) => match session.text(path) {
-                Some(open) => Some(open),
-                None => tokio::fs::read_to_string(path.as_path()).await.ok(),
-            },
-            DocUri::Virtual(_) => None,
-        };
-        let preview: String = text
-            .and_then(|all: String| line_of(&all, location.span.start.line))
-            .unwrap_or_default();
-        out.push(Place { location, preview });
-    }
-    out
-}
-
-fn line_of(text: &str, line: u32) -> Option<String> {
-    let index: usize = usize::try_from(line).ok()?;
-    text.lines()
-        .nth(index)
-        .map(|found: &str| found.trim().to_owned())
-}
-
-fn doc(path: &Path) -> Result<DocPath, IntelError> {
-    DocPath::new(path.to_path_buf())
-}
-
-fn send(events: &UnboundedSender<Event>, event: Event) {
-    // A closed receiver means the window is gone; nothing is left to tell.
-    let _sent: Result<(), tokio::sync::mpsc::error::SendError<Event>> = events.send(event);
 }

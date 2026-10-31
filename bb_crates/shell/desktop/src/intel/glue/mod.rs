@@ -23,6 +23,7 @@ use crate::ExplorerView;
 pub(crate) use answers::apply_rename;
 pub(crate) use answers::{jump, opened};
 pub(crate) use asks::{hover_move, word_start};
+pub(crate) use bb_keys::RestartServer;
 
 /// Start the server for the workspace's solution, if it has one, and pump
 /// its events into the window.
@@ -37,6 +38,44 @@ pub(crate) fn connect(
     };
     let (link, events): (Link, UnboundedReceiver<Event>) = bb_worker::start(&solution);
     attach(view, link, events, window, cx);
+}
+
+/// Relaunch Roslyn and replay the current text of every open tab.
+pub(crate) fn restart(
+    view: &mut ExplorerView,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    if !matches!(
+        view.intel.status,
+        LoadStatus::Stopped | LoadStatus::Failed(_)
+    ) {
+        return;
+    }
+    view.intel.in_flight.clear();
+    view.intel.dismiss();
+    connect(view, window, cx);
+    resync_open(view);
+    cx.notify();
+}
+
+fn resync_open(view: &mut ExplorerView) {
+    let _events: Vec<TabEvent> = view.tabs.take_events();
+    let opens: Vec<Request> = view
+        .tabs
+        .items_mut()
+        .iter_mut()
+        .map(|tab: &mut Tab| {
+            let _edits: Vec<CharEdit> = tab.document.take_char_edits();
+            Request::Open {
+                path: tab.path.clone(),
+                text: tab.document.text(),
+            }
+        })
+        .collect();
+    for open in opens {
+        send(view, open);
+    }
 }
 
 /// Use `link` for requests and deliver `events` to the window in order.
@@ -136,6 +175,10 @@ pub(crate) fn on_event(
     cx: &mut Context<ExplorerView>,
 ) {
     match event {
+        Event::Stopped => {
+            view.link = None;
+            view.intel.server_stopped();
+        }
         Event::Progress { loaded, total } => view.intel.status.progress(loaded, total),
         Event::Ready { took } => {
             view.intel.status = LoadStatus::Ready;

@@ -3,6 +3,7 @@
 
 mod bb_vstest;
 mod mtp;
+pub(super) mod shadow;
 
 use std::path::{Path, PathBuf};
 

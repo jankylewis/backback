@@ -25,7 +25,7 @@ Failing-first tests (each failed on `fba483d` code, passes now):
 `files_sort_by_number_value_not_by_text`,
 `every_window_error_reaches_the_status_bar_not_only_stderr` (9 sites at HEAD).
 B2 and B3 are performance defects: their failing check is the bench in
-`docs/plan/bench/BBEOD02_FIX.md` (before 244 ms p99 per key, 439 ms frame).
+`docs/plan/bench/BBEOD02/BBEOD02_FIX.md` (before 244 ms p99 per key, 439 ms frame).
 
 ## Families and guards
 

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use bb_dotnet::ProjectPath;
 
 use super::DotnetBackend;
-use crate::backend::{project_name, Call, Finished, TempDir};
+use crate::backend::{project_name, shadow, Call, Finished, TempDir};
 use crate::bb_engine::Selection;
 use crate::model::{Fqn, SpecList};
 use crate::parse::parse_fqn_lines;
@@ -22,9 +22,10 @@ pub(super) async fn list(
     assembly: PathBuf,
 ) -> Result<SpecList, TestkitError> {
     let folder: TempDir = TempDir::new()?;
+    let safe_assembly: PathBuf = shadow::assembly(&assembly, &folder)?;
     let target: PathBuf = folder.path().join("tests.txt");
-    let done: Finished = Call::new(backend.sdk.host(), backend.workspace.root())
-        .args(["vstest".into(), assembly.as_os_str().to_owned()])
+    let done: Finished = Call::new(backend.sdk.host(), folder.path())
+        .args(["vstest".into(), safe_assembly.as_os_str().to_owned()])
         .args([
             "--ListFullyQualifiedTests".to_owned(),
             format!("--ListTestsTargetPath:{}", target.display()),

@@ -4,6 +4,7 @@
 mod apex;
 mod bb_proc;
 mod dotnet;
+use dotnet::shadow;
 mod tree;
 
 pub use apex::{ApexBackend, DebugHost};

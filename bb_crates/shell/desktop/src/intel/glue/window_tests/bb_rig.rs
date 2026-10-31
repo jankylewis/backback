@@ -98,7 +98,10 @@ impl Rig {
             .rev()
             .find_map(|r: Request| match r {
                 Request::Ask { ticket, ask, .. } => Some((ticket, ask)),
-                Request::Open { .. } | Request::Change { .. } | Request::Close { .. } => None,
+                Request::KillForTest
+                | Request::Open { .. }
+                | Request::Change { .. }
+                | Request::Close { .. } => None,
             })
             .expect("a question was sent")
     }

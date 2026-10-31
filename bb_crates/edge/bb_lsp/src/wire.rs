@@ -3,9 +3,9 @@
 //! other server request with `null`, forward notifications.
 
 use serde_json::{json, Value};
-use tokio::io::AsyncReadExt;
-use tokio::process::ChildStdout;
-use tokio::sync::{mpsc, oneshot};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::process::{ChildStdin, ChildStdout};
+use tokio::sync::{mpsc, oneshot, watch};
 
 use bb_framing::{Decoder, FrameError};
 
@@ -19,6 +19,7 @@ pub(crate) struct Reader {
     pub(crate) incoming: mpsc::Sender<Incoming>,
     pub(crate) outgoing: mpsc::Sender<Vec<u8>>,
     pub(crate) settings: Arc<Settings>,
+    pub(crate) closed: watch::Sender<bool>,
 }
 
 impl Reader {
@@ -40,6 +41,7 @@ impl Reader {
                 let _dropped: Result<(), Result<Value, LspError>> = tx.send(Err(LspError::Closed));
             }
         }
+        self.closed.send_replace(true);
     }
 
     async fn drain(&self, decoder: &mut Decoder) {
@@ -97,6 +99,14 @@ impl Reader {
         };
         if let Some(tx) = waiter {
             let _dropped: Result<(), Result<Value, LspError>> = tx.send(outcome);
+        }
+    }
+}
+
+pub(crate) async fn write_loop(mut stdin: ChildStdin, mut rx: mpsc::Receiver<Vec<u8>>) {
+    while let Some(bytes) = rx.recv().await {
+        if stdin.write_all(&bytes).await.is_err() {
+            break;
         }
     }
 }

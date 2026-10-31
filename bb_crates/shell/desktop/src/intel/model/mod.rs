@@ -26,6 +26,8 @@ pub(crate) enum LoadStatus {
     Loading { loaded: usize, total: usize },
     /// Every project loaded.
     Ready,
+    /// The active server connection closed.
+    Stopped,
     /// The server failed; the text says why.
     Failed(String),
 }
@@ -38,7 +40,7 @@ impl LoadStatus {
     pub(crate) fn progress(&mut self, loaded: usize, total: usize) {
         match self {
             Self::Loading { .. } => *self = Self::Loading { loaded, total },
-            Self::NoSolution | Self::Ready | Self::Failed(_) => {}
+            Self::NoSolution | Self::Ready | Self::Stopped | Self::Failed(_) => {}
         }
     }
 
@@ -48,6 +50,7 @@ impl LoadStatus {
             Self::NoSolution => String::from("No solution"),
             Self::Loading { loaded, total } => format!("Loading {loaded}/{total} projects"),
             Self::Ready => String::from("Ready"),
+            Self::Stopped => String::from("C# server stopped — Restart"),
             Self::Failed(reason) => format!("C# server failed: {reason}"),
         }
     }
@@ -148,6 +151,16 @@ impl IntelModel {
             rename_asked: None,
             hover_at: (0.0, 0.0),
         }
+    }
+
+    /// Fail all questions and clear stale server-owned UI state.
+    pub(crate) fn server_stopped(&mut self) {
+        self.status = LoadStatus::Stopped;
+        self.in_flight.clear();
+        self.dismiss();
+        self.references = None;
+        self.jump = None;
+        self.undrawn = None;
     }
 
     /// Keep the newest diagnostics of one document.

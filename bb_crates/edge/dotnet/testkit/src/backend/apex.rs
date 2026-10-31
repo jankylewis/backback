@@ -1,6 +1,6 @@
 //! The Apex CLI in IDE mode, as the Apex Testkit extension drives it.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use bb_dotnet::{ProjectPath, Sdk};
@@ -8,7 +8,7 @@ use tokio::io::{AsyncBufReadExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdout};
 
 use super::tree::stop_tree;
-use super::{build, Call, Finished, Workspace};
+use super::{build, shadow, Call, Finished, TempDir, Workspace};
 use crate::bb_engine::{Deadlines, Selection, TestBackend};
 use crate::model::{Fqn, SpecList};
 use crate::parse::{parse_apex_list, parse_host_pid, ApexList, ApexSettings, CommandLine, HostPid};
@@ -156,15 +156,19 @@ impl TestBackend for ApexBackend {
     }
 
     async fn list(&self, project: &ProjectPath) -> Result<SpecList, TestkitError> {
+        let folder: TempDir = TempDir::new()?;
+        let safe_project: PathBuf = shadow::project(project.as_path(), &folder)?;
         let done: Finished = self
-            .base(project)
+            .base(&ProjectPath::from_path(safe_project.clone()))
             .args(["--list", "--json", "--no-build"])
             .discover(self.deadlines.list)
             .await?;
         let list: ApexList = parse_apex_list(&done.stdout)?;
+        let original_assembly: PathBuf =
+            shadow::original_assembly(project.as_path(), &safe_project, &list.assembly)?;
         Ok(SpecList {
             project: list.project,
-            assembly: list.assembly,
+            assembly: original_assembly,
             specs: list.specs,
             elapsed: done.elapsed,
         })

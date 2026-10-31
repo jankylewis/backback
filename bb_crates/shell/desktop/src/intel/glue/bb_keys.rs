@@ -3,12 +3,27 @@
 //! edit to keep the completion list in step with the text.
 
 use bb_text::{CharIdx, Document};
-use gpui::{KeyDownEvent, Keystroke};
+use gpui::{Context, KeyDownEvent, Keystroke, Window};
 
 use super::asks;
 use crate::intel::bb_worker::protocol::Ask;
 use crate::intel::model::popups::CompletionPopup;
 use crate::ExplorerView;
+
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct RestartServer;
+
+impl ExplorerView {
+    pub(crate) fn restart_server(
+        &mut self,
+        _: &RestartServer,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        super::restart(self, window, cx);
+    }
+}
 
 /// Handle a key meant for a popup or an intel command.
 pub(crate) fn key(view: &mut ExplorerView, event: &KeyDownEvent) -> bool {

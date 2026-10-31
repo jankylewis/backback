@@ -1,8 +1,15 @@
 # BBEOD02 progress
 
+- BBEOD03-FIX (backback_2, 2026-11-01): claimed `backback_wt/bbeod-03-gui`;
+  merged `origin/master` at `c07f7bf`. Discovery now uses temp shadow output;
+  real child death yields Stopped within 1 s and restart answers completion.
+  Gate: fmt, Clippy, 224 tests, deny, `bb audit` clean. Records:
+  `readback/BBEOD03/BBEOD03_FIX.md`, `bench/BBEOD03_FIX.md`. Quiet-host
+  timing and the absent GUI test explorer path remain open.
+
 - BBEOD02-MEM (backback_1, 2026-11-01): 20 MB file RSS 1,008 -> 166 MB; the
   holder was the whole-file tree-sitter tree (862 MB). Large files now parse
-  a window around the view. Record: `bench/BBEOD02_FIX.md`.
+  a window around the view. Record: `bench/BBEOD02/BBEOD02_FIX.md`.
 
 - Hygiene-ctx (`backback_2`, 2026-11-01): moved five tracked ctx summaries
   unchanged to the external rawctxhub; removed the repo copies and added an
@@ -13,7 +20,7 @@
 - BBEOD02-FIX (backback_1, 2026-11-01): fixes for verification bugs B1-B3.
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
   -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),
-  status bar, natural sort, Quit. Evidence: `bench/BBEOD02_FIX.md`,
+  status bar, natural sort, Quit. Evidence: `bench/BBEOD02/BBEOD02_FIX.md`,
   `readback/BBEOD02_FIX/`. Open: FS watcher, 1 GB RSS on 20 MB file.
 
 - BBEOD02-B follow-up opened after acceptance: add light theme that follows

@@ -4,10 +4,12 @@ use gpui::{div, prelude::*, px, uniform_list, Context, FocusHandle, IntoElement,
 
 use super::bb_tabs::Tab;
 mod bb_line;
+mod status;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
 use bb_line::{line_row, styled_line, LineRow};
+pub(crate) use status::status_bar;
 
 pub(crate) fn tab_bar(
     tabs: &Tabs,
@@ -42,32 +44,6 @@ fn file_name(path: &std::path::Path) -> String {
         || String::from("Untitled"),
         |part: &std::ffi::OsStr| part.to_string_lossy().into_owned(),
     )
-}
-
-/// The foot of the editor: the latest open or save error on the left, the
-/// C# server's load state on the right.
-pub(crate) fn status_bar(status: Option<&str>, intel: &str, theme: Theme) -> impl IntoElement {
-    div()
-        .h(px(24.0))
-        .px_2()
-        .flex()
-        .items_center()
-        .justify_between()
-        .bg(color(theme.overlay))
-        .text_color(color(theme.text))
-        .child(
-            crate::intel::view::one_line(24.0)
-                .flex_1()
-                .min_w(px(0.0))
-                .child(status.unwrap_or_default().to_owned()),
-        )
-        .child(
-            div()
-                .flex_none()
-                .pl_2()
-                .text_color(color(theme.text_dim))
-                .child(intel.to_owned()),
-        )
 }
 
 fn tab_item(

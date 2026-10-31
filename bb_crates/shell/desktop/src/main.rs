@@ -34,6 +34,7 @@ use gpui::{
     ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
 };
 
+use intel::glue::RestartServer;
 use navigation::{MoveDown, MoveLeft, MoveRight, MoveUp, Open};
 
 struct ExplorerView {
@@ -218,6 +219,7 @@ impl Render for ExplorerView {
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
+            .on_action(cx.listener(ExplorerView::restart_server))
             .child(panel::explorer_panel(self, cx))
             .child(panel::resize_edge(self.theme, cx))
             .child(
@@ -234,7 +236,9 @@ impl Render for ExplorerView {
                     .child(editor::status_bar(
                         self.status.as_deref(),
                         &status,
+                        self.intel.status == intel::model::LoadStatus::Stopped,
                         self.theme,
+                        cx,
                     )),
             )
     }
