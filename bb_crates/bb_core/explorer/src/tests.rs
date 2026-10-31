@@ -32,6 +32,93 @@ fn folder_is_sorted_lazily_and_classified() {
 }
 
 #[test]
+fn metadata_is_hidden_and_gitignored_entries_are_dimmed() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    fs::create_dir(dir.path().join(".git")).unwrap();
+    fs::create_dir(dir.path().join("Nested")).unwrap();
+    fs::write(dir.path().join(".DS_Store"), "").unwrap();
+    fs::write(dir.path().join(".gitignore"), "*.tmp\nNested/*.log\n").unwrap();
+    fs::write(dir.path().join("scratch.tmp"), "").unwrap();
+    fs::write(dir.path().join("keep.cs"), "").unwrap();
+    fs::write(dir.path().join("Nested/trace.log"), "").unwrap();
+    let mut tree: Explorer = Explorer::open(dir.path()).unwrap();
+    let root_names: Vec<&str> = tree
+        .root()
+        .children()
+        .iter()
+        .map(crate::Entry::name)
+        .collect();
+    assert!(!root_names.contains(&".DS_Store"));
+    assert!(!root_names.contains(&".git"));
+    let scratch: &crate::Entry = tree
+        .root()
+        .children()
+        .iter()
+        .find(|entry: &&crate::Entry| entry.name() == "scratch.tmp")
+        .unwrap();
+    assert!(scratch.dimmed());
+    let keep: &crate::Entry = tree
+        .root()
+        .children()
+        .iter()
+        .find(|entry: &&crate::Entry| entry.name() == "keep.cs")
+        .unwrap();
+    assert!(!keep.dimmed());
+    tree.toggle(&dir.path().join("Nested")).unwrap();
+    assert!(tree
+        .root()
+        .children()
+        .iter()
+        .find(|entry: &&crate::Entry| entry.name() == "Nested")
+        .unwrap()
+        .children()
+        .iter()
+        .find(|entry: &&crate::Entry| entry.name() == "trace.log")
+        .unwrap()
+        .dimmed());
+}
+
+#[test]
+fn nested_gitignore_negation_controls_dim_state() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    fs::create_dir(dir.path().join("Nested")).unwrap();
+    fs::write(dir.path().join(".gitignore"), "*.log\n").unwrap();
+    fs::write(dir.path().join("Nested/.gitignore"), "!important.log\n").unwrap();
+    fs::write(dir.path().join("Nested/trace.log"), "").unwrap();
+    fs::write(dir.path().join("Nested/important.log"), "").unwrap();
+    let mut tree: Explorer = Explorer::open(dir.path()).unwrap();
+    tree.toggle(&dir.path().join("Nested")).unwrap();
+    let nested: &crate::Entry = tree
+        .root()
+        .children()
+        .iter()
+        .find(|entry: &&crate::Entry| entry.name() == "Nested")
+        .unwrap();
+    let trace: &crate::Entry = nested
+        .children()
+        .iter()
+        .find(|entry: &&crate::Entry| entry.name() == "trace.log")
+        .unwrap();
+    let important: &crate::Entry = nested
+        .children()
+        .iter()
+        .find(|entry: &&crate::Entry| entry.name() == "important.log")
+        .unwrap();
+    assert!(trace.dimmed());
+    assert!(!important.dimmed());
+}
+
+#[test]
+fn opening_subfolder_keeps_parent_gitignore_rules() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    fs::create_dir_all(dir.path().join("Nested/Child")).unwrap();
+    fs::write(dir.path().join(".gitignore"), "*.tmp\n").unwrap();
+    fs::write(dir.path().join("Nested/Child/scratch.tmp"), "").unwrap();
+    let tree: Explorer = Explorer::open(&dir.path().join("Nested/Child")).unwrap();
+    assert!(tree.root().children().first().unwrap().dimmed());
+}
+
+#[test]
 fn slnx_shows_only_projects_and_their_folders() {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     fs::create_dir(dir.path().join("Core")).unwrap();

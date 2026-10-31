@@ -11,3 +11,17 @@
 - First-frame time includes runtime shader compilation. No precompiled-shader
   build exists on this host, so isolated shader overhead is unmeasured.
 - No earlier BBEOD02 baseline exists for a >5% regression comparison.
+
+## Reopened visual review cost
+
+- New model hides `.git` and `.DS_Store`, and checks `.gitignore` rules when
+  deciding whether to dim entries. The reachable MbTx folder count is now 8,712.
+- First sequential expand-all recheck after warm-up: median 676 ms. This is
+  above the prior 576 ms result. Code inspection of the folder read path found an
+  extra `.gitignore` existence check on every directory.
+- One change reused the directory entries already read to detect `.gitignore`.
+  After a warm-up run of 747 ms, five runs were 654, 670, 664, 666, 654 ms;
+  median 664 ms. It is 12 ms faster than the pre-change recheck and 15.3%
+  slower than the original 576 ms benchmark. The added ignore matching is
+  the functional cost; the comparison is indicative because a quiet host was
+  not certified during the live readback session.

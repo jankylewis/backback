@@ -13,7 +13,7 @@ use gpui::{
     IntoElement, KeyBinding, Render, StatefulInteractiveElement, Window, WindowBounds,
     WindowOptions,
 };
-use icons::{chevron, icon};
+use icons::chevron;
 
 /// Select the preceding Explorer row.
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
@@ -141,19 +141,18 @@ fn row(
     let path: PathBuf = entry.path().to_path_buf();
     let tooltip_path: String = path.display().to_string();
     let expandable: bool = entry.expandable();
-    let icon: &str = icon(entry.kind());
     let name: String = entry.name().to_owned();
     let text_color: gpui::Rgba = color(if entry.dimmed() {
         DARK.text_dim
     } else {
         DARK.text
     });
-    let depth_px: f32 = u16::try_from(depth).map_or(f32::from(u16::MAX), f32::from);
     div()
         .id(index)
-        .pl(px(8.0 + depth_px * 16.0))
-        .py_1()
+        .pl_2()
+        .h(px(30.0))
         .flex()
+        .items_center()
         .gap_2()
         .text_color(text_color)
         .border_1()
@@ -174,9 +173,18 @@ fn row(
                 cx.notify();
             },
         ))
+        .children((0..depth).map(|_: usize| indent_guide()))
         .child(chevron(entry))
-        .child(icon)
+        .child(icons::icon(entry, text_color))
         .child(name)
+}
+
+fn indent_guide() -> impl IntoElement {
+    div()
+        .w(px(16.0))
+        .h_full()
+        .border_l_1()
+        .border_color(color(DARK.border))
 }
 
 fn color(value: Rgb) -> gpui::Rgba {

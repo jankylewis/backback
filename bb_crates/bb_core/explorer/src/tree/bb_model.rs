@@ -1,11 +1,8 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
-use crate::entry::{
-    collect_visible, dim_name, file_kind, find, find_mut, sort_entries, Entry, EntryKind,
-};
+use crate::children::{expand_entry, read_children_from};
+use crate::entry::{collect_visible, find, find_mut, Entry, EntryKind};
+use crate::ignore_rules;
 use bb_dotnet::{Solution, SolutionError, SolutionPath};
 
 /// Explorer I/O or input error.
@@ -29,10 +26,19 @@ pub enum ExplorerError {
     /// No matching entry exists.
     #[error("entry not found: {0}")]
     NotFound(PathBuf),
+    /// A git ignore file could not be parsed.
+    #[error("cannot parse {path}: {source}")]
+    Ignore {
+        /// Ignore file path.
+        path: PathBuf,
+        /// Parse or I/O cause.
+        #[source]
+        source: ignore::Error,
+    },
 }
 
 #[derive(Debug, Clone)]
-enum Source {
+pub(crate) enum Source {
     Folder,
     Solution {
         directory: PathBuf,
@@ -87,8 +93,14 @@ impl Explorer {
         } else {
             return Err(ExplorerError::InvalidRoot(absolute));
         };
+        let rule_directory: &Path = match &source {
+            Source::Folder => &absolute,
+            Source::Solution { directory, .. } => directory,
+        };
+        let rules: std::sync::Arc<Vec<ignore::gitignore::Gitignore>> =
+            ignore_rules::ancestors(rule_directory)?;
         let mut tree: Self = Self {
-            root: Entry::new(absolute, kind, false),
+            root: Entry::new(absolute, kind, false).with_rules(rules),
             source,
         };
         let children: Vec<Entry> = tree.read_children(&tree.root)?;
@@ -146,100 +158,4 @@ impl Explorer {
     fn read_children(&self, parent: &Entry) -> Result<Vec<Entry>, ExplorerError> {
         read_children_from(&self.source, parent)
     }
-}
-
-fn read_children_from(source: &Source, parent: &Entry) -> Result<Vec<Entry>, ExplorerError> {
-    match source {
-        Source::Folder => read_folder(&parent.path, parent.dimmed),
-        Source::Solution {
-            directory,
-            projects,
-        } => {
-            let location: &Path = if parent.kind == EntryKind::Solution {
-                directory
-            } else {
-                &parent.path
-            };
-            Ok(solution_children(location, projects, parent.dimmed))
-        }
-    }
-}
-
-fn expand_entry(source: &Source, entry: &mut Entry) -> Result<usize, ExplorerError> {
-    if !entry.expandable() {
-        return Ok(0);
-    }
-    if entry.children.is_none() {
-        entry.children = Some(read_children_from(source, entry)?);
-    }
-    entry.expanded = true;
-    let mut count: usize = 1;
-    if let Some(children) = &mut entry.children {
-        for child in children {
-            count = count.saturating_add(expand_entry(source, child)?);
-        }
-    }
-    Ok(count)
-}
-
-fn read_folder(path: &Path, inherited_dim: bool) -> Result<Vec<Entry>, ExplorerError> {
-    let items: fs::ReadDir =
-        fs::read_dir(path).map_err(|source: std::io::Error| ExplorerError::Read {
-            path: path.to_path_buf(),
-            source,
-        })?;
-    let mut children: Vec<Entry> = Vec::new();
-    for item in items {
-        let item: fs::DirEntry = item.map_err(|source: std::io::Error| ExplorerError::Read {
-            path: path.to_path_buf(),
-            source,
-        })?;
-        let metadata: fs::Metadata =
-            fs::symlink_metadata(item.path()).map_err(|source: std::io::Error| {
-                ExplorerError::Read {
-                    path: item.path(),
-                    source,
-                }
-            })?;
-        let kind: EntryKind = if metadata.is_dir() {
-            EntryKind::Folder
-        } else if metadata.is_file() {
-            file_kind(&item.path())
-        } else {
-            EntryKind::Other
-        };
-        let dimmed: bool = inherited_dim || dim_name(&item.file_name().to_string_lossy());
-        children.push(Entry::new(item.path(), kind, dimmed));
-    }
-    sort_entries(&mut children);
-    Ok(children)
-}
-
-fn solution_children(parent: &Path, projects: &[PathBuf], inherited_dim: bool) -> Vec<Entry> {
-    let mut children: Vec<Entry> = Vec::new();
-    for project in projects {
-        let Ok(relative): Result<&Path, _> = project.strip_prefix(parent) else {
-            continue;
-        };
-        let Some(component): Option<&std::ffi::OsStr> = relative
-            .components()
-            .next()
-            .map(std::path::Component::as_os_str)
-        else {
-            continue;
-        };
-        let path: PathBuf = parent.join(component);
-        if children.iter().any(|entry: &Entry| entry.path == path) {
-            continue;
-        }
-        let kind: EntryKind = if &path == project {
-            EntryKind::Project
-        } else {
-            EntryKind::Folder
-        };
-        let dimmed: bool = inherited_dim || dim_name(&component.to_string_lossy());
-        children.push(Entry::new(path, kind, dimmed));
-    }
-    sort_entries(&mut children);
-    children
 }

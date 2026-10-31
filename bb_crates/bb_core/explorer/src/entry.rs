@@ -1,7 +1,10 @@
 use std::{
     cmp::Ordering,
     path::{Path, PathBuf},
+    sync::Arc,
 };
+
+use ignore::gitignore::Gitignore;
 
 /// Explorer entry kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -29,6 +32,7 @@ pub struct Entry {
     pub(super) dimmed: bool,
     pub(super) expanded: bool,
     pub(super) children: Option<Vec<Entry>>,
+    pub(super) ignore_rules: Arc<Vec<Gitignore>>,
 }
 
 impl Entry {
@@ -44,7 +48,13 @@ impl Entry {
             dimmed,
             expanded: false,
             children: None,
+            ignore_rules: Arc::new(Vec::new()),
         }
+    }
+
+    pub(super) fn with_rules(mut self, rules: Arc<Vec<Gitignore>>) -> Self {
+        self.ignore_rules = rules;
+        self
     }
 
     /// Full path, suitable for a tooltip.

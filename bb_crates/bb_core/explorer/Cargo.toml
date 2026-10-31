@@ -8,6 +8,7 @@ description = "Lazy C# solution and folder explorer model"
 
 [dependencies]
 bb-dotnet.workspace = true
+ignore = "0.4"
 thiserror.workspace = true
 
 [dev-dependencies]

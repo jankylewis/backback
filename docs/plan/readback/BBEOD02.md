@@ -23,3 +23,26 @@
 - macOS may report a temporary folder via `/var` or `/private/var`. A failing
   model test exposed path lookup failure; root and requested paths now resolve
   to the same canonical identity.
+
+## Reopened visual review
+
+The refreshed `BBEOD02_MBTX.png` shows MbTx expanded through
+`MbAuto/RgvMbDesktop/Tests/Documents/Pdf`. The refreshed
+`BBEOD02_FIXTURE.png` shows every file icon kind in a synthetic folder.
+Compared against the headmate screenshot criteria in the BBEOD02 brief:
+
+| Requested item | Observed in live window |
+| --- | --- |
+| Closed and open folder icons | Distinct authored SVG outlines in both screenshots. |
+| C# file glyph | Authored file/C# SVG beside `Foo.cs` in fixture. |
+| Markdown glyph | Authored M/down-arrow SVG beside `README.md` in fixture. |
+| Project and solution icons | Distinct authored SVGs beside `App.csproj` and `App.slnx`. |
+| Generic file icon | Authored SVG beside `notes.txt`. |
+| Vertical indent guides | One line per depth in the MbTx chain through Pdf. |
+| Hide `.git` and `.DS_Store` | Absent from fixture; failing model test added first. |
+| Dim ignored entries and `bin`/`obj` | `scratch.tmp`, `bin`, and `obj` dim in fixture; ignored MbTx folders dim. |
+| Selected row outline | Visible on Pdf in MbTx screenshot. |
+
+The exact headmate image is unavailable in this pane, so this compares its
+stated criteria. A path tooltip remains bound to rows; its live appearance
+was not visible in the captured hover state.
