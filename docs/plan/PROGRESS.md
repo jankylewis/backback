@@ -21,3 +21,4 @@
 - Bench ran five samples, but load 3.24 missed the quiet threshold. No valid perf verdict.
 - Final audit clean. Release artifacts and evidence are ready for branch commit and handoff.
 - Open items: no GUI screenshots at M0; quiet benchmark baseline and rerun; Apple Developer ID signing and notarization by the headmate.
+- BBEOD07-A polish: removed the hair arc over the goggles and separated the pack strap at the right shoulder; re-exported all icon sizes.

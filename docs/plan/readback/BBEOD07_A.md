@@ -9,6 +9,8 @@
 - Bundled `bb scan` read the fixture solution: 4 projects, 2 test projects.
 - Bundled `bb scan` read MbTx read-only: 17 projects, 11 test projects.
 - The PNG previews have measured dimensions 16, 32, 128, and 1024 px.
+- Polish check: the hair edge stays above the goggles, and the pack strap has a distinct dark border.
+- At 16 px, the head, goggles, and pack remain visually separate.
 - M0 has no GUI, so app screenshots from readback do not exist yet.
 
 ## Lesson
