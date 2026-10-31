@@ -6,7 +6,7 @@ server and Samsung's `netcoredbg`.
 
 **Status:** R&D skeleton (M0). The crates compile into a `bb` command line that
 proves the risky path: start Roslyn from Rust, load a real solution, time it.
-No GUI yet; the GUI milestone (M1) is in [docs/04_ROADMAP.md](docs/04_ROADMAP.md).
+No GUI yet; the GUI milestone (M1) is in [docs/plan/ROADMAP.md](docs/plan/ROADMAP.md).
 
 ## Why
 
@@ -36,43 +36,43 @@ search, process plumbing. Semantics stay in .NET where they already exist.
 
 ```
 backback/
-  Cargo.toml            workspace, one lint gate for every crate
-  .deny.toml            licences, advisories, duplicate crates (cargo deny reads it)
-  LICENSE               MIT
-  README.md
-  crates/
-    text/               bb-text     rope buffer, CharIdx / LineIdx / LspPoint newtypes
-    syntax/             bb-syntax   tree-sitter C# parse, outline (highlighting next)
-    dotnet/             bb-dotnet   SDK discovery, .sln/.slnx listing, test runner facade
-    protocol/
+  AGENTS.md, CLAUDE.md  agent laws (outside the 5-entry count)
+  LICENSE, README.md
+  bb_crates/            Cargo workspace: one lint gate, .deny.toml, Cargo.lock
+    bb_core/
+      bb_text/          bb-text     rope buffer, CharIdx / LineIdx / LspPoint newtypes
+      syntax/           bb-syntax   tree-sitter C# parse, outline
+    edge/
+      bb_lsp/           bb-lsp      JSON-RPC client + Roslyn specifics
       framing/          bb-framing  Content-Length codec shared by LSP and DAP
-      lsp/              bb-lsp      JSON-RPC client + Roslyn specifics (solution/open)
       dap/              bb-dap      DAP envelope + netcoredbg discovery
+      dotnet/           bb-dotnet   SDK, .sln/.slnx, projects, runsettings, tests
     shell/
-      ui/               bb-ui       theme tokens (dark default) + Frontend trait
-      bb/               bb          CLI: doctor, open, outline
-  docs/
-    01_RND_REPORT.md    what the world does: Zed, Helix, Lapce, VS Code, Rider, Roslyn
-    02_ARCHITECTURE.md  process model, crates, data flow, latency budget
-    03_DECISIONS.md     ADRs: Rust, GPUI, ropey, Roslyn LSP, netcoredbg, MIT
-    04_ROADMAP.md       M0..M4, estimates, risks, performance gates
-    05_PROOF_M0.md      how to run the proof and what to record
+      bb_cli/           bb          CLI: doctor, scan, open, outline, audit
+      ui/               bb-ui       theme tokens (dark default)
+      audit/            bb-audit    convention audit; `cargo test` runs it on the repo
+  docs/                 design, plan, R&D
+  fixtures/_Harness/    small C# solution the e2e tests run `bb` on
 ```
 
-Every folder holds at most five entries; every `.rs` stays under 500 lines and
-every `.md` under 200 (the HD taxonomy used across this workspace).
+Conventions (enforced by `bb-audit`, rules in [AGENTS.md](AGENTS.md)): at most
+5 visible entries per folder; `.md` ≤ 100 lines, `.rs`/`.cs` ≤ 250; one backbone
+marker per folder (`_` in C# trees, `bb_` in Rust and neutral trees).
 
 ## Build and gate
 
 ```sh
 # toolchain (once): https://rustup.rs  then  cargo install cargo-deny
 dotnet tool install --global roslyn-language-server --prerelease
-cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings \
-  && cargo test --all-targets && cargo deny check
+cd bb_crates
+cargo fmt --check && cargo clippy --all-targets -- -D warnings \
+  && cargo test --workspace && cargo deny check
 
 cargo run -p bb -- doctor
+cargo run -p bb -- scan ../fixtures/_Harness/Harness.slnx
 cargo run -p bb -- open path/to/Solution.slnx
 cargo run -p bb -- outline path/to/File.cs
+cargo run -p bb -- audit ..
 ```
 
 ## Licence
