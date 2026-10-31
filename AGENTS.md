@@ -54,4 +54,4 @@ cargo test --workspace && cargo deny check`
 
 Post READY with: branch, commits, gate output counts, readback and bench
 deltas. Write state to `docs/plan/PROGRESS.md` before any long run.
-Write ctx summaries to `/Users/vinh.tranmodec.com/Documents/se/dna_engineering_dx/rawctxhub/ctx_summarizing/backback/11_01_2026/`, never inside this repo.
+Write ctx summaries to the fleet ctx hub outside this repo (path given in your brief or env BACKBACK_CTX_HUB), never inside the repo.

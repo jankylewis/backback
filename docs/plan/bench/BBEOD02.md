@@ -2,7 +2,7 @@
 
 - Host: macOS with CommandLineTools, no full Xcode `metal` compiler.
 - GPUI: Zed `ba63a02`, `gpui_platform/runtime_shaders` enabled.
-- Input: `/Users/vinh.tranmodec.com/Documents/se/dna_engineering_dx/MbTx`, read-only.
+- Input: MbTx (local checkout), read-only.
 - Warm-up: one run before each five-run set; runs were sequential.
 - Cold process to first frame, ms: `146, 151, 152, 157, 156`; median `152`.
 - RSS after 10 seconds idle, KiB: `109936, 109392, 109808, 111168, 109440`;
