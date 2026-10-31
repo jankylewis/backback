@@ -45,9 +45,8 @@ pub(crate) fn bottom(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Opt
             .text_size(px(12.0))
             .text_color(color(theme.text))
             .child(
-                div()
+                super::one_line(22.0)
                     .px_2()
-                    .h(px(22.0))
                     .text_color(color(theme.text_dim))
                     .child(title),
             )
@@ -75,11 +74,11 @@ fn place_row(
         DocUri::Virtual(uri) => uri.clone(),
     };
     let line: u32 = place.location.span.start.line.saturating_add(1);
-    let label: String = format!("{name}:{line}  {}", place.preview);
-    div()
+    let column: u32 = place.location.span.start.character.saturating_add(1);
+    let label: String = format!("{name}:{line}:{column}  {}", place.preview);
+    super::one_line(20.0)
         .id(("place", index))
         .px_2()
-        .h(px(20.0))
         .hover(|el: gpui::StyleRefinement| el.bg(color(theme.overlay)))
         .child(label)
         .on_click(cx.listener(
@@ -99,7 +98,7 @@ fn problem_rows(
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> (String, Vec<AnyElement>) {
-    let problems: Vec<(&Path, &Diagnostic)> = view.intel.problems();
+    let problems: Vec<(&Path, &Diagnostic)> = view.intel.problems_in(&view.root);
     let title: String = format!("Problems ({})", problems.len());
     let rows: Vec<AnyElement> = problems
         .into_iter()
@@ -157,9 +156,8 @@ fn rename_rows(plan: &RenamePreview, root: &Path, theme: Theme) -> (String, Vec<
                 }
                 FileChange::Delete(uri) => format!("delete {}", uri_name(uri, root)),
             };
-            div()
+            super::one_line(20.0)
                 .px_2()
-                .h(px(20.0))
                 .text_color(color(theme.text))
                 .child(text)
                 .into_any_element()

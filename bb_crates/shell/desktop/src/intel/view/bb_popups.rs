@@ -54,11 +54,8 @@ fn frame(theme: Theme) -> gpui::Div {
 }
 
 fn row(text: String, detail: Option<String>, selected: bool, theme: Theme) -> gpui::Div {
-    div()
+    super::one_line(20.0)
         .px_2()
-        .h(px(20.0))
-        .flex()
-        .items_center()
         .gap_2()
         .bg(color(if selected {
             theme.accent

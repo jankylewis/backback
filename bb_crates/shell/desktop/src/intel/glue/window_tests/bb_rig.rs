@@ -26,7 +26,17 @@ pub(super) struct Rig {
     pub(super) events: UnboundedSender<Event>,
 }
 
+/// A window with `A.cs` open and the fake server ready.
 pub(super) fn rig(cx: &mut TestAppContext, no_write: bool) -> (Rig, &mut VisualTestContext) {
+    rig_with(cx, no_write, true)
+}
+
+/// A window with `A.cs` open; the fake server is ready only if `ready`.
+pub(super) fn rig_with(
+    cx: &mut TestAppContext,
+    no_write: bool,
+    ready: bool,
+) -> (Rig, &mut VisualTestContext) {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let root: PathBuf = dir.path().canonicalize().unwrap();
     let file: PathBuf = root.join("A.cs");
@@ -49,11 +59,13 @@ pub(super) fn rig(cx: &mut TestAppContext, no_write: bool) -> (Rig, &mut VisualT
             v.open_file(&opened, window, cx);
         },
     );
-    events
-        .send(Event::Ready {
-            took: Duration::ZERO,
-        })
-        .unwrap();
+    if ready {
+        events
+            .send(Event::Ready {
+                took: Duration::ZERO,
+            })
+            .unwrap();
+    }
     vcx.run_until_parked();
     let mut rig: Rig = Rig {
         _dir: dir,

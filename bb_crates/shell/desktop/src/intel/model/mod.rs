@@ -31,6 +31,17 @@ pub(crate) enum LoadStatus {
 }
 
 impl LoadStatus {
+    /// A batch line counted `loaded` of `total` projects. Only a load in
+    /// progress moves: Roslyn logs batch lines after the load too (a
+    /// decompiled metadata document loads one), and they must not turn
+    /// `Ready` or `Failed` back into `Loading`.
+    pub(crate) fn progress(&mut self, loaded: usize, total: usize) {
+        match self {
+            Self::Loading { .. } => *self = Self::Loading { loaded, total },
+            Self::NoSolution | Self::Ready | Self::Failed(_) => {}
+        }
+    }
+
     /// The status bar text.
     pub(crate) fn label(&self) -> String {
         match self {
@@ -167,6 +178,14 @@ impl IntelModel {
             )
         });
         all
+    }
+
+    /// The problems of files inside `root`; decompiled metadata and other
+    /// files outside it keep their squiggles but stay out of the list.
+    pub(crate) fn problems_in(&self, root: &Path) -> Vec<(&Path, &Diagnostic)> {
+        let mut inside: Vec<(&Path, &Diagnostic)> = self.problems();
+        inside.retain(|(path, _): &(&Path, &Diagnostic)| path.starts_with(root));
+        inside
     }
 
     /// A tab closed: drop what belongs to it.

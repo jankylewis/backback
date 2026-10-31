@@ -74,6 +74,7 @@
 ## BBEOD03-B (backback_1, branch `bbeod-03-gui`, worktree `backback_wt/bbeod-03-gui`)
 
 - Merge `9cc54ed` (03a5511 + `bbeod-03-intel`): gate 184 passed / 0 failed.
-- In progress: `desktop/src/intel/` (server thread, model, glue, view);
-  bb_text char log + `replace_many` + write lock. Next: worker tests on the
-  harness, GPUI key tests, gate, readback on MbTx/Apex (no-write mode).
+- `370ac90`: GUI code intelligence (`desktop/src/intel/`: server thread,
+  model, glue, view); bb_text char log, `replace_many`, write lock.
+- Live readback (harness, MbTx, Apex `--no-write`, 0 writes) found 4 issues,
+  each fixed failing-first. Record `readback/BBEOD03/BBEOD03_B/`.

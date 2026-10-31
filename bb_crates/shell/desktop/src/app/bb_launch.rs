@@ -1,3 +1,4 @@
+use crate::args::Start;
 use crate::editor::{Quit, Tabs};
 use crate::theme::{install_appearance_observer, resolved_theme, FollowAppearance, ToggleTheme};
 use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open};
@@ -8,32 +9,9 @@ use gpui::{
 };
 use std::{path::PathBuf, time::Instant};
 
-/// What the command line asks for.
-struct Start {
-    root: PathBuf,
-    file: Option<PathBuf>,
-    no_write: bool,
-}
-
-fn parse_args() -> Start {
-    let args: Vec<std::ffi::OsString> = std::env::args_os().skip(1).collect();
-    let no_write: bool = args.iter().any(|a: &std::ffi::OsString| a == "--no-write");
-    let argument: PathBuf = args
-        .iter()
-        .find(|a: &&std::ffi::OsString| *a != "--no-write")
-        .map_or_else(|| PathBuf::from("."), PathBuf::from);
-    let (root, file): (PathBuf, Option<PathBuf>) = split_argument(argument);
-    let root: PathBuf = root.canonicalize().unwrap_or(root);
-    Start {
-        root,
-        file,
-        no_write,
-    }
-}
-
 pub(crate) fn launch() {
     let start: Instant = Instant::now();
-    let wanted: Start = parse_args();
+    let wanted: Start = crate::args::parse_args();
     let tree: Explorer = match Explorer::open(&wanted.root) {
         Ok(tree) => tree,
         Err(error) => {
@@ -86,30 +64,6 @@ fn build_window(
         eprintln!("first_frame_ms={}", start.elapsed().as_millis());
     });
     view
-}
-
-/// A file argument opens its folder in the Explorer and the file in a tab;
-/// a solution file opens its folder (and loads that solution).
-fn split_argument(argument: PathBuf) -> (PathBuf, Option<PathBuf>) {
-    let solution: bool = argument
-        .extension()
-        .is_some_and(|ext: &std::ffi::OsStr| ext == "slnx" || ext == "sln");
-    if argument.is_file() && solution {
-        let folder: PathBuf = argument
-            .parent()
-            .filter(|parent: &&std::path::Path| !parent.as_os_str().is_empty())
-            .map_or_else(|| PathBuf::from("."), std::path::Path::to_path_buf);
-        return (folder, None);
-    }
-    if argument.is_file() {
-        let folder: PathBuf = argument
-            .parent()
-            .filter(|parent: &&std::path::Path| !parent.as_os_str().is_empty())
-            .map_or_else(|| PathBuf::from("."), std::path::Path::to_path_buf);
-        (folder, Some(argument))
-    } else {
-        (argument, None)
-    }
 }
 
 fn menus() -> Vec<Menu> {
@@ -196,16 +150,6 @@ fn bind_keys(cx: &mut App) {
 mod tests {
     use super::*;
     use bb_ui::bb_theme::ThemeKind;
-
-    #[test]
-    fn a_file_argument_opens_its_folder_and_the_file() {
-        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let (folder, file): (PathBuf, PathBuf) =
-            (dir.path().to_path_buf(), dir.path().join("A.cs"));
-        std::fs::write(&file, "class A {}").unwrap();
-        assert_eq!(split_argument(file.clone()), (folder.clone(), Some(file)));
-        assert_eq!(split_argument(folder.clone()), (folder, None));
-    }
 
     #[test]
     fn absent_preference_is_dark_and_system_light_is_live_source() {

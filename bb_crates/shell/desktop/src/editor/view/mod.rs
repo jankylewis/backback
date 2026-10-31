@@ -55,9 +55,16 @@ pub(crate) fn status_bar(status: Option<&str>, intel: &str, theme: Theme) -> imp
         .justify_between()
         .bg(color(theme.overlay))
         .text_color(color(theme.text))
-        .child(status.unwrap_or_default().to_owned())
+        .child(
+            crate::intel::view::one_line(24.0)
+                .flex_1()
+                .min_w(px(0.0))
+                .child(status.unwrap_or_default().to_owned()),
+        )
         .child(
             div()
+                .flex_none()
+                .pl_2()
                 .text_color(color(theme.text_dim))
                 .child(intel.to_owned()),
         )

@@ -131,6 +131,11 @@ impl InFlight {
             .retain(|_: &AskKind, p: &mut Pending| p.path != path);
     }
 
+    /// Whether no question waits for its answer.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.slots.is_empty()
+    }
+
     /// Whether a question of `kind` waits for its answer.
     #[cfg(test)]
     pub(crate) fn waiting(&self, kind: AskKind) -> bool {

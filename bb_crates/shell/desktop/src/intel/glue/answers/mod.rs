@@ -30,7 +30,7 @@ pub(super) fn apply(
 ) {
     match answer {
         Answer::Completion(items) => completion(view, pending, items, stages),
-        Answer::Hover(info) => hover(view, info),
+        Answer::Hover(info) => hover(view, pending, info),
         Answer::Definition(places) => match places.into_iter().next() {
             Some(place) => jump(view, &place, window, cx),
             None => view.report(&"No definition found"),
@@ -93,7 +93,19 @@ fn completion(
     });
 }
 
-fn hover(view: &mut ExplorerView, info: Option<HoverInfo>) {
+/// Show hover text only while the mouse still rests on the char it was
+/// asked for; the mouse may have moved on while the server worked.
+fn hover(view: &mut ExplorerView, pending: &Pending, info: Option<HoverInfo>) {
+    let resting: bool =
+        view.intel
+            .hover_target
+            .as_ref()
+            .is_some_and(|(path, at, _): &(PathBuf, CharIdx, u64)| {
+                *path == pending.path && *at == pending.anchor
+            });
+    if !resting {
+        return;
+    }
     let line: u32 = info
         .as_ref()
         .and_then(|i: &HoverInfo| i.span)

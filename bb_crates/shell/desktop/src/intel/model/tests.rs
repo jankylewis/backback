@@ -195,3 +195,39 @@ fn problems_sort_by_file_line_and_severity_and_leave_with_their_tab() {
     assert!(!model.in_flight.waiting(AskKind::Hover));
     assert_eq!(model.problems().len(), 2);
 }
+
+#[test]
+fn a_late_batch_line_never_turns_ready_or_failed_back_into_loading() {
+    let mut status: LoadStatus = LoadStatus::Loading {
+        loaded: 0,
+        total: 4,
+    };
+    status.progress(4, 4);
+    assert_eq!(status.label(), "Loading 4/4 projects");
+    status = LoadStatus::Ready;
+    status.progress(4, 4);
+    assert_eq!(status, LoadStatus::Ready);
+    status = LoadStatus::Failed(String::from("x"));
+    status.progress(1, 4);
+    assert_eq!(status, LoadStatus::Failed(String::from("x")));
+}
+
+#[test]
+fn problems_list_only_files_inside_the_workspace() {
+    let mut model: IntelModel = IntelModel::new(LoadStatus::Ready);
+    model.set_diagnostics(
+        PathBuf::from("/ws/a.cs"),
+        vec![diag(1, Some(Severity::Error))],
+    );
+    model.set_diagnostics(PathBuf::from("/tmp/meta/String.cs"), vec![diag(2, None)]);
+    let listed: Vec<String> = model
+        .problems_in(Path::new("/ws"))
+        .iter()
+        .map(|(path, _): &(&Path, &Diagnostic)| path.display().to_string())
+        .collect();
+    assert_eq!(listed, ["/ws/a.cs"]);
+    assert_eq!(
+        model.diagnostics_of(Path::new("/tmp/meta/String.cs")).len(),
+        1
+    );
+}

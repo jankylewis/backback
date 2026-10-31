@@ -136,9 +136,7 @@ pub(crate) fn on_event(
     cx: &mut Context<ExplorerView>,
 ) {
     match event {
-        Event::Progress { loaded, total } => {
-            view.intel.status = LoadStatus::Loading { loaded, total };
-        }
+        Event::Progress { loaded, total } => view.intel.status.progress(loaded, total),
         Event::Ready { took } => {
             view.intel.status = LoadStatus::Ready;
             eprintln!("intel_ready_ms={}", took.as_millis());

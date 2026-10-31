@@ -1,5 +1,7 @@
 //! macOS desktop shell for the backback Explorer.
 
+#[path = "app/args.rs"]
+mod args;
 #[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
 mod editor;
@@ -14,22 +16,22 @@ mod launch;
 mod navigation;
 #[path = "bb_explorer/panel.rs"]
 mod panel;
+#[path = "app/script.rs"]
+mod script;
 #[path = "app/theme.rs"]
 mod theme;
+use theme::color;
 #[path = "bb_explorer/tooltip.rs"]
 mod tooltip;
 
 use std::path::PathBuf;
 
 use bb_explorer::{Entry, Explorer};
-use bb_ui::{
-    bb_theme::{Theme, ThemeKind},
-    Rgb,
-};
+use bb_ui::bb_theme::{Theme, ThemeKind};
 use editor::{Tab, TabError, Tabs};
 use gpui::{
-    div, prelude::*, rgb, AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton,
-    Render, ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
+    div, prelude::*, AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton, Render,
+    ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
 };
 
 use navigation::{MoveDown, MoveLeft, MoveRight, MoveUp, Open};
@@ -56,9 +58,7 @@ struct ExplorerView {
     quit_after_close: bool,
     /// The folder the Explorer shows; files outside it open read-only.
     root: PathBuf,
-    /// Code intelligence state.
     intel: intel::model::IntelModel,
-    /// The server thread, once started.
     link: Option<intel::bb_worker::Link>,
     editor_scroll: UniformListScrollHandle,
 }
@@ -223,6 +223,8 @@ impl Render for ExplorerView {
             .child(
                 div()
                     .flex_1()
+                    .min_w(gpui::px(0.0))
+                    .overflow_hidden()
                     .h_full()
                     .flex()
                     .flex_col()
@@ -236,11 +238,6 @@ impl Render for ExplorerView {
                     )),
             )
     }
-}
-
-fn color(value: Rgb) -> gpui::Rgba {
-    let packed: u32 = (u32::from(value.r) << 16) | (u32::from(value.g) << 8) | u32::from(value.b);
-    rgb(packed)
 }
 
 fn main() {

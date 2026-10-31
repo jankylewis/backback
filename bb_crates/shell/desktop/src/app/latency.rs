@@ -41,10 +41,12 @@ pub(crate) fn drive(
     }
     cx.spawn_in(
         window,
-        async move |_: gpui::WeakEntity<ExplorerView>, cx: &mut gpui::AsyncWindowContext| {
+        async move |view: gpui::WeakEntity<ExplorerView>, cx: &mut gpui::AsyncWindowContext| {
             let mut work: Vec<u64> = Vec::new();
             for key in keys {
-                work.extend(send_key(&key, cx).await);
+                if !crate::script::run(&key, &view, cx).await {
+                    work.extend(send_key(&key, cx).await);
+                }
             }
             report_keys(&mut work);
             if std::env::var("BB_KEYS_QUIT").is_ok_and(|value: String| value == "1") {

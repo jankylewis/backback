@@ -80,3 +80,9 @@ impl ExplorerView {
         cx.notify();
     }
 }
+
+/// A theme colour as GPUI paints it.
+pub(crate) fn color(value: bb_ui::Rgb) -> gpui::Rgba {
+    let packed: u32 = (u32::from(value.r) << 16) | (u32::from(value.g) << 8) | u32::from(value.b);
+    gpui::rgb(packed)
+}
