@@ -49,6 +49,9 @@ pub enum CommandError {
     /// `bb bench` problem.
     #[error(transparent)]
     Bench(#[from] bench::BenchError),
+    /// `bb doctor` found a required tool missing or broken (already printed).
+    #[error("required tools not usable: {}", .0.join(", "))]
+    Doctor(Vec<&'static str>),
     /// The audit found violations (already printed).
     #[error("{0} convention violations")]
     Violations(usize),
@@ -85,25 +88,39 @@ async fn doctor() -> Result<(), CommandError> {
         "light ok  : {}",
         Theme::for_kind(Some(ThemeKind::Light)).name
     );
+    let mut broken: Vec<&'static str> = Vec::new();
     match Sdk::locate() {
         Ok(sdk) => {
             println!("dotnet    : {}", sdk.host().display());
             match sdk.version(PROCESS_TIMEOUT).await {
                 Ok(v) => println!("sdk       : {}", v.as_str()),
-                Err(e) => println!("sdk       : ERROR {e}"),
+                Err(e) => {
+                    println!("sdk       : ERROR {e}");
+                    broken.push("dotnet sdk");
+                }
             }
         }
-        Err(e) => println!("dotnet    : MISSING ({e})"),
+        Err(e) => {
+            println!("dotnet    : MISSING ({e})");
+            broken.push("dotnet");
+        }
     }
     match roslyn::locate() {
         Ok(p) => println!("roslyn-ls : {}", p.display()),
-        Err(e) => println!("roslyn-ls : MISSING ({e})"),
+        Err(e) => {
+            println!("roslyn-ls : MISSING ({e})");
+            broken.push("roslyn-ls");
+        }
     }
     match bb_dap::locate() {
         Ok(p) => println!("netcoredbg: {}", p.display()),
-        Err(e) => println!("netcoredbg: MISSING ({e})"),
+        Err(e) => println!("netcoredbg: OPTIONAL (needed from BBEOD05): {e}"),
     }
-    Ok(())
+    if broken.is_empty() {
+        Ok(())
+    } else {
+        Err(CommandError::Doctor(broken))
+    }
 }
 
 fn outline(file: &Path) -> Result<(), CommandError> {
