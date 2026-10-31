@@ -170,4 +170,33 @@ mod tests {
             vec![Rule::FunctionParams]
         );
     }
+
+    #[test]
+    fn block_findings_carry_the_header_line_and_the_block_length() {
+        let body: String = "    let a: u8 = 1;\n".repeat(caps::FUNCTION_LINES);
+        let src: String = format!(
+            "// one\n// two\nstruct S {{\n    a: u8,\n}}\nfn f()\n{{\n{body}}}\nfn g(a: u8, b: u8, c: u8, d: u8, e: u8, h: u8) {{}}\n"
+        );
+        let found: Vec<(usize, Rule, String)> = check(&src)
+            .into_iter()
+            .map(|f: Finding| (f.line, f.rule, f.detail))
+            .collect();
+        let long: usize = caps::FUNCTION_LINES.saturating_add(3);
+        let g_line: usize = caps::FUNCTION_LINES.saturating_add(9);
+        assert_eq!(
+            found,
+            vec![
+                (
+                    6,
+                    Rule::FunctionLines,
+                    format!("{long} lines (max {})", caps::FUNCTION_LINES)
+                ),
+                (
+                    g_line,
+                    Rule::FunctionParams,
+                    format!("6 params (max {})", caps::FUNCTION_PARAMS)
+                ),
+            ]
+        );
+    }
 }
