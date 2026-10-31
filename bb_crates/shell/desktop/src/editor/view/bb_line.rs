@@ -3,6 +3,7 @@ use crate::{color, ExplorerView};
 use bb_syntax::{HighlightKind, HighlightSpan};
 use bb_ui::bb_theme::DARK;
 use gpui::{div, prelude::*, px, Context, IntoElement, Window};
+use std::time::Instant;
 
 pub(super) struct Run {
     text: String,
@@ -11,6 +12,7 @@ pub(super) struct Run {
 }
 
 pub(super) fn styled_line(tab: &Tab, index: usize) -> Vec<Run> {
+    let started: Instant = Instant::now();
     let text: String = tab.document.line(index).unwrap_or_default();
     let clean: &str = text.trim_end_matches(['\r', '\n']);
     let byte_start: usize = tab.line_bytes.get(index).copied().unwrap_or(0);
@@ -47,6 +49,7 @@ pub(super) fn styled_line(tab: &Tab, index: usize) -> Vec<Run> {
     if cursor == Some(clean.chars().count()) {
         push_run(&mut runs, '│', HighlightKind::Plain, false);
     }
+    crate::latency::record_highlight(started.elapsed());
     runs
 }
 

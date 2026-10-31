@@ -27,19 +27,7 @@ pub(crate) fn launch() {
                 ..Default::default()
             },
             |window: &mut Window, cx: &mut App| {
-                let view: gpui::Entity<ExplorerView> =
-                    cx.new(|cx: &mut gpui::Context<ExplorerView>| ExplorerView {
-                        tree,
-                        selected: 0,
-                        focus: cx.focus_handle(),
-                        editor_focus: cx.focus_handle(),
-                        tabs: Tabs::new(),
-                        keypresses: 0,
-                        latency_before: None,
-                        closing_window: false,
-                        panel_width: 300.0,
-                        resizing: false,
-                    });
+                let view: gpui::Entity<ExplorerView> = new_view(tree, cx);
                 let focus: FocusHandle = view.read(cx).focus.clone();
                 window.focus(&focus, cx);
                 install_close_guard(window, &view, cx);
@@ -55,6 +43,24 @@ pub(crate) fn launch() {
         }
         cx.activate(true);
     });
+}
+
+fn new_view(tree: Explorer, cx: &mut App) -> gpui::Entity<ExplorerView> {
+    cx.new(|cx: &mut gpui::Context<ExplorerView>| ExplorerView {
+        tree,
+        selected: 0,
+        focus: cx.focus_handle(),
+        editor_focus: cx.focus_handle(),
+        tabs: Tabs::new(),
+        keypresses: 0,
+        latency_before: None,
+        frame_collector: None,
+        edit_ns: 0,
+        reparse_ns: 0,
+        closing_window: false,
+        panel_width: 300.0,
+        resizing: false,
+    })
 }
 
 fn install_close_guard(window: &Window, view: &gpui::Entity<ExplorerView>, cx: &App) {

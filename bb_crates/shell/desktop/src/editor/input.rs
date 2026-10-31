@@ -1,4 +1,5 @@
 use gpui::{Context, KeyDownEvent, Window};
+use std::time::Instant;
 
 use crate::ExplorerView;
 
@@ -39,6 +40,8 @@ pub(crate) fn handle_key(
 ) {
     let key: &str = event.keystroke.key.as_str();
     let shift: bool = event.keystroke.modifiers.shift;
+    let timed: bool = event.keystroke.key_char.is_some() && !event.keystroke.modifiers.platform;
+    let edit_start: Instant = Instant::now();
     let result: Option<Result<(), bb_text::DocumentError>> = if event.keystroke.modifiers.platform {
         command_key(view, key, shift)
     } else {
@@ -49,15 +52,24 @@ pub(crate) fn handle_key(
     let Some(result): Option<Result<(), bb_text::DocumentError>> = result else {
         return;
     };
+    if timed {
+        view.edit_ns = view
+            .edit_ns
+            .saturating_add(crate::latency::nanos(edit_start.elapsed()));
+    }
     if let Err(error) = result {
         eprintln!("{error}");
     }
+    let reparse_start: Instant = Instant::now();
     if let Some(tab) = view.tabs.active_tab_mut() {
         if let Err(error) = tab.reparse() {
             eprintln!("{error}");
         }
     }
-    if event.keystroke.key_char.is_some() && !event.keystroke.modifiers.platform {
+    if timed {
+        view.reparse_ns = view
+            .reparse_ns
+            .saturating_add(crate::latency::nanos(reparse_start.elapsed()));
         view.record_keypress(window);
     }
     cx.stop_propagation();

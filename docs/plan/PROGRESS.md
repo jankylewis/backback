@@ -7,10 +7,14 @@
   incremental-reparse and short-line vertical cursor regressions passed.
 - Live fixture, MbTx, and Apex readbacks passed for tab open and rendering;
   temporary fixture save and dirty window close prompt were verified.
-- Performance remains open: debug p99 124.781 ms, release p99 41.222 ms on
-  the 5,000-line fixture, both above the 16 ms target. Host load was >5.
+- Review trace: 500 paced keys produced 500 presents, p99 22.036 ms on the
+  5,000-line fixture. The active display was 47.95 Hz; each GPUI frame
+  reported a 20.833 ms refresh interval. This demonstrates a display floor
+  above the 16 ms budget on this configuration; quiet-host check remains open.
+- Three live editor screenshots were saved and inspected under
+  `docs/plan/readback/BBEOD02/EDITOR/`.
 - Editor evidence: `docs/plan/bench/EDITOR.md` and
-  `docs/plan/readback/BBEOD02/EDITOR.md`.
+  `docs/plan/readback/BBEOD02/EDITOR/bb_EDITOR.md`.
 
 - BBEOD02-B start: merged `origin/master` into `bbeod-02-editor`; resolved four
   fixture project rename conflicts in favor of the `_*.csproj` backbone names.

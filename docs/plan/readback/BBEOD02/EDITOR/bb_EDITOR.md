@@ -14,7 +14,12 @@
    characters before the original first line. An additional unsaved `x` was
    kept off disk when window close showed Save/Discard/Cancel.
 
-CUA screenshots were observed during these steps, including the window close
-prompt. The CUA surface did not provide a screenshot file-write operation, so
-editor screenshots are not persisted in this folder. Existing BBEOD02-A
-Explorer captures remain here. The editor screenshot artifact is still open.
+## Saved screenshots
+
+- `BBEOD02_EDITOR_FIXTURE.png`: highlighted Greeter.cs tab and Explorer.
+- `BBEOD02_EDITOR_MBTX.png`: read-only MbTx _ApexManager.cs tab.
+- `BBEOD02_EDITOR_DIRTY_CLOSE.png`: unsaved fixture and close prompt.
+
+Each PNG was captured from this seat's live window with `screencapture -l` and
+visually inspected after writing. Existing BBEOD02-A Explorer captures remain
+in the parent folder.
