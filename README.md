@@ -1,0 +1,82 @@
+# backback
+
+A very lightweight, dark-by-default, open-source IDE for **C# only**, built for
+maximum performance: a Rust shell in front of Microsoft's own Roslyn language
+server and Samsung's `netcoredbg`.
+
+**Status:** R&D skeleton (M0). The crates compile into a `bb` command line that
+proves the risky path: start Roslyn from Rust, load a real solution, time it.
+No GUI yet; the GUI milestone (M1) is in [docs/plan/bb_roadmap/bb_ROADMAP.md](docs/plan/bb_roadmap/bb_ROADMAP.md).
+
+## Why
+
+- Visual Studio for Mac was retired on 2024-08-31; MonoDevelop has not been built
+  since January 2020. There is no open-source native C# IDE left.
+- VS Code is an Electron app with 20+ processes; Rider is heavy and paid.
+- Roslyn (`roslyn-language-server`, MIT, on NuGet) and `netcoredbg` (MIT) now make
+  a thin, fast, fully open-source shell possible.
+
+## Design in one picture
+
+```
+ bb / backback (Rust)                              .NET processes (owned by the SDK)
+ ┌─────────────────────────────────┐   LSP/stdio   ┌─────────────────────────────┐
+ │ bb-ui   theme + frontend trait  │ ◄───────────► │ roslyn-language-server (MIT)│
+ │ bb-text rope buffer, positions  │   DAP/stdio   ├─────────────────────────────┤
+ │ bb-syntax tree-sitter C#        │ ◄───────────► │ netcoredbg (MIT)            │
+ │ bb-dotnet SDK, .sln/.slnx, test │   argv+stdout ├─────────────────────────────┤
+ │ bb-lsp / bb-dap / bb-framing    │ ◄───────────► │ dotnet build / run / test   │
+ └─────────────────────────────────┘               └─────────────────────────────┘
+```
+
+Roslyn is never rewritten. The shell is fast because it does little: text, UI,
+search, process plumbing. Semantics stay in .NET where they already exist.
+
+## Layout
+
+```
+backback/
+  AGENTS.md, CLAUDE.md  agent laws (outside the 5-entry count)
+  LICENSE, README.md
+  bb_crates/            Cargo workspace: one lint gate, .deny.toml, Cargo.lock
+    bb_core/
+      bb_text/          bb-text     rope buffer, CharIdx / LineIdx / LspPoint newtypes
+      syntax/           bb-syntax   tree-sitter C# parse, outline
+    edge/
+      bb_lsp/           bb-lsp      JSON-RPC client + Roslyn specifics
+      framing/          bb-framing  Content-Length codec shared by LSP and DAP
+      dap/              bb-dap      DAP envelope + netcoredbg discovery
+      dotnet/           bb-dotnet   SDK, .sln/.slnx, projects, runsettings, tests
+    shell/
+      bb_cli/           bb          CLI: doctor, scan, open, outline, audit
+      ui/               bb-ui       theme tokens (dark default)
+      audit/            bb-audit    convention audit; `cargo test` runs it on the repo
+  docs/                 design, plan, R&D
+  fixtures/_Harness/    small C# solution the e2e tests run `bb` on
+```
+
+Conventions (enforced by `bb-audit`, rules in [AGENTS.md](AGENTS.md)): at most
+5 visible entries per folder; `.md` ≤ 100 lines, `.rs`/`.cs` ≤ 250; one backbone
+marker per folder (`_` in C# trees, `bb_` in Rust and neutral trees).
+
+## Build and gate
+
+```sh
+# toolchain (once): https://rustup.rs  then  cargo install cargo-deny
+dotnet tool install --global roslyn-language-server --prerelease
+cd bb_crates
+cargo fmt --check && cargo clippy --all-targets -- -D warnings \
+  && cargo test --workspace && cargo deny check
+
+cargo run -p bb -- doctor
+cargo run -p bb -- scan ../fixtures/_Harness/Harness.slnx
+cargo run -p bb -- open path/to/Solution.slnx
+cargo run -p bb -- outline path/to/File.cs
+cargo run -p bb -- audit ..
+```
+
+## Licence
+
+MIT. Dependencies are MIT/Apache-2.0/BSD; `cargo deny` enforces the allow-list.
+`vsdbg` (Microsoft's debugger) is deliberately not used: its licence limits it to
+Visual Studio and VS Code.

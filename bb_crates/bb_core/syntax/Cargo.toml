@@ -1,0 +1,15 @@
+[package]
+name = "bb-syntax"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "tree-sitter C# parsing: highlighting, folding and outline without Roslyn"
+
+[dependencies]
+tree-sitter.workspace = true
+tree-sitter-c-sharp.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

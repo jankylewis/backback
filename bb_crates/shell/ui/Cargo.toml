@@ -1,0 +1,13 @@
+[package]
+name = "bb-ui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Theme tokens (dark by default) and the frontend contract; GPUI frontend lands in M1"
+
+[dependencies]
+thiserror.workspace = true
+
+[lints]
+workspace = true

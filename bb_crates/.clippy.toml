@@ -1,0 +1,7 @@
+# unwrap/expect/panic/indexing are denied in product code and allowed only in #[cfg(test)].
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
+# Product names that are prose, not code (".." keeps clippy's defaults).
+doc-valid-idents = ["NUnit", "MSBuild", "VSTest", "MSTest", "GPUI", "NuGet", "xUnit", "TypeScript", ".."]

@@ -1,0 +1,28 @@
+# BBEOD01-B: Set Next Statement spike
+
+Source: AgentFarm `state/fleet/backback/evidence/SPIKE_SETNEXT.md`.
+
+Observed 2026-11-01. Source snapshots: DAP `1248685`, Samsung/netcoredbg `9744e1f` (release 3.2.0-1092). This is source research, not a live debugger run.
+
+## Protocol
+
+- **Yes.** DAP `gotoTargets` takes a source and line, with optional column; the response returns target IDs. `goto` takes `threadId` and `targetId`. The adapter must advertise `supportsGotoTargetsRequest`; after `goto`, it responds, then emits `stopped` with reason `goto`. [DAP specification](https://github.com/microsoft/debug-adapter-protocol/blob/1248685/specification.md#L2185-L2229), [targets](https://github.com/microsoft/debug-adapter-protocol/blob/1248685/specification.md#L3115-L3170), [capability](https://github.com/microsoft/debug-adapter-protocol/blob/1248685/specification.md#L3653-L3657).
+- A target has an ID, label, and source line. An IDE should offer the action only for targets returned by the adapter. [DAP GotoTarget](https://github.com/microsoft/debug-adapter-protocol/blob/1248685/specification.md#L4891-L4915).
+
+## netcoredbg today
+
+- **No implementation in the inspected revision.** Its initialize capabilities omit `supportsGotoTargetsRequest`; the DAP command map contains neither `gotoTargets` nor `goto`. Unknown commands return `E_NOTIMPL`. [capabilities](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/protocols/vscodeprotocol.cpp#L414-L436), [dispatch](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/protocols/vscodeprotocol.cpp#L484-L495), [unknown command](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/protocols/vscodeprotocol.cpp#L870-L878). Repository search also found no `CanSetIP` or `SetIP` call in `src/`.
+- The debugger already has source breakpoint resolution, frame lookup, and IL/sequence-point helpers that could support a targeted implementation. [modules interface](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/metadata/modules.h#L69-L96), [frame lookup](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/debugger/frames.cpp#L418-L430).
+
+## CoreCLR mechanism and limits
+
+- `ICorDebugILFrame::CanSetIP(offset)` checks whether moving to a CIL offset is safe. Call it before `SetIP`; a result other than `S_OK` is **not** a safe target. [Microsoft CanSetIP](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugilframe-cansetip-method).
+- `ICorDebugILFrame::SetIP(offset)` moves the current frame to a CIL offset. Since the offset belongs to that frame's method, this does not jump to a different method or stack frame. It invalidates that thread's frames and chains; fetch a fresh stack after success. Locals can be uninitialized, and program state remains the caller's responsibility. [Microsoft SetIP](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugilframe-setip-method).
+- Do not promise arbitrary try/catch moves. On 64-bit platforms, leaving a `catch` or `finally` via `SetIP` fails. Other exception-region transitions must be gated by `CanSetIP`, rather than a blanket source-line rule. [Microsoft SetIP](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugilframe-setip-method), [CanSetIP](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugilframe-cansetip-method).
+- Optimized code can have missing or inaccurate source mapping and locals. Treat Release/optimized targets as unavailable unless symbols and `CanSetIP` prove a precise safe IL target; a blanket "all optimized code fails" claim is not supported. [Microsoft MDbg guidance](https://learn.microsoft.com/en-us/dotnet/framework/tools/mdbg-exe), [CanSetIP](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugilframe-cansetip-method).
+- Moving line 35 to 33 **does not undo side effects** of line 33 or 34. It only moves the next instruction, so stepping forward can execute them again. [DAP goto semantics](https://github.com/microsoft/debug-adapter-protocol/blob/1248685/specification.md#L2185-L2195), [Microsoft SetIP](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugilframe-setip-method).
+
+## Upstream change estimate
+
+- **Estimate: roughly 1–2 engineering weeks, plus cross-platform validation.** This is an inference from the inspected architecture, not an upstream quote. Add DAP handlers/capability, map a requested source line to sequence points in the *active method*, retain safe target IDs, call `CanSetIP` then `SetIP`, invalidate/rebuild stack state, emit `stopped(goto)`, and add same-block, cross-method, exception-region, optimized-code, and stale-target tests. [DAP contract](https://github.com/microsoft/debug-adapter-protocol/blob/1248685/specification.md#L2185-L2229), [netcoredbg dispatch](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/protocols/vscodeprotocol.cpp#L484-L495), [modules interface](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/metadata/modules.h#L69-L96), [Microsoft SetIP](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugilframe-setip-method).
+- Backback should keep the action hidden until an adapter advertises the capability; no client-only workaround can make netcoredbg move the instruction pointer. [DAP capability rule](https://github.com/microsoft/debug-adapter-protocol/blob/1248685/specification.md#L2193-L2195), [netcoredbg capabilities](https://github.com/Samsung/netcoredbg/blob/9744e1f/src/protocols/vscodeprotocol.cpp#L414-L436).
