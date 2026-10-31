@@ -3,6 +3,7 @@
 
 mod bb_open;
 mod bench;
+mod debug;
 mod scan;
 
 use std::path::{Path, PathBuf};
@@ -49,6 +50,9 @@ pub enum CommandError {
     /// `bb bench` problem.
     #[error(transparent)]
     Bench(#[from] bench::BenchError),
+    /// Debugger problem.
+    #[error(transparent)]
+    Debug(#[from] debug::DebugError),
     /// `bb doctor` found a required tool missing or broken (already printed).
     #[error("required tools not usable: {}", .0.join(", "))]
     Doctor(Vec<&'static str>),
@@ -78,6 +82,13 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
         Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
+        Command::Debug {
+            target,
+            source,
+            line,
+        } => debug::run(&target, &source, line)
+            .await
+            .map_err(CommandError::from),
     }
 }
 

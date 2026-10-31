@@ -1,5 +1,17 @@
 # BBEOD01-C docs progress
 
+## BBEOD05-A debugger engine in progress
+
+- Seat: `backback_2`; branch: `bbeod-05-debug`; base: `978f75f`.
+- Official netcoredbg `3.2.0-1092` macOS arm64 archive passed its published SHA-256 check.
+- Next: typed DAP session, real debugger probe, gate, readback, and benchmark evidence.
+- DAP attach readback: GreeterSpec stopped, locals were visible, step resumed, and both tests finished.
+- Probe CLI stopped at a temporary console fixture and printed stack and locals.
+- Measured attach-to-first-stop 594 ms and step-to-stop 19 ms in one real run.
+- Final gate: format, Clippy, 87 tests, and cargo-deny all passed.
+- Performance: five-run release benchmark completed at load1 5.02; quiet comparison remains open.
+- Remaining: handoff summary, commit, and READY to `backback_mm`.
+
 - Seat: `backback_2`; owned tree: `docs/`.
 - Branch observed: `bbeod-01-engine`.
 - Docs plan, conventions, and research notes are ready for handoff.

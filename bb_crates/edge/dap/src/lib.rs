@@ -3,9 +3,14 @@
 //! The debugger is `netcoredbg` (Samsung, MIT). Microsoft's `vsdbg` is licensed
 //! for Visual Studio and VS Code only, so it is never used here. DAP shares the
 //! `Content-Length` framing with LSP ([`bb_framing`]); this crate adds the DAP
-//! message envelope and adapter discovery. The session state machine lands in M3.
+//! message envelope, adapter discovery, and a bounded session.
 
 use std::path::PathBuf;
+
+mod bb_session;
+mod types;
+pub use bb_session::{DapSession, GotoTarget, Step};
+pub use types::{Capabilities, Event, Scope, SourceBreakpoint, StackFrame, Thread, Variable};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -28,6 +33,40 @@ pub enum DapError {
     /// A message did not match the DAP envelope.
     #[error("not a DAP message: {0}")]
     Envelope(#[from] serde_json::Error),
+    /// The adapter could not be started.
+    #[error("cannot start adapter: {0}")]
+    Spawn(#[source] std::io::Error),
+    /// Adapter stdio was unavailable.
+    #[error("adapter has no stdio pipes")]
+    NoPipes,
+    /// The adapter closed its pipe or crashed.
+    #[error("adapter closed the connection")]
+    Closed,
+    /// A request exceeded its deadline.
+    #[error("DAP {command} timed out after {after:?}")]
+    Timeout {
+        /// Request command.
+        command: String,
+        /// Configured deadline.
+        after: std::time::Duration,
+    },
+    /// The adapter rejected a request.
+    #[error("DAP {command}: {message}")]
+    Rejected {
+        /// Request command.
+        command: String,
+        /// Adapter message.
+        message: String,
+    },
+    /// A frame was malformed.
+    #[error("DAP frame: {0}")]
+    Frame(#[from] bb_framing::FrameError),
+    /// A feature was not advertised by the adapter.
+    #[error("adapter does not support {0}")]
+    Unsupported(&'static str),
+    /// A setup command was sent in the wrong order.
+    #[error("DAP session setup order is invalid")]
+    State,
 }
 
 /// The DAP envelope. `type` decides which of the optional fields are present.
