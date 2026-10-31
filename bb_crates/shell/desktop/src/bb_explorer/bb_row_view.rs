@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use bb_explorer::Entry;
-use bb_ui::bb_theme::DARK;
+use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, Context, IntoElement, Window};
 
 use crate::icons::chevron;
@@ -11,6 +11,7 @@ use crate::{color, icons, tooltip, ExplorerView};
 pub(crate) struct RowState {
     pub(crate) selected: bool,
     pub(crate) panel_width: f32,
+    pub(crate) theme: Theme,
 }
 
 struct RowAction {
@@ -33,17 +34,9 @@ pub(crate) fn row(
     };
     let tooltip_path: String = action.path.display().to_string();
     let name: String = entry.name().to_owned();
-    let text_color: gpui::Rgba = color(if entry.dimmed() {
-        DARK.text_dim
-    } else {
-        DARK.text
-    });
+    let text_color: gpui::Rgba = row_text_color(entry, state.theme);
     let layout: RowLayout = RowLayout::new(depth, state.panel_width, f32::MAX);
-    let border: gpui::Rgba = color(if state.selected {
-        DARK.accent
-    } else {
-        DARK.surface
-    });
+    let border: gpui::Rgba = row_border_color(state);
     div()
         .id(index)
         .pl_2()
@@ -54,8 +47,8 @@ pub(crate) fn row(
         .text_color(text_color)
         .border_1()
         .border_color(border)
-        .hover(|style: gpui::StyleRefinement| style.bg(color(DARK.overlay)))
-        .tooltip(tooltip::path(tooltip_path))
+        .hover(move |style: gpui::StyleRefinement| style.bg(color(state.theme.overlay)))
+        .tooltip(tooltip::path(tooltip_path, state.theme))
         .on_click(cx.listener(
             move |view: &mut ExplorerView,
                   _: &gpui::ClickEvent,
@@ -64,10 +57,31 @@ pub(crate) fn row(
                 activate(view, &action, window, cx);
             },
         ))
-        .children(layout.guide_offsets.iter().map(|_: &f32| indent_guide()))
+        .children(
+            layout
+                .guide_offsets
+                .iter()
+                .map(|_: &f32| indent_guide(state.theme)),
+        )
         .child(div().w(px(16.0)).flex_shrink_0().child(chevron(entry)))
-        .child(icons::icon(entry, color(icons::tint(entry, &DARK))))
+        .child(icons::icon(entry, color(icons::tint(entry, &state.theme))))
         .child(name_box(name, layout.name_width))
+}
+
+fn row_text_color(entry: &Entry, theme: Theme) -> gpui::Rgba {
+    color(if entry.dimmed() {
+        theme.text_dim
+    } else {
+        theme.text
+    })
+}
+
+fn row_border_color(state: RowState) -> gpui::Rgba {
+    color(if state.selected {
+        state.theme.accent
+    } else {
+        state.theme.surface
+    })
 }
 
 fn activate(
@@ -97,13 +111,13 @@ fn name_box(name: String, width: f32) -> impl IntoElement {
         .child(name)
 }
 
-fn indent_guide() -> impl IntoElement {
+fn indent_guide(theme: Theme) -> impl IntoElement {
     div()
         .w(px(16.0))
         .flex_shrink_0()
         .h_full()
         .border_l_1()
-        .border_color(color(DARK.border))
+        .border_color(color(theme.border))
 }
 
 struct RowLayout {

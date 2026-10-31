@@ -16,7 +16,10 @@ use std::path::PathBuf;
 
 use bb_explorer::{Entry, Explorer};
 use bb_row_view::{row, RowState};
-use bb_ui::{bb_theme::DARK, Rgb};
+use bb_ui::{
+    bb_theme::{Theme, ThemeKind},
+    Rgb,
+};
 use editor::Tabs;
 use gpui::{
     div, prelude::*, px, rgb, Context, FocusHandle, InteractiveElement, IntoElement, MouseButton,
@@ -58,6 +61,9 @@ struct ExplorerView {
     closing_window: bool,
     panel_width: f32,
     resizing: bool,
+    theme: Theme,
+    theme_override: Option<ThemeKind>,
+    appearance_subscription: Option<gpui::Subscription>,
 }
 
 impl ExplorerView {
@@ -155,19 +161,26 @@ impl Render for ExplorerView {
         div()
             .size_full()
             .flex()
-            .bg(color(DARK.bg))
+            .bg(color(self.theme.bg))
+            .on_action(cx.listener(ExplorerView::toggle_theme))
+            .on_action(cx.listener(ExplorerView::follow_appearance))
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .child(explorer_panel(self, cx))
-            .child(resize_edge(cx))
+            .child(resize_edge(self.theme, cx))
             .child(
                 div()
                     .flex_1()
                     .h_full()
                     .flex()
                     .flex_col()
-                    .child(editor::tab_bar(&self.tabs, cx))
-                    .child(editor::editor_body(&self.tabs, &self.editor_focus, cx)),
+                    .child(editor::tab_bar(&self.tabs, self.theme, cx))
+                    .child(editor::editor_body(
+                        &self.tabs,
+                        &self.editor_focus,
+                        self.theme,
+                        cx,
+                    )),
             )
     }
 }
@@ -180,7 +193,7 @@ fn explorer_panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl I
         .h_full()
         .flex()
         .flex_col()
-        .bg(color(DARK.surface))
+        .bg(color(view.theme.surface))
         .overflow_y_scroll()
         .key_context("Explorer")
         .track_focus(&view.focus)
@@ -193,7 +206,7 @@ fn explorer_panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl I
             div()
                 .px_3()
                 .py_2()
-                .text_color(color(DARK.text))
+                .text_color(color(view.theme.text))
                 .child("EXPLORER"),
         )
         .children(rows.into_iter().enumerate().map(
@@ -205,6 +218,7 @@ fn explorer_panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl I
                     RowState {
                         selected: index == view.selected,
                         panel_width: view.panel_width,
+                        theme: view.theme,
                     },
                     cx,
                 )
@@ -212,13 +226,13 @@ fn explorer_panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl I
         ))
 }
 
-fn resize_edge(cx: &mut Context<ExplorerView>) -> impl IntoElement {
+fn resize_edge(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
     div()
         .id("explorer-resize-edge")
         .w(px(6.0))
         .h_full()
         .flex_shrink_0()
-        .bg(color(DARK.border))
+        .bg(color(theme.border))
         .on_mouse_down(MouseButton::Left, cx.listener(ExplorerView::start_resize))
 }
 

@@ -1,5 +1,18 @@
 # BBEOD02-A progress
 
+- BBEOD02-B follow-up opened after acceptance: add light theme that follows
+  macOS appearance, live View toggle, and screenshots of both modes.
+- One rapid-typing performance round remains: compare one change against the
+  accepted 500-key release baseline on the same 5,000-line fixture. Keep only
+  a faster, green change; record the result in `docs/plan/bench/EDITOR.md`.
+- State first: branch `bbeod-02-editor`, last accepted SHA `7c35450`, no push.
+- Theme live readback passed: separate View menu, light toggle, return to the
+  current macOS dark appearance through Follow, no restart; both PNGs saved.
+- One rapid-key scheduling candidate (`window.refresh`) was measured A/B and
+  reverted: p99 41.255 vs 41.222 ms with unequal 11.892/13.332 s key loops.
+  Two-frame latency remains open; final full gate passed: fmt, Clippy, 109
+  workspace tests, and deny.
+
 - BBEOD02-B editor implemented on `bbeod-02-editor`: rope document, guarded
   tabs and window close, atomic save, visible-line C# highlighting, and input
   latency capture from GPUI's input-to-present histogram.

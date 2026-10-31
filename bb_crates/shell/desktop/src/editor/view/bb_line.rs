@@ -1,7 +1,7 @@
 use super::super::bb_tabs::Tab;
 use crate::{color, ExplorerView};
 use bb_syntax::{HighlightKind, HighlightSpan};
-use bb_ui::bb_theme::DARK;
+use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, Context, IntoElement, Window};
 use std::time::Instant;
 
@@ -71,6 +71,7 @@ pub(super) fn line_row(
     index: usize,
     runs: Vec<Run>,
     current: bool,
+    theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
     div()
@@ -80,8 +81,8 @@ pub(super) fn line_row(
         .items_center()
         .font_family("Menlo")
         .text_size(px(13.0))
-        .text_color(color(DARK.text))
-        .bg(color(if current { DARK.surface } else { DARK.bg }))
+        .text_color(color(theme.text))
+        .bg(color(if current { theme.surface } else { theme.bg }))
         .on_mouse_down(
             gpui::MouseButton::Left,
             cx.listener(
@@ -104,31 +105,31 @@ pub(super) fn line_row(
         .child(
             div()
                 .w(px(50.0))
-                .text_color(color(DARK.text_dim))
+                .text_color(color(theme.text_dim))
                 .child(format!("{:>4} ", index.saturating_add(1))),
         )
         .children(
             runs.into_iter()
-                .map(move |run: Run| run_segment(run, current)),
+                .map(move |run: Run| run_segment(run, current, theme)),
         )
 }
 
-fn run_segment(run: Run, current: bool) -> impl IntoElement {
+fn run_segment(run: Run, current: bool, theme: Theme) -> impl IntoElement {
     let ink: bb_ui::Rgb = match run.kind {
-        HighlightKind::Keyword => DARK.keyword,
-        HighlightKind::String => DARK.string,
-        HighlightKind::Comment => DARK.comment,
-        HighlightKind::Type => DARK.ty,
-        HighlightKind::Plain => DARK.text,
+        HighlightKind::Keyword => theme.keyword,
+        HighlightKind::String => theme.string,
+        HighlightKind::Comment => theme.comment,
+        HighlightKind::Type => theme.ty,
+        HighlightKind::Plain => theme.text,
     };
     div()
         .text_color(color(ink))
         .bg(color(if run.selected {
-            DARK.accent
+            theme.accent
         } else if current {
-            DARK.surface
+            theme.surface
         } else {
-            DARK.bg
+            theme.bg
         }))
         .child(run.text)
 }

@@ -54,3 +54,22 @@ All rows below are real keypresses and GPUI input-to-present samples.
 - Host load was 4.41, 5.14, and 5.32 in A, B, and C. A quiet-machine gate
   remains unverified. Re-measure on a display running at least 60 Hz before
   claiming the 16 ms target on that configuration.
+
+## Accepted follow-up: one rapid-typing scheduling round
+
+- Same release build target, same unedited 5,000-line, 167,722-byte fixture,
+  same focused editor and 500 sequential CUA `x` keypresses. The only candidate
+  change replaced the edit path's `cx.notify()` with `window.refresh()`.
+- A baseline: 11.892 s key loop; 500 draws, 216 presents; input-to-present
+  p50/p95/p99 33.440/41.222/41.255 ms. Draw p99 1.572 ms.
+- B candidate: 13.332 s key loop; 500 draws, 229 presents; input-to-present
+  p50/p95/p99 32.702/41.189/41.222 ms. Draw p99 2.003 ms. Eight desktop
+  tests passed. The loop-rate and p99 differences are too small and confounded
+  to prove improvement; the candidate was reverted.
+- Both runs reported 20.833 ms refresh intervals on all 500 draws. Most key
+  draws did not get their own presentation (216/500 and 229/500); the p99
+  remains about two refreshes. The measured edit, reparse, and paint work
+  is below 4 ms per key. GPUI's display-link/Metal presentation scheduling
+  is the remaining likely source; the available trace does not isolate
+  coalescing from drawable queueing or display-link phase. Rapid typing is
+  still open, with no product scheduling change retained in this round.

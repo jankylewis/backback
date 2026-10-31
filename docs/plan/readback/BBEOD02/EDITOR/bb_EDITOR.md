@@ -23,3 +23,14 @@
 Each PNG was captured from this seat's live window with `screencapture -l` and
 visually inspected after writing. Existing BBEOD02-A Explorer captures remain
 in the parent folder.
+
+## Theme follow-up
+
+- The native View menu exposed Toggle Light/Dark Theme and Follow macOS
+  Appearance. A menu placement defect initially put both actions under the
+  application menu; a failing-first desktop test and live recheck fixed it.
+- With the fixture tab open, Toggle changed the running app to light. Follow
+  cleared the override and returned the same window to the current macOS dark
+  appearance, without restart. The appearance observer is wired for later
+  system changes; a global macOS setting change was not part of this readback.
+- Both live window captures were saved and inspected in `THEME/`.

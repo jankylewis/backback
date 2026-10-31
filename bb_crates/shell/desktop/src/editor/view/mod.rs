@@ -1,5 +1,5 @@
 use bb_text::Document;
-use bb_ui::bb_theme::DARK;
+use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, uniform_list, Context, FocusHandle, IntoElement, Window};
 
 use super::bb_tabs::Tab;
@@ -8,17 +8,21 @@ use super::Tabs;
 use crate::{color, ExplorerView};
 use bb_line::{line_row, styled_line};
 
-pub(crate) fn tab_bar(tabs: &Tabs, cx: &mut Context<ExplorerView>) -> impl IntoElement {
+pub(crate) fn tab_bar(
+    tabs: &Tabs,
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> impl IntoElement {
     div()
         .h(px(36.0))
         .flex()
-        .bg(color(DARK.surface))
+        .bg(color(theme.surface))
         .children(
             tabs.items()
                 .iter()
                 .enumerate()
                 .map(|(index, tab): (usize, &Tab)| {
-                    tab_item(index, tab, tabs.active_index() == Some(index), cx)
+                    tab_item(index, tab, tabs.active_index() == Some(index), theme, cx)
                 }),
         )
 }
@@ -27,6 +31,7 @@ fn tab_item(
     index: usize,
     tab: &Tab,
     active: bool,
+    theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
     let name: String = tab.path.file_name().map_or_else(
@@ -40,8 +45,8 @@ fn tab_item(
         .px_2()
         .flex()
         .items_center()
-        .bg(color(if active { DARK.bg } else { DARK.surface }))
-        .text_color(color(DARK.text))
+        .bg(color(if active { theme.bg } else { theme.surface }))
+        .text_color(color(theme.text))
         .on_click(cx.listener(
             move |view: &mut ExplorerView,
                   _: &gpui::ClickEvent,
@@ -52,7 +57,7 @@ fn tab_item(
                 cx.notify();
             },
         ))
-        .child(div().text_color(color(DARK.icon_csharp)).child("C# "))
+        .child(div().text_color(color(theme.icon_csharp)).child("C# "))
         .child(format!("{name}{dirty}"))
         .child(
             div()
@@ -74,13 +79,14 @@ fn tab_item(
 pub(crate) fn editor_body(
     tabs: &Tabs,
     focus: &FocusHandle,
+    theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
     let lines: usize = tabs.active().map_or(0, Document::len_lines);
     div()
         .id("editor-area")
         .flex_1()
-        .bg(color(DARK.bg))
+        .bg(color(theme.bg))
         .key_context("Editor")
         .track_focus(focus)
         .on_key_down(cx.listener(ExplorerView::editor_key_down))
@@ -94,14 +100,7 @@ pub(crate) fn editor_body(
                      _: &mut Window,
                      row_cx: &mut Context<ExplorerView>| {
                         range
-                            .map(|index: usize| {
-                                let tab: &Tab = match view.tabs.active_tab() {
-                                    Some(tab) => tab,
-                                    None => return line_row(index, Vec::new(), false, row_cx),
-                                };
-                                let current: bool = tab.document.cursor_line() == index;
-                                line_row(index, styled_line(tab, index), current, row_cx)
-                            })
+                            .map(|index: usize| editor_line(view, index, row_cx))
                             .collect::<Vec<_>>()
                     },
                 ),
@@ -110,6 +109,21 @@ pub(crate) fn editor_body(
         )
         .when(
             tabs.pending_close(),
-            |element: gpui::Stateful<gpui::Div>| element.child(super::prompt::close_prompt(cx)),
+            |element: gpui::Stateful<gpui::Div>| {
+                element.child(super::prompt::close_prompt(theme, cx))
+            },
         )
+}
+
+fn editor_line(
+    view: &ExplorerView,
+    index: usize,
+    cx: &mut Context<ExplorerView>,
+) -> impl IntoElement {
+    let tab: &Tab = match view.tabs.active_tab() {
+        Some(tab) => tab,
+        None => return line_row(index, Vec::new(), false, view.theme, cx),
+    };
+    let current: bool = tab.document.cursor_line() == index;
+    line_row(index, styled_line(tab, index), current, view.theme, cx)
 }

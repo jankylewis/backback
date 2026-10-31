@@ -1,16 +1,16 @@
-use bb_ui::bb_theme::DARK;
+use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, Context, IntoElement, MouseButton, Window};
 
 use crate::{color, ExplorerView};
 
-pub(crate) fn close_prompt(cx: &mut Context<ExplorerView>) -> impl IntoElement {
+pub(crate) fn close_prompt(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
     div()
         .absolute()
         .left(px(40.0))
         .top(px(60.0))
         .p_4()
-        .bg(color(DARK.overlay))
-        .text_color(color(DARK.text))
+        .bg(color(theme.overlay))
+        .text_color(color(theme.text))
         .child("Save changes before closing?")
         .child(prompt_button("Save", cx, save_prompt))
         .child(prompt_button("Discard", cx, discard_prompt))
