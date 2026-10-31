@@ -116,6 +116,15 @@ fn open_waits_until_every_project_of_the_solution_has_loaded() {
 }
 
 #[test]
+fn open_keeps_the_server_lines_until_the_server_has_shut_down() {
+    let dir: PathBuf = fresh_copy("shutdownlog");
+    let run: Run = open(&dir, &[]);
+    let log: String = log_of(&run);
+    let _gone: std::io::Result<()> = std::fs::remove_dir_all(&dir);
+    assert!(log.contains("[info] Shutting down"), "{log}");
+}
+
+#[test]
 fn open_with_restore_flag_lets_roslyn_restore() {
     let dir: PathBuf = fresh_copy("restore");
     let run: Run = open(&dir, &["--restore"]);

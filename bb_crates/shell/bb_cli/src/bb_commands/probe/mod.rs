@@ -59,7 +59,7 @@ pub(crate) async fn run(probe: &Probe) -> Result<(), CommandError> {
         path: log_dir.clone(),
         source,
     })?;
-    let (log_path, mut log): (PathBuf, std::fs::File) = bb_open::create_log(&log_dir)?;
+    let (log_path, log): (PathBuf, std::fs::File) = bb_open::create_log(&log_dir)?;
     let config: Config = Config {
         scratch: bb_open::scratch_dir(&solution, std::process::id()),
         solution,
@@ -71,7 +71,7 @@ pub(crate) async fn run(probe: &Probe) -> Result<(), CommandError> {
     println!("solution  : {}", config.solution.display());
     println!("log       : {}", log_path.display());
     let started: Instant = Instant::now();
-    let mut session: Session = Session::start(&config, &mut log)
+    let mut session: Session = Session::start(&config, log)
         .await
         .map_err(ProbeError::from)?;
     println!(

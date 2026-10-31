@@ -45,18 +45,23 @@ pub struct Session {
     pub(crate) request_timeout: Duration,
     scratch: PathBuf,
     loaded_in: Duration,
+    pump: tokio::task::JoinHandle<()>,
 }
+
+/// How long the server's last log lines may take after `shutdown`.
+const DRAIN_TIMEOUT: Duration = Duration::from_secs(5);
 
 impl Session {
     /// Start the server, load `config.solution` and wait until every project
-    /// of it has loaded. Server log lines go to `log`.
+    /// of it has loaded. Server log lines go to `log`, during the load and
+    /// for as long as the session runs.
     ///
     /// # Errors
     /// The server is missing or fails to start, a path is bad, or the load
     /// passes its deadline.
-    pub async fn start<W: std::io::Write>(
+    pub async fn start<W: std::io::Write + Send + 'static>(
         config: &Config,
-        log: &mut W,
+        mut log: W,
     ) -> Result<Self, IntelError> {
         let solution: DocPath = DocPath::new(config.solution.clone())?;
         let listing: Solution = Solution::load(&SolutionPath::new(config.solution.clone())?)?;
@@ -81,11 +86,12 @@ impl Session {
             &mut incoming,
             config.load_timeout,
             listing.projects.len(),
-            log,
+            &mut log,
         )
         .await?;
         let store: Store = Store::default();
-        tokio::spawn(pump(incoming, Arc::clone(&store)));
+        let pump: tokio::task::JoinHandle<()> =
+            tokio::spawn(pump(incoming, Arc::clone(&store), log));
         Ok(Self {
             client,
             docs: HashMap::new(),
@@ -93,6 +99,7 @@ impl Session {
             request_timeout: config.request_timeout,
             scratch: config.scratch.clone(),
             loaded_in,
+            pump,
         })
     }
 
@@ -127,12 +134,17 @@ impl Session {
         Ok(self.client.request_within(method, params, deadline).await?)
     }
 
-    /// Stop the server and remove the scratch folder.
+    /// Stop the server, wait (bounded) until its last log lines are
+    /// written, and remove the scratch folder.
     ///
     /// # Errors
     /// The `exit` notification cannot be sent.
     pub async fn shutdown(self) -> Result<(), IntelError> {
         let stopped: Result<(), bb_lsp::LspError> = self.client.shutdown().await;
+        // The pump ends when the server closes its stream; past the deadline
+        // the log simply ends there, which is not a shutdown failure.
+        let _drained: Result<Result<(), tokio::task::JoinError>, tokio::time::error::Elapsed> =
+            tokio::time::timeout(DRAIN_TIMEOUT, self.pump).await;
         // Best effort: a scratch folder left behind is only temp space.
         let _removed: std::io::Result<()> = std::fs::remove_dir_all(&self.scratch);
         Ok(stopped?)
@@ -146,9 +158,13 @@ impl Session {
 }
 
 /// Keep reading server messages so the reader never blocks on a full
-/// channel; keep each pushed `publishDiagnostics` per document.
-async fn pump(mut incoming: mpsc::Receiver<Incoming>, store: Store) {
+/// channel; write each one to the run log, and keep each pushed
+/// `publishDiagnostics` per document.
+async fn pump<W: std::io::Write>(mut incoming: mpsc::Receiver<Incoming>, store: Store, mut log: W) {
     while let Some(message) = incoming.recv().await {
+        // A log that stops accepting lines must not stop the drain: the
+        // reader would block and every later request would time out.
+        let _logged: Result<&str, roslyn::RoslynError> = roslyn::log_incoming(&message, &mut log);
         let Incoming::Notification { method, params }: Incoming = message else {
             continue;
         };

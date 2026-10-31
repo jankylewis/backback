@@ -47,6 +47,17 @@ pub enum IntelError {
     /// The document version cannot go higher.
     #[error("document version overflow: {0}")]
     VersionOverflow(PathBuf),
+    /// The server's formatter failed on this document (Roslyn: `-32000` on
+    /// some U+0085/U+2028/U+2029 trivia). The session keeps working.
+    #[error("formatter failed on {path} (server error {code}): {message}")]
+    Formatter {
+        /// The document.
+        path: PathBuf,
+        /// JSON-RPC error code.
+        code: i64,
+        /// Server message.
+        message: String,
+    },
     /// A file could not be read.
     #[error("cannot read {path}: {source}")]
     Read {

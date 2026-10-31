@@ -187,7 +187,7 @@ impl FileChange {
     }
 }
 
-fn text_change(e: &lsp_types::TextEdit) -> TextChange {
+pub(crate) fn text_change(e: &lsp_types::TextEdit) -> TextChange {
     TextChange {
         span: Span::from_lsp(e.range),
         new_text: e.new_text.clone(),

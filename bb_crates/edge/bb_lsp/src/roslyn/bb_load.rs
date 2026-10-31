@@ -47,17 +47,59 @@ pub async fn wait_for_load<W: std::io::Write>(
             Some(Incoming::Notification { method, .. }) if method == PROJECT_INIT_COMPLETE => {
                 signalled = true;
             }
-            Some(Incoming::Notification { method, params }) => {
-                let text: &str = log_message(&method, params.as_ref(), log)?;
+            Some(message) => {
+                let text: &str = log_incoming(&message, log)?;
                 loaded = loaded.saturating_add(batch_size(text));
-            }
-            Some(Incoming::ServerRequest { method, params }) => {
-                log_configuration(&method, params.as_ref(), log)?;
             }
             None => return Err(RoslynError::Client(LspError::Closed)),
         }
     }
     Ok(started.elapsed())
+}
+
+/// Write one server message to `log` the way the run log keeps it: a
+/// `window/logMessage` or `window/showMessage` as `[level] text`, each
+/// section a `workspace/configuration` request asks for as `[config] name`.
+/// Returns the message text (empty for anything else). The session calls
+/// this for every message after the load too, so the log never stops there.
+///
+/// # Errors
+/// [`RoslynError::Log`] when `log` cannot be written.
+pub fn log_incoming<'m, W: std::io::Write>(
+    message: &'m Incoming,
+    log: &mut W,
+) -> Result<&'m str, RoslynError> {
+    match message {
+        Incoming::Notification { method, params } => log_message(method, params.as_ref(), log),
+        Incoming::ServerRequest { method, params } => {
+            log_configuration(method, params.as_ref(), log)?;
+            Ok("")
+        }
+    }
+}
+
+/// Write every message still coming to `log` until the server closes the
+/// stream or `deadline` passes. Call it after `shutdown`, so the lines the
+/// server writes on its way out stay in the run log.
+///
+/// # Errors
+/// [`RoslynError::Log`] when `log` cannot be written. A passed deadline is
+/// not an error: the log then simply ends there.
+pub async fn drain_log<W: std::io::Write>(
+    incoming: &mut tokio::sync::mpsc::Receiver<Incoming>,
+    deadline: Duration,
+    log: &mut W,
+) -> Result<(), RoslynError> {
+    let started: Instant = Instant::now();
+    while let Some(remaining) = deadline.checked_sub(started.elapsed()) {
+        match tokio::time::timeout(remaining, incoming.recv()).await {
+            Ok(Some(message)) => {
+                log_incoming(&message, log)?;
+            }
+            Ok(None) | Err(_) => break,
+        }
+    }
+    Ok(())
 }
 
 /// The project count of a batch line, else 0.

@@ -32,6 +32,11 @@ impl Harness {
 
 /// Copy the harness to a new temp folder named after `name`, load it.
 pub async fn start(name: &str) -> Harness {
+    start_logged(name, std::io::sink()).await
+}
+
+/// [`start`], with the server log going to `log`.
+pub async fn start_logged<W: std::io::Write + Send + 'static>(name: &str, log: W) -> Harness {
     let base: PathBuf =
         std::env::temp_dir().join(format!("bb-intel-{name}-{}", std::process::id()));
     let _fresh: std::io::Result<()> = std::fs::remove_dir_all(&base);
@@ -46,8 +51,7 @@ pub async fn start(name: &str) -> Harness {
         request_timeout: DEADLINE,
         load_timeout: Duration::from_secs(120),
     };
-    let mut log: Vec<u8> = Vec::new();
-    let session: Session = Session::start(&config, &mut log).await.unwrap();
+    let session: Session = Session::start(&config, log).await.unwrap();
     Harness { root, session }
 }
 

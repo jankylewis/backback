@@ -13,6 +13,8 @@ use super::CommandError;
 
 const LSP_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 const SOLUTION_LOAD_TIMEOUT: Duration = Duration::from_secs(300);
+/// How long the server's last lines may take after `shutdown`.
+const DRAIN_TIMEOUT: Duration = Duration::from_secs(5);
 
 pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(), CommandError> {
     let (sln, listing): (SolutionPath, Solution) = describe(solution, restore)?;
@@ -51,6 +53,7 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
         println!("obj       : {} (removed at exit)", scratch.display());
     }
     let stopped: Result<(), bb_lsp::LspError> = client.shutdown().await;
+    roslyn::drain_log(&mut incoming, DRAIN_TIMEOUT, &mut log).await?;
     // Best effort: a scratch folder left behind is only temp space.
     let _removed: std::io::Result<()> = std::fs::remove_dir_all(&scratch);
     stopped.map_err(roslyn::RoslynError::Client)?;
