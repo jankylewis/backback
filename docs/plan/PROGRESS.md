@@ -1,5 +1,14 @@
 # BBEOD02 progress
 
+- BBEOD05-B Set Next (`backback_2`, 2026-11-01): local netcoredbg
+  `3.2.0-1092` clone at `backback_wt/netcoredbg`, branch `local-setnext`.
+  Backback instrument branch `bbeod-05-setnext` starts at origin/master.
+  Local DAP goto patch built and installed. Upstream-style fixture passed for
+  same-method re-execution, stale IDs, cross-method, catch, and finally gates.
+  Backback live DAP instrument passed. Merged backback gate: fmt, Clippy, 127 tests,
+  deny, and `bb audit` passed. Full netcoredbg build and 6 CTest tests passed.
+  Direct upstream-style runner passed; no publication.
+
 - Hygiene-ctx (`backback_2`, 2026-11-01): moved five tracked ctx summaries
   unchanged to the external rawctxhub; removed the repo copies and added an
   ignore rule and external-hub instruction. Public-path review found two
