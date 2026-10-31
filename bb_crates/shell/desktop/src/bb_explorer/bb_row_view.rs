@@ -93,7 +93,7 @@ fn activate(
     view.selected = action.index;
     if action.expandable {
         if let Err(error) = view.tree.toggle(&action.path) {
-            eprintln!("{error}");
+            view.report(&error);
         }
     } else {
         view.open_file(&action.path, window, cx);

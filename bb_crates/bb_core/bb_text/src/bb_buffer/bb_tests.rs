@@ -71,3 +71,14 @@ proptest! {
         prop_assert_eq!(b.from_lsp(point).unwrap(), idx);
     }
 }
+
+proptest! {
+    #[test]
+    fn load_scan_and_edit_scan_agree_on_other_line_breaks(
+        text in "[a\r\n\u{0b}\u{0c}\u{85}\u{2028}\u{2029}]{0,24}",
+    ) {
+        let buffer: Buffer = Buffer::from_text(&text);
+        let whole: bool = buffer.other_break_near(CharIdx::new(0), CharIdx::new(buffer.len_chars()));
+        prop_assert_eq!(Buffer::text_has_other_break(&text), whole);
+    }
+}

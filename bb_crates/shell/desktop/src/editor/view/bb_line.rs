@@ -15,10 +15,10 @@ pub(super) fn styled_line(tab: &Tab, index: usize) -> Vec<Run> {
     let started: Instant = Instant::now();
     let text: String = tab.document.line(index).unwrap_or_default();
     let clean: &str = text.trim_end_matches(['\r', '\n']);
-    let byte_start: usize = tab.line_bytes.get(index).copied().unwrap_or(0);
-    let spans: Vec<HighlightSpan> = tab.syntax.highlight_spans(
-        &tab.tree,
-        &tab.parsed_text,
+    let byte_start: usize = tab.document.line_start_byte(index).unwrap_or(0);
+    let spans: Vec<HighlightSpan> = tab.highlighter.highlight_spans(
+        tab.live.tree(),
+        tab.document.rope(),
         byte_start..byte_start.saturating_add(clean.len()),
     );
     let char_start: usize = tab

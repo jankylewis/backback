@@ -58,3 +58,24 @@ mod tests {
         assert_eq!(left(&mut tree, 2).unwrap(), 1);
     }
 }
+
+/// Select the preceding Explorer row.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct MoveUp;
+/// Select the next Explorer row.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct MoveDown;
+/// Collapse the selected folder or select its parent.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct MoveLeft;
+/// Expand the selected folder.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct MoveRight;
+/// Open the selected entry.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct Open;

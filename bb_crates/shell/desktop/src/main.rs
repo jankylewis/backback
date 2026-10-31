@@ -9,43 +9,25 @@ mod latency;
 mod launch;
 #[path = "bb_explorer/navigation.rs"]
 mod navigation;
+#[path = "bb_explorer/panel.rs"]
+mod panel;
 #[path = "bb_explorer/tooltip.rs"]
 mod tooltip;
 
 use std::path::PathBuf;
 
 use bb_explorer::{Entry, Explorer};
-use bb_row_view::{row, RowState};
 use bb_ui::{
     bb_theme::{Theme, ThemeKind},
     Rgb,
 };
-use editor::Tabs;
+use editor::{Tab, TabError, Tabs};
 use gpui::{
-    div, prelude::*, px, rgb, Context, FocusHandle, InteractiveElement, IntoElement, MouseButton,
-    Render, StatefulInteractiveElement, Window,
+    div, prelude::*, rgb, AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton,
+    Render, ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
 };
 
-/// Select the preceding Explorer row.
-#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
-#[action(namespace = backback)]
-struct MoveUp;
-/// Select the next Explorer row.
-#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
-#[action(namespace = backback)]
-struct MoveDown;
-/// Collapse the selected folder or select its parent.
-#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
-#[action(namespace = backback)]
-struct MoveLeft;
-/// Expand the selected folder.
-#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
-#[action(namespace = backback)]
-struct MoveRight;
-/// Open the selected entry.
-#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
-#[action(namespace = backback)]
-struct Open;
+use navigation::{MoveDown, MoveLeft, MoveRight, MoveUp, Open};
 
 struct ExplorerView {
     tree: Explorer,
@@ -64,6 +46,9 @@ struct ExplorerView {
     theme: Theme,
     theme_override: Option<ThemeKind>,
     appearance_subscription: Option<gpui::Subscription>,
+    status: Option<String>,
+    explorer_scroll: UniformListScrollHandle,
+    quit_after_close: bool,
 }
 
 impl ExplorerView {
@@ -96,31 +81,41 @@ impl ExplorerView {
         self.resizing = true;
     }
 
-    fn move_up(&mut self, _: &MoveUp, _: &mut Window, cx: &mut Context<Self>) {
-        self.selected = self.selected.saturating_sub(1);
+    /// Show an error in the status bar (and on stderr for logs).
+    pub(crate) fn report(&mut self, error: &dyn std::fmt::Display) {
+        let text: String = error.to_string();
+        eprintln!("{text}");
+        self.status = Some(text);
+    }
+
+    fn select_row(&mut self, selected: usize, cx: &mut Context<Self>) {
+        self.selected = selected;
+        self.explorer_scroll
+            .scroll_to_item(selected, ScrollStrategy::Nearest);
         cx.notify();
     }
 
+    fn move_up(&mut self, _: &MoveUp, _: &mut Window, cx: &mut Context<Self>) {
+        self.select_row(self.selected.saturating_sub(1), cx);
+    }
+
     fn move_down(&mut self, _: &MoveDown, _: &mut Window, cx: &mut Context<Self>) {
-        self.selected = self
-            .selected
-            .saturating_add(1)
-            .min(self.tree.visible().len().saturating_sub(1));
-        cx.notify();
+        let last: usize = self.tree.visible().len().saturating_sub(1);
+        self.select_row(self.selected.saturating_add(1).min(last), cx);
     }
 
     fn move_left(&mut self, _: &MoveLeft, _: &mut Window, cx: &mut Context<Self>) {
         match navigation::left(&mut self.tree, self.selected) {
-            Ok(selected) => self.selected = selected,
-            Err(error) => eprintln!("{error}"),
+            Ok(selected) => self.select_row(selected, cx),
+            Err(error) => self.report(&error),
         }
         cx.notify();
     }
 
     fn move_right(&mut self, _: &MoveRight, _: &mut Window, cx: &mut Context<Self>) {
         match navigation::right(&mut self.tree, self.selected) {
-            Ok(selected) => self.selected = selected,
-            Err(error) => eprintln!("{error}"),
+            Ok(selected) => self.select_row(selected, cx),
+            Err(error) => self.report(&error),
         }
         cx.notify();
     }
@@ -138,7 +133,7 @@ impl ExplorerView {
         if let Some((path, folder)) = row {
             if folder {
                 if let Err(error) = self.tree.toggle(&path) {
-                    eprintln!("{error}");
+                    self.report(&error);
                 }
             } else {
                 self.open_file(&path, window, cx);
@@ -147,10 +142,49 @@ impl ExplorerView {
         cx.notify();
     }
 
+    /// Open a file without blocking the UI: a placeholder tab shows while a
+    /// background thread reads and parses it.
     fn open_file(&mut self, path: &std::path::Path, window: &mut Window, cx: &mut Context<Self>) {
-        match self.tabs.open(path) {
-            Ok(()) => window.focus(&self.editor_focus, cx),
-            Err(error) => eprintln!("{error}"),
+        match self.tabs.begin_open(path) {
+            Ok(Some(file)) => {
+                let job: PathBuf = file.clone();
+                let load: gpui::Task<Result<Tab, TabError>> = cx
+                    .background_executor()
+                    .spawn(async move { Tab::load(job) });
+                cx.spawn_in(
+                    window,
+                    async move |view: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
+                        let loaded: Result<Tab, TabError> = load.await;
+                        view.update_in(
+                            cx,
+                            |view: &mut Self, window: &mut Window, cx: &mut Context<Self>| {
+                                view.finish_open(&file, loaded, window, cx);
+                            },
+                        )
+                        .ok();
+                    },
+                )
+                .detach();
+            }
+            Ok(None) => window.focus(&self.editor_focus, cx),
+            Err(error) => self.report(&error),
+        }
+        cx.notify();
+    }
+
+    fn finish_open(
+        &mut self,
+        file: &std::path::Path,
+        loaded: Result<Tab, TabError>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match self.tabs.finish_open(file, loaded) {
+            Ok(()) => {
+                window.focus(&self.editor_focus, cx);
+                latency::drive(self, window, cx);
+            }
+            Err(error) => self.report(&error),
         }
         cx.notify();
     }
@@ -166,8 +200,9 @@ impl Render for ExplorerView {
             .on_action(cx.listener(ExplorerView::follow_appearance))
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
-            .child(explorer_panel(self, cx))
-            .child(resize_edge(self.theme, cx))
+            .on_action(cx.listener(ExplorerView::quit))
+            .child(panel::explorer_panel(self, cx))
+            .child(panel::resize_edge(self.theme, cx))
             .child(
                 div()
                     .flex_1()
@@ -180,60 +215,10 @@ impl Render for ExplorerView {
                         &self.editor_focus,
                         self.theme,
                         cx,
-                    )),
+                    ))
+                    .child(editor::status_bar(self.status.as_deref(), self.theme)),
             )
     }
-}
-
-fn explorer_panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
-    let rows: Vec<(usize, &Entry)> = view.tree.visible();
-    div()
-        .id("explorer-panel")
-        .w(px(view.panel_width))
-        .h_full()
-        .flex()
-        .flex_col()
-        .bg(color(view.theme.surface))
-        .overflow_y_scroll()
-        .key_context("Explorer")
-        .track_focus(&view.focus)
-        .on_action(cx.listener(ExplorerView::move_up))
-        .on_action(cx.listener(ExplorerView::move_down))
-        .on_action(cx.listener(ExplorerView::move_left))
-        .on_action(cx.listener(ExplorerView::move_right))
-        .on_action(cx.listener(ExplorerView::open))
-        .child(
-            div()
-                .px_3()
-                .py_2()
-                .text_color(color(view.theme.text))
-                .child("EXPLORER"),
-        )
-        .children(rows.into_iter().enumerate().map(
-            |(index, (depth, entry)): (usize, (usize, &Entry))| {
-                row(
-                    index,
-                    depth,
-                    entry,
-                    RowState {
-                        selected: index == view.selected,
-                        panel_width: view.panel_width,
-                        theme: view.theme,
-                    },
-                    cx,
-                )
-            },
-        ))
-}
-
-fn resize_edge(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
-    div()
-        .id("explorer-resize-edge")
-        .w(px(6.0))
-        .h_full()
-        .flex_shrink_0()
-        .bg(color(theme.border))
-        .on_mouse_down(MouseButton::Left, cx.listener(ExplorerView::start_resize))
 }
 
 fn color(value: Rgb) -> gpui::Rgba {

@@ -1,4 +1,10 @@
-# BBEOD02-A progress
+# BBEOD02 progress
+
+- BBEOD02-FIX (backback_1, 2026-11-01): fixes for verification bugs B1-B3.
+  B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
+  -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),
+  status bar, natural sort, Quit. Evidence: `bench/BBEOD02_FIX.md`,
+  `readback/BBEOD02_FIX/`. Open: FS watcher, 1 GB RSS on 20 MB file.
 
 - BBEOD02-B follow-up opened after acceptance: add light theme that follows
   macOS appearance, live View toggle, and screenshots of both modes.

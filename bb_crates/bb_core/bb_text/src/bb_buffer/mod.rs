@@ -232,5 +232,7 @@ fn from_u32(value: u32) -> usize {
     usize::try_from(value).unwrap_or(usize::MAX)
 }
 
+mod bytes;
+
 #[cfg(test)]
 mod bb_tests;

@@ -20,7 +20,7 @@ pub(crate) fn close_prompt(theme: Theme, cx: &mut Context<ExplorerView>) -> impl
 fn save_prompt(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
     match view.tabs.save_close() {
         Ok(()) => view.finish_close(window, cx),
-        Err(error) => eprintln!("{error}"),
+        Err(error) => view.report(&error),
     }
 }
 
@@ -32,6 +32,7 @@ fn discard_prompt(view: &mut ExplorerView, window: &mut Window, cx: &mut Context
 fn cancel_prompt(view: &mut ExplorerView, _: &mut Window, cx: &mut Context<ExplorerView>) {
     view.tabs.cancel_close();
     view.closing_window = false;
+    view.quit_after_close = false;
     cx.notify();
 }
 
@@ -54,7 +55,19 @@ fn prompt_button(
     )
 }
 
+/// Quit the app; dirty tabs ask first, like closing the window.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct Quit;
+
 impl ExplorerView {
+    pub(crate) fn quit(&mut self, _: &Quit, _: &mut Window, cx: &mut Context<Self>) {
+        self.quit_after_close = true;
+        if self.handle_window_close(cx) {
+            cx.quit();
+        }
+    }
+
     pub(crate) fn handle_window_close(&mut self, cx: &mut Context<Self>) -> bool {
         self.closing_window = true;
         let ready: bool = self.tabs.request_window_close();
@@ -64,7 +77,11 @@ impl ExplorerView {
 
     fn finish_close(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if self.closing_window && self.tabs.request_window_close() {
-            window.remove_window();
+            if self.quit_after_close {
+                cx.quit();
+            } else {
+                window.remove_window();
+            }
         }
         cx.notify();
     }

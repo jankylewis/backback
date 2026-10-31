@@ -509,6 +509,9 @@ dependencies = [
 name = "bb-syntax"
 version = "0.0.1"
 dependencies = [
+ "bb-text",
+ "proptest",
+ "ropey",
  "thiserror",
  "tree-sitter",
  "tree-sitter-c-sharp",

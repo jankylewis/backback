@@ -124,10 +124,61 @@ pub(super) fn sort_entries(entries: &mut [Entry]) {
     });
 }
 
+/// Natural, case-insensitive order (`f2` < `f10`); exact bytes break ties, so
+/// two names are equal only when they are the same name.
 pub(crate) fn name_order(left: &str, right: &str) -> Ordering {
-    left.to_ascii_lowercase()
-        .cmp(&right.to_ascii_lowercase())
-        .then_with(|| left.cmp(right))
+    let (mut ours, mut theirs): (Vec<&str>, Vec<&str>) = (runs(left), runs(right));
+    ours.reverse();
+    theirs.reverse();
+    loop {
+        match (ours.pop(), theirs.pop()) {
+            (None, None) => return left.cmp(right),
+            (None, Some(_)) => return Ordering::Less,
+            (Some(_), None) => return Ordering::Greater,
+            (Some(a), Some(b)) => match run_order(a, b) {
+                Ordering::Equal => {}
+                decided @ (Ordering::Less | Ordering::Greater) => return decided,
+            },
+        }
+    }
+}
+
+/// Split a name into alternating digit and non-digit runs.
+fn runs(name: &str) -> Vec<&str> {
+    let mut out: Vec<&str> = Vec::new();
+    let mut start: usize = 0;
+    let mut previous: Option<bool> = None;
+    for (byte, ch) in name.char_indices() {
+        let digit: bool = ch.is_ascii_digit();
+        if previous.is_some_and(|was: bool| was != digit) {
+            out.extend(name.get(start..byte));
+            start = byte;
+        }
+        previous = Some(digit);
+    }
+    out.extend(name.get(start..).filter(|rest: &&str| !rest.is_empty()));
+    out
+}
+
+fn run_order(a: &str, b: &str) -> Ordering {
+    match (is_digits(a), is_digits(b)) {
+        (true, true) => {
+            let (x, y): (&str, &str) = (a.trim_start_matches('0'), b.trim_start_matches('0'));
+            x.len().cmp(&y.len()).then_with(|| x.cmp(y))
+        }
+        (false, false) => lower(a).cmp(&lower(b)),
+        (true, false) | (false, true) => lower(a).first().cmp(&lower(b).first()),
+    }
+}
+
+fn is_digits(run: &str) -> bool {
+    run.starts_with(|ch: char| ch.is_ascii_digit())
+}
+
+fn lower(run: &str) -> Vec<char> {
+    run.chars()
+        .map(|ch: char| ch.to_ascii_lowercase())
+        .collect()
 }
 
 pub(super) fn find<'a>(entry: &'a Entry, path: &Path) -> Option<&'a Entry> {

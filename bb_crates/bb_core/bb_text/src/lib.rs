@@ -9,5 +9,6 @@ mod document;
 mod position;
 
 pub use bb_buffer::{Buffer, TextError};
-pub use document::{Document, DocumentError, TextChange};
+pub use document::{BytePoint, Document, DocumentError, TextChange};
 pub use position::{CharIdx, LineIdx, LspPoint};
+pub use ropey::Rope;

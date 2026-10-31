@@ -1,4 +1,4 @@
-use crate::editor::Tabs;
+use crate::editor::{Quit, Tabs};
 use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open};
 use bb_explorer::Explorer;
 use bb_ui::bb_theme::{Theme, ThemeKind};
@@ -18,10 +18,11 @@ pub(crate) struct FollowAppearance;
 
 pub(crate) fn launch() {
     let start: Instant = Instant::now();
-    let path: PathBuf = std::env::args_os()
+    let argument: PathBuf = std::env::args_os()
         .nth(1)
         .map_or_else(|| PathBuf::from("."), PathBuf::from);
-    let tree: Explorer = match Explorer::open(&path) {
+    let (root, file): (PathBuf, Option<PathBuf>) = split_argument(argument);
+    let tree: Explorer = match Explorer::open(&root) {
         Ok(tree) => tree,
         Err(error) => {
             eprintln!("{error}");
@@ -43,6 +44,14 @@ pub(crate) fn launch() {
                 window.focus(&focus, cx);
                 install_close_guard(window, &view, cx);
                 install_appearance_observer(window, &view, cx);
+                if let Some(file) = &file {
+                    view.update(
+                        cx,
+                        |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+                            state.open_file(file, window, cx);
+                        },
+                    );
+                }
                 window.on_next_frame(move |_: &mut Window, _: &mut App| {
                     eprintln!("first_frame_ms={}", start.elapsed().as_millis());
                 });
@@ -57,9 +66,22 @@ pub(crate) fn launch() {
     });
 }
 
+/// A file argument opens its folder in the Explorer and the file in a tab.
+fn split_argument(argument: PathBuf) -> (PathBuf, Option<PathBuf>) {
+    if argument.is_file() {
+        let folder: PathBuf = argument
+            .parent()
+            .filter(|parent: &&std::path::Path| !parent.as_os_str().is_empty())
+            .map_or_else(|| PathBuf::from("."), std::path::Path::to_path_buf);
+        (folder, Some(argument))
+    } else {
+        (argument, None)
+    }
+}
+
 fn menus() -> Vec<Menu> {
     vec![
-        Menu::new("Backback"),
+        Menu::new("Backback").items([MenuItem::action("Quit Backback", Quit)]),
         Menu::new("View").items([
             MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
             MenuItem::action("Follow macOS Appearance", FollowAppearance),
@@ -89,6 +111,9 @@ fn new_view(
         theme: resolved_theme(None, Some(appearance)),
         theme_override: None,
         appearance_subscription: None,
+        status: None,
+        explorer_scroll: gpui::UniformListScrollHandle::new(),
+        quit_after_close: false,
     })
 }
 
@@ -173,12 +198,23 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("left", MoveLeft, Some("Explorer")),
         KeyBinding::new("right", MoveRight, Some("Explorer")),
         KeyBinding::new("enter", Open, Some("Explorer")),
+        KeyBinding::new("cmd-q", Quit, None),
     ]);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_file_argument_opens_its_folder_and_the_file() {
+        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let (folder, file): (PathBuf, PathBuf) =
+            (dir.path().to_path_buf(), dir.path().join("A.cs"));
+        std::fs::write(&file, "class A {}").unwrap();
+        assert_eq!(split_argument(file.clone()), (folder.clone(), Some(file)));
+        assert_eq!(split_argument(folder.clone()), (folder, None));
+    }
 
     #[test]
     fn absent_preference_is_dark_and_system_light_is_live_source() {
@@ -201,6 +237,10 @@ mod tests {
     fn view_is_a_separate_mac_menu_after_application_menu() {
         let configured: Vec<Menu> = menus();
         assert_eq!(configured[0].name.as_ref(), "Backback");
+        assert!(matches!(
+            configured[0].items.first(),
+            Some(MenuItem::Action { name, .. }) if name.as_ref() == "Quit Backback"
+        ));
         assert_eq!(configured[1].name.as_ref(), "View");
         assert_eq!(configured[1].items.len(), 2);
     }

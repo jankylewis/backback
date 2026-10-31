@@ -1,6 +1,6 @@
 use crate::CharIdx;
 
-use super::{Document, DocumentError, TextChange, UndoEdit};
+use super::{BytePoint, Document, DocumentError, TextChange, UndoEdit};
 
 impl Document {
     /// Insert text over the selection or at the cursor.
@@ -10,43 +10,36 @@ impl Document {
     pub fn insert(&mut self, text: &str) -> Result<(), DocumentError> {
         let (start, end): (CharIdx, CharIdx) =
             self.selection().unwrap_or((self.cursor, self.cursor));
-        let removed: String = self
-            .buffer
-            .slice(start, end)
-            .ok_or(DocumentError::Selection)?;
-        self.last_change = Some(TextChange {
-            at: start,
-            removed_chars: removed.chars().count(),
-            inserted_bytes: text.len(),
-        });
         let before: CharIdx = self.cursor;
-        self.buffer.remove(start, end)?;
-        self.buffer.insert(start, text)?;
+        let removed: String = self.splice(start, end, text)?;
         let after: CharIdx = CharIdx::new(start.raw().saturating_add(text.chars().count()));
-        let can_group: bool = removed.is_empty()
-            && text.chars().count() == 1
-            && text.chars().all(char::is_alphanumeric)
-            && self.word_group_open;
-        if can_group && self.extend_word_group(start, text, after) {
-            self.cursor = after;
-        } else {
+        let word_char: bool = text.chars().count() == 1 && text.chars().all(char::is_alphanumeric);
+        let state_before: u64 = self.state;
+        self.state = self.fresh_state();
+        let grouped: bool = removed.is_empty()
+            && word_char
+            && self.word_group_open
+            && self.extend_word_group(start, text, after);
+        if !grouped {
             self.undo.push(UndoEdit {
                 start,
                 removed,
                 inserted: text.to_owned(),
                 cursor_before: before,
                 cursor_after: after,
+                state_before,
+                state_after: self.state,
             });
-            self.cursor = after;
         }
+        self.cursor = after;
         self.anchor = None;
         self.redo.clear();
-        self.word_group_open = text.chars().count() == 1 && text.chars().all(char::is_alphanumeric);
-        self.dirty = true;
+        self.word_group_open = word_char;
         Ok(())
     }
 
     fn extend_word_group(&mut self, start: CharIdx, text: &str, after: CharIdx) -> bool {
+        let state: u64 = self.state;
         let Some(last): Option<&mut UndoEdit> = self.undo.last_mut() else {
             return false;
         };
@@ -55,6 +48,7 @@ impl Document {
         }
         last.inserted.push_str(text);
         last.cursor_after = after;
+        last.state_after = state;
         true
     }
 
@@ -93,48 +87,43 @@ impl Document {
     }
 
     fn delete_range(&mut self, start: CharIdx, end: CharIdx) -> Result<(), DocumentError> {
-        let removed: String = self
-            .buffer
-            .slice(start, end)
-            .ok_or(DocumentError::Selection)?;
-        self.last_change = Some(TextChange {
-            at: start,
-            removed_chars: removed.chars().count(),
-            inserted_bytes: 0,
-        });
         let before: CharIdx = self.cursor;
-        self.buffer.remove(start, end)?;
+        let removed: String = self.splice(start, end, "")?;
+        let state_before: u64 = self.state;
+        self.state = self.fresh_state();
         self.undo.push(UndoEdit {
             start,
             removed,
             inserted: String::new(),
             cursor_before: before,
             cursor_after: start,
+            state_before,
+            state_after: self.state,
         });
         self.cursor = start;
         self.anchor = None;
         self.redo.clear();
         self.word_group_open = false;
-        self.dirty = true;
         Ok(())
     }
 
-    /// Insert a line break with the current line's indentation.
+    /// Insert a line break with the cursor line's indentation (reads one line).
     ///
     /// # Errors
     /// Returns a checked text error on an invalid range.
     pub fn enter(&mut self) -> Result<(), DocumentError> {
-        let text: String = self.buffer.to_text();
+        let line_start: CharIdx = self
+            .line_start(self.cursor_line())
+            .ok_or(DocumentError::Selection)?;
         let before: String = self
             .buffer
-            .slice(CharIdx::new(0), self.cursor)
+            .slice(line_start, self.cursor)
             .ok_or(DocumentError::Selection)?;
-        let line: &str = before.rsplit(['\n', '\r']).next().unwrap_or("");
-        let indent: String = line
+        let indent: String = before
             .chars()
             .take_while(|c: &char| *c == ' ' || *c == '\t')
             .collect();
-        let ending: &str = if text.contains("\r\n") { "\r\n" } else { "\n" };
+        let ending: &str = if self.format.crlf { "\r\n" } else { "\n" };
         self.insert(&format!("{ending}{indent}"))
     }
 
@@ -146,9 +135,10 @@ impl Document {
         let Some(edit): Option<UndoEdit> = self.undo.pop() else {
             return Ok(());
         };
-        self.replace_history(&edit, true)?;
+        let end: CharIdx = after_text(edit.start, &edit.inserted);
+        self.splice(edit.start, end, &edit.removed)?;
+        self.restore(edit.cursor_before, edit.state_before);
         self.redo.push(edit);
-        self.refresh_dirty();
         Ok(())
     }
 
@@ -160,29 +150,59 @@ impl Document {
         let Some(edit): Option<UndoEdit> = self.redo.pop() else {
             return Ok(());
         };
-        self.replace_history(&edit, false)?;
+        let end: CharIdx = after_text(edit.start, &edit.removed);
+        self.splice(edit.start, end, &edit.inserted)?;
+        self.restore(edit.cursor_after, edit.state_after);
         self.undo.push(edit);
-        self.refresh_dirty();
         Ok(())
     }
 
-    fn replace_history(&mut self, edit: &UndoEdit, reverse: bool) -> Result<(), DocumentError> {
-        let (old, new, cursor): (&str, &str, CharIdx) = if reverse {
-            (&edit.inserted, &edit.removed, edit.cursor_before)
-        } else {
-            (&edit.removed, &edit.inserted, edit.cursor_after)
-        };
-        let end: CharIdx = CharIdx::new(edit.start.raw().saturating_add(old.chars().count()));
-        self.buffer.remove(edit.start, end)?;
-        self.buffer.insert(edit.start, new)?;
-        self.last_change = Some(TextChange {
-            at: edit.start,
-            removed_chars: old.chars().count(),
-            inserted_bytes: new.len(),
-        });
+    fn restore(&mut self, cursor: CharIdx, state: u64) {
         self.cursor = cursor;
         self.anchor = None;
         self.word_group_open = false;
-        Ok(())
+        self.state = state;
     }
+
+    /// The one place that changes the text: replace `[start, end)` with
+    /// `text`, log the byte-level change and return the removed text.
+    fn splice(
+        &mut self,
+        start: CharIdx,
+        end: CharIdx,
+        text: &str,
+    ) -> Result<String, DocumentError> {
+        let removed: String = self
+            .buffer
+            .slice(start, end)
+            .ok_or(DocumentError::Selection)?;
+        self.format.other_breaks =
+            self.format.other_breaks || self.buffer.other_break_near(start, end);
+        let from: BytePoint = self.byte_point(start)?;
+        let old_end: BytePoint = self.byte_point(end)?;
+        self.buffer.remove(start, end)?;
+        self.buffer.insert(start, text)?;
+        let end_after: CharIdx = after_text(start, text);
+        self.format.other_breaks =
+            self.format.other_breaks || self.buffer.other_break_near(start, end_after);
+        let new_end: BytePoint = self.byte_point(end_after)?;
+        self.changes.push(TextChange {
+            start: from,
+            old_end,
+            new_end,
+        });
+        Ok(removed)
+    }
+
+    fn byte_point(&self, at: CharIdx) -> Result<BytePoint, DocumentError> {
+        let (byte, row, column): (usize, usize, usize) = self
+            .buffer
+            .byte_point(at, !self.format.other_breaks)
+            .ok_or(DocumentError::Selection)?;
+        Ok(BytePoint { byte, row, column })
+    }
+}
+
+fn after_text(start: CharIdx, text: &str) -> CharIdx {
+    CharIdx::new(start.raw().saturating_add(text.chars().count()))
 }

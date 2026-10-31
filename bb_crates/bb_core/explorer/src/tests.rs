@@ -188,7 +188,47 @@ fn expand_all_reveals_nested_folders_once() {
     assert_eq!(tree.expand_all().unwrap(), 2);
 }
 
+#[test]
+fn files_sort_by_number_value_not_by_text() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    for name in [
+        "f10.cs",
+        "f2.cs",
+        "F1.cs",
+        "f100.cs",
+        "f1001.cs",
+        "f10000.cs",
+        "f02.cs",
+    ] {
+        fs::write(dir.path().join(name), "").unwrap();
+    }
+    let tree: Explorer = Explorer::open(dir.path()).unwrap();
+    let names: Vec<&str> = tree
+        .root()
+        .children()
+        .iter()
+        .map(crate::Entry::name)
+        .collect();
+    let expected: &str = "F1.cs f02.cs f2.cs f10.cs f100.cs f1001.cs f10000.cs";
+    assert_eq!(names.join(" "), expected);
+}
+
 proptest! {
+    #[test]
+    fn name_order_is_a_total_order(
+        a in "[a-zA-Z0-9]{1,12}",
+        b in "[a-zA-Z0-9]{1,12}",
+        c in "[a-zA-Z0-9]{1,12}",
+    ) {
+        use std::cmp::Ordering;
+        let order: fn(&str, &str) -> Ordering = crate::bb_entry::name_order;
+        prop_assert_eq!(order(&a, &b), order(&b, &a).reverse());
+        prop_assert_eq!(order(&a, &b) == Ordering::Equal, a == b);
+        if order(&a, &b) != Ordering::Greater && order(&b, &c) != Ordering::Greater {
+            prop_assert_ne!(order(&a, &c), Ordering::Greater);
+        }
+    }
+
     #[test]
     fn case_insensitive_sort_is_stable(a in "[a-zA-Z]{1,12}", b in "[a-zA-Z]{1,12}") {
         let comparison: std::cmp::Ordering = crate::bb_entry::name_order(&a, &b);

@@ -1,16 +1,15 @@
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use bb_syntax::{ByteEdit, CSharpSyntax, SyntaxError, Tree};
+use bb_syntax::{CSharpSyntax, LiveTree, SyntaxError, Tree};
 use bb_text::{Document, DocumentError, TextChange};
 
 pub(crate) struct Tab {
     pub(crate) path: PathBuf,
     pub(crate) document: Document,
-    pub(crate) syntax: CSharpSyntax,
-    pub(crate) tree: Tree,
-    pub(crate) parsed_text: String,
-    pub(crate) line_bytes: Vec<usize>,
+    /// Highlight queries; parsing uses the parser inside `live`.
+    pub(crate) highlighter: CSharpSyntax,
+    pub(crate) live: LiveTree,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -24,13 +23,13 @@ pub(crate) enum TabError {
 }
 
 impl Tab {
-    fn new(path: PathBuf) -> Result<Self, TabError> {
+    /// Read and parse a file. Slow on a big file: call it off the UI thread.
+    pub(crate) fn load(path: PathBuf) -> Result<Self, TabError> {
         let started: Instant = Instant::now();
         let document: Document = Document::open(&path)?;
-        let parsed_text: String = document.text();
         let mut syntax: CSharpSyntax = CSharpSyntax::new()?;
-        let tree: Tree = syntax.parse(&parsed_text, None)?;
-        let line_bytes: Vec<usize> = line_starts(&parsed_text);
+        let tree: Tree = syntax.parse_rope(document.rope(), None)?;
+        let highlighter: CSharpSyntax = CSharpSyntax::new()?;
         eprintln!(
             "editor_open_ms={:.3}",
             started.elapsed().as_secs_f64() * 1000.0
@@ -38,59 +37,31 @@ impl Tab {
         Ok(Self {
             path,
             document,
-            syntax,
-            tree,
-            parsed_text,
-            line_bytes,
+            highlighter,
+            live: LiveTree::new(syntax, tree),
         })
     }
 
+    /// Move the document's new edits onto the shown tree. O(depth) per edit;
+    /// the parse itself runs later, off the UI thread.
+    pub(crate) fn sync_edits(&mut self) {
+        let changes: Vec<TextChange> = self.document.take_changes();
+        self.live.edit(&changes);
+    }
+
+    /// Sync and parse on this thread, as a test oracle for the background path.
+    #[cfg(test)]
     pub(crate) fn reparse(&mut self) -> Result<(), TabError> {
-        let after: String = self.document.text();
-        if after != self.parsed_text {
-            let change: Option<TextChange> = self.document.last_change();
-            self.tree = if let Some(change) = change {
-                let start: usize = char_byte(&self.parsed_text, change.at.raw());
-                let old_end: usize = char_byte(
-                    &self.parsed_text,
-                    change.at.raw().saturating_add(change.removed_chars),
-                );
-                let edit: ByteEdit = ByteEdit {
-                    start,
-                    old_end,
-                    new_end: start.saturating_add(change.inserted_bytes),
-                };
-                self.syntax
-                    .reparse_bytes(&self.tree, &self.parsed_text, &after, edit)?
-            } else {
-                self.syntax.reparse(&self.tree, &self.parsed_text, &after)?
-            };
-            self.line_bytes = line_starts(&after);
-            self.parsed_text = after;
-        }
+        self.sync_edits();
+        self.live.parse_now(self.document.rope())?;
         Ok(())
     }
-}
-
-fn char_byte(text: &str, index: usize) -> usize {
-    text.char_indices()
-        .nth(index)
-        .map_or(text.len(), |(byte, _): (usize, char)| byte)
-}
-
-fn line_starts(text: &str) -> Vec<usize> {
-    let mut starts: Vec<usize> = vec![0];
-    for (index, byte) in text.bytes().enumerate() {
-        if byte == b'\n' {
-            starts.push(index.saturating_add(1));
-        }
-    }
-    starts
 }
 
 #[derive(Default)]
 pub(crate) struct Tabs {
     items: Vec<Tab>,
+    loading: Vec<PathBuf>,
     active: Option<usize>,
     pending_close: Option<usize>,
 }
@@ -100,7 +71,10 @@ impl Tabs {
         Self::default()
     }
 
-    pub(crate) fn open(&mut self, path: &Path) -> Result<(), TabError> {
+    /// Start opening `path`. `Ok(None)`: it is already open (now active) or
+    /// loading. `Ok(Some(file))`: load `file` with [`Tab::load`] off the UI
+    /// thread, then call [`Tabs::finish_open`].
+    pub(crate) fn begin_open(&mut self, path: &Path) -> Result<Option<PathBuf>, TabError> {
         let canonical: PathBuf = path.canonicalize()?;
         if let Some(index) = self
             .items
@@ -108,11 +82,38 @@ impl Tabs {
             .position(|tab: &Tab| tab.path == canonical)
         {
             self.active = Some(index);
-            return Ok(());
+            return Ok(None);
         }
-        self.items.push(Tab::new(canonical)?);
+        if self.loading.contains(&canonical) {
+            return Ok(None);
+        }
+        self.loading.push(canonical.clone());
+        Ok(Some(canonical))
+    }
+
+    /// Finish a load started by [`Tabs::begin_open`]; the new tab becomes active.
+    pub(crate) fn finish_open(
+        &mut self,
+        path: &Path,
+        loaded: Result<Tab, TabError>,
+    ) -> Result<(), TabError> {
+        self.loading.retain(|pending: &PathBuf| pending != path);
+        self.items.push(loaded?);
         self.active = self.items.len().checked_sub(1);
         Ok(())
+    }
+
+    /// Files still loading, shown as placeholder tabs.
+    pub(crate) fn loading(&self) -> &[PathBuf] {
+        &self.loading
+    }
+
+    #[cfg(test)]
+    pub(crate) fn open(&mut self, path: &Path) -> Result<(), TabError> {
+        match self.begin_open(path)? {
+            Some(file) => self.finish_open(&file.clone(), Tab::load(file)),
+            None => Ok(()),
+        }
     }
 
     #[cfg(test)]
@@ -132,6 +133,12 @@ impl Tabs {
 
     pub(crate) fn active_tab(&self) -> Option<&Tab> {
         self.active.and_then(|index: usize| self.items.get(index))
+    }
+
+    pub(crate) fn tab_mut(&mut self, path: &Path) -> Option<&mut Tab> {
+        self.items
+            .iter_mut()
+            .find(|tab: &&mut Tab| tab.path == path)
     }
 
     pub(crate) fn active_tab_mut(&mut self) -> Option<&mut Tab> {

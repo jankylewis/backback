@@ -5,8 +5,10 @@
 //! microseconds, so highlighting, folding and the outline never wait on Roslyn.
 
 mod bb_highlight;
+mod live;
 
-pub use bb_highlight::{ByteEdit, HighlightKind, HighlightSpan};
+pub use bb_highlight::{HighlightKind, HighlightSpan};
+pub use live::{LiveTree, ParseJob, Parsed};
 pub use tree_sitter::Tree;
 use tree_sitter::{Language, Node, Parser, Query, TreeCursor};
 

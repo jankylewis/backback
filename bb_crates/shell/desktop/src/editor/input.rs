@@ -25,7 +25,7 @@ pub(crate) fn pointer_at(
         let target: bb_text::CharIdx =
             bb_text::CharIdx::new(start.saturating_add(column.min(visible)));
         if let Err(error) = document.move_to(target, extend) {
-            eprintln!("{error}");
+            view.status = Some(error.to_string());
         }
     }
     window.focus(&view.editor_focus, cx);
@@ -41,6 +41,7 @@ pub(crate) fn handle_key(
     let key: &str = event.keystroke.key.as_str();
     let shift: bool = event.keystroke.modifiers.shift;
     let timed: bool = event.keystroke.key_char.is_some() && !event.keystroke.modifiers.platform;
+    let saved: bool = event.keystroke.modifiers.platform && key == "s";
     let edit_start: Instant = Instant::now();
     let result: Option<Result<(), bb_text::DocumentError>> = if event.keystroke.modifiers.platform {
         command_key(view, key, shift)
@@ -57,14 +58,16 @@ pub(crate) fn handle_key(
             .edit_ns
             .saturating_add(crate::latency::nanos(edit_start.elapsed()));
     }
-    if let Err(error) = result {
-        eprintln!("{error}");
+    match result {
+        Ok(()) if saved => view.status = None,
+        Ok(()) => {}
+        Err(error) => view.report(&error),
     }
     let reparse_start: Instant = Instant::now();
     if let Some(tab) = view.tabs.active_tab_mut() {
-        if let Err(error) = tab.reparse() {
-            eprintln!("{error}");
-        }
+        tab.sync_edits();
+        let path: std::path::PathBuf = tab.path.clone();
+        schedule_parse(view, path, window, cx);
     }
     if timed {
         view.reparse_ns = view
@@ -125,4 +128,49 @@ fn text_key(
         _ => document.insert(event.keystroke.key_char.as_deref()?),
     };
     Some(result)
+}
+
+/// Start a background parse for the tab at `path` when edits wait and none
+/// runs; on completion install it and start the next one if typing went on.
+fn schedule_parse(
+    view: &mut ExplorerView,
+    path: std::path::PathBuf,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let Some(tab): Option<&mut super::Tab> = view.tabs.tab_mut(&path) else {
+        return;
+    };
+    let Some(job): Option<bb_syntax::ParseJob> = tab.live.start_parse(tab.document.rope()) else {
+        return;
+    };
+    let parse: gpui::Task<(bb_syntax::Parsed, std::time::Duration)> =
+        cx.background_executor().spawn(async move {
+            let started: Instant = Instant::now();
+            let parsed: bb_syntax::Parsed = job.run();
+            (parsed, started.elapsed())
+        });
+    cx.spawn_in(
+        window,
+        async move |view: gpui::WeakEntity<ExplorerView>, cx: &mut gpui::AsyncWindowContext| {
+            let (parsed, took): (bb_syntax::Parsed, std::time::Duration) = parse.await;
+            crate::latency::record_parse(took);
+            view.update_in(
+                cx,
+                |view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>| {
+                    let outcome: Option<Result<(), bb_syntax::SyntaxError>> = view
+                        .tabs
+                        .tab_mut(&path)
+                        .map(|tab: &mut super::Tab| tab.live.finish_parse(parsed));
+                    if let Some(Err(error)) = outcome {
+                        view.report(&error);
+                    }
+                    schedule_parse(view, path, window, cx);
+                    cx.notify();
+                },
+            )
+            .ok();
+        },
+    )
+    .detach();
 }
