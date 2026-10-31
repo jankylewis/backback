@@ -1,4 +1,4 @@
-//! Argument parsing. Standard library only; the surface is five commands.
+//! Argument parsing. Standard library only; the surface is six commands.
 
 use std::path::PathBuf;
 
@@ -8,7 +8,8 @@ pub const USAGE: &str = "usage:
   bb scan <solution>        what each project is: tests, Apex, Playwright, MCP, runsettings
   bb open <solution>        load a .sln/.slnx through Roslyn and time it
   bb outline <file.cs>      print the tree-sitter outline of one file
-  bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types";
+  bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
+  bb bench [solution]       time the fixed benchmark set: table + JSON lines";
 
 /// A parsed command.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -34,6 +35,11 @@ pub enum Command {
     Audit {
         /// Folder to audit (default: current folder).
         root: PathBuf,
+    },
+    /// Time the fixed benchmark set.
+    Bench {
+        /// Extra solution to scan, if any.
+        solution: Option<PathBuf>,
     },
 }
 
@@ -82,6 +88,7 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         "audit" => Ok(Command::Audit {
             root: path.unwrap_or_else(|| PathBuf::from(".")),
         }),
+        "bench" => Ok(Command::Bench { solution: path }),
         other => Err(CliError::Unknown(other.to_owned())),
     }
 }
@@ -122,6 +129,16 @@ mod tests {
             })
         );
         assert_eq!(
+            parse(&args(&["bench"])),
+            Ok(Command::Bench { solution: None })
+        );
+        assert_eq!(
+            parse(&args(&["bench", "A.slnx"])),
+            Ok(Command::Bench {
+                solution: Some(PathBuf::from("A.slnx"))
+            })
+        );
+        assert_eq!(
             parse(&args(&["audit", "src"])),
             Ok(Command::Audit {
                 root: PathBuf::from("src")
@@ -148,5 +165,6 @@ mod tests {
         assert_eq!(parse(&args(&["open", "A.slnx", "x"])), extra);
         assert_eq!(parse(&args(&["outline", "A.cs", "x"])), extra);
         assert_eq!(parse(&args(&["audit", "src", "x"])), extra);
+        assert_eq!(parse(&args(&["bench", "A.slnx", "x"])), extra);
     }
 }

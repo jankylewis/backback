@@ -1,6 +1,7 @@
 //! Command implementations. Each prints plain lines so the output can be
 //! pasted into docs as evidence.
 
+mod bench;
 mod open;
 mod scan;
 
@@ -34,6 +35,9 @@ pub enum CommandError {
     /// Audit could not read the tree.
     #[error(transparent)]
     Audit(#[from] bb_audit::AuditError),
+    /// `bb bench` problem.
+    #[error(transparent)]
+    Bench(#[from] bench::BenchError),
     /// The audit found violations (already printed).
     #[error("{0} convention violations")]
     Violations(usize),
@@ -59,6 +63,7 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Open { solution } => open::run(&solution).await,
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
+        Command::Bench { solution } => bench::run(solution.as_deref()),
     }
 }
 

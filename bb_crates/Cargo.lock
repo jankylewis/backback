@@ -28,6 +28,9 @@ dependencies = [
  "bb-syntax",
  "bb-ui",
  "lsp-types",
+ "proptest",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
 ]
