@@ -7,6 +7,7 @@ members = [
   "edge/framing",
   "edge/dap",
   "edge/dotnet",
+  "edge/mcp",
   "shell/bb_cli",
   "shell/ui",
   "shell/audit",
@@ -30,6 +31,7 @@ bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
 bb-framing = { path = "edge/framing", version = "0.0.1" }
 bb-dap = { path = "edge/dap", version = "0.0.1" }
 bb-dotnet = { path = "edge/dotnet", version = "0.0.1" }
+bb-mcp = { path = "edge/mcp", version = "0.0.1" }
 bb-ui = { path = "shell/ui", version = "0.0.1" }
 bb-audit = { path = "shell/audit", version = "0.0.1" }
 # text
@@ -44,7 +46,7 @@ serde_json = "1"
 lsp-types = "0.95"
 url = "2"
 # async + processes (every call carries a timeout; see crates/protocol)
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "sync", "time"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "sync", "time", "signal"] }
 # errors
 thiserror = "2"
 # .slnx is XML

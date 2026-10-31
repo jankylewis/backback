@@ -25,6 +25,7 @@ dependencies = [
  "bb-dap",
  "bb-dotnet",
  "bb-lsp",
+ "bb-mcp",
  "bb-syntax",
  "bb-ui",
  "lsp-types",
@@ -81,6 +82,17 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "bb-mcp"
+version = "0.0.1"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

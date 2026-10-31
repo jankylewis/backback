@@ -2,6 +2,10 @@
 
 use std::path::PathBuf;
 
+mod bb_mcp;
+mod bench;
+pub use bb_mcp::McpCommand;
+
 use bb_lsp::roslyn::Restore;
 
 /// Usage text.
@@ -14,7 +18,12 @@ pub const USAGE: &str = "usage:
   bb outline <file.cs>      print the tree-sitter outline of one file
   bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
   bb bench [solution] [--runs N]
-                            time the fixed set: 1 warm-up + N runs (default 5)";
+                            time the fixed set: 1 warm-up + N runs (default 5)
+  bb mcp list <solution>    list MCP server projects and run commands
+  bb mcp tools <project>    list tools from one MCP server
+  bb mcp call <project> <tool> '<json>'
+                            call one tool with JSON arguments
+  bb mcp log <project>      follow timestamped server stderr";
 
 /// Default measured runs per bench item.
 pub const DEFAULT_RUNS: usize = 5;
@@ -55,6 +64,8 @@ pub enum Command {
         /// Measured runs per item, after one warm-up.
         runs: usize,
     },
+    /// MCP discovery and client commands.
+    Mcp(McpCommand),
 }
 
 /// Parse errors.
@@ -75,6 +86,9 @@ pub enum CliError {
     /// An argument the command does not take.
     #[error("unexpected argument: {0}")]
     Extra(String),
+    /// Unknown MCP subcommand.
+    #[error("unknown mcp command: {0}")]
+    McpCommand(String),
 }
 
 /// Parse the arguments after the program name.
@@ -86,7 +100,10 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let mut it: std::slice::Iter<'_, String> = args.iter();
     let word: &String = it.next().ok_or(CliError::Missing)?;
     if word == "bench" {
-        return bench(it.as_slice());
+        return bench::parse(it.as_slice());
+    }
+    if word == "mcp" {
+        return bb_mcp::parse(it.as_slice()).map(Command::Mcp);
     }
     let path: Option<PathBuf> = it.next().map(PathBuf::from);
     let flag: Option<&String> = it.next();
@@ -112,25 +129,6 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         }),
         other => Err(CliError::Unknown(other.to_owned())),
     }
-}
-
-/// `bench [solution] [--runs N]`, in that order.
-fn bench(rest: &[String]) -> Result<Command, CliError> {
-    let (solution, flags): (Option<PathBuf>, &[String]) = match rest.split_first() {
-        Some((first, after)) if first != "--runs" => (Some(PathBuf::from(first)), after),
-        Some(_) | None => (None, rest),
-    };
-    let runs: usize = match flags {
-        [] => DEFAULT_RUNS,
-        [flag, n] if flag == "--runs" => n
-            .parse::<usize>()
-            .ok()
-            .filter(|r: &usize| (1..=MAX_RUNS).contains(r))
-            .ok_or_else(|| CliError::BadRuns(n.clone()))?,
-        [flag] if flag == "--runs" => return Err(CliError::BadRuns(String::new())),
-        [.., last] => return Err(CliError::Extra(last.clone())),
-    };
-    Ok(Command::Bench { solution, runs })
 }
 
 fn open(
