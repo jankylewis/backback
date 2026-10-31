@@ -11,9 +11,6 @@ use serde::Serialize;
 use super::CommandError;
 use stats::Summary;
 
-/// Measured runs per item, after one warm-up.
-pub(crate) const RUNS: usize = 5;
-
 /// The harness solution, relative to the repo root.
 const HARNESS_SLNX: &str = "fixtures/_Harness/Harness.slnx";
 
@@ -44,6 +41,9 @@ pub enum BenchError {
     /// A row did not encode as JSON.
     #[error("cannot encode a row: {0}")]
     Json(#[from] serde_json::Error),
+    /// `sysctl -n vm.loadavg` gave no number.
+    #[error("no load average in sysctl output: {0:?}")]
+    LoadAverage(String),
     /// An item produced no samples.
     #[error("no samples")]
     NoSamples,
@@ -60,7 +60,27 @@ pub(crate) enum Unit {
     Bytes,
 }
 
-/// One result row (also one JSON line).
+/// What one item measured, before the load readings are added.
+pub(crate) struct Measured {
+    item: &'static str,
+    unit: Unit,
+    summary: Summary,
+    detail: String,
+}
+
+impl Measured {
+    fn new(item: &'static str, unit: Unit, summary: Summary, detail: String) -> Self {
+        Self {
+            item,
+            unit,
+            summary,
+            detail,
+        }
+    }
+}
+
+/// One result row (also one JSON line), with the 1-minute load average read
+/// just before and just after the item ran.
 #[derive(Debug, Serialize)]
 pub(crate) struct Row {
     item: &'static str,
@@ -68,20 +88,26 @@ pub(crate) struct Row {
     median: u64,
     p95: u64,
     runs: usize,
+    load_before: f64,
+    load_after: f64,
     detail: String,
 }
 
-impl Row {
-    fn new(item: &'static str, unit: Unit, summary: Summary, detail: String) -> Self {
-        Self {
-            item,
-            unit,
-            median: summary.median,
-            p95: summary.p95,
-            runs: RUNS,
-            detail,
-        }
-    }
+/// Run one item between two load readings.
+fn with_load<F: FnOnce() -> Result<Measured, CommandError>>(item: F) -> Result<Row, CommandError> {
+    let load_before: f64 = bb_items::load_now()?;
+    let m: Measured = item()?;
+    let load_after: f64 = bb_items::load_now()?;
+    Ok(Row {
+        item: m.item,
+        unit: m.unit,
+        median: m.summary.median,
+        p95: m.summary.p95,
+        runs: m.summary.count,
+        load_before,
+        load_after,
+        detail: m.detail,
+    })
 }
 
 /// The repo root: the folder that holds the harness solution.
@@ -110,24 +136,29 @@ impl RepoRoot {
 }
 
 /// Run the set and print the table, then the JSON lines.
-pub(crate) fn run(solution: Option<&Path>) -> Result<(), CommandError> {
+pub(crate) fn run(solution: Option<&Path>, runs: usize) -> Result<(), CommandError> {
     let cwd: PathBuf =
         std::env::current_dir().map_err(|source: std::io::Error| BenchError::Io {
             what: "read the current folder",
             source,
         })?;
     let repo: RepoRoot = RepoRoot::find(&cwd)?;
-    let mut rows: Vec<Row> = vec![bb_items::cold_start()?];
-    rows.extend(bb_items::outlines(&repo.fixtures())?);
-    rows.push(bb_items::scan("scan-harness", &repo.harness())?);
+    let fixtures: PathBuf = repo.fixtures();
+    let harness: PathBuf = repo.harness();
+    let mut rows: Vec<Row> = vec![
+        with_load(|| bb_items::cold_start(runs))?,
+        with_load(|| bb_items::outline_largest(&fixtures, runs))?,
+        with_load(|| bb_items::outline_50k(runs))?,
+        with_load(|| bb_items::scan("scan-harness", &harness, runs))?,
+    ];
     if let Some(sln) = solution {
-        rows.push(bb_items::scan("scan-solution", sln)?);
+        rows.push(with_load(|| bb_items::scan("scan-solution", sln, runs))?);
     }
-    rows.push(bb_items::audit(repo.path())?);
-    rows.push(bb_items::binary_size()?);
+    rows.push(with_load(|| bb_items::audit(repo.path(), runs))?);
+    rows.push(with_load(|| bb_items::binary_size(runs))?);
     println!(
-        "{:<16} {:>10} {:>10}  {:<5}  detail",
-        "item", "median", "p95", "unit"
+        "{:<16} {:>10} {:>10}  {:<5}  {:>11}  detail",
+        "item", "median", "p95", "unit", "load"
     );
     for row in &rows {
         println!("{}", table_line(row));
@@ -144,8 +175,9 @@ fn table_line(row: &Row) -> String {
         Unit::Micros => "us",
         Unit::Bytes => "bytes",
     };
+    let load: String = format!("{:.2}>{:.2}", row.load_before, row.load_after);
     format!(
-        "{:<16} {:>10} {:>10}  {unit:<5}  {}",
+        "{:<16} {:>10} {:>10}  {unit:<5}  {load:>11}  {}",
         row.item, row.median, row.p95, row.detail
     )
 }

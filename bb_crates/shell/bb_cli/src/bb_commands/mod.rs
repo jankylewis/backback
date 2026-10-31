@@ -77,7 +77,7 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Open { solution, restore } => bb_open::run(&solution, restore).await,
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
-        Command::Bench { solution } => bench::run(solution.as_deref()),
+        Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
     }
 }
 

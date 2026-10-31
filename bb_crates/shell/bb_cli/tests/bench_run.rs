@@ -93,3 +93,30 @@ fn bench_rejects_a_second_argument() {
     assert_eq!(run.code, Some(2), "{}", run.all());
     assert!(run.err.contains("usage:"), "{}", run.err);
 }
+
+#[test]
+fn bench_runs_flag_sets_the_run_count_and_rows_carry_the_load() {
+    let run: Run = bb(&["bench", "--runs", "7"]);
+    assert_eq!(run.code, Some(0), "{}", run.all());
+    let lines: Vec<serde_json::Value> = json_lines(&run);
+    assert!(!lines.is_empty(), "{}", run.out);
+    for line in &lines {
+        assert_eq!(line["runs"].as_u64(), Some(7), "{line}");
+        assert!(
+            line["load_before"].as_f64().is_some_and(|l: f64| l > 0.0),
+            "{line}"
+        );
+        assert!(
+            line["load_after"].as_f64().is_some_and(|l: f64| l > 0.0),
+            "{line}"
+        );
+    }
+}
+
+#[test]
+fn bench_rejects_a_bad_run_count() {
+    for bad in ["0", "x", "1000"] {
+        let run: Run = bb(&["bench", "--runs", bad]);
+        assert_eq!(run.code, Some(2), "--runs {bad}: {}", run.all());
+    }
+}

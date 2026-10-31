@@ -13,7 +13,13 @@ pub const USAGE: &str = "usage:
                             never writes into it unless --restore is given
   bb outline <file.cs>      print the tree-sitter outline of one file
   bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
-  bb bench [solution]       time the fixed benchmark set: table + JSON lines";
+  bb bench [solution] [--runs N]
+                            time the fixed set: 1 warm-up + N runs (default 5)";
+
+/// Default measured runs per bench item.
+pub const DEFAULT_RUNS: usize = 5;
+/// Most measured runs per bench item.
+pub const MAX_RUNS: usize = 100;
 
 /// A parsed command.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -46,6 +52,8 @@ pub enum Command {
     Bench {
         /// Extra solution to scan, if any.
         solution: Option<PathBuf>,
+        /// Measured runs per item, after one warm-up.
+        runs: usize,
     },
 }
 
@@ -61,6 +69,9 @@ pub enum CliError {
     /// A command needed a path.
     #[error("{0} needs a path argument")]
     NeedsPath(&'static str),
+    /// `--runs` needs a whole number from 1 to [`MAX_RUNS`].
+    #[error("--runs needs a number from 1 to {MAX_RUNS}, got {0}")]
+    BadRuns(String),
     /// An argument the command does not take.
     #[error("unexpected argument: {0}")]
     Extra(String),
@@ -74,6 +85,9 @@ pub enum CliError {
 pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let mut it: std::slice::Iter<'_, String> = args.iter();
     let word: &String = it.next().ok_or(CliError::Missing)?;
+    if word == "bench" {
+        return bench(it.as_slice());
+    }
     let path: Option<PathBuf> = it.next().map(PathBuf::from);
     let flag: Option<&String> = it.next();
     if word == "open" && flag.is_some_and(|f: &String| f == "--restore") {
@@ -96,9 +110,27 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         "audit" => Ok(Command::Audit {
             root: path.unwrap_or_else(|| PathBuf::from(".")),
         }),
-        "bench" => Ok(Command::Bench { solution: path }),
         other => Err(CliError::Unknown(other.to_owned())),
     }
+}
+
+/// `bench [solution] [--runs N]`, in that order.
+fn bench(rest: &[String]) -> Result<Command, CliError> {
+    let (solution, flags): (Option<PathBuf>, &[String]) = match rest.split_first() {
+        Some((first, after)) if first != "--runs" => (Some(PathBuf::from(first)), after),
+        Some(_) | None => (None, rest),
+    };
+    let runs: usize = match flags {
+        [] => DEFAULT_RUNS,
+        [flag, n] if flag == "--runs" => n
+            .parse::<usize>()
+            .ok()
+            .filter(|r: &usize| (1..=MAX_RUNS).contains(r))
+            .ok_or_else(|| CliError::BadRuns(n.clone()))?,
+        [flag] if flag == "--runs" => return Err(CliError::BadRuns(String::new())),
+        [.., last] => return Err(CliError::Extra(last.clone())),
+    };
+    Ok(Command::Bench { solution, runs })
 }
 
 fn open(
@@ -162,12 +194,16 @@ mod tests {
     fn parses_audit_and_bench() {
         assert_eq!(
             parse(&args(&["bench"])),
-            Ok(Command::Bench { solution: None })
+            Ok(Command::Bench {
+                solution: None,
+                runs: DEFAULT_RUNS
+            })
         );
         assert_eq!(
             parse(&args(&["bench", "A.slnx"])),
             Ok(Command::Bench {
-                solution: Some(PathBuf::from("A.slnx"))
+                solution: Some(PathBuf::from("A.slnx")),
+                runs: DEFAULT_RUNS
             })
         );
         assert_eq!(
@@ -199,5 +235,16 @@ mod tests {
         assert_eq!(parse(&args(&["outline", "A.cs", "x"])), extra);
         assert_eq!(parse(&args(&["audit", "src", "x"])), extra);
         assert_eq!(parse(&args(&["bench", "A.slnx", "x"])), extra);
+        assert_eq!(
+            parse(&args(&["bench", "A.slnx", "--runs", "7"])),
+            Ok(Command::Bench {
+                solution: Some(PathBuf::from("A.slnx")),
+                runs: 7
+            })
+        );
+        assert_eq!(
+            parse(&args(&["bench", "--runs", "0"])),
+            Err(CliError::BadRuns("0".to_owned()))
+        );
     }
 }

@@ -2,7 +2,6 @@
 
 use std::time::{Duration, Instant};
 
-use super::RUNS;
 use crate::bb_commands::CommandError;
 
 /// Median and p95 (nearest rank) of one item's samples.
@@ -12,6 +11,8 @@ pub(crate) struct Summary {
     pub(crate) median: u64,
     /// Nearest-rank 95th percentile; for 5 samples this is the largest.
     pub(crate) p95: u64,
+    /// Number of samples.
+    pub(crate) count: usize,
 }
 
 impl Summary {
@@ -23,17 +24,18 @@ impl Summary {
         let rank: usize = count.checked_mul(95)?.checked_add(99)? / 100;
         let median: u64 = *sorted.get(count / 2)?;
         let p95: u64 = *sorted.get(rank.checked_sub(1)?)?;
-        Some(Self { median, p95 })
+        Some(Self { median, p95, count })
     }
 }
 
-/// One warm-up call, then [`RUNS`] measured calls of `sample`.
+/// One warm-up call, then `runs` measured calls of `sample`.
 pub(crate) fn repeat<F: FnMut() -> Result<u64, CommandError>>(
+    runs: usize,
     mut sample: F,
 ) -> Result<Summary, CommandError> {
     sample()?;
-    let mut samples: Vec<u64> = Vec::with_capacity(RUNS);
-    for _ in 0..RUNS {
+    let mut samples: Vec<u64> = Vec::with_capacity(runs);
+    for _ in 0..runs {
         samples.push(sample()?);
     }
     Summary::of(&samples).ok_or(CommandError::Bench(super::BenchError::NoSamples))
@@ -41,9 +43,10 @@ pub(crate) fn repeat<F: FnMut() -> Result<u64, CommandError>>(
 
 /// [`repeat`] with the wall time of `op` in microseconds as the sample.
 pub(crate) fn timed<F: FnMut() -> Result<(), CommandError>>(
+    runs: usize,
     mut op: F,
 ) -> Result<Summary, CommandError> {
-    repeat(|| -> Result<u64, CommandError> {
+    repeat(runs, || -> Result<u64, CommandError> {
         let started: Instant = Instant::now();
         op()?;
         Ok(micros(started.elapsed()))
@@ -66,23 +69,38 @@ mod tests {
             Summary::of(&[50, 10, 40, 20, 30]),
             Some(Summary {
                 median: 30,
-                p95: 50
+                p95: 50,
+                count: 5
             })
         );
         assert_eq!(Summary::of(&[]), None);
-        assert_eq!(Summary::of(&[7]), Some(Summary { median: 7, p95: 7 }));
+        assert_eq!(
+            Summary::of(&[7]),
+            Some(Summary {
+                median: 7,
+                p95: 7,
+                count: 1
+            })
+        );
     }
 
     #[test]
     fn repeat_takes_one_warm_up_and_five_samples() {
         let mut calls: u64 = 0;
-        let summary: Summary = repeat(|| -> Result<u64, CommandError> {
+        let summary: Summary = repeat(5, || -> Result<u64, CommandError> {
             calls += 1;
             Ok(calls)
         })
         .unwrap();
         assert_eq!(calls, 6);
-        assert_eq!(summary, Summary { median: 4, p95: 6 });
+        assert_eq!(
+            summary,
+            Summary {
+                median: 4,
+                p95: 6,
+                count: 5
+            }
+        );
     }
 
     proptest! {
