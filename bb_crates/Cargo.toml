@@ -21,15 +21,17 @@ repository = "https://github.com/jankylewis/backback"
 description = "backback: a very lightweight, dark-by-default, open-source C# IDE shell"
 
 [workspace.dependencies]
-# internal crates (one place for paths; crates use `bb-x.workspace = true`)
-bb-text = { path = "bb_core/bb_text" }
-bb-syntax = { path = "bb_core/syntax" }
-bb-lsp = { path = "edge/bb_lsp" }
-bb-framing = { path = "edge/framing" }
-bb-dap = { path = "edge/dap" }
-bb-dotnet = { path = "edge/dotnet" }
-bb-ui = { path = "shell/ui" }
-bb-audit = { path = "shell/audit" }
+# internal crates (one place for paths; crates use `bb-x.workspace = true`).
+# The version keeps cargo deny from reading a path dep as a wildcard; keep it
+# equal to workspace.package.version.
+bb-text = { path = "bb_core/bb_text", version = "0.0.1" }
+bb-syntax = { path = "bb_core/syntax", version = "0.0.1" }
+bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
+bb-framing = { path = "edge/framing", version = "0.0.1" }
+bb-dap = { path = "edge/dap", version = "0.0.1" }
+bb-dotnet = { path = "edge/dotnet", version = "0.0.1" }
+bb-ui = { path = "shell/ui", version = "0.0.1" }
+bb-audit = { path = "shell/audit", version = "0.0.1" }
 # text
 ropey = "1.6"
 # syntax
