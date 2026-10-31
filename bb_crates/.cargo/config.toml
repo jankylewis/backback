@@ -1,3 +1,7 @@
 [build]
 # Keep build output hidden and out of the HD count.
 target-dir = "../.target"
+
+[env]
+# AGENTS.md law: at most 2 test workers per seat.
+RUST_TEST_THREADS = "2"
