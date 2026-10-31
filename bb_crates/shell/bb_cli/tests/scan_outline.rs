@@ -1,4 +1,4 @@
-//! `bb scan` and `bb outline` end to end on `fixtures/_Harness`.
+//! `bb scan` and `bb outline` end to end on the desktop shell's C# fixture.
 
 #[cfg(test)]
 mod common;

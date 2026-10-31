@@ -12,7 +12,7 @@ use super::CommandError;
 use stats::Summary;
 
 /// The harness solution, relative to the repo root.
-const HARNESS_SLNX: &str = "fixtures/_Harness/Harness.slnx";
+const HARNESS_SLNX: &str = "bb_crates/shell/desktop/fixtures/_Harness/Harness.slnx";
 
 /// Bench errors.
 #[derive(Debug, thiserror::Error)]
@@ -131,7 +131,7 @@ impl RepoRoot {
     }
 
     fn fixtures(&self) -> PathBuf {
-        self.0.join("fixtures")
+        self.0.join("bb_crates/shell/desktop/fixtures")
     }
 }
 

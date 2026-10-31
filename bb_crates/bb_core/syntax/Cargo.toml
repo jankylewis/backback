@@ -10,6 +10,12 @@ description = "tree-sitter C# parsing: highlighting, folding and outline without
 tree-sitter.workspace = true
 tree-sitter-c-sharp.workspace = true
 thiserror.workspace = true
+# the editor's text: parse and highlight straight from its rope, no copies.
+bb-text.workspace = true
+ropey.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
 
 [lints]
 workspace = true

@@ -4,8 +4,13 @@
 //! can be seconds away on a big solution. tree-sitter parses incrementally in
 //! microseconds, so highlighting, folding and the outline never wait on Roslyn.
 
+mod bb_highlight;
+mod live;
+
+pub use bb_highlight::{HighlightKind, HighlightSpan};
+pub use live::{LiveTree, ParseJob, Parsed};
 pub use tree_sitter::Tree;
-use tree_sitter::{Language, Node, Parser, TreeCursor};
+use tree_sitter::{Language, Node, Parser, Query, TreeCursor};
 
 /// Syntax errors.
 #[derive(Debug, thiserror::Error)]
@@ -16,6 +21,9 @@ pub enum SyntaxError {
     /// The parse was cancelled or hit the parser's limits.
     #[error("parse did not produce a tree")]
     NoTree,
+    /// The C# highlight query did not compile.
+    #[error("cannot load the C# highlight query: {0}")]
+    Query(#[from] tree_sitter::QueryError),
 }
 
 /// Kind of declaration shown in the outline.
@@ -45,6 +53,7 @@ pub struct OutlineItem {
 /// A C# parser. Keep one per buffer and reuse it for incremental parses.
 pub struct CSharpSyntax {
     parser: Parser,
+    query: Query,
 }
 
 impl CSharpSyntax {
@@ -56,7 +65,8 @@ impl CSharpSyntax {
         let mut parser: Parser = Parser::new();
         let language: Language = tree_sitter_c_sharp::LANGUAGE.into();
         parser.set_language(&language)?;
-        Ok(Self { parser })
+        let query: Query = Query::new(&language, tree_sitter_c_sharp::HIGHLIGHTS_QUERY)?;
+        Ok(Self { parser, query })
     }
 
     /// Parse `text`. Pass the previous tree for an incremental parse.

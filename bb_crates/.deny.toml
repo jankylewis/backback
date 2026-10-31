@@ -27,3 +27,10 @@ wildcards = "deny"
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
+# GPUI's single Zed revision brings these three pinned transitive sources.
+allow-git = [
+  "https://github.com/zed-industries/zed",
+  "https://github.com/zed-industries/font-kit",
+  "https://github.com/zed-industries/oo7",
+  "https://github.com/gfx-rs/wgpu",
+]
