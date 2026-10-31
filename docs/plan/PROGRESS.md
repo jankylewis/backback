@@ -5,3 +5,5 @@
 - Docs plan, conventions, and research notes are ready for handoff.
 - `cargo run -q -p bb -- audit ..` returned `audit : clean (..)`.
 - Source evidence: AgentFarm goals board and two BBEOD01-B spikes.
+
+- BBEOD01-E: renamed plan marker to `bb_roadmap/`; independent frozen worktree gate pending.
