@@ -8,7 +8,8 @@ use serde_json::{json, Value};
 
 use crate::{Capabilities, DapError, SourceBreakpoint};
 
-use super::{state::Action, DapSession};
+use super::lifecycle::{state::Action, Target};
+use super::DapSession;
 
 #[derive(Deserialize)]
 struct TargetsBody {
@@ -69,6 +70,7 @@ impl DapSession {
                 }),
             )
             .await?;
+        self.set_target(Target::Launched)?;
         self.commit_state(next)?;
         Ok(())
     }
@@ -88,6 +90,7 @@ impl DapSession {
                 }),
             )
             .await?;
+        self.set_target(Target::Attached(process_id))?;
         self.commit_state(next)?;
         Ok(())
     }

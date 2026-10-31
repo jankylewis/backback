@@ -4,7 +4,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use bb_dap::{DapError, DapSession, Event, Scope, SourceBreakpoint, StackFrame, Variable};
+use bb_dap::{
+    DapError, DapSession, Event, ExitTruth, Scope, SourceBreakpoint, StackFrame, Variable,
+};
 use serde_json::Value;
 use tokio::process::Command;
 
@@ -42,23 +44,29 @@ pub async fn run(target: &Path, source: &Path, line: u32) -> Result<(), DebugErr
         start(target, source, line).await?;
     let mut saw_stop: bool = false;
     loop {
-        match DapSession::next_event(&mut events, DEADLINE).await? {
+        let event: Event = DapSession::next_event(&mut events, DEADLINE).await?;
+        let exit_code: Option<i64> = event.exit_code();
+        match event {
             Event::Stopped(body) => {
                 saw_stop = true;
-                let thread_id: i64 = body
-                    .get("threadId")
-                    .and_then(Value::as_i64)
-                    .ok_or(DebugError::NoStop)?;
                 println!(
                     "stopped   : {}",
                     body.get("reason")
                         .and_then(Value::as_str)
                         .unwrap_or("unknown")
                 );
+                let thread_id: i64 = thread_of(&body)?;
                 print_stack_and_locals(&session, thread_id).await?;
                 session.continue_thread(thread_id).await?;
             }
-            Event::Exited(body) => println!("exited    : {body}"),
+            Event::ConditionError { message, stopped } => {
+                println!("condition : {message}");
+                session.continue_thread(thread_of(&stopped)?).await?;
+            }
+            Event::Exited(_) => println!(
+                "exited    : {}",
+                exit_line(bb_dap::exit_truth(exit_code, None))
+            ),
             Event::Terminated(_) => {
                 return if saw_stop {
                     Ok(())
@@ -74,6 +82,13 @@ pub async fn run(target: &Path, source: &Path, line: u32) -> Result<(), DebugErr
             Event::Breakpoint(_) | Event::Other(_, _) => {}
         }
     }
+}
+
+fn thread_of(stopped: &Value) -> Result<i64, DebugError> {
+    stopped
+        .get("threadId")
+        .and_then(Value::as_i64)
+        .ok_or(DebugError::NoStop)
 }
 
 async fn start(
@@ -184,4 +199,44 @@ async fn timed_command(command: &mut Command) -> Result<std::process::Output, De
         .await
         .map_err(|_: _| DebugError::Timeout)?
         .map_err(DebugError::Io)
+}
+
+/// The exit code with where it came from. A launched debuggee is the
+/// adapter's child, so its code is the adapter's word only.
+fn exit_line(truth: ExitTruth) -> String {
+    match truth {
+        ExitTruth::Verified(code) => format!("code {code}"),
+        ExitTruth::Corrected { process, adapter } => {
+            format!("code {process} (adapter said {adapter})")
+        }
+        ExitTruth::Signaled => "ended by a signal".to_owned(),
+        ExitTruth::Unverified(code) => format!(
+            "code {code} (adapter-reported, unverified; see docs/rnd/NETCOREDBG_EXIT_CODE.md)"
+        ),
+        ExitTruth::Unknown => "code unknown".to_owned(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn adapter_only_exit_code_is_labelled_unverified() {
+        let line: String = exit_line(bb_dap::exit_truth(Some(0), None));
+        assert_eq!(
+            line,
+            "code 0 (adapter-reported, unverified; see docs/rnd/NETCOREDBG_EXIT_CODE.md)"
+        );
+    }
+
+    #[test]
+    fn corrected_exit_code_names_both_values() {
+        let truth: ExitTruth = ExitTruth::Corrected {
+            process: 5,
+            adapter: 0,
+        };
+        assert_eq!(exit_line(truth), "code 5 (adapter said 0)");
+        assert_eq!(exit_line(ExitTruth::Verified(3)), "code 3");
+    }
 }

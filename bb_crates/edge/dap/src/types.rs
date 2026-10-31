@@ -36,6 +36,14 @@ pub enum Event {
     Exited(Value),
     /// Breakpoint status changed.
     Breakpoint(Value),
+    /// The adapter stopped at a breakpoint because its condition failed to
+    /// evaluate. This is not a real hit.
+    ConditionError {
+        /// The adapter's error text.
+        message: String,
+        /// The `stopped` event body.
+        stopped: Value,
+    },
     /// Another protocol event.
     Other(String, Value),
 }
@@ -50,6 +58,20 @@ impl Event {
             "exited" => Self::Exited(data),
             "breakpoint" => Self::Breakpoint(data),
             _ => Self::Other(name, data),
+        }
+    }
+
+    /// The `exitCode` of an `exited` event.
+    #[must_use]
+    pub fn exit_code(&self) -> Option<i64> {
+        match self {
+            Self::Exited(body) => body.get("exitCode").and_then(Value::as_i64),
+            Self::Stopped(_)
+            | Self::Output(_)
+            | Self::Terminated(_)
+            | Self::Breakpoint(_)
+            | Self::ConditionError { .. }
+            | Self::Other(_, _) => None,
         }
     }
 }

@@ -8,8 +8,10 @@
 use std::path::PathBuf;
 
 mod bb_session;
+mod exit;
 mod types;
 pub use bb_session::{DapSession, GotoTarget, Step};
+pub use exit::{exit_truth, AdapterExit, Debuggee, ExitTruth};
 pub use types::{Capabilities, Event, Scope, SourceBreakpoint, StackFrame, Thread, Variable};
 
 use serde::{Deserialize, Serialize};

@@ -1,5 +1,15 @@
 # BBEOD05 ship progress
 
+## BBEOD05-FIX (backback_1)
+
+- Branch `bbeod-05-ship` from `1d1b791`; tree `backback_wt/bbeod-05-ship`.
+- B1 liveness from adapter exit; B2 attach target exit; B3 exit code truth;
+  B4 no vacuous skip (audit rule `VacuousSkip`); typed condition error.
+- Gate: stock and patched adapters 153 passed, 0 failed, 0 ignored (30
+  suites); no adapter: 12 adapter tests fail with a clear message.
+- Readback: `readback/BBEOD05/FIX.md`; bench: `bench/BBEOD05/FIX.md` (noisy).
+- Upstream draft: `docs/rnd/NETCOREDBG_EXIT_CODE.md`.
+
 - Seat: `backback_2`; branch: `bbeod-05-ship`; base: `19050c9`.
 - Merged `bbeod-05-debug` and `bbeod-05-setnext` with both intents kept.
 - Stock and local patched netcoredbg each passed the capability-aware Set Next instrument.

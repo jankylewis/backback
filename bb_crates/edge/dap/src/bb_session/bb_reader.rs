@@ -1,23 +1,25 @@
 //! Decode adapter frames and route responses to the matching waiter.
+//!
+//! The reader does not decide liveness: the exit watcher aborts it when the
+//! adapter process exits, even while a debuggee keeps the pipe open.
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use serde_json::Value;
 use tokio::io::AsyncReadExt;
 use tokio::process::ChildStdout;
 use tokio::sync::mpsc;
 
 use crate::{DapError, Event, Message};
 
-use super::Pending;
+use super::lifecycle::Liveness;
+use super::{Pending, Reply};
 
-pub(super) async fn run(
-    mut stdout: ChildStdout,
-    pending: Pending,
-    closed: Arc<AtomicBool>,
-    events: mpsc::Sender<Event>,
-) {
+/// Prefix netcoredbg writes to stderr output before a condition-error stop.
+const CONDITION_ERROR: &str = "Breakpoint error: ";
+
+pub(super) async fn run(mut stdout: ChildStdout, live: Liveness, events: mpsc::Sender<Event>) {
     let mut decoder: bb_framing::Decoder = bb_framing::Decoder::default();
     let mut bytes: [u8; 8192] = [0; 8192];
+    let mut pairing: Pairing = Pairing::default();
     loop {
         let count: usize = match stdout.read(&mut bytes).await {
             Ok(0) | Err(_) => break,
@@ -27,27 +29,66 @@ pub(super) async fn run(
             decoder.push(chunk);
         }
         loop {
-            let value: serde_json::Value = match decoder.next_message() {
+            let value: Value = match decoder.next_message() {
                 Ok(Some(value)) => value,
                 Ok(None) => break,
-                Err(_) => return close_all(&pending, &closed),
+                Err(_) => return live.close_all(),
             };
             let message: Message = match Message::decode(value) {
                 Ok(message) => message,
-                Err(_) => return close_all(&pending, &closed),
+                Err(_) => return live.close_all(),
             };
             match message {
-                response @ Message::Response { .. } => handle_response(&pending, response),
+                response @ Message::Response { .. } => handle_response(&live.pending, response),
                 Message::Event { event, body, .. } => {
-                    if events.send(Event::from_parts(event, body)).await.is_err() {
-                        return close_all(&pending, &closed);
+                    let event: Event = pairing.classify(Event::from_parts(event, body));
+                    if matches!(event, Event::Terminated(_)) {
+                        live.saw_terminated();
+                    }
+                    if events.send(event).await.is_err() {
+                        return live.close_all();
                     }
                 }
                 Message::Request { .. } => {}
             }
         }
     }
-    close_all(&pending, &closed);
+    live.close_all();
+}
+
+/// Pairs a "Breakpoint error" output with the breakpoint stop that follows it.
+#[derive(Default)]
+struct Pairing {
+    condition: Option<String>,
+}
+
+impl Pairing {
+    fn classify(&mut self, event: Event) -> Event {
+        match event {
+            Event::Output(body) => {
+                let text: Option<&str> = body.get("output").and_then(Value::as_str);
+                if let Some(message) = text.filter(|t: &&str| t.starts_with(CONDITION_ERROR)) {
+                    self.condition = Some(message.trim_end().to_owned());
+                }
+                Event::Output(body)
+            }
+            Event::Stopped(body) => {
+                let reason: Option<&str> = body.get("reason").and_then(Value::as_str);
+                match (self.condition.take(), reason) {
+                    (Some(message), Some("breakpoint")) => Event::ConditionError {
+                        message,
+                        stopped: body,
+                    },
+                    (Some(_) | None, _) => Event::Stopped(body),
+                }
+            }
+            event @ (Event::Terminated(_)
+            | Event::Exited(_)
+            | Event::Breakpoint(_)
+            | Event::ConditionError { .. }
+            | Event::Other(_, _)) => event,
+        }
+    }
 }
 
 fn handle_response(pending: &Pending, response: Message) {
@@ -56,7 +97,7 @@ fn handle_response(pending: &Pending, response: Message) {
         bool,
         String,
         Option<String>,
-        Option<serde_json::Value>,
+        Option<Value>,
     ) = match response {
         Message::Response {
             request_seq,
@@ -68,30 +109,57 @@ fn handle_response(pending: &Pending, response: Message) {
         } => (request_seq, success, command, message, body),
         Message::Request { .. } | Message::Event { .. } => return,
     };
-    let waiter: Option<tokio::sync::oneshot::Sender<super::Reply>> = pending.lock().ok().and_then(
+    let waiter: Option<tokio::sync::oneshot::Sender<Reply>> = pending.lock().ok().and_then(
         |mut map: std::sync::MutexGuard<
             '_,
-            std::collections::HashMap<u64, tokio::sync::oneshot::Sender<super::Reply>>,
+            std::collections::HashMap<u64, tokio::sync::oneshot::Sender<Reply>>,
         >| map.remove(&request_seq),
     );
     if let Some(tx) = waiter {
-        let result: super::Reply = if success {
-            Ok(body.unwrap_or(serde_json::Value::Null))
+        let result: Reply = if success {
+            Ok(body.unwrap_or(Value::Null))
         } else {
             Err(DapError::Rejected {
                 command,
                 message: message.unwrap_or_else(|| "unknown adapter error".to_owned()),
             })
         };
-        let _sent: Result<(), super::Reply> = tx.send(result);
+        let _sent: Result<(), Reply> = tx.send(result);
     }
 }
 
-fn close_all(pending: &Pending, closed: &AtomicBool) {
-    closed.store(true, Ordering::Release);
-    if let Ok(mut map) = pending.lock() {
-        for (_, tx) in map.drain() {
-            let _sent: Result<(), super::Reply> = tx.send(Err(DapError::Closed));
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn stop(reason: &str) -> Event {
+        Event::Stopped(json!({"reason": reason, "threadId": 1}))
+    }
+
+    #[test]
+    fn breakpoint_stop_after_condition_error_output_is_a_condition_error() {
+        let mut pairing: Pairing = Pairing::default();
+        let text: &str = "Breakpoint error: The name 'nosuchvar' does not exist - /a/L.cs:7\n";
+        let output: Event = pairing.classify(Event::Output(json!({"output": text})));
+        assert!(matches!(output, Event::Output(_)));
+        let paired: Event = pairing.classify(stop("breakpoint"));
+        assert!(
+            matches!(&paired, Event::ConditionError { message, .. } if message.contains("nosuchvar")),
+            "{paired:?}"
+        );
+        assert_eq!(pairing.classify(stop("breakpoint")), stop("breakpoint"));
+    }
+
+    #[test]
+    fn plain_output_and_other_stops_stay_as_they_are() {
+        let mut pairing: Pairing = Pairing::default();
+        pairing.classify(Event::Output(json!({"output": "hello\n"})));
+        assert_eq!(pairing.classify(stop("breakpoint")), stop("breakpoint"));
+        pairing.classify(Event::Output(
+            json!({"output": "Breakpoint error: x - y:1\n"}),
+        ));
+        assert_eq!(pairing.classify(stop("step")), stop("step"));
+        assert_eq!(pairing.classify(stop("breakpoint")), stop("breakpoint"));
     }
 }

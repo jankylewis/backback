@@ -2,8 +2,12 @@ using System;
 
 class Program
 {
-    static int Main()
+    static int Main(string[] args)
     {
+        if (args.Length > 0)
+        {
+            return Lifecycle.Run(args[0]);
+        }
         int count = 0;
         count += 1;
         count = count + 1;

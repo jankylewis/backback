@@ -6,8 +6,10 @@
     clippy::wildcard_enum_match_arm
 )]
 
-#[path = "setnext/bb_session.rs"]
+#[path = "support/bb_session.rs"]
 mod bb_session;
+#[path = "support/fixture.rs"]
+mod fixture;
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -16,7 +18,6 @@ use bb_dap::{DapError, DapSession};
 
 use bb_session::Session;
 use serde_json::{json, Value};
-use tokio::process::Command;
 
 fn fixture_line(source: &str, statement: &str) -> usize {
     source
@@ -27,39 +28,10 @@ fn fixture_line(source: &str, statement: &str) -> usize {
 }
 
 async fn build_fixture() -> (PathBuf, PathBuf, String) {
-    let fixture: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixture");
-    let scratch: PathBuf =
-        std::env::temp_dir().join(format!("backback-setnext-{}", std::process::id()));
-    if scratch.exists() {
-        std::fs::remove_dir_all(&scratch).unwrap();
-    }
-    std::fs::create_dir_all(&scratch).unwrap();
-    let source: PathBuf = scratch.join("_Program.cs");
-    std::fs::copy(fixture.join("_Program.cs"), &source).unwrap();
-    std::fs::copy(
-        fixture.join("GotoFixture.csproj"),
-        scratch.join("GotoFixture.csproj"),
-    )
-    .unwrap();
-    let output: std::process::Output = tokio::time::timeout(
-        Duration::from_secs(60),
-        Command::new("dotnet")
-            .arg("build")
-            .arg(scratch.join("GotoFixture.csproj"))
-            .arg("-c")
-            .arg("Debug")
-            .output(),
-    )
-    .await
-    .unwrap()
-    .unwrap();
-    assert!(
-        output.status.success(),
-        "fixture build failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
+    let built: fixture::Built = fixture::build("setnext").await;
+    let source: PathBuf = built.dir.join("_Program.cs");
     let content: String = std::fs::read_to_string(&source).unwrap();
-    (scratch, source.canonicalize().unwrap(), content)
+    (built.dir, source, content)
 }
 
 async fn first_stop(session: &mut Session, source: &Path, content: &str) -> i64 {

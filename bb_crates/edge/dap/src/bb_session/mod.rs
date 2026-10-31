@@ -3,12 +3,12 @@
 mod bb_reader;
 mod commands;
 mod inspect;
-mod state;
+mod lifecycle;
 pub use commands::{GotoTarget, Step};
 
 use std::collections::HashMap;
 use std::process::Stdio;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -18,27 +18,33 @@ use tokio::io::AsyncWriteExt;
 use tokio::process::{Child, ChildStdin, Command};
 use tokio::sync::{mpsc, oneshot};
 
-use crate::{DapError, Event, Message, DAP_ARGS};
-use state::{Action, SessionState};
+use crate::{AdapterExit, DapError, Event, Message, DAP_ARGS};
+use lifecycle::state::{Action, SessionState};
+use lifecycle::{Liveness, Target, Watcher};
 
 type Reply = Result<Value, DapError>;
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Reply>>>>;
 
-/// One running debug adapter. Dropping it kills the child.
+/// One running debug adapter.
+///
+/// Liveness comes from the adapter process exit: when it exits, every waiter
+/// fails with [`DapError::Closed`] at once and the event stream closes. A
+/// launched debuggee is ended with the adapter; an attached one never is.
+/// Dropping the session stops the adapter and ends a launched debuggee.
 pub struct DapSession {
-    child: Child,
+    watcher: Watcher,
+    live: Liveness,
     outgoing: mpsc::Sender<Vec<u8>>,
-    pending: Pending,
-    closed: Arc<AtomicBool>,
     next_seq: AtomicU64,
     events: Option<mpsc::Receiver<Event>>,
+    events_weak: mpsc::WeakSender<Event>,
     timeout: Duration,
     capabilities: Mutex<Option<crate::Capabilities>>,
     state: Mutex<SessionState>,
 }
 
 impl DapSession {
-    /// Spawn the installed adapter in VS Code DAP mode.
+    /// Spawn the installed adapter in VS Code DAP mode, in its own process group.
     ///
     /// # Errors
     /// Missing adapter or process spawn failure.
@@ -50,32 +56,45 @@ impl DapSession {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
+            .process_group(0)
             .kill_on_drop(true);
         let mut child: Child = command.spawn().map_err(DapError::Spawn)?;
         let stdin: ChildStdin = child.stdin.take().ok_or(DapError::NoPipes)?;
         let stdout: tokio::process::ChildStdout = child.stdout.take().ok_or(DapError::NoPipes)?;
         let (outgoing, rx): (mpsc::Sender<Vec<u8>>, mpsc::Receiver<Vec<u8>>) = mpsc::channel(64);
         tokio::spawn(write_loop(stdin, rx));
-        let pending: Pending = Arc::default();
-        let closed: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
+        let live: Liveness = Liveness::new();
         let (event_tx, event_rx): (mpsc::Sender<Event>, mpsc::Receiver<Event>) = mpsc::channel(256);
-        tokio::spawn(bb_reader::run(
-            stdout,
-            Arc::clone(&pending),
-            Arc::clone(&closed),
-            event_tx,
-        ));
+        let events_weak: mpsc::WeakSender<Event> = event_tx.downgrade();
+        let reader: tokio::task::JoinHandle<()> =
+            tokio::spawn(bb_reader::run(stdout, live.clone(), event_tx));
+        let watcher: Watcher = Watcher::spawn(child, reader.abort_handle(), live.clone());
         Ok(Self {
-            child,
+            watcher,
+            live,
             outgoing,
-            pending,
-            closed,
             next_seq: AtomicU64::new(1),
             events: Some(event_rx),
+            events_weak,
             timeout,
             capabilities: Mutex::new(None),
             state: Mutex::new(SessionState::Created),
         })
+    }
+
+    /// Operating system process ID of the adapter.
+    pub fn adapter_pid(&self) -> Option<u32> {
+        self.watcher.pid()
+    }
+
+    /// How the adapter ended, once it has exited and the cleanup is done.
+    pub fn adapter_exit(&self) -> Option<AdapterExit> {
+        self.watcher.exit()
+    }
+
+    /// Kill the adapter now; waiters then fail with [`DapError::Closed`].
+    pub fn stop_adapter(&mut self) {
+        self.watcher.stop();
     }
 
     /// Take the event stream once.
@@ -120,16 +139,18 @@ impl DapSession {
         arguments: Value,
     ) -> Result<R, DapError> {
         let seq: u64 = self.next_seq.fetch_add(1, Ordering::Relaxed);
-        if self.closed.load(Ordering::Acquire) {
+        if self.live.is_closed() {
             return Err(DapError::Closed);
         }
         let (tx, rx): (oneshot::Sender<Reply>, oneshot::Receiver<Reply>) = oneshot::channel();
-        self.pending
+        self.live
+            .pending
             .lock()
             .map_err(|_: _| DapError::Closed)?
             .insert(seq, tx);
-        if self.closed.load(Ordering::Acquire) {
-            self.pending
+        if self.live.is_closed() {
+            self.live
+                .pending
                 .lock()
                 .map_err(|_: _| DapError::Closed)?
                 .remove(&seq);
@@ -150,7 +171,8 @@ impl DapSession {
                 rx.await.map_err(|_: _| DapError::Closed)
             })
             .await;
-        self.pending
+        self.live
+            .pending
             .lock()
             .map_err(|_: _| DapError::Closed)?
             .remove(&seq);
@@ -178,19 +200,32 @@ impl DapSession {
             .ok_or(DapError::Closed)
     }
 
-    /// Wait briefly for the adapter to exit after a disconnect.
+    /// Wait for the adapter to exit after a disconnect, and for the cleanup.
     ///
     /// # Errors
     /// Adapter exit exceeded the deadline.
-    pub async fn wait_exit(&mut self) -> Result<(), DapError> {
-        tokio::time::timeout(self.timeout, self.child.wait())
-            .await
-            .map_err(|_: _| DapError::Timeout {
-                command: "exit".to_owned(),
-                after: self.timeout,
-            })?
-            .map_err(DapError::Spawn)?;
+    pub async fn wait_exit(&mut self) -> Result<AdapterExit, DapError> {
+        self.watcher.wait(self.timeout).await
+    }
+
+    fn set_target(&self, target: Target) -> Result<(), DapError> {
+        self.live.set_target(target)?;
+        if let Target::Attached(pid) = target {
+            lifecycle::watch_target(pid, self.events_weak.clone(), self.live.clone());
+        }
         Ok(())
+    }
+}
+
+impl Drop for DapSession {
+    /// A runtime that shuts down can cancel the watcher task, so a launched
+    /// debuggee is ended here too, with a bounded blocking call.
+    fn drop(&mut self) {
+        if self.live.target() == Target::Launched && self.watcher.exit().is_none() {
+            if let Some(pgid) = self.watcher.pid() {
+                let _sent: Option<bool> = lifecycle::kill_group(pgid);
+            }
+        }
     }
 }
 
@@ -199,32 +234,5 @@ async fn write_loop(mut stdin: ChildStdin, mut rx: mpsc::Receiver<Vec<u8>>) {
         if stdin.write_all(&frame).await.is_err() {
             break;
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn real_adapter_respects_goto_capability_and_closes_waiters() {
-        if crate::locate().is_err() {
-            return;
-        }
-        let mut session: DapSession = DapSession::spawn(Duration::from_secs(10)).unwrap();
-        let caps: crate::Capabilities = session.initialize().await.unwrap();
-        assert_eq!(
-            session.can_set_next_statement(),
-            caps.supports_goto_targets_request
-        );
-        if !caps.supports_goto_targets_request {
-            assert!(matches!(
-                session.goto(1, 1).await,
-                Err(DapError::Unsupported(_))
-            ));
-        }
-        session.child.start_kill().unwrap();
-        session.wait_exit().await.unwrap();
-        assert!(matches!(session.threads().await, Err(DapError::Closed)));
     }
 }

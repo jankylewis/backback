@@ -3,7 +3,7 @@
 use crate::DapError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum SessionState {
+pub(in crate::bb_session) enum SessionState {
     Created,
     Initialized,
     Configuring,
@@ -11,7 +11,7 @@ pub(super) enum SessionState {
 }
 
 impl SessionState {
-    pub(super) fn next(self, action: Action) -> Result<Self, DapError> {
+    pub(in crate::bb_session) fn next(self, action: Action) -> Result<Self, DapError> {
         match (self, action) {
             (Self::Created, Action::Initialize) => Ok(Self::Initialized),
             (Self::Initialized, Action::Launch | Action::Attach) => Ok(Self::Configuring),
@@ -22,7 +22,7 @@ impl SessionState {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(super) enum Action {
+pub(in crate::bb_session) enum Action {
     Initialize,
     Launch,
     Attach,

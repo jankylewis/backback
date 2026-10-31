@@ -3,6 +3,7 @@
 
 use crate::lexer::{strip, Lang};
 mod bb_types;
+mod skips;
 
 use crate::{caps, line_of, matching_brace, Finding, Rule};
 
@@ -16,12 +17,14 @@ const FN_PREFIXES: [&str; 6] = [
 ];
 const TYPE_WORDS: [&str; 4] = ["impl", "struct", "enum", "trait"];
 
-pub(crate) fn check(src: &str) -> Vec<Finding> {
+/// All Rust rules; `all_test` when the whole file is test code.
+pub(crate) fn check_file(src: &str, all_test: bool) -> Vec<Finding> {
     let text: String = strip(src, Lang::Rust);
     let mut out: Vec<Finding> = Vec::new();
     check_blocks(&text, &mut out);
     bb_types::check_lets(&text, &mut out);
     bb_types::check_closures(&text, &mut out);
+    skips::check(&text, all_test, &mut out);
     out
 }
 
@@ -132,7 +135,10 @@ mod tests {
     use super::*;
 
     fn rules(src: &str) -> Vec<Rule> {
-        check(src).into_iter().map(|f: Finding| f.rule).collect()
+        check_file(src, false)
+            .into_iter()
+            .map(|f: Finding| f.rule)
+            .collect()
     }
 
     #[test]
@@ -177,7 +183,7 @@ mod tests {
         let src: String = format!(
             "// one\n// two\nstruct S {{\n    a: u8,\n}}\nfn f()\n{{\n{body}}}\nfn g(a: u8, b: u8, c: u8, d: u8, e: u8, h: u8) {{}}\n"
         );
-        let found: Vec<(usize, Rule, String)> = check(&src)
+        let found: Vec<(usize, Rule, String)> = check_file(&src, false)
             .into_iter()
             .map(|f: Finding| (f.line, f.rule, f.detail))
             .collect();

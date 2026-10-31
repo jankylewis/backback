@@ -14,9 +14,7 @@ type Lines = tokio::io::Lines<BufReader<ChildStdout>>;
 
 #[tokio::test]
 async fn greeter_testhost_stops_reads_locals_steps_and_finishes() {
-    if bb_dap::locate().is_err() {
-        return;
-    }
+    bb_dap::locate().expect("netcoredbg must be installed for this gate");
     let root: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../..")
         .canonicalize()
@@ -131,6 +129,7 @@ async fn consume_stops(
                 }
             }
             Event::Terminated(_) => break,
+            Event::ConditionError { message, .. } => panic!("no condition was set: {message}"),
             Event::Output(_) | Event::Exited(_) | Event::Breakpoint(_) | Event::Other(_, _) => {}
         }
     }
