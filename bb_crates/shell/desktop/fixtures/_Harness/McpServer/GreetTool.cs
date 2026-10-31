@@ -1,6 +1,7 @@
 namespace Harness.McpServer;
 
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Harness.Core;
 using ModelContextProtocol.Server;
 
@@ -12,5 +13,12 @@ public static class GreetTool
     {
         Greeter greeter = new Greeter();
         return greeter.Hello(name);
+    }
+
+    [McpServerTool, Description("Waits so the client can test a server crash.")]
+    public static async Task<string> Hold()
+    {
+        await Task.Delay(10000);
+        return "held";
     }
 }

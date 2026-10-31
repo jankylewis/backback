@@ -3,6 +3,7 @@
 
 mod bb_open;
 mod bench;
+mod mcp;
 mod scan;
 
 use std::path::{Path, PathBuf};
@@ -49,6 +50,9 @@ pub enum CommandError {
     /// `bb bench` problem.
     #[error(transparent)]
     Bench(#[from] bench::BenchError),
+    /// MCP problem.
+    #[error(transparent)]
+    Mcp(#[from] mcp::McpCommandError),
     /// `bb doctor` found a required tool missing or broken (already printed).
     #[error("required tools not usable: {}", .0.join(", "))]
     Doctor(Vec<&'static str>),
@@ -78,6 +82,7 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
         Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
+        Command::Mcp(command) => mcp::run(command).await.map_err(CommandError::from),
     }
 }
 
