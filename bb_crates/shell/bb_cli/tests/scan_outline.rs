@@ -37,13 +37,13 @@ fn scan_lists_capabilities_per_project() {
     let run: Run = scan();
     assert!(run.out.contains("(Slnx, 4 projects)"), "{}", run.out);
     for (name, wants) in [
-        ("NUnitApex", &["test exe", "VsTest", "NUnit", "Apex"][..]),
+        ("_NUnitApex", &["test exe", "VsTest", "NUnit", "Apex"][..]),
         (
-            "XunitPlaywright",
+            "_XunitPlaywright",
             &["test dll", "Mtp", "XUnit", "Playwright"][..],
         ),
-        ("McpServer", &["lib  exe", "Mcp"][..]),
-        ("Core", &["lib  dll"][..]),
+        ("_McpServer", &["lib  exe", "Mcp"][..]),
+        ("_Core", &["lib  dll"][..]),
     ] {
         let line: &str = line_of(&run, name);
         for want in wants {
@@ -64,7 +64,7 @@ fn scan_counts_secrets_shows_unset_and_never_prints_a_value() {
     assert!(!secret.is_empty(), "fixture must carry a secret value");
     let run: Run = scan();
     assert!(!run.all().contains(secret), "secret value printed");
-    let line: &str = line_of(&run, "NUnitApex");
+    let line: &str = line_of(&run, "_NUnitApex");
     assert!(line.contains("3 vars (1 secret"), "{line}");
     assert!(line.contains("UNSET HARNESS_TOTP_KEY"), "{line}");
 }
@@ -81,4 +81,57 @@ fn outline_prints_namespace_type_and_member() {
     ] {
         assert!(run.out.contains(want), "missing {want:?}:\n{}", run.out);
     }
+}
+
+#[cfg(test)]
+mod missing_project {
+    use std::path::PathBuf;
+
+    /// A valid `.slnx` with one real and one missing project, under temp.
+    pub fn solution(tag: &str) -> PathBuf {
+        let dir: PathBuf =
+            std::env::temp_dir().join(format!("bb-e2e-missing-{tag}-{}", std::process::id()));
+        let _fresh: std::io::Result<()> = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("Here")).unwrap();
+        std::fs::write(
+            dir.join("Here/Here.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\" />\n",
+        )
+        .unwrap();
+        let sln: PathBuf = dir.join("A.slnx");
+        std::fs::write(
+            &sln,
+            "<Solution>\n  <Project Path=\"Gone/Gone.csproj\" />\n  <Project Path=\"Here/Here.csproj\" />\n</Solution>\n",
+        )
+        .unwrap();
+        sln
+    }
+}
+
+#[test]
+fn scan_with_a_missing_project_exits_non_zero_and_names_it() {
+    let sln: PathBuf = missing_project::solution("scan");
+    let run: Run = bb(&["scan", sln.to_str().unwrap()]);
+    let _gone: std::io::Result<()> = std::fs::remove_dir_all(sln.parent().unwrap());
+    assert_eq!(run.code, Some(1), "{}", run.all());
+    assert!(run.err.contains("Gone.csproj"), "{}", run.all());
+    assert!(
+        run.err.contains("1 of 2 projects could not be read"),
+        "{}",
+        run.all()
+    );
+    assert!(
+        run.out.contains("Here "),
+        "the readable project is still listed: {}",
+        run.out
+    );
+}
+
+#[test]
+fn bench_with_a_missing_project_exits_non_zero_and_names_it() {
+    let sln: PathBuf = missing_project::solution("bench");
+    let run: Run = bb(&["bench", sln.to_str().unwrap()]);
+    let _gone: std::io::Result<()> = std::fs::remove_dir_all(sln.parent().unwrap());
+    assert_eq!(run.code, Some(1), "{}", run.all());
+    assert!(run.err.contains("Gone.csproj"), "{}", run.all());
 }

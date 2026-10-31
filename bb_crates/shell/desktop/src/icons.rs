@@ -1,5 +1,5 @@
 use bb_explorer::{Entry, EntryKind};
-use bb_ui::{theme::Theme, Rgb};
+use bb_ui::{bb_theme::Theme, Rgb};
 use gpui::{prelude::*, px, svg, Rgba, Svg};
 
 pub(crate) fn chevron(entry: &Entry) -> &'static str {
@@ -16,13 +16,13 @@ pub(crate) fn chevron(entry: &Entry) -> &'static str {
 
 pub(crate) fn icon(entry: &Entry, tint: Rgba) -> Svg {
     let data: &'static [u8] = match entry.kind() {
-        EntryKind::Folder if entry.expanded() => include_bytes!("../assets/bb_folders/open.svg"),
-        EntryKind::Folder => include_bytes!("../assets/bb_folders/bb_closed.svg"),
-        EntryKind::CSharp => include_bytes!("../assets/files/bb_csharp.svg"),
-        EntryKind::Markdown => include_bytes!("../assets/files/markdown.svg"),
-        EntryKind::Project => include_bytes!("../assets/files/project.svg"),
-        EntryKind::Solution => include_bytes!("../assets/files/solution.svg"),
-        EntryKind::Other => include_bytes!("../assets/files/generic.svg"),
+        EntryKind::Folder if entry.expanded() => include_bytes!("../bb_assets/bb_folders/open.svg"),
+        EntryKind::Folder => include_bytes!("../bb_assets/bb_folders/bb_closed.svg"),
+        EntryKind::CSharp => include_bytes!("../bb_assets/files/bb_csharp.svg"),
+        EntryKind::Markdown => include_bytes!("../bb_assets/files/markdown.svg"),
+        EntryKind::Project => include_bytes!("../bb_assets/files/project.svg"),
+        EntryKind::Solution => include_bytes!("../bb_assets/files/solution.svg"),
+        EntryKind::Other => include_bytes!("../bb_assets/files/generic.svg"),
     };
     svg()
         .data(data)

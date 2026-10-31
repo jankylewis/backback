@@ -1,8 +1,8 @@
 //! `bb`: the backback command line. Until the GUI lands (M1) this is the proof
 //! path and the readback tool: run it on real solutions, find what breaks.
 
+mod bb_commands;
 mod cli;
-mod commands;
 
 use std::process::ExitCode;
 
@@ -16,7 +16,7 @@ async fn main() -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    match commands::run(command).await {
+    match bb_commands::run(command).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("bb: {e}");

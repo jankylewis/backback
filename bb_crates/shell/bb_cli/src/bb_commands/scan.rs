@@ -6,7 +6,7 @@ use std::path::Path;
 
 use bb_dotnet::bb_project::{EnvValue, EnvVar, RunSettings};
 use bb_dotnet::testing::TestPlatform;
-use bb_dotnet::{Capability, ProjectInfo, Solution, SolutionPath};
+use bb_dotnet::{Capability, ProjectError, ProjectInfo, Solution, SolutionPath};
 
 use super::CommandError;
 
@@ -21,10 +21,14 @@ pub(crate) fn run(solution: &Path) -> Result<(), CommandError> {
     );
     let mut totals: BTreeMap<String, usize> = BTreeMap::new();
     let mut infos: Vec<ProjectInfo> = Vec::new();
-    for project in &listing.projects {
-        match ProjectInfo::load(project) {
+    let mut failed: usize = 0;
+    for loaded in projects(&listing) {
+        match loaded {
             Ok(info) => infos.push(info),
-            Err(e) => println!("  ! {e}"),
+            Err(e) => {
+                eprintln!("bb: {e}");
+                failed = failed.saturating_add(1);
+            }
         }
     }
     let width: usize = infos
@@ -41,7 +45,28 @@ pub(crate) fn run(solution: &Path) -> Result<(), CommandError> {
         .map(|(k, v): (&String, &usize)| format!("{k} {v}"))
         .collect();
     println!("summary   : {}", summary.join(" · "));
-    Ok(())
+    match failed {
+        0 => Ok(()),
+        _ => Err(CommandError::Projects {
+            failed,
+            total: listing.projects.len(),
+        }),
+    }
+}
+
+/// Every project of `listing`, read the way `bb scan` reads it.
+fn projects(listing: &Solution) -> Vec<Result<ProjectInfo, ProjectError>> {
+    listing.projects.iter().map(ProjectInfo::load).collect()
+}
+
+/// The solution and every project, silently: the work `bb scan` does,
+/// without printing (for `bb bench`). The first unreadable project fails it.
+pub(crate) fn load(sln: &SolutionPath) -> Result<Vec<ProjectInfo>, CommandError> {
+    let listing: Solution = Solution::load(sln)?;
+    let infos: Vec<ProjectInfo> = projects(&listing)
+        .into_iter()
+        .collect::<Result<Vec<ProjectInfo>, ProjectError>>()?;
+    Ok(infos)
 }
 
 /// One line per project, e.g. `MbDesktop  test exe VSTest  NUnit Apex  rs: 14 vars ...`.

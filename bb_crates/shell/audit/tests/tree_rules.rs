@@ -10,7 +10,7 @@ use common::{only, Scratch};
 #[test]
 fn six_entries_break_the_hd_cap_and_dotfiles_do_not_count() {
     let s: Scratch = Scratch::new("hd");
-    for name in ["a.md", "b.md", "c.md", "d.md", "e.md", ".hidden"] {
+    for name in ["bb_a.md", "b.md", "c.md", "d.md", "e.md", ".hidden"] {
         s.file(name, "x\n");
     }
     assert!(s.rules().is_empty(), "five visible + one hidden is fine");
@@ -22,7 +22,7 @@ fn six_entries_break_the_hd_cap_and_dotfiles_do_not_count() {
 fn agent_files_do_not_count_toward_the_hd_cap() {
     let s: Scratch = Scratch::new("agents");
     for name in [
-        "a.md",
+        "bb_a.md",
         "b.md",
         "c.md",
         "d.md",

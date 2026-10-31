@@ -1,7 +1,8 @@
 //! Command implementations. Each prints plain lines so the output can be
 //! pasted into docs as evidence.
 
-mod open;
+mod bb_open;
+mod bench;
 mod scan;
 
 use std::path::{Path, PathBuf};
@@ -25,6 +26,17 @@ pub enum CommandError {
     /// Solution problem.
     #[error(transparent)]
     Solution(#[from] bb_dotnet::SolutionError),
+    /// A project file could not be read.
+    #[error(transparent)]
+    Project(#[from] bb_dotnet::ProjectError),
+    /// Some projects of a solution could not be read (each already printed).
+    #[error("{failed} of {total} projects could not be read")]
+    Projects {
+        /// Projects that failed.
+        failed: usize,
+        /// Projects the solution declares.
+        total: usize,
+    },
     /// Roslyn problem.
     #[error(transparent)]
     Roslyn(#[from] roslyn::RoslynError),
@@ -34,6 +46,12 @@ pub enum CommandError {
     /// Audit could not read the tree.
     #[error(transparent)]
     Audit(#[from] bb_audit::AuditError),
+    /// `bb bench` problem.
+    #[error(transparent)]
+    Bench(#[from] bench::BenchError),
+    /// `bb doctor` found a required tool missing or broken (already printed).
+    #[error("required tools not usable: {}", .0.join(", "))]
+    Doctor(Vec<&'static str>),
     /// The audit found violations (already printed).
     #[error("{0} convention violations")]
     Violations(usize),
@@ -56,9 +74,10 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
     match command {
         Command::Doctor => doctor().await,
         Command::Scan { solution } => scan::run(&solution),
-        Command::Open { solution } => open::run(&solution).await,
+        Command::Open { solution, restore } => bb_open::run(&solution, restore).await,
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
+        Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
     }
 }
 
@@ -69,25 +88,39 @@ async fn doctor() -> Result<(), CommandError> {
         "light ok  : {}",
         Theme::for_kind(Some(ThemeKind::Light)).name
     );
+    let mut broken: Vec<&'static str> = Vec::new();
     match Sdk::locate() {
         Ok(sdk) => {
             println!("dotnet    : {}", sdk.host().display());
             match sdk.version(PROCESS_TIMEOUT).await {
                 Ok(v) => println!("sdk       : {}", v.as_str()),
-                Err(e) => println!("sdk       : ERROR {e}"),
+                Err(e) => {
+                    println!("sdk       : ERROR {e}");
+                    broken.push("dotnet sdk");
+                }
             }
         }
-        Err(e) => println!("dotnet    : MISSING ({e})"),
+        Err(e) => {
+            println!("dotnet    : MISSING ({e})");
+            broken.push("dotnet");
+        }
     }
     match roslyn::locate() {
         Ok(p) => println!("roslyn-ls : {}", p.display()),
-        Err(e) => println!("roslyn-ls : MISSING ({e})"),
+        Err(e) => {
+            println!("roslyn-ls : MISSING ({e})");
+            broken.push("roslyn-ls");
+        }
     }
     match bb_dap::locate() {
         Ok(p) => println!("netcoredbg: {}", p.display()),
-        Err(e) => println!("netcoredbg: MISSING ({e})"),
+        Err(e) => println!("netcoredbg: OPTIONAL (needed from BBEOD05): {e}"),
     }
-    Ok(())
+    if broken.is_empty() {
+        Ok(())
+    } else {
+        Err(CommandError::Doctor(broken))
+    }
 }
 
 fn outline(file: &Path) -> Result<(), CommandError> {

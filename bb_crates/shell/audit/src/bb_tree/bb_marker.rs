@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use super::{file_name, is_visible_dir, read_dir, read_error, SKIP_DIRS};
+use super::{file_name, read_dir, SKIP_DIRS};
 use crate::AuditError;
 
 /// File endings that mark C# code.
@@ -93,43 +93,51 @@ fn classify(dir: &Path, by_dir: &mut HashMap<PathBuf, Dialect>) -> Result<Dialec
     Ok(kind)
 }
 
-/// A Cargo crate root: a `Cargo.toml` with a `[package]` table.
-pub(crate) fn is_crate_root(dir: &Path) -> Result<bool, AuditError> {
-    let manifest: PathBuf = dir.join("Cargo.toml");
-    if !manifest.is_file() {
-        return Ok(false);
-    }
-    let text: String =
-        std::fs::read_to_string(&manifest).map_err(|e: std::io::Error| read_error(&manifest, e))?;
-    Ok(text.lines().any(|l: &str| l.trim() == "[package]"))
-}
+/// Names fixed by Cargo, Rust or the repo: they never carry the marker, never
+/// count toward it, and are never renamed.
+pub(crate) const FIXED_NAMES: [&str; 14] = [
+    "lib.rs",
+    "main.rs",
+    "mod.rs",
+    "build.rs",
+    "Cargo.toml",
+    "Cargo.lock",
+    "src",
+    "tests",
+    "benches",
+    "examples",
+    "README.md",
+    "LICENSE",
+    "AGENTS.md",
+    "CLAUDE.md",
+];
 
-/// The marker problem of one folder, if any. `exempt` (a crate root or a
-/// folder inside a crate) lifts only the "one is required" part.
-pub(crate) fn problem(
-    entries: &[PathBuf],
-    visible: &[String],
-    dialect: Dialect,
-    exempt: bool,
-) -> Option<String> {
+/// The marker problem of one folder, if any: every folder with 2+ visible
+/// entries carries exactly one marker on a non-fixed entry, unless all its
+/// entries are fixed names.
+pub(crate) fn problem(visible: &[String], dialect: Dialect) -> Option<String> {
     let (marker, wrong): (&str, &str) = dialect.markers();
     if let Some(bad) = visible.iter().find(|n: &&String| n.starts_with(wrong)) {
         return Some(format!(
             "`{wrong}` is not the marker here, use `{marker}`: {bad}"
         ));
     }
-    let carried: usize = visible
+    let free: Vec<&String> = visible
         .iter()
-        .filter(|n: &&String| n.starts_with(marker))
-        .count();
-    let subdirs: usize = entries
+        .filter(|n: &&String| !FIXED_NAMES.contains(&n.as_str()))
+        .collect();
+    let carried: usize = free
         .iter()
-        .filter(|p: &&PathBuf| is_visible_dir(p))
+        .filter(|n: &&&String| n.starts_with(marker))
         .count();
     if carried > 1 {
         Some(format!("{carried} `{marker}` entries, max 1"))
-    } else if carried == 0 && subdirs >= 2 && !exempt {
-        Some(format!("{subdirs} subfolders need one `{marker}` entry"))
+    } else if carried == 0 && visible.len() >= 2 && !free.is_empty() {
+        let names: Vec<&str> = free.iter().map(|n: &&String| n.as_str()).collect();
+        Some(format!(
+            "needs one `{marker}` entry among: {}",
+            names.join(", ")
+        ))
     } else {
         None
     }

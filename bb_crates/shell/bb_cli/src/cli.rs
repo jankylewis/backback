@@ -1,14 +1,25 @@
-//! Argument parsing. Standard library only; the surface is five commands.
+//! Argument parsing. Standard library only; the surface is six commands.
 
 use std::path::PathBuf;
+
+use bb_lsp::roslyn::Restore;
 
 /// Usage text.
 pub const USAGE: &str = "usage:
   bb doctor                 check dotnet, roslyn-language-server and netcoredbg
   bb scan <solution>        what each project is: tests, Apex, Playwright, MCP, runsettings
-  bb open <solution>        load a .sln/.slnx through Roslyn and time it
+  bb open <solution> [--restore]
+                            load a .sln/.slnx through Roslyn and time it;
+                            never writes into it unless --restore is given
   bb outline <file.cs>      print the tree-sitter outline of one file
-  bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types";
+  bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
+  bb bench [solution] [--runs N]
+                            time the fixed set: 1 warm-up + N runs (default 5)";
+
+/// Default measured runs per bench item.
+pub const DEFAULT_RUNS: usize = 5;
+/// Most measured runs per bench item.
+pub const MAX_RUNS: usize = 100;
 
 /// A parsed command.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,6 +35,8 @@ pub enum Command {
     Open {
         /// Solution path.
         solution: PathBuf,
+        /// Whether Roslyn may run `dotnet restore` in the solution.
+        restore: Restore,
     },
     /// Outline a C# file.
     Outline {
@@ -34,6 +47,13 @@ pub enum Command {
     Audit {
         /// Folder to audit (default: current folder).
         root: PathBuf,
+    },
+    /// Time the fixed benchmark set.
+    Bench {
+        /// Extra solution to scan, if any.
+        solution: Option<PathBuf>,
+        /// Measured runs per item, after one warm-up.
+        runs: usize,
     },
 }
 
@@ -49,6 +69,9 @@ pub enum CliError {
     /// A command needed a path.
     #[error("{0} needs a path argument")]
     NeedsPath(&'static str),
+    /// `--runs` needs a whole number from 1 to [`MAX_RUNS`].
+    #[error("--runs needs a number from 1 to {MAX_RUNS}, got {0}")]
+    BadRuns(String),
     /// An argument the command does not take.
     #[error("unexpected argument: {0}")]
     Extra(String),
@@ -62,8 +85,15 @@ pub enum CliError {
 pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let mut it: std::slice::Iter<'_, String> = args.iter();
     let word: &String = it.next().ok_or(CliError::Missing)?;
+    if word == "bench" {
+        return bench(it.as_slice());
+    }
     let path: Option<PathBuf> = it.next().map(PathBuf::from);
-    if let Some(extra) = it.next() {
+    let flag: Option<&String> = it.next();
+    if word == "open" && flag.is_some_and(|f: &String| f == "--restore") {
+        return open(path, Restore::On, it.next());
+    }
+    if let Some(extra) = flag {
         return Err(CliError::Extra(extra.clone()));
     }
     match word.as_str() {
@@ -73,9 +103,7 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         "scan" => path
             .map(|solution: PathBuf| Command::Scan { solution })
             .ok_or(CliError::NeedsPath("scan")),
-        "open" => path
-            .map(|solution: PathBuf| Command::Open { solution })
-            .ok_or(CliError::NeedsPath("open")),
+        "open" => open(path, Restore::Off, None),
         "outline" => path
             .map(|file: PathBuf| Command::Outline { file })
             .ok_or(CliError::NeedsPath("outline")),
@@ -84,6 +112,37 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         }),
         other => Err(CliError::Unknown(other.to_owned())),
     }
+}
+
+/// `bench [solution] [--runs N]`, in that order.
+fn bench(rest: &[String]) -> Result<Command, CliError> {
+    let (solution, flags): (Option<PathBuf>, &[String]) = match rest.split_first() {
+        Some((first, after)) if first != "--runs" => (Some(PathBuf::from(first)), after),
+        Some(_) | None => (None, rest),
+    };
+    let runs: usize = match flags {
+        [] => DEFAULT_RUNS,
+        [flag, n] if flag == "--runs" => n
+            .parse::<usize>()
+            .ok()
+            .filter(|r: &usize| (1..=MAX_RUNS).contains(r))
+            .ok_or_else(|| CliError::BadRuns(n.clone()))?,
+        [flag] if flag == "--runs" => return Err(CliError::BadRuns(String::new())),
+        [.., last] => return Err(CliError::Extra(last.clone())),
+    };
+    Ok(Command::Bench { solution, runs })
+}
+
+fn open(
+    path: Option<PathBuf>,
+    restore: Restore,
+    extra: Option<&String>,
+) -> Result<Command, CliError> {
+    if let Some(extra) = extra {
+        return Err(CliError::Extra(extra.clone()));
+    }
+    path.map(|solution: PathBuf| Command::Open { solution, restore })
+        .ok_or(CliError::NeedsPath("open"))
 }
 
 #[cfg(test)]
@@ -106,7 +165,15 @@ mod tests {
         assert_eq!(
             parse(&args(&["open", "A.slnx"])),
             Ok(Command::Open {
-                solution: PathBuf::from("A.slnx")
+                solution: PathBuf::from("A.slnx"),
+                restore: Restore::Off
+            })
+        );
+        assert_eq!(
+            parse(&args(&["open", "A.slnx", "--restore"])),
+            Ok(Command::Open {
+                solution: PathBuf::from("A.slnx"),
+                restore: Restore::On
             })
         );
         assert_eq!(
@@ -119,6 +186,24 @@ mod tests {
             parse(&args(&["audit"])),
             Ok(Command::Audit {
                 root: PathBuf::from(".")
+            })
+        );
+    }
+
+    #[test]
+    fn parses_audit_and_bench() {
+        assert_eq!(
+            parse(&args(&["bench"])),
+            Ok(Command::Bench {
+                solution: None,
+                runs: DEFAULT_RUNS
+            })
+        );
+        assert_eq!(
+            parse(&args(&["bench", "A.slnx"])),
+            Ok(Command::Bench {
+                solution: Some(PathBuf::from("A.slnx")),
+                runs: DEFAULT_RUNS
             })
         );
         assert_eq!(
@@ -146,7 +231,20 @@ mod tests {
         assert_eq!(parse(&args(&["doctor", "x"])), extra);
         assert_eq!(parse(&args(&["scan", "A.slnx", "x"])), extra);
         assert_eq!(parse(&args(&["open", "A.slnx", "x"])), extra);
+        assert_eq!(parse(&args(&["open", "A.slnx", "--restore", "x"])), extra);
         assert_eq!(parse(&args(&["outline", "A.cs", "x"])), extra);
         assert_eq!(parse(&args(&["audit", "src", "x"])), extra);
+        assert_eq!(parse(&args(&["bench", "A.slnx", "x"])), extra);
+        assert_eq!(
+            parse(&args(&["bench", "A.slnx", "--runs", "7"])),
+            Ok(Command::Bench {
+                solution: Some(PathBuf::from("A.slnx")),
+                runs: 7
+            })
+        );
+        assert_eq!(
+            parse(&args(&["bench", "--runs", "0"])),
+            Err(CliError::BadRuns("0".to_owned()))
+        );
     }
 }

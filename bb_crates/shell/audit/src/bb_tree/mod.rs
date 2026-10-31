@@ -1,11 +1,11 @@
 //! Folder rules (HD taxonomy, backbone marker) and file line caps.
 
-mod marker;
+mod bb_marker;
 
 use std::path::{Path, PathBuf};
 
 use crate::{caps, csharp, rust, AuditError, Finding, Rule, Violation};
-use marker::{Dialect, Dialects};
+use bb_marker::{Dialect, Dialects};
 
 /// Folders that are never audited: VCS, build output, dependencies.
 const SKIP_DIRS: [&str; 6] = [".git", ".target", "target", "bin", "obj", "node_modules"];
@@ -14,32 +14,19 @@ const AGENT_FILES: [&str; 2] = ["AGENTS.md", "CLAUDE.md"];
 /// Generated or legal files that are exempt from line caps.
 const SKIP_FILES: [&str; 2] = ["Cargo.lock", "LICENSE"];
 
-/// One folder to audit, and whether it sits in (or is) a Cargo crate.
-struct Folder {
-    dir: PathBuf,
-    in_crate: bool,
-}
-
 pub(crate) fn walk(root: &Path) -> Result<Vec<Violation>, AuditError> {
     let dialects: Dialects = Dialects::scan(root)?;
     let mut out: Vec<Violation> = Vec::new();
-    let mut stack: Vec<Folder> = vec![Folder {
-        dir: root.to_path_buf(),
-        in_crate: false,
-    }];
-    while let Some(folder) = stack.pop() {
-        let in_crate: bool = folder.in_crate || marker::is_crate_root(&folder.dir)?;
-        let entries: Vec<PathBuf> = read_dir(&folder.dir)?;
-        let dialect: Dialect = dialects.of(&folder.dir);
-        check_folder(root, &folder.dir, &entries, (dialect, in_crate), &mut out);
+    let mut stack: Vec<PathBuf> = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let entries: Vec<PathBuf> = read_dir(&dir)?;
+        let dialect: Dialect = dialects.of(&dir);
+        check_folder(root, &dir, &entries, dialect, &mut out);
         for entry in entries {
             let name: String = file_name(&entry);
             if entry.is_dir() {
                 if !SKIP_DIRS.contains(&name.as_str()) {
-                    stack.push(Folder {
-                        dir: entry,
-                        in_crate,
-                    });
+                    stack.push(entry);
                 }
             } else if !SKIP_FILES.contains(&name.as_str()) {
                 check_file(root, &entry, &mut out)?;
@@ -73,7 +60,7 @@ fn check_folder(
     root: &Path,
     dir: &Path,
     entries: &[PathBuf],
-    (dialect, exempt): (Dialect, bool),
+    dialect: Dialect,
     out: &mut Vec<Violation>,
 ) {
     let visible: Vec<String> = entries
@@ -95,7 +82,7 @@ fn check_folder(
         );
         out.push(violation(root, dir, 0, Rule::FolderEntries, detail));
     }
-    if let Some(detail) = marker::problem(entries, &visible, dialect, exempt) {
+    if let Some(detail) = bb_marker::problem(&visible, dialect) {
         out.push(violation(root, dir, 0, Rule::Marker, detail));
     }
 }
@@ -142,10 +129,6 @@ fn check_file(root: &Path, file: &Path, out: &mut Vec<Violation>) -> Result<(), 
         out.push(violation(root, file, f.line, f.rule, f.detail));
     }
     Ok(())
-}
-
-fn is_visible_dir(p: &Path) -> bool {
-    p.is_dir() && !file_name(p).starts_with('.')
 }
 
 fn file_name(p: &Path) -> String {

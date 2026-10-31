@@ -1,20 +1,20 @@
 //! macOS desktop shell for the backback Explorer.
 
+mod bb_row_view;
 mod icons;
 mod navigation;
-mod row_view;
 mod tooltip;
 
 use std::{path::PathBuf, time::Instant};
 
 use bb_explorer::{Entry, Explorer};
-use bb_ui::{theme::DARK, Rgb};
+use bb_row_view::{row, RowState};
+use bb_ui::{bb_theme::DARK, Rgb};
 use gpui::{
     div, prelude::*, px, rgb, size, App, Bounds, Context, FocusHandle, InteractiveElement,
     IntoElement, KeyBinding, MouseButton, Render, StatefulInteractiveElement, Window, WindowBounds,
     WindowOptions,
 };
-use row_view::{row, RowState};
 
 /// Select the preceding Explorer row.
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]

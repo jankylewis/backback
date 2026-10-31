@@ -191,8 +191,8 @@ fn expand_all_reveals_nested_folders_once() {
 proptest! {
     #[test]
     fn case_insensitive_sort_is_stable(a in "[a-zA-Z]{1,12}", b in "[a-zA-Z]{1,12}") {
-        let comparison: std::cmp::Ordering = crate::entry::name_order(&a, &b);
-        let reverse: std::cmp::Ordering = crate::entry::name_order(&b, &a);
+        let comparison: std::cmp::Ordering = crate::bb_entry::name_order(&a, &b);
+        let reverse: std::cmp::Ordering = crate::bb_entry::name_order(&b, &a);
         prop_assert_eq!(comparison, reverse.reverse());
         if a.eq_ignore_ascii_case(&b) {
             prop_assert_eq!(comparison, a.cmp(&b));

@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use bb_explorer::Entry;
-use bb_ui::theme::DARK;
+use bb_ui::bb_theme::DARK;
 use gpui::{div, prelude::*, px, Context, IntoElement, Window};
 
 use crate::icons::chevron;

@@ -1,4 +1,4 @@
-use bb_ui::theme::DARK;
+use bb_ui::bb_theme::DARK;
 use gpui::{div, prelude::*, AnyView, App, Context, IntoElement, Render, Window};
 
 use super::color;

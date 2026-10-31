@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::entry::{dim_name, file_kind, sort_entries, Entry, EntryKind};
+use crate::bb_entry::{dim_name, file_kind, sort_entries, Entry, EntryKind};
 use crate::ignore_rules;
 use crate::model::{ExplorerError, Source};
 

@@ -4,9 +4,9 @@
 //! behind [`Frontend`]: core crates never depend on it, and this crate owns the
 //! theme tokens so dark-by-default is a data decision, not a widget decision.
 
-pub mod theme;
+pub mod bb_theme;
 
-pub use theme::{Rgb, Theme, ThemeKind};
+pub use bb_theme::{Rgb, Theme, ThemeKind};
 
 /// Frontend errors.
 #[derive(Debug, thiserror::Error)]

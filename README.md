@@ -6,7 +6,7 @@ server and Samsung's `netcoredbg`.
 
 **Status:** R&D skeleton (M0). The crates compile into a `bb` command line that
 proves the risky path: start Roslyn from Rust, load a real solution, time it.
-No GUI yet; the GUI milestone (M1) is in [docs/plan/ROADMAP.md](docs/plan/ROADMAP.md).
+No GUI yet; the GUI milestone (M1) is in [docs/plan/bb_roadmap/bb_ROADMAP.md](docs/plan/bb_roadmap/bb_ROADMAP.md).
 
 ## Why
 

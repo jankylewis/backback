@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
+use crate::bb_entry::{collect_visible, find, find_mut, Entry, EntryKind};
 use crate::children::{expand_entry, read_children_from};
-use crate::entry::{collect_visible, find, find_mut, Entry, EntryKind};
 use crate::ignore_rules;
 use bb_dotnet::{Solution, SolutionError, SolutionPath};
 
