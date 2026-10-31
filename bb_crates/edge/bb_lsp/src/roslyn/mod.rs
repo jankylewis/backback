@@ -7,14 +7,21 @@
 //!   diagnostics and navigation are trustworthy.
 
 use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use lsp_types::{ClientCapabilities, InitializeParams, InitializeResult, InitializedParams};
+use lsp_types::{
+    ClientCapabilities, InitializeParams, InitializeResult, InitializedParams,
+    WorkspaceClientCapabilities,
+};
 use serde_json::json;
 use tokio::process::Command;
 use url::Url;
 
-use crate::client::{Incoming, LspClient, LspError};
+use crate::client::{LspClient, LspError, Settings};
+
+mod load;
+
+pub use load::wait_for_load;
 
 /// Binary name of the official server (installed with `dotnet tool install -g roslyn-language-server --prerelease`).
 pub const BINARY: &str = "roslyn-language-server";
@@ -22,6 +29,40 @@ pub const BINARY: &str = "roslyn-language-server";
 pub const ENV_OVERRIDE: &str = "BACKBACK_ROSLYN_LS";
 /// Notification the server sends once the solution is loaded.
 pub const PROJECT_INIT_COMPLETE: &str = "workspace/projectInitializationComplete";
+
+/// The setting that lets Roslyn run `dotnet restore` on the opened solution.
+pub const AUTOMATIC_RESTORE: &str = "projects.dotnet_enable_automatic_restore";
+
+/// MSBuild properties (read from the environment) that hold where a
+/// design-time build writes: generated files (`obj/<config>/`) and outputs
+/// (`bin/<config>/`), each under the scratch folder when restore is off.
+pub const REDIRECTED_OUTPUTS: [(&str, &str); 2] =
+    [("IntermediateOutputPath", "obj"), ("OutputPath", "bin")];
+
+/// Whether Roslyn may write into the opened solution.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Restore {
+    /// The default: no `dotnet restore`, and the design-time build writes its
+    /// generated files to a scratch folder outside the solution.
+    Off,
+    /// Let Roslyn restore projects it finds unrestored and build in `obj/`.
+    On,
+}
+
+/// The `workspace/configuration` answers bb gives Roslyn.
+#[must_use]
+pub fn settings(restore: Restore) -> Settings {
+    let allowed: bool = match restore {
+        Restore::Off => false,
+        Restore::On => true,
+    };
+    let mut map: Settings = Settings::new();
+    map.insert(
+        AUTOMATIC_RESTORE.to_owned(),
+        serde_json::Value::Bool(allowed),
+    );
+    map
+}
 
 /// Roslyn-specific errors.
 #[derive(Debug, thiserror::Error)]
@@ -72,20 +113,48 @@ pub fn locate() -> Result<PathBuf, RoslynError> {
         .ok_or(RoslynError::NotFound)
 }
 
-/// Start the server over stdio. `log_dir` receives the server's own logs.
+/// Start the server over stdio. `log_dir` receives the server's own logs;
+/// with [`Restore::Off`], `scratch` receives the design-time build output.
 ///
 /// # Errors
-/// The log folder cannot be created, or the process cannot be spawned.
-pub fn start(binary: &Path, log_dir: &Path, timeout: Duration) -> Result<LspClient, RoslynError> {
-    std::fs::create_dir_all(log_dir)
-        .map_err(|_: std::io::Error| RoslynError::BadPath(log_dir.to_path_buf()))?;
+/// A folder cannot be created, or the process cannot be spawned.
+pub fn start(
+    binary: &Path,
+    log_dir: &Path,
+    timeout: Duration,
+    restore: Restore,
+    scratch: &Path,
+) -> Result<LspClient, RoslynError> {
+    create_dir(log_dir)?;
     let mut cmd: Command = Command::new(binary);
+    match restore {
+        Restore::Off => {
+            for (property, folder) in REDIRECTED_OUTPUTS {
+                let dir: PathBuf = scratch.join(folder);
+                create_dir(&dir)?;
+                // MSBuild needs the trailing separator on an output path.
+                let mut value: std::ffi::OsString = dir.into_os_string();
+                value.push(std::path::MAIN_SEPARATOR_STR);
+                cmd.env(property, value);
+            }
+        }
+        Restore::On => {
+            for (property, _) in REDIRECTED_OUTPUTS {
+                cmd.env_remove(property);
+            }
+        }
+    }
     cmd.arg("--stdio")
         .arg("--logLevel")
         .arg("Information")
         .arg("--extensionLogDirectory")
         .arg(log_dir);
-    Ok(LspClient::spawn(cmd, timeout)?)
+    Ok(LspClient::spawn(cmd, timeout, settings(restore))?)
+}
+
+fn create_dir(dir: &Path) -> Result<(), RoslynError> {
+    std::fs::create_dir_all(dir)
+        .map_err(|_: std::io::Error| RoslynError::BadPath(dir.to_path_buf()))
 }
 
 /// `initialize` + `initialized` for a workspace root.
@@ -98,7 +167,13 @@ pub async fn initialize(client: &LspClient, root: &Path) -> Result<InitializeRes
     let params: InitializeParams = InitializeParams {
         process_id: Some(std::process::id()),
         root_uri: Some(root_uri),
-        capabilities: ClientCapabilities::default(),
+        capabilities: ClientCapabilities {
+            workspace: Some(WorkspaceClientCapabilities {
+                configuration: Some(true),
+                ..WorkspaceClientCapabilities::default()
+            }),
+            ..ClientCapabilities::default()
+        },
         ..InitializeParams::default()
     };
     let result: InitializeResult = client.request("initialize", params).await?;
@@ -118,107 +193,9 @@ pub async fn open_solution(client: &LspClient, solution: &Path) -> Result<(), Ro
     Ok(())
 }
 
-/// Drain incoming messages until `projectInitializationComplete`. Returns how long it took.
-///
-/// Every `window/logMessage` and `window/showMessage` on the way is written to
-/// `log` as one line, so the run leaves the server's own account behind.
-///
-/// # Errors
-/// [`RoslynError::LoadTimeout`] past `deadline`, the server closes, or `log`
-/// cannot be written.
-pub async fn wait_for_load<W: std::io::Write>(
-    incoming: &mut tokio::sync::mpsc::Receiver<Incoming>,
-    deadline: Duration,
-    log: &mut W,
-) -> Result<Duration, RoslynError> {
-    let started: Instant = Instant::now();
-    loop {
-        let remaining: Duration = deadline
-            .checked_sub(started.elapsed())
-            .ok_or(RoslynError::LoadTimeout(deadline))?;
-        let next: Option<Incoming> = tokio::time::timeout(remaining, incoming.recv())
-            .await
-            .map_err(|_: tokio::time::error::Elapsed| RoslynError::LoadTimeout(deadline))?;
-        match next {
-            Some(Incoming::Notification { method, .. }) if method == PROJECT_INIT_COMPLETE => {
-                return Ok(started.elapsed());
-            }
-            Some(Incoming::Notification { method, params }) => {
-                log_message(&method, params.as_ref(), log)?;
-            }
-            Some(Incoming::ServerRequest { .. }) => {}
-            None => return Err(RoslynError::Client(LspError::Closed)),
-        }
-    }
-}
-
-/// Write one `window/logMessage` or `window/showMessage` as `[level] text`.
-fn log_message<W: std::io::Write>(
-    method: &str,
-    params: Option<&serde_json::Value>,
-    log: &mut W,
-) -> Result<(), RoslynError> {
-    if method != "window/logMessage" && method != "window/showMessage" {
-        return Ok(());
-    }
-    let text: &str = params
-        .and_then(|p: &serde_json::Value| p.get("message"))
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or_default();
-    let level: &str = match params
-        .and_then(|p: &serde_json::Value| p.get("type"))
-        .and_then(serde_json::Value::as_u64)
-    {
-        Some(1) => "error",
-        Some(2) => "warn",
-        Some(3) => "info",
-        Some(_) | None => "log",
-    };
-    writeln!(log, "[{level}] {text}").map_err(RoslynError::Log)
-}
-
 fn file_url(path: &Path) -> Result<Url, RoslynError> {
     Url::from_file_path(path).map_err(|(): ()| RoslynError::BadPath(path.to_path_buf()))
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use tokio::sync::mpsc;
-
-    fn note(method: &str, params: serde_json::Value) -> Incoming {
-        Incoming::Notification {
-            method: method.to_owned(),
-            params: Some(params),
-        }
-    }
-
-    #[tokio::test]
-    async fn wait_for_load_keeps_every_server_message_in_the_log() {
-        let (tx, mut rx): (mpsc::Sender<Incoming>, mpsc::Receiver<Incoming>) = mpsc::channel(8);
-        tx.send(note(
-            "window/logMessage",
-            json!({"type": 3, "message": "loading A.csproj"}),
-        ))
-        .await
-        .unwrap();
-        tx.send(note(
-            "window/showMessage",
-            json!({"type": 1, "message": "restore failed"}),
-        ))
-        .await
-        .unwrap();
-        tx.send(note("$/progress", json!({"token": 1})))
-            .await
-            .unwrap();
-        tx.send(note(PROJECT_INIT_COMPLETE, json!({})))
-            .await
-            .unwrap();
-        let mut log: Vec<u8> = Vec::new();
-        wait_for_load(&mut rx, Duration::from_secs(5), &mut log)
-            .await
-            .unwrap();
-        let text: String = String::from_utf8(log).unwrap();
-        assert_eq!(text, "[info] loading A.csproj\n[error] restore failed\n");
-    }
-}
+mod tests;

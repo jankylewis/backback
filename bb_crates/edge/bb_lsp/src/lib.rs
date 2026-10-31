@@ -10,4 +10,4 @@ pub mod client;
 pub mod roslyn;
 mod wire;
 
-pub use client::{Incoming, LspClient, LspError};
+pub use client::{Incoming, LspClient, LspError, Settings};

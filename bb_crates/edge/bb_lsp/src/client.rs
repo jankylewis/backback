@@ -68,6 +68,9 @@ pub enum Incoming {
     },
 }
 
+/// Answers for `workspace/configuration`: section name to value.
+pub type Settings = serde_json::Map<String, Value>;
+
 /// What a waiter receives: the result value or the error.
 pub(crate) type Reply = Result<Value, LspError>;
 
@@ -85,11 +88,16 @@ pub struct LspClient {
 }
 
 impl LspClient {
-    /// Spawn `command` and wire its stdio to this client.
+    /// Spawn `command` and wire its stdio to this client. `settings` answers
+    /// the server's `workspace/configuration` requests.
     ///
     /// # Errors
     /// [`LspError::Spawn`] or [`LspError::NoPipes`].
-    pub fn spawn(mut command: Command, timeout: Duration) -> Result<Self, LspError> {
+    pub fn spawn(
+        mut command: Command,
+        timeout: Duration,
+        settings: Settings,
+    ) -> Result<Self, LspError> {
         command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -108,6 +116,7 @@ impl LspClient {
             pending: Arc::clone(&pending),
             incoming: incoming_tx,
             outgoing: outgoing.clone(),
+            settings: Arc::new(settings),
         };
         tokio::spawn(reader.run(stdout));
         Ok(Self {

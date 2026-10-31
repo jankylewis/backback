@@ -60,7 +60,7 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
     match command {
         Command::Doctor => doctor().await,
         Command::Scan { solution } => scan::run(&solution),
-        Command::Open { solution } => open::run(&solution).await,
+        Command::Open { solution, restore } => open::run(&solution, restore).await,
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
         Command::Bench { solution } => bench::run(solution.as_deref()),

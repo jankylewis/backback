@@ -2,11 +2,15 @@
 
 use std::path::PathBuf;
 
+use bb_lsp::roslyn::Restore;
+
 /// Usage text.
 pub const USAGE: &str = "usage:
   bb doctor                 check dotnet, roslyn-language-server and netcoredbg
   bb scan <solution>        what each project is: tests, Apex, Playwright, MCP, runsettings
-  bb open <solution>        load a .sln/.slnx through Roslyn and time it
+  bb open <solution> [--restore]
+                            load a .sln/.slnx through Roslyn and time it;
+                            never writes into it unless --restore is given
   bb outline <file.cs>      print the tree-sitter outline of one file
   bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
   bb bench [solution]       time the fixed benchmark set: table + JSON lines";
@@ -25,6 +29,8 @@ pub enum Command {
     Open {
         /// Solution path.
         solution: PathBuf,
+        /// Whether Roslyn may run `dotnet restore` in the solution.
+        restore: Restore,
     },
     /// Outline a C# file.
     Outline {
@@ -69,7 +75,11 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let mut it: std::slice::Iter<'_, String> = args.iter();
     let word: &String = it.next().ok_or(CliError::Missing)?;
     let path: Option<PathBuf> = it.next().map(PathBuf::from);
-    if let Some(extra) = it.next() {
+    let flag: Option<&String> = it.next();
+    if word == "open" && flag.is_some_and(|f: &String| f == "--restore") {
+        return open(path, Restore::On, it.next());
+    }
+    if let Some(extra) = flag {
         return Err(CliError::Extra(extra.clone()));
     }
     match word.as_str() {
@@ -79,9 +89,7 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         "scan" => path
             .map(|solution: PathBuf| Command::Scan { solution })
             .ok_or(CliError::NeedsPath("scan")),
-        "open" => path
-            .map(|solution: PathBuf| Command::Open { solution })
-            .ok_or(CliError::NeedsPath("open")),
+        "open" => open(path, Restore::Off, None),
         "outline" => path
             .map(|file: PathBuf| Command::Outline { file })
             .ok_or(CliError::NeedsPath("outline")),
@@ -91,6 +99,18 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         "bench" => Ok(Command::Bench { solution: path }),
         other => Err(CliError::Unknown(other.to_owned())),
     }
+}
+
+fn open(
+    path: Option<PathBuf>,
+    restore: Restore,
+    extra: Option<&String>,
+) -> Result<Command, CliError> {
+    if let Some(extra) = extra {
+        return Err(CliError::Extra(extra.clone()));
+    }
+    path.map(|solution: PathBuf| Command::Open { solution, restore })
+        .ok_or(CliError::NeedsPath("open"))
 }
 
 #[cfg(test)]
@@ -113,7 +133,15 @@ mod tests {
         assert_eq!(
             parse(&args(&["open", "A.slnx"])),
             Ok(Command::Open {
-                solution: PathBuf::from("A.slnx")
+                solution: PathBuf::from("A.slnx"),
+                restore: Restore::Off
+            })
+        );
+        assert_eq!(
+            parse(&args(&["open", "A.slnx", "--restore"])),
+            Ok(Command::Open {
+                solution: PathBuf::from("A.slnx"),
+                restore: Restore::On
             })
         );
         assert_eq!(
@@ -128,6 +156,10 @@ mod tests {
                 root: PathBuf::from(".")
             })
         );
+    }
+
+    #[test]
+    fn parses_audit_and_bench() {
         assert_eq!(
             parse(&args(&["bench"])),
             Ok(Command::Bench { solution: None })
@@ -163,6 +195,7 @@ mod tests {
         assert_eq!(parse(&args(&["doctor", "x"])), extra);
         assert_eq!(parse(&args(&["scan", "A.slnx", "x"])), extra);
         assert_eq!(parse(&args(&["open", "A.slnx", "x"])), extra);
+        assert_eq!(parse(&args(&["open", "A.slnx", "--restore", "x"])), extra);
         assert_eq!(parse(&args(&["outline", "A.cs", "x"])), extra);
         assert_eq!(parse(&args(&["audit", "src", "x"])), extra);
         assert_eq!(parse(&args(&["bench", "A.slnx", "x"])), extra);
