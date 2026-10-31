@@ -7,7 +7,9 @@ mod steps;
 
 use std::time::{Duration, Instant};
 
-use bb_dap::{AdapterExit, DapError, DapSession, Debuggee, Event, ExitTruth};
+use bb_dap::{
+    AdapterExit, Capabilities, DapError, DapSession, Debuggee, Event, ExitSource, ExitTruth,
+};
 use steps::{Events, Stop, Target};
 
 #[tokio::test]
@@ -177,19 +179,43 @@ async fn real_adapter_respects_goto_capability_and_closes_waiters() {
 }
 
 #[tokio::test]
-async fn launched_exit_code_is_the_adapter_word_only_and_marked_unverified() {
-    let (_session, mut events): (DapSession, Events) = steps::launch("exit3", None).await;
-    let mut adapter_code: Option<i64> = None;
+async fn launched_exit_code_is_verified_only_when_the_adapter_reads_the_process_status() {
+    let real: i32 = steps::run_direct("exit3").await.unwrap();
+    let (truth, caps): (ExitTruth, Capabilities) = launched_truth("exit3").await;
+    if caps.launch_exit_code_is_process_status {
+        assert_eq!(truth, ExitTruth::Verified(real));
+    } else {
+        assert!(matches!(truth, ExitTruth::Unverified(_)), "{truth:?}");
+    }
+}
+
+#[tokio::test]
+async fn launched_signal_death_is_signaled_only_when_the_adapter_reads_the_process_status() {
+    assert_eq!(steps::run_direct("sigkill").await, None);
+    let (truth, caps): (ExitTruth, Capabilities) = launched_truth("sigkill").await;
+    if caps.launch_exit_code_is_process_status {
+        assert_eq!(truth, ExitTruth::Signaled);
+    } else {
+        assert!(matches!(truth, ExitTruth::Unverified(_)), "{truth:?}");
+    }
+}
+
+async fn launched_truth(mode: &str) -> (ExitTruth, Capabilities) {
+    let (_session, mut events, caps): (DapSession, Events, Capabilities) =
+        steps::launch_with_caps(mode, None).await;
+    let mut code: Option<i64> = None;
+    let mut signal: Option<i64> = None;
     loop {
         let event: Event = DapSession::next_event(&mut events, steps::DEADLINE)
             .await
             .unwrap();
-        adapter_code = adapter_code.or(event.exit_code());
+        code = code.or(event.exit_code());
+        signal = signal.or(event.exit_signal());
         if matches!(event, Event::Terminated(_)) {
             break;
         }
     }
-    eprintln!("launch_exit3_adapter_exit_code={adapter_code:?}");
-    let truth: ExitTruth = bb_dap::exit_truth(adapter_code, None);
-    assert!(matches!(truth, ExitTruth::Unverified(_)), "{truth:?}");
+    let source: ExitSource = caps.launch_exit_source();
+    eprintln!("launch_{mode} adapter_exit_code={code:?} signal={signal:?} source={source:?}");
+    (bb_dap::launch_exit_truth(code, signal, source), caps)
 }

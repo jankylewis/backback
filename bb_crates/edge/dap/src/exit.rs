@@ -54,6 +54,33 @@ impl ExitTruth {
     }
 }
 
+/// Where the `exitCode` of a debuggee the adapter launched comes from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExitSource {
+    /// Only the adapter's word; stock netcoredbg on macOS always sends `0`.
+    AdapterWord,
+    /// The adapter reads the kernel process status (patched netcoredbg capability).
+    ProcessStatus,
+}
+
+/// The exit code of a debuggee the adapter launched; backback is not its parent.
+#[must_use]
+pub fn launch_exit_truth(
+    adapter: Option<i64>,
+    signal: Option<i64>,
+    source: ExitSource,
+) -> ExitTruth {
+    match (source, signal, adapter) {
+        (ExitSource::ProcessStatus, Some(_), _) => ExitTruth::Signaled,
+        (ExitSource::ProcessStatus, None, Some(said)) => {
+            i32::try_from(said).map_or(ExitTruth::Unverified(said), ExitTruth::Verified)
+        }
+        (ExitSource::ProcessStatus, None, None) | (ExitSource::AdapterWord, _, _) => {
+            exit_truth(adapter, None)
+        }
+    }
+}
+
 /// Cross-check the adapter's `exited` code with the real status of an owned process.
 #[must_use]
 pub fn exit_truth(adapter: Option<i64>, process: Option<std::process::ExitStatus>) -> ExitTruth {
@@ -99,6 +126,39 @@ mod tests {
     fn agreeing_or_silent_adapter_gives_a_verified_code() {
         assert_eq!(exit_truth(Some(3), Some(exited(3))), ExitTruth::Verified(3));
         assert_eq!(exit_truth(None, Some(exited(3))), ExitTruth::Verified(3));
+    }
+
+    #[test]
+    fn launch_code_is_verified_only_from_an_adapter_that_reads_the_process_status() {
+        assert_eq!(
+            launch_exit_truth(Some(3), None, ExitSource::ProcessStatus),
+            ExitTruth::Verified(3)
+        );
+        assert_eq!(
+            launch_exit_truth(Some(0), None, ExitSource::AdapterWord),
+            ExitTruth::Unverified(0)
+        );
+        assert_eq!(
+            launch_exit_truth(None, None, ExitSource::ProcessStatus),
+            ExitTruth::Unknown
+        );
+        let wide: i64 = i64::from(i32::MAX) + 1;
+        assert_eq!(
+            launch_exit_truth(Some(wide), None, ExitSource::ProcessStatus),
+            ExitTruth::Unverified(wide)
+        );
+    }
+
+    #[test]
+    fn launch_signal_death_has_no_code_only_from_a_process_status_adapter() {
+        assert_eq!(
+            launch_exit_truth(Some(1), Some(9), ExitSource::ProcessStatus),
+            ExitTruth::Signaled
+        );
+        assert_eq!(
+            launch_exit_truth(Some(1), Some(9), ExitSource::AdapterWord),
+            ExitTruth::Unverified(1)
+        );
     }
 
     #[test]

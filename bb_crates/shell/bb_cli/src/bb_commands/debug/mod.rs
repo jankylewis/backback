@@ -4,9 +4,12 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+mod bb_exit;
+
 use bb_dap::{
-    DapError, DapSession, Event, ExitTruth, Scope, SourceBreakpoint, StackFrame, Variable,
+    DapError, DapSession, Event, ExitSource, Scope, SourceBreakpoint, StackFrame, Variable,
 };
+use bb_exit::launched_exit_line;
 use serde_json::Value;
 use tokio::process::Command;
 
@@ -40,12 +43,16 @@ pub enum DebugError {
 /// # Errors
 /// Missing target, failed build, or DAP failure.
 pub async fn run(target: &Path, source: &Path, line: u32) -> Result<(), DebugError> {
-    let (session, mut events): (DapSession, tokio::sync::mpsc::Receiver<Event>) =
-        start(target, source, line).await?;
+    let (session, mut events, exit_source): (
+        DapSession,
+        tokio::sync::mpsc::Receiver<Event>,
+        ExitSource,
+    ) = start(target, source, line).await?;
     let mut saw_stop: bool = false;
     loop {
         let event: Event = DapSession::next_event(&mut events, DEADLINE).await?;
         let exit_code: Option<i64> = event.exit_code();
+        let exit_signal: Option<i64> = event.exit_signal();
         match event {
             Event::Stopped(body) => {
                 saw_stop = true;
@@ -63,10 +70,12 @@ pub async fn run(target: &Path, source: &Path, line: u32) -> Result<(), DebugErr
                 println!("condition : {message}");
                 session.continue_thread(thread_of(&stopped)?).await?;
             }
-            Event::Exited(_) => println!(
-                "exited    : {}",
-                exit_line(bb_dap::exit_truth(exit_code, None))
-            ),
+            Event::Exited(_) => {
+                println!(
+                    "exited    : {}",
+                    launched_exit_line(exit_code, exit_signal, exit_source)
+                );
+            }
             Event::Terminated(_) => {
                 return if saw_stop {
                     Ok(())
@@ -95,7 +104,7 @@ async fn start(
     target: &Path,
     source: &Path,
     line: u32,
-) -> Result<(DapSession, tokio::sync::mpsc::Receiver<Event>), DebugError> {
+) -> Result<(DapSession, tokio::sync::mpsc::Receiver<Event>, ExitSource), DebugError> {
     let program: PathBuf = resolve_target(target).await?;
     let source: PathBuf = source.canonicalize()?;
     let cwd: &Path = program.parent().ok_or(DebugError::Target)?;
@@ -109,6 +118,14 @@ async fn start(
             "available"
         } else {
             "hidden"
+        }
+    );
+    let exit_source: ExitSource = caps.launch_exit_source();
+    println!(
+        "exit code : {}",
+        match exit_source {
+            ExitSource::ProcessStatus => "process status",
+            ExitSource::AdapterWord => "adapter word",
         }
     );
     session
@@ -125,7 +142,7 @@ async fn start(
         .await?;
     println!("breakpoint: {}:{} {}", source.display(), line, response);
     session.configuration_done().await?;
-    Ok((session, events))
+    Ok((session, events, exit_source))
 }
 
 async fn print_stack_and_locals(session: &DapSession, thread_id: i64) -> Result<(), DebugError> {
@@ -199,44 +216,4 @@ async fn timed_command(command: &mut Command) -> Result<std::process::Output, De
         .await
         .map_err(|_: _| DebugError::Timeout)?
         .map_err(DebugError::Io)
-}
-
-/// The exit code with where it came from. A launched debuggee is the
-/// adapter's child, so its code is the adapter's word only.
-fn exit_line(truth: ExitTruth) -> String {
-    match truth {
-        ExitTruth::Verified(code) => format!("code {code}"),
-        ExitTruth::Corrected { process, adapter } => {
-            format!("code {process} (adapter said {adapter})")
-        }
-        ExitTruth::Signaled => "ended by a signal".to_owned(),
-        ExitTruth::Unverified(code) => format!(
-            "code {code} (adapter-reported, unverified; see docs/rnd/NETCOREDBG_EXIT_CODE.md)"
-        ),
-        ExitTruth::Unknown => "code unknown".to_owned(),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn adapter_only_exit_code_is_labelled_unverified() {
-        let line: String = exit_line(bb_dap::exit_truth(Some(0), None));
-        assert_eq!(
-            line,
-            "code 0 (adapter-reported, unverified; see docs/rnd/NETCOREDBG_EXIT_CODE.md)"
-        );
-    }
-
-    #[test]
-    fn corrected_exit_code_names_both_values() {
-        let truth: ExitTruth = ExitTruth::Corrected {
-            process: 5,
-            adapter: 0,
-        };
-        assert_eq!(exit_line(truth), "code 5 (adapter said 0)");
-        assert_eq!(exit_line(ExitTruth::Verified(3)), "code 3");
-    }
 }

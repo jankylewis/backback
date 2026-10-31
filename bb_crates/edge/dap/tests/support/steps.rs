@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::{Duration, Instant};
 
-use bb_dap::{DapError, DapSession, Event, SourceBreakpoint};
+use bb_dap::{Capabilities, DapError, DapSession, Event, SourceBreakpoint};
 use serde_json::Value;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
@@ -35,15 +35,46 @@ pub async fn spin_line() -> (PathBuf, u32) {
 }
 
 pub async fn start_session() -> (DapSession, Events) {
-    bb_dap::locate().expect("netcoredbg must be installed for this gate");
-    let mut session: DapSession = DapSession::spawn(DEADLINE).unwrap();
-    let events: Events = session.take_events().unwrap();
-    session.initialize().await.unwrap();
+    let (session, events, _caps): (DapSession, Events, Capabilities) =
+        start_session_with_caps().await;
     (session, events)
 }
 
+pub async fn start_session_with_caps() -> (DapSession, Events, Capabilities) {
+    bb_dap::locate().expect("netcoredbg must be installed for this gate");
+    let mut session: DapSession = DapSession::spawn(DEADLINE).unwrap();
+    let events: Events = session.take_events().unwrap();
+    let caps: Capabilities = session.initialize().await.unwrap();
+    (session, events, caps)
+}
+
 pub async fn launch(mode: &str, condition: Option<&str>) -> (DapSession, Events) {
-    let (session, events): (DapSession, Events) = start_session().await;
+    let (session, events, _caps): (DapSession, Events, Capabilities) =
+        launch_with_caps(mode, condition).await;
+    (session, events)
+}
+
+pub async fn run_direct(mode: &str) -> Option<i32> {
+    let status: std::process::ExitStatus = tokio::time::timeout(
+        DEADLINE,
+        Command::new("dotnet")
+            .arg(dll().await)
+            .arg(mode)
+            .kill_on_drop(true)
+            .status(),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    status.code()
+}
+
+pub async fn launch_with_caps(
+    mode: &str,
+    condition: Option<&str>,
+) -> (DapSession, Events, Capabilities) {
+    let (session, events, caps): (DapSession, Events, Capabilities) =
+        start_session_with_caps().await;
     let program: PathBuf = dll().await;
     let cwd: PathBuf = built().await.dir.clone();
     let args: Vec<String> = vec![mode.to_owned()];
@@ -58,7 +89,7 @@ pub async fn launch(mode: &str, condition: Option<&str>) -> (DapSession, Events)
     };
     session.set_breakpoints(&source, &[point]).await.unwrap();
     session.configuration_done().await.unwrap();
-    (session, events)
+    (session, events, caps)
 }
 
 pub struct Target {

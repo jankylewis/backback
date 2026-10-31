@@ -9,6 +9,9 @@ static class Lifecycle
         {
             case "exit3":
                 return 3;
+            case "sigkill":
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+                return 2;
             case "spin":
                 return Spin();
             case "await":

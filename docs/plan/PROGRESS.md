@@ -1,5 +1,15 @@
 # BBEOD05 ship progress
 
+## BBEOD05-EXITCODE (backback_1)
+
+- Local netcoredbg `9731de2` on `local-setnext`: kqueue `NOTE_EXITSTATUS`
+  gives the launch exit code; capability `netcoredbgLaunchExitCodeIsProcessStatus`;
+  a signal death adds `netcoredbgSignal`.
+- Backback: `launch_exit_truth` is `Verified` (or `Signaled`) only with that
+  capability; stock stays `Unverified`. Readback: `readback/BBEOD05/EXITCODE.md`.
+- Gate: stock and patched 159 passed, 0 failed, 0 ignored (30 suites); no
+  adapter: 13 adapter tests fail with `NotFound`. No bench (no hot path).
+
 ## BBEOD05-FIX (backback_1)
 
 - Branch `bbeod-05-ship` from `1d1b791`; tree `backback_wt/bbeod-05-ship`.

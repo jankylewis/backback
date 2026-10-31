@@ -1,6 +1,7 @@
 # netcoredbg exit code on macOS: upstream issue draft
 
-Status: draft text only, not filed. Observed 2026-11-01 by backback (BBEOD05-FIX B3).
+Status: draft text only, not filed. Observed 2026-11-01 by backback
+(BBEOD05-FIX B3). Root cause and a local fix: BBEOD05-EXITCODE.
 
 ## Title
 
@@ -14,17 +15,18 @@ Status: draft text only, not filed. Observed 2026-11-01 by backback (BBEOD05-FIX
 
 ## Steps
 
-1. Build a console app whose `Main` returns `3` (or `5`).
+1. Build a console app whose `Main` returns `3`.
 2. Run it directly: the shell shows exit status `3`.
 3. DAP `launch` it, then `configurationDone`, and let it run to the end.
 4. Read the `exited` event.
 
-Second case: start the app yourself, DAP `attach` to its pid, then let it exit.
+Upstream's own `VSCodeTestExitCode` (`_exit(3)`) and `MITestExitCode` also
+fail on macOS with the stock build.
 
 ## Expected
 
-`exited` carries `exitCode: 3` (launch) and the real code (attach), as the
-DAP specification asks: "The exit code returned from the debuggee."
+`exited` carries `exitCode: 3`, as the DAP specification asks: "The exit
+code returned from the debuggee."
 
 ## Observed
 
@@ -32,33 +34,37 @@ DAP specification asks: "The exit code returned from the debuggee."
 | --- | --- | --- |
 | launch, `Main` returns 3 | 3 | 0 |
 | attach, `Main` returns 5 | 5 | 0 |
+| launch, SIGKILL | 137 (signal 9) | 0 |
 
-Backback's live test `owned_attach_exit_code_is_the_process_status` logs:
-`adapter_exit_code=Some(0) process_exit_code=Some(5)`.
+## Root cause (verified)
 
-## Source reading (not a verified root cause)
+- `ManagedCallback::ExitProcess` on `FEATURE_PAL` reads
+  `GetWaitpid().GetExitCode()`; the default is `0`.
+- Only the exported `waitpid()` hook (`src/debugger/waitpid.cpp`) changes it.
+- `nm -m bin/libdbgshim.dylib` shows `_waitpid (from libSystem)`. macOS binds
+  each import to a named library (two-level namespace), so the PAL in
+  libdbgshim never calls the hook. The default `0` is sent.
+- Attach: netcoredbg is not the parent, so no wait status exists for it.
 
-- `ManagedCallback::ExitProcess` on `FEATURE_PAL` takes the code from
-  `GetWaitpid().GetExitCode()` (`src/debugger/managedcallback.cpp`).
-- `waitpid_t::SetupTrackingPID` sets the default `exitCode = 0`
-  ("same behaviour as CoreCLR have"), and only the `waitpid()` hook in
-  `src/debugger/waitpid.cpp` changes it.
-- Attach: netcoredbg is not the parent of the target, so no `waitpid()` can see
-  its status; the default `0` is always sent.
-- Launch (hypothesis): on macOS the exported `waitpid` hook may not intercept
-  the PAL's own `waitpid` calls inside the runtime libraries (two-level
-  namespace), so the default `0` stays. Not confirmed with a debugger trace.
+## Local fix (commit `9731de2`, not published)
 
-## Suggested fix
+- On macOS, `SetupTrackingPID` adds a kqueue `EVFILT_PROC` watch with
+  `NOTE_EXIT | NOTE_EXITSTATUS`. For a child, the kernel gives the wait
+  status without reaping it. `GetExitCode()` waits up to 3 s for it.
+- A signal death keeps `exitCode: 1` (upstream convention) and adds the
+  non-standard field `netcoredbgSignal`.
+- Non-standard capability `netcoredbgLaunchExitCodeIsProcessStatus: true`
+  (macOS) tells a client the launch code is real.
+- Tests: `VSCodeTestExitCodeReturn` (exitCode 3) and `VSCodeTestExitSignal`
+  (exitCode 1, signal 9). Both fail on stock and pass on the patched build.
+- For upstream, the capability and the signal field are open questions: a
+  plain fix needs neither, but a client cannot then tell old from new.
 
-- When the status is unknown, omit `exitCode` or send an explicit unknown,
-  instead of a confident `0`.
-- On macOS, take the code from the runtime (for example the latched exit code)
-  or from a real `waitpid` on the launched child.
-
-## What backback does meanwhile
+## What backback does
 
 - Owned process (backback started it, then attached): the real OS status wins;
   `bb_dap::exit_truth` returns `Corrected { process, adapter }` on a mismatch.
-- Launched by the adapter: backback cannot read the status, so `bb debug`
-  prints `code 0 (adapter-reported, unverified; ...)`, never a bare `0`.
+- Launched, adapter with the capability: `launch_exit_truth` gives
+  `Verified(code)`, or `Signaled` when `netcoredbgSignal` is present.
+- Launched, stock adapter: `bb debug` prints
+  `code 0 (adapter-reported, unverified; ...)`, never a bare `0`.
