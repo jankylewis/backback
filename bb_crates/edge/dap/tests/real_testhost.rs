@@ -1,9 +1,5 @@
 //! End-to-end VSTest host attach through the installed netcoredbg.
-#![allow(
-    clippy::unwrap_used,
-    reason = "required test evidence must fail immediately"
-)]
-
+#![cfg(test)]
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 

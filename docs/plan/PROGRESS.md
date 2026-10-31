@@ -12,6 +12,16 @@
 - Performance: five-run release benchmark completed at load1 5.02; quiet comparison remains open.
 - Remaining: handoff summary, commit, and READY to `backback_mm`.
 
+## BBEOD05-A acceptance benchmark
+
+- Functionally accepted; performance comparison is in progress.
+- A: master `978f75f`; B: `bbeod-05-debug` `e01277d`.
+- Plan: release builds, five interleaved A/B pairs, three measured runs per item.
+- Target items: scan-harness, scan-solution, and audit-repo.
+- The redundant test-only Clippy allow was removed; `#![cfg(test)]` kept the integration helpers in test scope.
+- A/B second window: median paired B deltas +2.7% harness, −1.5% solution, +3.8% audit.
+- A/A control and sign-changing pairs support `noise, no regression`.
+
 - Seat: `backback_2`; owned tree: `docs/`.
 - Branch observed: `bbeod-01-engine`.
 - Docs plan, conventions, and research notes are ready for handoff.
