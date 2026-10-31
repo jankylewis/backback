@@ -26,6 +26,17 @@ pub enum CommandError {
     /// Solution problem.
     #[error(transparent)]
     Solution(#[from] bb_dotnet::SolutionError),
+    /// A project file could not be read.
+    #[error(transparent)]
+    Project(#[from] bb_dotnet::ProjectError),
+    /// Some projects of a solution could not be read (each already printed).
+    #[error("{failed} of {total} projects could not be read")]
+    Projects {
+        /// Projects that failed.
+        failed: usize,
+        /// Projects the solution declares.
+        total: usize,
+    },
     /// Roslyn problem.
     #[error(transparent)]
     Roslyn(#[from] roslyn::RoslynError),

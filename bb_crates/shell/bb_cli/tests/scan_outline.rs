@@ -82,3 +82,56 @@ fn outline_prints_namespace_type_and_member() {
         assert!(run.out.contains(want), "missing {want:?}:\n{}", run.out);
     }
 }
+
+#[cfg(test)]
+mod missing_project {
+    use std::path::PathBuf;
+
+    /// A valid `.slnx` with one real and one missing project, under temp.
+    pub fn solution(tag: &str) -> PathBuf {
+        let dir: PathBuf =
+            std::env::temp_dir().join(format!("bb-e2e-missing-{tag}-{}", std::process::id()));
+        let _fresh: std::io::Result<()> = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("Here")).unwrap();
+        std::fs::write(
+            dir.join("Here/Here.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\" />\n",
+        )
+        .unwrap();
+        let sln: PathBuf = dir.join("A.slnx");
+        std::fs::write(
+            &sln,
+            "<Solution>\n  <Project Path=\"Gone/Gone.csproj\" />\n  <Project Path=\"Here/Here.csproj\" />\n</Solution>\n",
+        )
+        .unwrap();
+        sln
+    }
+}
+
+#[test]
+fn scan_with_a_missing_project_exits_non_zero_and_names_it() {
+    let sln: PathBuf = missing_project::solution("scan");
+    let run: Run = bb(&["scan", sln.to_str().unwrap()]);
+    let _gone: std::io::Result<()> = std::fs::remove_dir_all(sln.parent().unwrap());
+    assert_eq!(run.code, Some(1), "{}", run.all());
+    assert!(run.err.contains("Gone.csproj"), "{}", run.all());
+    assert!(
+        run.err.contains("1 of 2 projects could not be read"),
+        "{}",
+        run.all()
+    );
+    assert!(
+        run.out.contains("Here "),
+        "the readable project is still listed: {}",
+        run.out
+    );
+}
+
+#[test]
+fn bench_with_a_missing_project_exits_non_zero_and_names_it() {
+    let sln: PathBuf = missing_project::solution("bench");
+    let run: Run = bb(&["bench", sln.to_str().unwrap()]);
+    let _gone: std::io::Result<()> = std::fs::remove_dir_all(sln.parent().unwrap());
+    assert_eq!(run.code, Some(1), "{}", run.all());
+    assert!(run.err.contains("Gone.csproj"), "{}", run.all());
+}
