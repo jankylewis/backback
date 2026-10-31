@@ -8,7 +8,7 @@ pub const USAGE: &str = "usage:
   bb scan <solution>        what each project is: tests, Apex, Playwright, MCP, runsettings
   bb open <solution>        load a .sln/.slnx through Roslyn and time it
   bb outline <file.cs>      print the tree-sitter outline of one file
-  bb audit [path]           check HD taxonomy, caps, underscore rule, explicit types";
+  bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types";
 
 /// A parsed command.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,18 +49,27 @@ pub enum CliError {
     /// A command needed a path.
     #[error("{0} needs a path argument")]
     NeedsPath(&'static str),
+    /// An argument the command does not take.
+    #[error("unexpected argument: {0}")]
+    Extra(String),
 }
 
 /// Parse the arguments after the program name.
 ///
 /// # Errors
-/// [`CliError`] for a missing or unknown command, or a missing path.
+/// [`CliError`] for a missing or unknown command, a missing path, or an
+/// argument the command does not take.
 pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let mut it: std::slice::Iter<'_, String> = args.iter();
     let word: &String = it.next().ok_or(CliError::Missing)?;
     let path: Option<PathBuf> = it.next().map(PathBuf::from);
+    if let Some(extra) = it.next() {
+        return Err(CliError::Extra(extra.clone()));
+    }
     match word.as_str() {
-        "doctor" => Ok(Command::Doctor),
+        "doctor" => path.map_or(Ok(Command::Doctor), |p: PathBuf| {
+            Err(CliError::Extra(p.display().to_string()))
+        }),
         "scan" => path
             .map(|solution: PathBuf| Command::Scan { solution })
             .ok_or(CliError::NeedsPath("scan")),
@@ -129,5 +138,15 @@ mod tests {
             parse(&args(&["fly"])),
             Err(CliError::Unknown("fly".to_owned()))
         );
+    }
+
+    #[test]
+    fn rejects_arguments_a_command_does_not_take() {
+        let extra: Result<Command, CliError> = Err(CliError::Extra("x".to_owned()));
+        assert_eq!(parse(&args(&["doctor", "x"])), extra);
+        assert_eq!(parse(&args(&["scan", "A.slnx", "x"])), extra);
+        assert_eq!(parse(&args(&["open", "A.slnx", "x"])), extra);
+        assert_eq!(parse(&args(&["outline", "A.cs", "x"])), extra);
+        assert_eq!(parse(&args(&["audit", "src", "x"])), extra);
     }
 }
