@@ -70,3 +70,43 @@ fn every_local_markdown_link_resolves() {
     }
     assert!(broken.is_empty(), "broken links:\n{}", broken.join("\n"));
 }
+
+#[test]
+fn tracked_text_has_no_absolute_home_paths() {
+    let repo: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    let output: std::process::Output = std::process::Command::new("git")
+        .args(["ls-files", "-z"])
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "git ls-files failed");
+    let prefixes: [String; 2] = [format!("/{}/", "Users"), format!("/{}/", "home")];
+    let mut found: Vec<String> = Vec::new();
+    for raw_path in output.stdout.split(|byte: &u8| *byte == 0) {
+        if raw_path.is_empty() {
+            continue;
+        }
+        let path: String = String::from_utf8_lossy(raw_path).into_owned();
+        let bytes: Vec<u8> = match std::fs::read(repo.join(&path)) {
+            Ok(bytes) => bytes,
+            Err(_) => continue,
+        };
+        let text: String = match String::from_utf8(bytes) {
+            Ok(text) => text,
+            Err(_) => continue,
+        };
+        for (line, content) in text.lines().enumerate() {
+            if prefixes
+                .iter()
+                .any(|prefix: &String| content.contains(prefix))
+            {
+                found.push(format!("{path}:{}", line + 1));
+            }
+        }
+    }
+    assert!(
+        found.is_empty(),
+        "absolute home paths: {}",
+        found.join(", ")
+    );
+}

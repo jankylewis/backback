@@ -1,5 +1,11 @@
 # BBEOD02 progress
 
+- Hygiene-ctx (`backback_2`, 2026-11-01): moved five tracked ctx summaries
+  unchanged to the external rawctxhub; removed the repo copies and added an
+  ignore rule and external-hub instruction. Public-path review found two
+  absolute home paths; a tracked-text guard failed on both before removal.
+  Revised gate: fmt, Clippy, 126 tests, deny, and `bb audit` passed.
+
 - BBEOD02-FIX (backback_1, 2026-11-01): fixes for verification bugs B1-B3.
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
   -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),
