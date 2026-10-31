@@ -1,0 +1,13 @@
+<RunSettings>
+  <RunConfiguration>
+    <MaxCpuCount>2</MaxCpuCount>
+    <EnvironmentVariables>
+      <HARNESS_HEADLESS>true</HARNESS_HEADLESS>
+      <HARNESS_PASSWORD>fixture-not-a-real-secret</HARNESS_PASSWORD>
+      <HARNESS_TOTP_KEY>__FILL_ME__</HARNESS_TOTP_KEY>
+    </EnvironmentVariables>
+  </RunConfiguration>
+  <NUnit>
+    <NumberOfTestWorkers>2</NumberOfTestWorkers>
+  </NUnit>
+</RunSettings>

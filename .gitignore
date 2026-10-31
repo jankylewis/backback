@@ -1,0 +1,9 @@
+/.target
+**/*.rs.bk
+*.log
+.DS_Store
+/.idea
+/.vscode
+# never commit env files or auth material
+.env
+.env.*
