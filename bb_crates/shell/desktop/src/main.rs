@@ -5,12 +5,17 @@ mod bb_row_view;
 mod editor;
 #[path = "bb_explorer/icons.rs"]
 mod icons;
+mod intel;
+#[path = "app/latency.rs"]
 mod latency;
+#[path = "app/bb_launch.rs"]
 mod launch;
 #[path = "bb_explorer/navigation.rs"]
 mod navigation;
 #[path = "bb_explorer/panel.rs"]
 mod panel;
+#[path = "app/theme.rs"]
+mod theme;
 #[path = "bb_explorer/tooltip.rs"]
 mod tooltip;
 
@@ -49,6 +54,13 @@ struct ExplorerView {
     status: Option<String>,
     explorer_scroll: UniformListScrollHandle,
     quit_after_close: bool,
+    /// The folder the Explorer shows; files outside it open read-only.
+    root: PathBuf,
+    /// Code intelligence state.
+    intel: intel::model::IntelModel,
+    /// The server thread, once started.
+    link: Option<intel::bb_worker::Link>,
+    editor_scroll: UniformListScrollHandle,
 }
 
 impl ExplorerView {
@@ -181,6 +193,7 @@ impl ExplorerView {
     ) {
         match self.tabs.finish_open(file, loaded) {
             Ok(()) => {
+                intel::glue::opened(self, file);
                 window.focus(&self.editor_focus, cx);
                 latency::drive(self, window, cx);
             }
@@ -192,6 +205,10 @@ impl ExplorerView {
 
 impl Render for ExplorerView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        intel::glue::flush(self);
+        intel::view::note_frame(&mut self.intel);
+        let status: String = self.intel.status.label();
+        let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
         div()
             .size_full()
             .flex()
@@ -210,13 +227,13 @@ impl Render for ExplorerView {
                     .flex()
                     .flex_col()
                     .child(editor::tab_bar(&self.tabs, self.theme, cx))
-                    .child(editor::editor_body(
-                        &self.tabs,
-                        &self.editor_focus,
+                    .child(editor::editor_body(self, cx))
+                    .children(panel)
+                    .child(editor::status_bar(
+                        self.status.as_deref(),
+                        &status,
                         self.theme,
-                        cx,
-                    ))
-                    .child(editor::status_bar(self.status.as_deref(), self.theme)),
+                    )),
             )
     }
 }

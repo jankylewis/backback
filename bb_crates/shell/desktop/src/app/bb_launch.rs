@@ -1,28 +1,40 @@
 use crate::editor::{Quit, Tabs};
+use crate::theme::{install_appearance_observer, resolved_theme, FollowAppearance, ToggleTheme};
 use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open};
 use bb_explorer::Explorer;
-use bb_ui::bb_theme::{Theme, ThemeKind};
 use gpui::{
     px, size, App, AppContext, Bounds, FocusHandle, KeyBinding, Menu, MenuItem, Window,
     WindowAppearance, WindowBounds, WindowOptions,
 };
 use std::{path::PathBuf, time::Instant};
 
-#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
-#[action(namespace = backback)]
-pub(crate) struct ToggleTheme;
+/// What the command line asks for.
+struct Start {
+    root: PathBuf,
+    file: Option<PathBuf>,
+    no_write: bool,
+}
 
-#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
-#[action(namespace = backback)]
-pub(crate) struct FollowAppearance;
+fn parse_args() -> Start {
+    let args: Vec<std::ffi::OsString> = std::env::args_os().skip(1).collect();
+    let no_write: bool = args.iter().any(|a: &std::ffi::OsString| a == "--no-write");
+    let argument: PathBuf = args
+        .iter()
+        .find(|a: &&std::ffi::OsString| *a != "--no-write")
+        .map_or_else(|| PathBuf::from("."), PathBuf::from);
+    let (root, file): (PathBuf, Option<PathBuf>) = split_argument(argument);
+    let root: PathBuf = root.canonicalize().unwrap_or(root);
+    Start {
+        root,
+        file,
+        no_write,
+    }
+}
 
 pub(crate) fn launch() {
     let start: Instant = Instant::now();
-    let argument: PathBuf = std::env::args_os()
-        .nth(1)
-        .map_or_else(|| PathBuf::from("."), PathBuf::from);
-    let (root, file): (PathBuf, Option<PathBuf>) = split_argument(argument);
-    let tree: Explorer = match Explorer::open(&root) {
+    let wanted: Start = parse_args();
+    let tree: Explorer = match Explorer::open(&wanted.root) {
         Ok(tree) => tree,
         Err(error) => {
             eprintln!("{error}");
@@ -38,25 +50,7 @@ pub(crate) fn launch() {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
                 ..Default::default()
             },
-            |window: &mut Window, cx: &mut App| {
-                let view: gpui::Entity<ExplorerView> = new_view(tree, window.appearance(), cx);
-                let focus: FocusHandle = view.read(cx).focus.clone();
-                window.focus(&focus, cx);
-                install_close_guard(window, &view, cx);
-                install_appearance_observer(window, &view, cx);
-                if let Some(file) = &file {
-                    view.update(
-                        cx,
-                        |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
-                            state.open_file(file, window, cx);
-                        },
-                    );
-                }
-                window.on_next_frame(move |_: &mut Window, _: &mut App| {
-                    eprintln!("first_frame_ms={}", start.elapsed().as_millis());
-                });
-                view
-            },
+            |window: &mut Window, cx: &mut App| build_window(tree, &wanted, start, window, cx),
         );
         if let Err(error) = result {
             eprintln!("{error}");
@@ -66,8 +60,47 @@ pub(crate) fn launch() {
     });
 }
 
-/// A file argument opens its folder in the Explorer and the file in a tab.
+fn build_window(
+    tree: Explorer,
+    wanted: &Start,
+    start: Instant,
+    window: &mut Window,
+    cx: &mut App,
+) -> gpui::Entity<ExplorerView> {
+    let workspace: (PathBuf, bool) = (wanted.root.clone(), wanted.no_write);
+    let view: gpui::Entity<ExplorerView> = new_view(tree, workspace, window.appearance(), cx);
+    let focus: FocusHandle = view.read(cx).focus.clone();
+    window.focus(&focus, cx);
+    install_close_guard(window, &view, cx);
+    install_appearance_observer(window, &view, cx);
+    view.update(
+        cx,
+        |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            crate::intel::glue::connect(state, window, cx);
+            if let Some(file) = &wanted.file {
+                state.open_file(file, window, cx);
+            }
+        },
+    );
+    window.on_next_frame(move |_: &mut Window, _: &mut App| {
+        eprintln!("first_frame_ms={}", start.elapsed().as_millis());
+    });
+    view
+}
+
+/// A file argument opens its folder in the Explorer and the file in a tab;
+/// a solution file opens its folder (and loads that solution).
 fn split_argument(argument: PathBuf) -> (PathBuf, Option<PathBuf>) {
+    let solution: bool = argument
+        .extension()
+        .is_some_and(|ext: &std::ffi::OsStr| ext == "slnx" || ext == "sln");
+    if argument.is_file() && solution {
+        let folder: PathBuf = argument
+            .parent()
+            .filter(|parent: &&std::path::Path| !parent.as_os_str().is_empty())
+            .map_or_else(|| PathBuf::from("."), std::path::Path::to_path_buf);
+        return (folder, None);
+    }
     if argument.is_file() {
         let folder: PathBuf = argument
             .parent()
@@ -91,15 +124,30 @@ fn menus() -> Vec<Menu> {
 
 fn new_view(
     tree: Explorer,
+    workspace: (PathBuf, bool),
     appearance: WindowAppearance,
     cx: &mut App,
 ) -> gpui::Entity<ExplorerView> {
-    cx.new(|cx: &mut gpui::Context<ExplorerView>| ExplorerView {
+    cx.new(|cx: &mut gpui::Context<ExplorerView>| fresh_view(tree, workspace, appearance, cx))
+}
+
+/// The window's state for `tree`; `no_write` locks every save.
+pub(crate) fn fresh_view(
+    tree: Explorer,
+    (root, no_write): (PathBuf, bool),
+    appearance: WindowAppearance,
+    cx: &mut gpui::Context<ExplorerView>,
+) -> ExplorerView {
+    let mut tabs: Tabs = Tabs::new();
+    if no_write {
+        tabs.set_no_write();
+    }
+    ExplorerView {
         tree,
         selected: 0,
         focus: cx.focus_handle(),
         editor_focus: cx.focus_handle(),
-        tabs: Tabs::new(),
+        tabs,
         keypresses: 0,
         latency_before: None,
         frame_collector: None,
@@ -114,68 +162,10 @@ fn new_view(
         status: None,
         explorer_scroll: gpui::UniformListScrollHandle::new(),
         quit_after_close: false,
-    })
-}
-
-fn resolved_theme(override_kind: Option<ThemeKind>, appearance: Option<WindowAppearance>) -> Theme {
-    let system_kind: Option<ThemeKind> = appearance.map(|value: WindowAppearance| match value {
-        WindowAppearance::Light | WindowAppearance::VibrantLight => ThemeKind::Light,
-        WindowAppearance::Dark | WindowAppearance::VibrantDark => ThemeKind::Dark,
-    });
-    Theme::for_kind(override_kind.or(system_kind))
-}
-
-fn install_appearance_observer(window: &Window, view: &gpui::Entity<ExplorerView>, cx: &mut App) {
-    let weak: gpui::WeakEntity<ExplorerView> = view.downgrade();
-    let subscription: gpui::Subscription =
-        window.observe_window_appearance(move |window: &mut Window, cx: &mut App| {
-            weak.update(
-                cx,
-                |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
-                    state.theme = resolved_theme(state.theme_override, Some(window.appearance()));
-                    cx.notify();
-                },
-            )
-            .ok();
-        });
-    view.update(
-        cx,
-        |state: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
-            state.appearance_subscription = Some(subscription);
-        },
-    );
-}
-
-impl ExplorerView {
-    pub(crate) fn toggle_theme(
-        &mut self,
-        _: &ToggleTheme,
-        _: &mut Window,
-        cx: &mut gpui::Context<Self>,
-    ) {
-        let next: ThemeKind = match self.theme.kind {
-            ThemeKind::Dark => ThemeKind::Light,
-            ThemeKind::Light => ThemeKind::Dark,
-        };
-        self.theme_override = Some(next);
-        self.theme = Theme::for_kind(Some(next));
-        cx.set_window_appearance(Some(match next {
-            ThemeKind::Light => WindowAppearance::Light,
-            ThemeKind::Dark => WindowAppearance::Dark,
-        }));
-        cx.notify();
-    }
-
-    pub(crate) fn follow_appearance(
-        &mut self,
-        _: &FollowAppearance,
-        window: &mut Window,
-        cx: &mut gpui::Context<Self>,
-    ) {
-        self.theme_override = None;
-        cx.set_window_appearance(None);
-        self.theme = resolved_theme(None, Some(window.appearance()));
-        cx.notify();
+        root,
+        intel: crate::intel::model::IntelModel::new(crate::intel::model::LoadStatus::NoSolution),
+        link: None,
+        editor_scroll: gpui::UniformListScrollHandle::new(),
     }
 }
 
@@ -205,6 +195,7 @@ fn bind_keys(cx: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bb_ui::bb_theme::ThemeKind;
 
     #[test]
     fn a_file_argument_opens_its_folder_and_the_file() {

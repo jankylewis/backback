@@ -21,7 +21,7 @@ use crate::bb_client::{LspClient, LspError, Settings};
 
 mod bb_load;
 
-pub use bb_load::{drain_log, log_incoming, wait_for_load};
+pub use bb_load::{batch_projects, drain_log, log_incoming, wait_for_load};
 
 /// Binary name of the official server (installed with `dotnet tool install -g roslyn-language-server --prerelease`).
 pub const BINARY: &str = "roslyn-language-server";

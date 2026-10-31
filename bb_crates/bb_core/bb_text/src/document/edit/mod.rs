@@ -1,6 +1,12 @@
 use crate::CharIdx;
 
-use super::{BytePoint, Document, DocumentError, TextChange, UndoEdit};
+mod bb_splice;
+
+pub(super) use bb_splice::ChangeLog;
+pub use bb_splice::{BytePoint, CharEdit, TextChange};
+
+use super::{Document, DocumentError, UndoEdit};
+use bb_splice::after_text;
 
 impl Document {
     /// Insert text over the selection or at the cursor.
@@ -163,46 +169,7 @@ impl Document {
         self.word_group_open = false;
         self.state = state;
     }
-
-    /// The one place that changes the text: replace `[start, end)` with
-    /// `text`, log the byte-level change and return the removed text.
-    fn splice(
-        &mut self,
-        start: CharIdx,
-        end: CharIdx,
-        text: &str,
-    ) -> Result<String, DocumentError> {
-        let removed: String = self
-            .buffer
-            .slice(start, end)
-            .ok_or(DocumentError::Selection)?;
-        self.format.other_breaks =
-            self.format.other_breaks || self.buffer.other_break_near(start, end);
-        let from: BytePoint = self.byte_point(start)?;
-        let old_end: BytePoint = self.byte_point(end)?;
-        self.buffer.remove(start, end)?;
-        self.buffer.insert(start, text)?;
-        let end_after: CharIdx = after_text(start, text);
-        self.format.other_breaks =
-            self.format.other_breaks || self.buffer.other_break_near(start, end_after);
-        let new_end: BytePoint = self.byte_point(end_after)?;
-        self.changes.push(TextChange {
-            start: from,
-            old_end,
-            new_end,
-        });
-        Ok(removed)
-    }
-
-    pub(super) fn byte_point(&self, at: CharIdx) -> Result<BytePoint, DocumentError> {
-        let (byte, row, column): (usize, usize, usize) = self
-            .buffer
-            .byte_point(at, !self.format.other_breaks)
-            .ok_or(DocumentError::Selection)?;
-        Ok(BytePoint { byte, row, column })
-    }
 }
 
-fn after_text(start: CharIdx, text: &str) -> CharIdx {
-    CharIdx::new(start.raw().saturating_add(text.chars().count()))
-}
+#[cfg(test)]
+mod tests;

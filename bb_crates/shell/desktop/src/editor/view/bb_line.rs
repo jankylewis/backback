@@ -1,4 +1,5 @@
 use super::super::bb_tabs::Tab;
+use crate::intel::view::marks::{self, Ink, Mark};
 use crate::{color, ExplorerView};
 use bb_syntax::{HighlightKind, HighlightSpan};
 use bb_ui::bb_theme::Theme;
@@ -9,9 +10,21 @@ pub(super) struct Run {
     text: String,
     kind: HighlightKind,
     selected: bool,
+    /// A diagnostic squiggle under these chars.
+    mark: Option<Ink>,
 }
 
-pub(super) fn styled_line(tab: &Tab, index: usize) -> Vec<Run> {
+/// What a line row needs besides its text.
+pub(super) struct LineRow {
+    pub(super) index: usize,
+    pub(super) current: bool,
+    /// The worst diagnostic on the line, for the gutter dot.
+    pub(super) gutter: Option<Ink>,
+    /// A popup anchored below the cursor.
+    pub(super) overlay: Option<gpui::AnyElement>,
+}
+
+pub(super) fn styled_line(tab: &Tab, index: usize, marks: &[Mark]) -> Vec<Run> {
     let started: Instant = Instant::now();
     let text: String = tab.document.line(index).unwrap_or_default();
     let clean: &str = text.trim_end_matches(['\r', '\n']);
@@ -31,7 +44,7 @@ pub(super) fn styled_line(tab: &Tab, index: usize) -> Vec<Run> {
     let mut runs: Vec<Run> = Vec::new();
     for (column, (byte, ch)) in clean.char_indices().enumerate() {
         if cursor == Some(column) {
-            push_run(&mut runs, '│', HighlightKind::Plain, false);
+            push_run(&mut runs, '│', (HighlightKind::Plain, false, None));
         }
         let absolute: usize = byte_start.saturating_add(byte);
         let kind: HighlightKind = spans
@@ -44,18 +57,20 @@ pub(super) fn styled_line(tab: &Tab, index: usize) -> Vec<Run> {
                 from.raw() <= char_start.saturating_add(column)
                     && char_start.saturating_add(column) < to.raw()
             });
-        push_run(&mut runs, ch, kind, selected);
+        push_run(&mut runs, ch, (kind, selected, marks::at(marks, column)));
     }
     if cursor == Some(clean.chars().count()) {
-        push_run(&mut runs, '│', HighlightKind::Plain, false);
+        push_run(&mut runs, '│', (HighlightKind::Plain, false, None));
     }
     crate::latency::record_highlight(started.elapsed());
     runs
 }
 
-fn push_run(runs: &mut Vec<Run>, ch: char, kind: HighlightKind, selected: bool) {
+type Look = (HighlightKind, bool, Option<Ink>);
+
+fn push_run(runs: &mut Vec<Run>, ch: char, (kind, selected, mark): Look) {
     if let Some(last) = runs.last_mut() {
-        if last.kind == kind && last.selected == selected {
+        if last.kind == kind && last.selected == selected && last.mark == mark {
             last.text.push(ch);
             return;
         }
@@ -64,17 +79,32 @@ fn push_run(runs: &mut Vec<Run>, ch: char, kind: HighlightKind, selected: bool) 
         text: ch.to_string(),
         kind,
         selected,
+        mark,
     });
 }
 
+fn severity_ink(ink: Ink, theme: Theme) -> bb_ui::Rgb {
+    match ink {
+        Ink::Error => theme.error,
+        Ink::Warning => theme.warn,
+        Ink::Faint => theme.text_dim,
+    }
+}
+
 pub(super) fn line_row(
-    index: usize,
+    row: LineRow,
     runs: Vec<Run>,
-    current: bool,
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
+    let LineRow {
+        index,
+        current,
+        gutter,
+        overlay,
+    }: LineRow = row;
     div()
+        .relative()
         .id(index)
         .h(px(22.0))
         .flex()
@@ -102,15 +132,27 @@ pub(super) fn line_row(
                 mouse_move(index, view, event, window, cx);
             },
         ))
-        .child(
-            div()
-                .w(px(50.0))
-                .text_color(color(theme.text_dim))
-                .child(format!("{:>4} ", index.saturating_add(1))),
-        )
+        .child(gutter_cell(index, gutter, theme))
         .children(
             runs.into_iter()
                 .map(move |run: Run| run_segment(run, current, theme)),
+        )
+        .children(overlay)
+}
+
+/// The line number and, when the line has a diagnostic, a dot in its ink.
+fn gutter_cell(index: usize, gutter: Option<Ink>, theme: Theme) -> gpui::Div {
+    div()
+        .w(px(50.0))
+        .flex()
+        .text_color(color(theme.text_dim))
+        .child(format!("{:>4}", index.saturating_add(1)))
+        .child(
+            div()
+                .w(px(10.0))
+                .when_some(gutter, |dot: gpui::Div, s: Ink| {
+                    dot.text_color(color(severity_ink(s, theme))).child("●")
+                }),
         )
 }
 
@@ -124,6 +166,11 @@ fn run_segment(run: Run, current: bool, theme: Theme) -> impl IntoElement {
     };
     div()
         .text_color(color(ink))
+        .when_some(run.mark, |el: gpui::Div, s: Ink| {
+            el.text_decoration_1()
+                .text_decoration_wavy()
+                .text_decoration_color(color(severity_ink(s, theme)))
+        })
         .bg(color(if run.selected {
             theme.accent
         } else if current {
@@ -160,5 +207,10 @@ fn mouse_move(
 ) {
     if event.dragging() {
         super::super::input::pointer_at(view, index, f32::from(event.position.x), true, window, cx);
+        return;
     }
+    let x: f32 = f32::from(event.position.x);
+    let at: Option<bb_text::CharIdx> = super::super::input::char_at(view, index, x);
+    let position: (f32, f32) = (x, f32::from(event.position.y));
+    crate::intel::glue::hover_move(view, at, position, window, cx);
 }

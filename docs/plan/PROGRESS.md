@@ -73,5 +73,7 @@
 
 ## BBEOD03-B (backback_1, branch `bbeod-03-gui`, worktree `backback_wt/bbeod-03-gui`)
 
-- Base 03a5511 + merge of `bbeod-03-intel`; fixtures path moved to
-  `bb_crates/shell/desktop/fixtures`. GUI code intelligence in progress.
+- Merge `9cc54ed` (03a5511 + `bbeod-03-intel`): gate 184 passed / 0 failed.
+- In progress: `desktop/src/intel/` (server thread, model, glue, view);
+  bb_text char log + `replace_many` + write lock. Next: worker tests on the
+  harness, GPUI key tests, gate, readback on MbTx/Apex (no-write mode).

@@ -1,76 +1,14 @@
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 
-use bb_syntax::{CSharpSyntax, LiveTree, SyntaxError, Tree};
-use bb_text::{Document, DocumentError, TextChange};
+use bb_text::{Document, DocumentError};
 
+mod tab;
 mod window;
+
+pub(crate) use tab::{Tab, TabError, TabEvent};
 
 #[cfg(test)]
 pub(crate) use window::LARGE_FILE_BYTES;
-
-pub(crate) struct Tab {
-    pub(crate) path: PathBuf,
-    pub(crate) document: Document,
-    /// Highlight queries; parsing uses the parser inside `live`.
-    pub(crate) highlighter: CSharpSyntax,
-    pub(crate) live: LiveTree,
-    /// Lines the tree covers; `None` for a file parsed whole.
-    pub(crate) window_lines: Option<std::ops::Range<usize>>,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub(crate) enum TabError {
-    #[error("document: {0}")]
-    Document(#[from] DocumentError),
-    #[error("syntax: {0}")]
-    Syntax(#[from] SyntaxError),
-    #[error("file path: {0}")]
-    Path(#[from] std::io::Error),
-}
-
-impl Tab {
-    /// Read and parse a file. Slow on a big file: call it off the UI thread.
-    pub(crate) fn load(path: PathBuf) -> Result<Self, TabError> {
-        let started: Instant = Instant::now();
-        let document: Document = Document::open(&path)?;
-        let window_lines: Option<std::ops::Range<usize>> = window::first_window(&document);
-        let mut syntax: CSharpSyntax = CSharpSyntax::new()?;
-        let tree: Tree = syntax.parse_rope_in(
-            document.rope(),
-            None,
-            window::points(&document, window_lines.as_ref()),
-        )?;
-        let highlighter: CSharpSyntax = CSharpSyntax::new()?;
-        eprintln!(
-            "editor_open_ms={:.3}",
-            started.elapsed().as_secs_f64() * 1000.0
-        );
-        Ok(Self {
-            path,
-            document,
-            highlighter,
-            live: LiveTree::new(syntax, tree),
-            window_lines,
-        })
-    }
-
-    /// Move the document's new edits onto the shown tree. O(depth) per edit;
-    /// the parse itself runs later, off the UI thread.
-    pub(crate) fn sync_edits(&mut self) {
-        let changes: Vec<TextChange> = self.document.take_changes();
-        self.live.edit(&changes);
-    }
-
-    /// Sync and parse on this thread, as a test oracle for the background path.
-    #[cfg(test)]
-    pub(crate) fn reparse(&mut self) -> Result<(), TabError> {
-        self.sync_edits();
-        self.live
-            .parse_now(self.document.rope(), self.parse_window())?;
-        Ok(())
-    }
-}
 
 #[derive(Default)]
 pub(crate) struct Tabs {
@@ -78,11 +16,34 @@ pub(crate) struct Tabs {
     loading: Vec<PathBuf>,
     active: Option<usize>,
     pending_close: Option<usize>,
+    events: Vec<TabEvent>,
+    no_write: bool,
 }
 
 impl Tabs {
     pub(crate) fn new() -> Self {
         Self::default()
+    }
+
+    /// Lock saves in every tab, now and later (readback on real solutions).
+    pub(crate) fn set_no_write(&mut self) {
+        self.no_write = true;
+        for tab in &mut self.items {
+            tab.document.lock_writes();
+        }
+    }
+
+    /// Whether every save is locked.
+    pub(crate) fn no_write(&self) -> bool {
+        self.no_write
+    }
+
+    fn admit(&mut self, mut tab: Tab) {
+        if self.no_write {
+            tab.document.lock_writes();
+        }
+        self.events.push(TabEvent::Opened(tab.path.clone()));
+        self.items.push(tab);
     }
 
     /// Start opening `path`. `Ok(None)`: it is already open (now active) or
@@ -112,9 +73,17 @@ impl Tabs {
         loaded: Result<Tab, TabError>,
     ) -> Result<(), TabError> {
         self.loading.retain(|pending: &PathBuf| pending != path);
-        self.items.push(loaded?);
+        self.admit(loaded?);
         self.active = self.items.len().checked_sub(1);
         Ok(())
+    }
+
+    /// Add a tab loaded elsewhere (a rename opened it); the active tab stays.
+    pub(crate) fn adopt(&mut self, tab: Tab) {
+        self.admit(tab);
+        if self.active.is_none() {
+            self.active = Some(0);
+        }
     }
 
     /// Files still loading, shown as placeholder tabs.
@@ -168,6 +137,10 @@ impl Tabs {
 
     pub(crate) fn items(&self) -> &[Tab] {
         &self.items
+    }
+
+    pub(crate) fn items_mut(&mut self) -> &mut [Tab] {
+        &mut self.items
     }
 
     pub(crate) fn switch(&mut self, index: usize) {
@@ -230,8 +203,14 @@ impl Tabs {
         Ok(())
     }
 
+    /// Opens and closes since the last call, oldest first.
+    pub(crate) fn take_events(&mut self) -> Vec<TabEvent> {
+        std::mem::take(&mut self.events)
+    }
+
     fn remove(&mut self, index: usize) {
-        self.items.remove(index);
+        let tab: Tab = self.items.remove(index);
+        self.events.push(TabEvent::Closed(tab.path));
         self.active = match self.items.len() {
             0 => None,
             len => Some(index.min(len.saturating_sub(1))),

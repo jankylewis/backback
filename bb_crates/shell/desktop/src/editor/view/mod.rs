@@ -5,8 +5,9 @@ use gpui::{div, prelude::*, px, uniform_list, Context, FocusHandle, IntoElement,
 use super::bb_tabs::Tab;
 mod bb_line;
 use super::Tabs;
+use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
-use bb_line::{line_row, styled_line};
+use bb_line::{line_row, styled_line, LineRow};
 
 pub(crate) fn tab_bar(
     tabs: &Tabs,
@@ -43,17 +44,23 @@ fn file_name(path: &std::path::Path) -> String {
     )
 }
 
-/// One line at the foot of the editor for the latest open or save error.
-pub(crate) fn status_bar(status: Option<&str>, theme: Theme) -> impl IntoElement {
-    div().when_some(status, |bar: gpui::Div, text: &str| {
-        bar.h(px(24.0))
-            .px_2()
-            .flex()
-            .items_center()
-            .bg(color(theme.overlay))
-            .text_color(color(theme.text))
-            .child(text.to_owned())
-    })
+/// The foot of the editor: the latest open or save error on the left, the
+/// C# server's load state on the right.
+pub(crate) fn status_bar(status: Option<&str>, intel: &str, theme: Theme) -> impl IntoElement {
+    div()
+        .h(px(24.0))
+        .px_2()
+        .flex()
+        .items_center()
+        .justify_between()
+        .bg(color(theme.overlay))
+        .text_color(color(theme.text))
+        .child(status.unwrap_or_default().to_owned())
+        .child(
+            div()
+                .text_color(color(theme.text_dim))
+                .child(intel.to_owned()),
+        )
 }
 
 fn tab_item(
@@ -102,12 +109,9 @@ fn tab_item(
         )
 }
 
-pub(crate) fn editor_body(
-    tabs: &Tabs,
-    focus: &FocusHandle,
-    theme: Theme,
-    cx: &mut Context<ExplorerView>,
-) -> impl IntoElement {
+pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
+    let (tabs, focus, theme): (&Tabs, &FocusHandle, Theme) =
+        (&view.tabs, &view.editor_focus, view.theme);
     let lines: usize = tabs.active().map_or(0, Document::len_lines);
     div()
         .id("editor-area")
@@ -132,8 +136,13 @@ pub(crate) fn editor_body(
                     },
                 ),
             )
+            .track_scroll(&view.editor_scroll)
             .h_full(),
         )
+        .children(crate::intel::view::bb_popups::hover(
+            view.intel.hover.as_ref(),
+            theme,
+        ))
         .when(
             tabs.pending_close(),
             |element: gpui::Stateful<gpui::Div>| {
@@ -163,12 +172,34 @@ fn editor_line(
     index: usize,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
-    let tab: &Tab = match view.tabs.active_tab() {
-        Some(tab) => tab,
-        None => return line_row(index, Vec::new(), false, view.theme, cx),
+    let Some(tab): Option<&Tab> = view.tabs.active_tab() else {
+        let row: LineRow = LineRow {
+            index,
+            current: false,
+            gutter: None,
+            overlay: None,
+        };
+        return line_row(row, Vec::new(), view.theme, cx);
     };
     let current: bool = tab.document.cursor_line() == index;
-    line_row(index, styled_line(tab, index), current, view.theme, cx)
+    let marks: Vec<Mark> = line_marks(&tab.document, view.intel.diagnostics_of(&tab.path), index);
+    let overlay: Option<gpui::AnyElement> = current
+        .then(|| {
+            let start: usize = tab
+                .document
+                .line_start(index)
+                .map_or(0, bb_text::CharIdx::raw);
+            let column: usize = tab.document.cursor().raw().saturating_sub(start);
+            crate::intel::view::bb_popups::at_cursor(&view.intel, column, view.theme)
+        })
+        .flatten();
+    let row: LineRow = LineRow {
+        index,
+        current,
+        gutter: crate::intel::view::marks::worst(&marks),
+        overlay,
+    };
+    line_row(row, styled_line(tab, index, &marks), view.theme, cx)
 }
 
 #[cfg(test)]
@@ -194,7 +225,7 @@ mod tests {
         sources(&root, &mut files);
         let stderr_only: Vec<String> = files
             .iter()
-            .filter(|path: &&std::path::PathBuf| !path.ends_with("launch.rs"))
+            .filter(|path: &&std::path::PathBuf| !path.ends_with("bb_launch.rs"))
             .filter(|path: &&std::path::PathBuf| {
                 std::fs::read_to_string(path)
                     .unwrap()

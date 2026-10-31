@@ -49,7 +49,7 @@ pub async fn wait_for_load<W: std::io::Write>(
             }
             Some(message) => {
                 let text: &str = log_incoming(&message, log)?;
-                loaded = loaded.saturating_add(batch_size(text));
+                loaded = loaded.saturating_add(batch_projects(text));
             }
             None => return Err(RoslynError::Client(LspError::Closed)),
         }
@@ -102,8 +102,10 @@ pub async fn drain_log<W: std::io::Write>(
     Ok(())
 }
 
-/// The project count of a batch line, else 0.
-fn batch_size(text: &str) -> usize {
+/// The project count of a `Completed (re)load of N project(s)` log line,
+/// else 0. A progress view sums it the way [`wait_for_load`] does.
+#[must_use]
+pub fn batch_projects(text: &str) -> usize {
     text.split_once(BATCH_MARK)
         .and_then(|(_, rest): (&str, &str)| rest.split(' ').next())
         .and_then(|n: &str| n.parse::<usize>().ok())

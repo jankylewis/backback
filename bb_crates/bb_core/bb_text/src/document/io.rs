@@ -28,6 +28,18 @@ impl Document {
         Ok(doc)
     }
 
+    /// Refuse every later save with [`DocumentError::WriteLocked`]; edits
+    /// stay possible in memory. There is no unlock.
+    pub fn lock_writes(&mut self) {
+        self.write_locked = true;
+    }
+
+    /// Whether saves are locked.
+    #[must_use]
+    pub fn writes_locked(&self) -> bool {
+        self.write_locked
+    }
+
     /// Save the complete file without losing the target's identity.
     ///
     /// The target (a symlink is followed) must be writable, or the save fails
@@ -37,9 +49,13 @@ impl Document {
     /// that carries the target's mode and extended attributes, then renamed.
     ///
     /// # Errors
-    /// Returns [`DocumentError::ReadOnly`], a file error or [`DocumentError::NoPath`].
+    /// Returns [`DocumentError::WriteLocked`], [`DocumentError::ReadOnly`], a file
+    /// error or [`DocumentError::NoPath`].
     pub fn save(&mut self) -> Result<(), DocumentError> {
         let path: &Path = self.path.as_deref().ok_or(DocumentError::NoPath)?;
+        if self.write_locked {
+            return Err(DocumentError::WriteLocked(path.to_path_buf()));
+        }
         let target: PathBuf = resolve(path)?;
         match fs::metadata(&target) {
             Ok(metadata) => self.save_existing(&target, &metadata)?,

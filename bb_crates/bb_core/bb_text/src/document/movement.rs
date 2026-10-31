@@ -69,4 +69,20 @@ impl Document {
         self.word_group_open = false;
         Ok(())
     }
+
+    /// The LSP point (line, UTF-16 column) of a char index.
+    ///
+    /// # Errors
+    /// Out of bounds, or too large for LSP.
+    pub fn lsp_point(&self, at: CharIdx) -> Result<crate::LspPoint, DocumentError> {
+        Ok(self.buffer.to_lsp(at)?)
+    }
+
+    /// The char index of an LSP point; a column past its line end clamps.
+    ///
+    /// # Errors
+    /// The line does not exist.
+    pub fn char_of_lsp(&self, point: crate::LspPoint) -> Result<CharIdx, DocumentError> {
+        Ok(self.buffer.from_lsp(point)?)
+    }
 }
