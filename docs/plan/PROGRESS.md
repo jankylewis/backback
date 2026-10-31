@@ -17,3 +17,14 @@
   timed-out request left its waiter behind.
 - Readback: 16 probes on MbTx and Apex, record `readback/2026-11-01_BBEOD03_A.md`.
 - Open: references ~500 ms server floor; session drops log lines after load.
+
+## BBEOD04-A (backback_1, same branch and worktree)
+
+- Ruling (c) done: the session keeps writing server lines after the load
+  and waits for the last ones on shutdown; `bb open` drains after shutdown.
+- Ruling (b) done: `Session::format`, typed `IntelError::Formatter`;
+  issue draft `docs/rnd/ROSLYN_FORMATTER_ISSUE.md`.
+- Test engine `edge/dotnet/testkit` (`bb-testkit`): Apex CLI + VSTest + MTP
+  backends, TRX/list/settings readers, `bb test list|run`; e2e green.
+- MbTx list readback done on a filtered scratch copy (MbTx: 0 writes).
+- Gate 140 passed / 0 failed, deny ok. Record `readback/2026-11-01_BBEOD04_A.md`.
