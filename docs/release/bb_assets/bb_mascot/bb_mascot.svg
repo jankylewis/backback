@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Original backback scientist mascot">
+  <rect width="1024" height="1024" rx="220" fill="#191c27"/>
+  <path d="M736 566c116-11 180 61 180 168v93c0 30-25 55-55 55H686V604z" fill="#4b526a" stroke="#aeb8d2" stroke-width="24"/>
+  <rect x="733" y="663" width="140" height="120" rx="26" fill="#2b3041" stroke="#9ccfd8" stroke-width="18"/>
+  <path d="m781 706-22 18 22 18m44-36 22 18-22 18" fill="none" stroke="#9ccfd8" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M285 746c0-104 84-188 188-188h81c104 0 188 84 188 188v120H285z" fill="#bd8b69" stroke="#efc3a5" stroke-width="24"/>
+  <path d="M384 612v120m249-120v120" stroke="#4b526a" stroke-width="42" stroke-linecap="round"/>
+  <path d="M309 374c-32-31-24-83 8-107-3-49 30-83 71-89 18-45 73-61 115-40 38-27 99-13 120 29 56 0 91 46 83 92 40 31 40 83 13 115z" fill="#9ccfd8" stroke="#d0edf2" stroke-width="20" stroke-linejoin="round"/>
+  <path d="m310 280-54-14 40 57m89-136-33-48 62 25m198-20 40-48-7 75m65 77 58-21-35 59" fill="#9ccfd8" stroke="#d0edf2" stroke-width="20" stroke-linejoin="round"/>
+  <circle cx="512" cy="431" r="217" fill="#f3c7a7" stroke="#f7deca" stroke-width="22"/>
+  <path d="M310 361c21-76 80-142 166-163 85-20 175 10 231 91-53-18-105-17-154-4-89 24-156 77-243 76z" fill="#9ccfd8" stroke="#d0edf2" stroke-width="20" stroke-linejoin="round"/>
+  <rect x="375" y="256" width="274" height="88" rx="40" fill="#4b526a" stroke="#242838" stroke-width="16"/>
+  <circle cx="435" cy="301" r="42" fill="#d9f8fc" stroke="#9ccfd8" stroke-width="14"/>
+  <circle cx="589" cy="301" r="42" fill="#d9f8fc" stroke="#9ccfd8" stroke-width="14"/>
+  <path d="M430 437h28m107 0h28" stroke="#252936" stroke-width="22" stroke-linecap="round"/>
+  <path d="M472 523c27 25 61 25 88 0" fill="none" stroke="#a35d5c" stroke-width="18" stroke-linecap="round"/>
+  <path d="m275 732-83-99 25-29 39 34 36-31 42 48-35 36 31 36z" fill="#aeb8d2" stroke="#e1e7f2" stroke-width="16" stroke-linejoin="round"/>
+  <path d="m294 693 87 103" stroke="#e1e7f2" stroke-width="25" stroke-linecap="round"/>
+</svg>

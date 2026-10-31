@@ -6,7 +6,13 @@ server and Samsung's `netcoredbg`.
 
 **Status:** R&D skeleton (M0). The crates compile into a `bb` command line that
 proves the risky path: start Roslyn from Rust, load a real solution, time it.
-No GUI yet; the GUI milestone (M1) is in [docs/plan/bb_roadmap/bb_ROADMAP.md](docs/plan/bb_roadmap/bb_ROADMAP.md).
+No GUI yet; the GUI milestone (M1) is in [the roadmap](docs/plan/bb_roadmap/bb_ROADMAP.md).
+
+The [backback mascot](docs/release/bb_assets/bb_mascot/bb_mascot.svg) is an original
+chibi scientist with a coding rucksack. Its [icon previews](docs/release/bb_assets/bb_mascot/previews/)
+show the 16, 32, and 128 px sizes; [the main PNG](docs/release/bb_assets/bb_mascot/icon.png)
+is 1024 px. The [readback notes](docs/plan/readback/) document M0 use.
+App screenshots will follow when the GUI exists.
 
 ## Why
 
@@ -74,6 +80,18 @@ cargo run -p bb -- open path/to/Solution.slnx
 cargo run -p bb -- outline path/to/File.cs
 cargo run -p bb -- audit ..
 ```
+
+## macOS app bundle
+
+Run `bash docs/release/scripts/bb_bundle.sh` from the repo root.
+It builds `.target/bundle/backback.app` with the current Cargo version and
+an ad-hoc signature. The bundle contains the M0 `bb` CLI, so use the terminal
+commands above for now. To install, copy it to `/Applications`, then run
+`/Applications/backback.app/Contents/MacOS/bb doctor`. macOS 13 or newer is required.
+For public distribution, the maintainer must use a Developer ID and Apple
+notarization via [`sign_release.sh`](docs/release/scripts/sign_release.sh).
+See [security](docs/release/community/SECURITY.md), [conduct](docs/release/community/CODE_OF_CONDUCT.md), and
+[contributing](docs/release/community/bb_CONTRIBUTING.md).
 
 ## Licence
 
