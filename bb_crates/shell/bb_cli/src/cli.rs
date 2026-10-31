@@ -1,4 +1,4 @@
-//! Argument parsing. Standard library only; the surface is six commands.
+//! Argument parsing for the headless proof commands.
 
 use std::path::PathBuf;
 
@@ -14,7 +14,9 @@ pub const USAGE: &str = "usage:
   bb outline <file.cs>      print the tree-sitter outline of one file
   bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
   bb bench [solution] [--runs N]
-                            time the fixed set: 1 warm-up + N runs (default 5)";
+                            time the fixed set: 1 warm-up + N runs (default 5)
+  bb debug <proj|dll> --break File.cs:LINE
+                            stop at a source line and print stack and locals";
 
 /// Default measured runs per bench item.
 pub const DEFAULT_RUNS: usize = 5;
@@ -55,6 +57,15 @@ pub enum Command {
         /// Measured runs per item, after one warm-up.
         runs: usize,
     },
+    /// Launch a managed program and stop at one source line.
+    Debug {
+        /// Project or built DLL.
+        target: PathBuf,
+        /// Breakpoint source.
+        source: PathBuf,
+        /// One-based source line.
+        line: u32,
+    },
 }
 
 /// Parse errors.
@@ -75,6 +86,9 @@ pub enum CliError {
     /// An argument the command does not take.
     #[error("unexpected argument: {0}")]
     Extra(String),
+    /// A breakpoint was missing or malformed.
+    #[error("--break needs File.cs:LINE with a positive line number")]
+    BadBreak,
 }
 
 /// Parse the arguments after the program name.
@@ -87,6 +101,9 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let word: &String = it.next().ok_or(CliError::Missing)?;
     if word == "bench" {
         return bench(it.as_slice());
+    }
+    if word == "debug" {
+        return debug(it.as_slice());
     }
     let path: Option<PathBuf> = it.next().map(PathBuf::from);
     let flag: Option<&String> = it.next();
@@ -112,6 +129,33 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         }),
         other => Err(CliError::Unknown(other.to_owned())),
     }
+}
+
+fn debug(rest: &[String]) -> Result<Command, CliError> {
+    let [target, flag, location]: &[String] = rest else {
+        return Err(CliError::BadBreak);
+    };
+    if flag != "--break" {
+        return Err(CliError::Extra(flag.clone()));
+    }
+    let (source, line_text): (&str, &str) = location.rsplit_once(':').ok_or(CliError::BadBreak)?;
+    let line: u32 = line_text
+        .parse()
+        .ok()
+        .filter(|value: &u32| *value > 0)
+        .ok_or(CliError::BadBreak)?;
+    if source.is_empty()
+        || !std::path::Path::new(source)
+            .extension()
+            .is_some_and(|ext: &std::ffi::OsStr| ext.eq_ignore_ascii_case("cs"))
+    {
+        return Err(CliError::BadBreak);
+    }
+    Ok(Command::Debug {
+        target: PathBuf::from(target),
+        source: PathBuf::from(source),
+        line,
+    })
 }
 
 /// `bench [solution] [--runs N]`, in that order.
@@ -146,105 +190,4 @@ fn open(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn args(list: &[&str]) -> Vec<String> {
-        list.iter().map(|s: &&str| (*s).to_owned()).collect()
-    }
-
-    #[test]
-    fn parses_each_command() {
-        assert_eq!(parse(&args(&["doctor"])), Ok(Command::Doctor));
-        assert_eq!(
-            parse(&args(&["scan", "A.slnx"])),
-            Ok(Command::Scan {
-                solution: PathBuf::from("A.slnx")
-            })
-        );
-        assert_eq!(
-            parse(&args(&["open", "A.slnx"])),
-            Ok(Command::Open {
-                solution: PathBuf::from("A.slnx"),
-                restore: Restore::Off
-            })
-        );
-        assert_eq!(
-            parse(&args(&["open", "A.slnx", "--restore"])),
-            Ok(Command::Open {
-                solution: PathBuf::from("A.slnx"),
-                restore: Restore::On
-            })
-        );
-        assert_eq!(
-            parse(&args(&["outline", "A.cs"])),
-            Ok(Command::Outline {
-                file: PathBuf::from("A.cs")
-            })
-        );
-        assert_eq!(
-            parse(&args(&["audit"])),
-            Ok(Command::Audit {
-                root: PathBuf::from(".")
-            })
-        );
-    }
-
-    #[test]
-    fn parses_audit_and_bench() {
-        assert_eq!(
-            parse(&args(&["bench"])),
-            Ok(Command::Bench {
-                solution: None,
-                runs: DEFAULT_RUNS
-            })
-        );
-        assert_eq!(
-            parse(&args(&["bench", "A.slnx"])),
-            Ok(Command::Bench {
-                solution: Some(PathBuf::from("A.slnx")),
-                runs: DEFAULT_RUNS
-            })
-        );
-        assert_eq!(
-            parse(&args(&["audit", "src"])),
-            Ok(Command::Audit {
-                root: PathBuf::from("src")
-            })
-        );
-    }
-
-    #[test]
-    fn rejects_bad_input() {
-        assert_eq!(parse(&args(&["open"])), Err(CliError::NeedsPath("open")));
-        assert_eq!(parse(&args(&["scan"])), Err(CliError::NeedsPath("scan")));
-        assert_eq!(parse(&args(&[])), Err(CliError::Missing));
-        assert_eq!(
-            parse(&args(&["fly"])),
-            Err(CliError::Unknown("fly".to_owned()))
-        );
-    }
-
-    #[test]
-    fn rejects_arguments_a_command_does_not_take() {
-        let extra: Result<Command, CliError> = Err(CliError::Extra("x".to_owned()));
-        assert_eq!(parse(&args(&["doctor", "x"])), extra);
-        assert_eq!(parse(&args(&["scan", "A.slnx", "x"])), extra);
-        assert_eq!(parse(&args(&["open", "A.slnx", "x"])), extra);
-        assert_eq!(parse(&args(&["open", "A.slnx", "--restore", "x"])), extra);
-        assert_eq!(parse(&args(&["outline", "A.cs", "x"])), extra);
-        assert_eq!(parse(&args(&["audit", "src", "x"])), extra);
-        assert_eq!(parse(&args(&["bench", "A.slnx", "x"])), extra);
-        assert_eq!(
-            parse(&args(&["bench", "A.slnx", "--runs", "7"])),
-            Ok(Command::Bench {
-                solution: Some(PathBuf::from("A.slnx")),
-                runs: 7
-            })
-        );
-        assert_eq!(
-            parse(&args(&["bench", "--runs", "0"])),
-            Err(CliError::BadRuns("0".to_owned()))
-        );
-    }
-}
+mod tests;
