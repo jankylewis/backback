@@ -9,7 +9,7 @@ use bb_lsp::{Incoming, LspClient};
 use lsp_types::InitializeResult;
 use tokio::sync::mpsc;
 
-use super::CommandError;
+use super::super::CommandError;
 
 const LSP_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 const SOLUTION_LOAD_TIMEOUT: Duration = Duration::from_secs(300);

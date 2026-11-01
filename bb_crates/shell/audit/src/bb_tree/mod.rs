@@ -121,7 +121,7 @@ fn check_file(root: &Path, file: &Path, out: &mut Vec<Violation>) -> Result<(), 
         ));
     }
     let findings: Vec<Finding> = match ext.as_str() {
-        "rs" => rust::check(&text),
+        "rs" => rust::check_file(&text, is_test_file(root, file)),
         "cs" => csharp::check(&text),
         _ => Vec::new(),
     };
@@ -129,6 +129,18 @@ fn check_file(root: &Path, file: &Path, out: &mut Vec<Violation>) -> Result<(), 
         out.push(violation(root, file, f.line, f.rule, f.detail));
     }
     Ok(())
+}
+
+/// A file that holds only test code: under `tests/`, or a `tests.rs` module.
+fn is_test_file(root: &Path, file: &Path) -> bool {
+    let name: String = file_name(file);
+    name == "tests.rs"
+        || name == "bb_tests.rs"
+        || file
+            .strip_prefix(root)
+            .unwrap_or(file)
+            .components()
+            .any(|part: std::path::Component<'_>| part.as_os_str() == "tests")
 }
 
 fn file_name(p: &Path) -> String {

@@ -1,4 +1,4 @@
-//! Argument parsing. Standard library only; the surface is eight commands.
+//! Argument parsing for the headless commands.
 
 mod bb_probe;
 mod test_args;
@@ -21,6 +21,8 @@ pub const USAGE: &str = "usage:
   bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
   bb bench [solution] [--runs N]
                             time the fixed set: 1 warm-up + N runs (default 5)
+  bb debug <proj|dll> --break File.cs:LINE
+                            stop at a source line and print stack and locals
   bb probe <file.cs> <line:col> <feature> [--sln <solution>] [--repeat N]
                             ask Roslyn one feature at a 1-based line:col (restore off);
                             feature: completion, hover, definition, references,
@@ -70,6 +72,15 @@ pub enum Command {
         /// Measured runs per item, after one warm-up.
         runs: usize,
     },
+    /// Launch a managed program and stop at one source line.
+    Debug {
+        /// Project or built DLL.
+        target: PathBuf,
+        /// Breakpoint source.
+        source: PathBuf,
+        /// One-based source line.
+        line: u32,
+    },
     /// Ask Roslyn one feature at one position.
     Probe(Probe),
     /// List or run tests.
@@ -94,6 +105,9 @@ pub enum CliError {
     /// An argument the command does not take.
     #[error("unexpected argument: {0}")]
     Extra(String),
+    /// A breakpoint was missing or malformed.
+    #[error("--break needs File.cs:LINE with a positive line number")]
+    BadBreak,
     /// A position must be `line:col`, both from 1.
     #[error("position must be line:col, both from 1, got {0}")]
     BadPoint(String),
@@ -118,6 +132,9 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let word: &String = it.next().ok_or(CliError::Missing)?;
     if word == "bench" {
         return bench(it.as_slice());
+    }
+    if word == "debug" {
+        return debug(it.as_slice());
     }
     if word == "probe" {
         return bb_probe::parse(it.as_slice()).map(Command::Probe);
@@ -149,6 +166,33 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
         }),
         other => Err(CliError::Unknown(other.to_owned())),
     }
+}
+
+fn debug(rest: &[String]) -> Result<Command, CliError> {
+    let [target, flag, location]: &[String] = rest else {
+        return Err(CliError::BadBreak);
+    };
+    if flag != "--break" {
+        return Err(CliError::Extra(flag.clone()));
+    }
+    let (source, line_text): (&str, &str) = location.rsplit_once(':').ok_or(CliError::BadBreak)?;
+    let line: u32 = line_text
+        .parse()
+        .ok()
+        .filter(|value: &u32| *value > 0)
+        .ok_or(CliError::BadBreak)?;
+    if source.is_empty()
+        || !std::path::Path::new(source)
+            .extension()
+            .is_some_and(|ext: &std::ffi::OsStr| ext.eq_ignore_ascii_case("cs"))
+    {
+        return Err(CliError::BadBreak);
+    }
+    Ok(Command::Debug {
+        target: PathBuf::from(target),
+        source: PathBuf::from(source),
+        line,
+    })
 }
 
 /// `bench [solution] [--runs N]`, in that order.

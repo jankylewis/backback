@@ -1,0 +1,43 @@
+# BBEOD05 debugger readback
+
+- Seat: `backback_2`; branch: `bbeod-05-debug`.
+- Adapter: Samsung netcoredbg `3.2.0-1092`, macOS arm64, installed without sudo.
+- Official archive SHA-256: `f4fa33b3ff874910cc184b4bb3b9c56d0abdf5c6521cee0b144d7c6e4a6e59ea`.
+- `bb doctor` found .NET `10.0.403`, Roslyn, and the installed adapter.
+
+## Test host
+
+| Step | Observed result |
+|---|---|
+| `dotnet test` with `VSTEST_HOST_DEBUG=1` | Printed the host PID and waited for attach. |
+| DAP initialize and attach | Succeeded against the live host. |
+| Set breakpoint at `GreeterSpec.cs:13` | Initially pending; the adapter later stopped on it. |
+| Inspect first frame | Locals included `name` and `expected`. |
+| Step over and resume | A second stop occurred; both test cases finished. |
+| Timing, one run after a clean fixture build | Attach/configuration to first stop: 625 ms; step to next stop: 17 ms. |
+
+The fixture first failed with `NU1605`: Apex required NUnit 4.6.1, while the
+project pinned 4.3.2. The project now pins 4.6.1. `dotnet test` then passed
+2 tests. The integration test builds to a temporary artifacts path, so a clean
+worktree does not need prebuilt fixture files.
+
+## Probe CLI
+
+`bb debug /tmp/backback-debug-probe/backback-debug-probe.csproj --break /tmp/backback-debug-probe/Program.cs:4`
+stopped at line 4, printed the frame and local values, resumed, printed `PASS`,
+and received `exited` with code 0. `goto` was hidden because the adapter did
+not advertise `supportsGotoTargetsRequest`.
+
+## Lesson
+
+A source breakpoint may be pending before `configurationDone`. Confirm it from
+the later `stopped` event at the requested source line. A real adapter exit
+must close current and future request waiters; testing only an in-flight map
+misses future requests that would otherwise time out.
+
+## Merged ship readback
+
+The merged branch moved the test fixture under `bb_crates/shell/desktop/fixtures/`.
+The first full gate failed when the attach test still used the old path. The
+same real test then passed after the path fix: first stop 676 ms, step 15 ms.
+The full patched-adapter gate passed 131 tests with no ignored tests.

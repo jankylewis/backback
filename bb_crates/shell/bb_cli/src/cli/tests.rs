@@ -2,6 +2,22 @@
 
 use super::*;
 
+#[test]
+fn parses_debug_breakpoint_and_rejects_bad_line() {
+    assert_eq!(
+        parse(&args(&["debug", "App.csproj", "--break", "Program.cs:12"])),
+        Ok(Command::Debug {
+            target: PathBuf::from("App.csproj"),
+            source: PathBuf::from("Program.cs"),
+            line: 12,
+        })
+    );
+    assert_eq!(
+        parse(&args(&["debug", "App.dll", "--break", "Program.cs:0"])),
+        Err(CliError::BadBreak)
+    );
+}
+
 fn args(list: &[&str]) -> Vec<String> {
     list.iter().map(|s: &&str| (*s).to_owned()).collect()
 }
