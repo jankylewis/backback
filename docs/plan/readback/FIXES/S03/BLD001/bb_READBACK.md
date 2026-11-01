@@ -17,6 +17,7 @@ Date 2026-11-02, by backback_mm. Main checkout on `master` at `60cfb64`
 
 ## Not covered
 
-The terminal (PR #21) was not on `master` yet, so this build has no
-Terminal menu; re-run `install.sh` after it merges. Full-screen captures
+Re-installed after PR #21 merged: `install.sh` exit 0, `BBCommit` = `7bc9b96`,
+the binary holds the `alacritty_terminal` code, the app runs at nice 0, and
+quit leaves no process. The terminal itself is read back in `S02/BBEOD11`. Full-screen captures
 are not kept: other apps' windows were on screen.
