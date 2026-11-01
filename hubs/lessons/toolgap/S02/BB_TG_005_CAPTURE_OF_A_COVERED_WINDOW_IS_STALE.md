@@ -4,7 +4,7 @@ id: BB-TG-005
 for: BB-UIX-002
 status: OBSERVED
 date: 2026-11-01
-source: `docs/plan/readback/FIXES/BBEOD10/bb_READBACK.md` (Not covered)
+source: `docs/plan/readback/FIXES/S01/BBEOD10/bb_READBACK.md` (Not covered)
 
 In the BBEOD10 readback all window captures were byte-identical while the
 model cursor moved (STATE_LOG). Most likely another window covered backback,

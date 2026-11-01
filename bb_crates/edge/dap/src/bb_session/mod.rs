@@ -6,7 +6,9 @@ mod inspect;
 mod lifecycle;
 pub use commands::{GotoTarget, Step};
 
+use bb_process::OwnedGroup;
 use std::collections::HashMap;
+use std::num::NonZeroU32;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -59,6 +61,10 @@ impl DapSession {
             .process_group(0)
             .kill_on_drop(true);
         let mut child: Child = command.spawn().map_err(DapError::Spawn)?;
+        let group: Option<OwnedGroup> = child
+            .id()
+            .and_then(NonZeroU32::new)
+            .map(OwnedGroup::register);
         let stdin: ChildStdin = child.stdin.take().ok_or(DapError::NoPipes)?;
         let stdout: tokio::process::ChildStdout = child.stdout.take().ok_or(DapError::NoPipes)?;
         let (outgoing, rx): (mpsc::Sender<Vec<u8>>, mpsc::Receiver<Vec<u8>>) = mpsc::channel(64);
@@ -68,7 +74,7 @@ impl DapSession {
         let events_weak: mpsc::WeakSender<Event> = event_tx.downgrade();
         let reader: tokio::task::JoinHandle<()> =
             tokio::spawn(bb_reader::run(stdout, live.clone(), event_tx));
-        let watcher: Watcher = Watcher::spawn(child, reader.abort_handle(), live.clone());
+        let watcher: Watcher = Watcher::spawn(child, group, reader.abort_handle(), live.clone());
         Ok(Self {
             watcher,
             live,
@@ -214,18 +220,6 @@ impl DapSession {
             lifecycle::watch_target(pid, self.events_weak.clone(), self.live.clone());
         }
         Ok(())
-    }
-}
-
-impl Drop for DapSession {
-    /// A runtime that shuts down can cancel the watcher task, so a launched
-    /// debuggee is ended here too, with a bounded blocking call.
-    fn drop(&mut self) {
-        if self.live.target() == Target::Launched && self.watcher.exit().is_none() {
-            if let Some(pgid) = self.watcher.pid() {
-                let _sent: Option<bool> = lifecycle::kill_group(pgid);
-            }
-        }
     }
 }
 

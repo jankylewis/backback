@@ -4,6 +4,7 @@
 use std::process::ExitStatus;
 use std::time::Duration;
 
+use bb_process::{GroupId, OwnedGroup};
 use tokio::process::Child;
 use tokio::sync::{oneshot, watch};
 use tokio::task::AbortHandle;
@@ -17,6 +18,7 @@ const REAP: Duration = Duration::from_secs(2);
 /// Handle to the watcher task. Dropping it stops the adapter.
 pub(in crate::bb_session) struct Watcher {
     pid: Option<u32>,
+    group: Option<OwnedGroup>,
     stop: Option<oneshot::Sender<()>>,
     exit: watch::Receiver<Option<AdapterExit>>,
 }
@@ -24,7 +26,12 @@ pub(in crate::bb_session) struct Watcher {
 impl Watcher {
     /// Watch `child`; when it exits, stop `reader`, fail every waiter, and
     /// end a launched debuggee.
-    pub(in crate::bb_session) fn spawn(child: Child, reader: AbortHandle, live: Liveness) -> Self {
+    pub(in crate::bb_session) fn spawn(
+        child: Child,
+        group: Option<OwnedGroup>,
+        reader: AbortHandle,
+        live: Liveness,
+    ) -> Self {
         let pid: Option<u32> = child.id();
         let (stop, stop_rx): (oneshot::Sender<()>, oneshot::Receiver<()>) = oneshot::channel();
         let (exit_tx, exit): (
@@ -35,11 +42,12 @@ impl Watcher {
             reader,
             live,
             exit: exit_tx,
-            pgid: pid,
+            group: group.as_ref().map(OwnedGroup::id),
         };
         tokio::spawn(run(child, stop_rx, ends));
         Self {
             pid,
+            group,
             stop: Some(stop),
             exit,
         }
@@ -82,11 +90,17 @@ impl Watcher {
     }
 }
 
+impl Drop for Watcher {
+    fn drop(&mut self) {
+        drop(self.group.take());
+    }
+}
+
 struct Ends {
     reader: AbortHandle,
     live: Liveness,
     exit: watch::Sender<Option<AdapterExit>>,
-    pgid: Option<u32>,
+    group: Option<GroupId>,
 }
 
 async fn run(mut child: Child, stop: oneshot::Receiver<()>, ends: Ends) {
@@ -103,10 +117,18 @@ async fn run(mut child: Child, stop: oneshot::Receiver<()>, ends: Ends) {
         .and_then(Result::ok);
     ends.reader.abort();
     ends.live.close_all();
-    let debuggee: Debuggee = match (ends.live.target(), ends.pgid) {
-        (Target::None, _) => Debuggee::None,
-        (Target::Attached(pid), _) => Debuggee::LeftRunning(pid),
-        (Target::Launched, Some(pgid)) => group::end(pgid).await,
+    let debuggee: Debuggee = match (ends.live.target(), ends.group) {
+        (Target::None, Some(group)) => {
+            group.end(&mut || {});
+            Debuggee::None
+        }
+        (Target::None, None) => Debuggee::None,
+        (Target::Attached(pid), Some(group)) => {
+            group.end(&mut || {});
+            Debuggee::LeftRunning(pid)
+        }
+        (Target::Attached(pid), None) => Debuggee::LeftRunning(pid),
+        (Target::Launched, Some(group)) => group::end(group).await,
         (Target::Launched, None) => Debuggee::Unconfirmed,
     };
     let code: Option<i32> = status.and_then(|value: ExitStatus| value.code());

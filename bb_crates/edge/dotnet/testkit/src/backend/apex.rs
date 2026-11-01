@@ -1,13 +1,14 @@
 //! The Apex CLI in IDE mode, as the Apex Testkit extension drives it.
 
+use std::num::NonZeroU32;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use bb_dotnet::{ProjectPath, Sdk};
+use bb_process::OwnedGroup;
 use tokio::io::{AsyncBufReadExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdout};
 
-use super::process::stop_tree;
 use super::{assembly_of, build, shadow, Call, Finished, StopFlag, TempDir, Workspace};
 use crate::bb_engine::{Deadlines, Selection, TestBackend};
 use crate::model::{Fqn, SpecList};
@@ -31,6 +32,7 @@ pub struct DebugHost {
     /// The test host to attach to (`coreclr`, `processId` as a string).
     pub pid: HostPid,
     child: Child,
+    group: Option<OwnedGroup>,
 }
 
 impl ApexBackend {
@@ -88,6 +90,10 @@ impl ApexBackend {
                 program: call.name(),
                 source,
             })?;
+        let mut group: Option<OwnedGroup> = child
+            .id()
+            .and_then(NonZeroU32::new)
+            .map(OwnedGroup::register);
         let stdout: Option<ChildStdout> = child.stdout.take();
         let found: Option<HostPid> = match stdout {
             Some(out) => tokio::time::timeout(deadline, first_pid(BufReader::new(out).lines()))
@@ -97,9 +103,11 @@ impl ApexBackend {
             None => None,
         };
         if let Some(pid) = found {
-            return Ok(DebugHost { pid, child });
+            return Ok(DebugHost { pid, child, group });
         }
-        stop_tree(&mut child).await;
+        drop(group.take());
+        let _reaped: Result<std::io::Result<std::process::ExitStatus>, _> =
+            tokio::time::timeout(Duration::from_secs(2), child.wait()).await;
         Err(TestkitError::NoHostPid(deadline))
     }
 
@@ -148,7 +156,9 @@ async fn first_pid(mut lines: Lines<BufReader<ChildStdout>>) -> Option<HostPid> 
 impl DebugHost {
     /// Stop the run and everything it started, the waiting host included.
     pub async fn stop(mut self) {
-        stop_tree(&mut self.child).await;
+        drop(self.group.take());
+        let _reaped: Result<std::io::Result<std::process::ExitStatus>, _> =
+            tokio::time::timeout(Duration::from_secs(2), self.child.wait()).await;
     }
 }
 

@@ -4,7 +4,7 @@ id: BB-UIX-001
 family: UIX
 status: FIXED
 source: `bb_crates/shell/desktop/src/editor/view/bb_line/caret.rs` (`Columns`)
-source: `docs/plan/readback/FIXES/BBEOD12/bb_READBACK.md`
+source: `docs/plan/readback/FIXES/S02/BBEOD12/bb_READBACK.md`
 
 ## The fix that holds
 
@@ -22,4 +22,4 @@ and any non-Menlo fallback glyph break it.
 ## Proof
 
 4 window tests red on master, green on the branch (emoji + tab line); gate
-green; readback pixel diff in `docs/plan/readback/FIXES/BBEOD12/bb_READBACK.md`.
+green; readback pixel diff in `docs/plan/readback/FIXES/S02/BBEOD12/bb_READBACK.md`.

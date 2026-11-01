@@ -8,6 +8,7 @@ description = "Headless test engine: list and run .NET tests through the Apex CL
 
 [dependencies]
 bb-dotnet.workspace = true
+bb-process.workspace = true
 roxmltree.workspace = true
 serde.workspace = true
 serde_json.workspace = true

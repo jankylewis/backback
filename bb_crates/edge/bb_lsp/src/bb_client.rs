@@ -1,11 +1,11 @@
 //! Generic JSON-RPC 2.0 client over a child process's stdio.
 
-use std::collections::HashMap;
-use std::process::Stdio;
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use std::{collections::HashMap, process::Stdio};
 
+use bb_process::OwnedGroup;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -82,6 +82,7 @@ pub(crate) type Pending = Arc<Mutex<HashMap<i64, oneshot::Sender<Reply>>>>;
 /// A running language server connection.
 pub struct LspClient {
     child: Child,
+    group: Option<OwnedGroup>,
     outgoing: mpsc::Sender<Vec<u8>>,
     pending: Pending,
     next_id: AtomicI64,
@@ -105,8 +106,10 @@ impl LspClient {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
+            .process_group(0)
             .kill_on_drop(true);
         let mut child: Child = command.spawn().map_err(LspError::Spawn)?;
+        let group: Option<OwnedGroup> = bb_child::own_group(&child);
         let stdin: ChildStdin = child.stdin.take().ok_or(LspError::NoPipes)?;
         let stdout: ChildStdout = child.stdout.take().ok_or(LspError::NoPipes)?;
         let (outgoing, outgoing_rx): (mpsc::Sender<Vec<u8>>, mpsc::Receiver<Vec<u8>>) =
@@ -126,6 +129,7 @@ impl LspClient {
         tokio::spawn(reader.run(stdout));
         Ok(Self {
             child,
+            group,
             outgoing,
             pending,
             next_id: AtomicI64::new(1),
