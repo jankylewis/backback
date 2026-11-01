@@ -18,6 +18,9 @@ Fleet: `backback` — matemaster `backback_mm`, mates `backback_1` (cca),
 - One local browser runner at a time; at most 2 test workers per seat.
 - Scope: pure C# IDE, lightweight, minimal features; build only what the
   headmate asks for; propose extras, never build them unasked.
+- Hubs (critical): every bug report, red gate, CI failure, flake or false
+  claim gets its entries in `hubs/` (schema `hubs/bb_SCHEMA.md`) in
+  the same PR as the fix. Read `hubs/TRIAGE.md` before any diagnosis.
 - Never write Claude/Codex auto-memory; handoff state goes to
   `docs/plan/PROGRESS.md` or the external ctx hub.
 
