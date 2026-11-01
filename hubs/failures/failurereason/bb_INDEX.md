@@ -18,4 +18,4 @@ One file per failure mechanism. This hub owns the id. Entries: 15 — FIXED 13, 
 | BB-LSP-004 | `open --restore` can exit before Roslyn logs the restore | FIXED | yes | no | none | `APP/LSP/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
 | BB-UIX-003 | The gutter kept 50 px when zoomed, so line numbers ran into the code | FIXED | yes | no | none | `APP/UIX/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |
 | BB-PRC-002 | `dotnet build` spawned from a background thread never finished | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
-| BB-PRC-003 | Roslyn and test runs are also spawned from background threads | OBSERVED | no | no | none | `SYS/PRC/BB_PRC_003_TOOLS_SPAWNED_FROM_BACKGROUND_THREADS.md` |
+| BB-PRC-003 | `SN` Roslyn came from a niced readback launch, not the app | OBSERVED | no | no | BB-TG-006 | `SYS/PRC/BB_PRC_003_TOOLS_SPAWNED_FROM_BACKGROUND_THREADS.md` |

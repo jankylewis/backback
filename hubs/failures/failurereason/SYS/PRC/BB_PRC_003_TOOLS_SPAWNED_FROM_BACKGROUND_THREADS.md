@@ -1,4 +1,4 @@
-# BB-PRC-003 — Roslyn and test runs are also spawned from background threads
+# BB-PRC-003 — `SN` Roslyn came from a niced readback launch, not the app
 
 id: BB-PRC-003
 family: PRC
@@ -6,17 +6,24 @@ status: OBSERVED
 date: 2026-11-02
 signature: SN roslyn-language-server
 source: `docs/plan/readback/FIXES/S02/BBEOD13/bb_READBACK.md` (BB-PRC-002 family)
-observed: during the Build readback the app's Roslyn processes showed `SN`
-related: BB-BUG-004 (Test Explorer did not respond; a throttled test host
-  would look like that; not proven)
-links: fix=no lesson=no evidence=no toolgap=none
+observed: readback launch `backback <harness> &` from zsh: app `SN`, Roslyn `SN`
+observed: same build via `open -a /Applications/backback.app --args <harness>`:
+  app `S` nice 0, Roslyn `S` nice 0
+links: fix=no lesson=no evidence=yes toolgap=BB-TG-006
 
 ## What it is
 
-The same background-QoS spawn as BB-PRC-002 applies to the Roslyn server
-and to test runs. Roslyn still works (slower load); a test run or debug
-session may stall like the build did.
+The first reading blamed Roslyn being spawned from a background thread. That
+was wrong: the app itself was `SN`. zsh's `BG_NICE` (on by default) renices a
+job started with `&`, and every child inherits it. A user launch from Finder
+or `open` is not niced, and Roslyn runs at normal priority.
+
+## What it changes
+
+No product fix is needed for Roslyn. BB-BUG-004 (Test Explorer) is not
+explained by throttling; it stays OPEN. BB-PRC-002 was also read back from a
+niced launch; its fix (spawn on the UI thread) holds by its own test.
 
 ## How to confirm
 
-Run one test from the Test Explorer and read `ps -o stat` of its host.
+`ps -o stat,nice` of the app: `N` or nice > 0 means the launch shell niced it.
