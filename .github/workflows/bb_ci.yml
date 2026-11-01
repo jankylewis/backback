@@ -1,0 +1,35 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            .target
+          key: cargo-${{ runner.os }}-${{ hashFiles('bb_crates/Cargo.lock') }}
+      - name: Install cargo-deny
+        run: cargo install --locked cargo-deny
+      - name: Format
+        run: cargo fmt --check
+        working-directory: bb_crates
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: bb_crates
+      - name: Tests
+        run: cargo test --workspace
+        working-directory: bb_crates
+      - name: Dependency audit
+        run: cargo deny check
+        working-directory: bb_crates
+      - name: Backback audit
+        run: cargo run -p bb -- audit ..
+        working-directory: bb_crates

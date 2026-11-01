@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Original backback scientist mascot">
+  <defs><clipPath id="face-outline-visible"><rect x="0" y="390" width="1024" height="634"/></clipPath></defs>
+  <rect width="1024" height="1024" rx="220" fill="#191c27"/>
+  <path d="M736 566c116-11 180 61 180 168v93c0 30-25 55-55 55H686V604z" fill="#4b526a" stroke="#aeb8d2" stroke-width="24"/>
+  <rect x="733" y="663" width="140" height="120" rx="26" fill="#2b3041" stroke="#9ccfd8" stroke-width="18"/>
+  <path d="m781 706-22 18 22 18m44-36 22 18-22 18m-35 0 17-36" fill="none" stroke="#9ccfd8" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M285 746c0-104 84-188 188-188h81c104 0 188 84 188 188v120H285z" fill="#bd8b69" stroke="#efc3a5" stroke-width="24"/>
+  <path d="M646 590c40 35 61 97 61 180v85" fill="none" stroke="#242838" stroke-width="54" stroke-linecap="round"/>
+  <path d="M646 590c40 35 61 97 61 180v85" fill="none" stroke="#6c7691" stroke-width="29" stroke-linecap="round"/>
+  <path d="M384 612v120m249-120v120" stroke="#4b526a" stroke-width="42" stroke-linecap="round"/>
+  <path d="M311 369c-25-38-11-93 29-115 17-76 83-123 157-123 81-20 170 23 196 104 44 21 62 80 35 130-42 35-116 52-211 50-88 2-162-14-206-46z" fill="#493532" stroke="#755550" stroke-width="20" stroke-linejoin="round"/>
+  <circle cx="512" cy="431" r="217" fill="#f3c7a7"/>
+  <path d="M302 375c-29 130 59 273 210 273s239-143 210-273" fill="none" stroke="#f7deca" stroke-width="22" clip-path="url(#face-outline-visible)"/>
+  <path d="M298 381c-15-44 2-95 42-122 42-30 96-47 159-54 86-16 159 25 204 86 8 11 0 22-13 18-48-18-92-17-140-2-78 25-144 57-213 59-19 0-30 6-39 15z" fill="#493532"/>
+  <rect x="375" y="256" width="274" height="88" rx="40" fill="#4b526a" stroke="#242838" stroke-width="16"/>
+  <circle cx="435" cy="301" r="42" fill="#d9f8fc" stroke="#9ccfd8" stroke-width="14"/>
+  <circle cx="589" cy="301" r="42" fill="#d9f8fc" stroke="#9ccfd8" stroke-width="14"/>
+  <path d="M430 437h28m107 0h28" stroke="#252936" stroke-width="22" stroke-linecap="round"/>
+  <path d="M472 523c27 25 61 25 88 0" fill="none" stroke="#a35d5c" stroke-width="18" stroke-linecap="round"/>
+  <path d="m275 732-83-99 25-29 39 34 36-31 42 48-35 36 31 36z" fill="#aeb8d2" stroke="#e1e7f2" stroke-width="16" stroke-linejoin="round"/>
+  <path d="m294 693 87 103" stroke="#e1e7f2" stroke-width="25" stroke-linecap="round"/>
+</svg>

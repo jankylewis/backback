@@ -1,5 +1,11 @@
 # Backback progress
 
+- BBEOD07-MERGE (`backback_2`): merged `origin/master` `6b5e68b` on
+  `bbeod-07-release`. Final gate: 301 passed in 46 suites, 0 failed,
+  0 ignored; format, all-feature Clippy, deny, audit, path guard passed.
+  Bundle opened a visible window and quit with 0 leftover processes.
+  Icon corrections and conflict table: `readback/BBEOD07/MERGE.md`.
+
 - BBEOD06-MERGE (`backback_2`): merged MCP panel branch `bbeod-06-gui`
   with master debugger work. Stock full gate: 301 passed, 0 failed,
   0 ignored in 46 suites. MCP panel and Test Explorer GPUI tests passed;
@@ -58,11 +64,29 @@
 
 - BBEOD02-FIX (`backback_1`, 2026-11-01): B1 safe save; B2 rope edit log and
   background open/parse; B3 virtual Explorer, status bar, natural sort, Quit.
-  Evidence: `bench/BBEOD02/BBEOD02_FIX.md`, `readback/BBEOD02/FIX/`.
+  Evidence: `bench/BBEOD02/BBEOD02_FIX.md`, `readback/bb_FOUNDATION/BBEOD02/FIX/`.
   Open: FS watcher, 1 GB RSS on 20 MB file.
 - BBEOD02-B (`backback_2`): rope editor, guarded tabs, atomic save, C#
   highlighting, light theme and View toggle. Evidence:
-  `bench/bb_GENERAL/EDITOR.md`, `readback/BBEOD02/EDITOR/bb_EDITOR.md`.
+  `bench/bb_GENERAL/EDITOR.md`,
+  `readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/EDITOR/bb_EDITOR.md`.
 - BBEOD02 through BBEOD04 details: `docs/plan/HISTORY.md`.
 - Hygiene-ctx moved five summaries to the external rawctxhub and removed
   two tracked absolute home paths. The guard failed before that fix.
+
+## BBEOD07-FIX (backback_2)
+
+- Branch `bbeod-07-release`; merged `origin/master` at `3d83ae0`.
+- Prior BBEOD07 release bundled the CLI. This fix bundles the desktop GUI.
+- Served `.app` check passed: GUI executable, visible window screenshot,
+  app quit, and zero leftover processes for this bundle.
+- The first icon had a pointed fringe and a two-chevron pack mark.
+  BBEOD07-MERGE corrected both; the archive has 10 sizes.
+- CI uses pinned action commits and the all-feature gate. The two HD folders
+  now have five entries each and one marker.
+- Initial gate found two new marker issues. Both were corrected. The final
+  gate passed format, all-feature Clippy, 267 tests in 41 suites, deny,
+  audit, and the tracked absolute-path guard.
+- Five-run benchmark at load 9.41 is noisy. No performance verdict.
+- Records: `readback/BBEOD07/bb_BBEOD07_FIX.md`,
+  `bench/bb_GENERAL/BBEOD07_FIX.md`. No push.

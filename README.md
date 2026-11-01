@@ -4,9 +4,13 @@ A very lightweight, dark-by-default, open-source IDE for **C# only**, built for
 maximum performance: a Rust shell in front of Microsoft's own Roslyn language
 server and Samsung's `netcoredbg`.
 
-**Status:** R&D skeleton (M0). The crates compile into a `bb` command line that
-proves the risky path: start Roslyn from Rust, load a real solution, time it.
-No GUI yet; the GUI milestone (M1) is in [docs/plan/bb_roadmap/bb_ROADMAP.md](docs/plan/bb_roadmap/bb_ROADMAP.md).
+**Status:** early macOS desktop build. The `backback` app opens a C# solution.
+The `bb` command line provides doctor, scan, open, outline, and audit tools.
+See [the roadmap](docs/plan/bb_roadmap/bb_ROADMAP.md) for planned work.
+
+The [mascot](docs/release/bb_assets/bb_mascot/bb_mascot.svg) is an original
+chibi scientist. Its [dark contact sheet](docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
+shows all 10 sizes; the [main PNG](docs/release/bb_assets/bb_mascot/icon.png) is 1024 px.
 
 ## Why
 
@@ -49,6 +53,7 @@ backback/
       dotnet/           bb-dotnet   SDK, .sln/.slnx, projects, runsettings, tests
     shell/
       bb_cli/           bb          CLI: doctor, scan, open, outline, audit
+      desktop/          backback    native macOS GUI
       ui/               bb-ui       theme tokens (dark default)
       audit/            bb-audit    convention audit; `cargo test` runs it on the repo
   docs/                 design, plan, R&D
@@ -65,15 +70,28 @@ marker per folder (`_` in C# trees, `bb_` in Rust and neutral trees).
 # toolchain (once): https://rustup.rs  then  cargo install cargo-deny
 dotnet tool install --global roslyn-language-server --prerelease
 cd bb_crates
-cargo fmt --check && cargo clippy --all-targets -- -D warnings \
+cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings \
   && cargo test --workspace && cargo deny check
-
 cargo run -p bb -- doctor
 cargo run -p bb -- scan shell/desktop/fixtures/_Harness/Harness.slnx
 cargo run -p bb -- open path/to/Solution.slnx
 cargo run -p bb -- outline path/to/File.cs
 cargo run -p bb -- audit ..
 ```
+
+`netcoredbg` is optional for editing; `bb debug` and debugger tests need it.
+Set `BACKBACK_NETCOREDBG=/path/to/netcoredbg` or put it on `PATH`.
+
+## macOS app bundle
+
+Run `bash docs/release/scripts/bb_bundle.sh` from the repo root.
+It builds `.target/bundle/backback.app` with the current Cargo version and
+an ad-hoc signature. Open the app to launch the native GUI. The `bb` CLI ships
+at `backback.app/Contents/Resources/bb`. macOS 13 or newer is required.
+For public distribution, the maintainer must use a Developer ID and Apple
+notarization via [`sign_release.sh`](docs/release/scripts/sign_release.sh).
+See [security](docs/release/community/SECURITY.md), [conduct](docs/release/community/CODE_OF_CONDUCT.md), and
+[contributing](docs/release/community/bb_CONTRIBUTING.md).
 
 ## Licence
 

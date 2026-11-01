@@ -28,7 +28,7 @@
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
   -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),
   status bar, natural sort, Quit. Evidence: `bench/BBEOD02/BBEOD02_FIX.md`,
-  `readback/BBEOD02_FIX/`. Open: FS watcher, 1 GB RSS on 20 MB file.
+  `readback/bb_FOUNDATION/BBEOD02/FIX/`. Open: FS watcher, 1 GB RSS on 20 MB file.
 
 - BBEOD02-B follow-up opened after acceptance: add light theme that follows
   macOS appearance, live View toggle, and screenshots of both modes.
@@ -55,9 +55,9 @@
   reported a 20.833 ms refresh interval. This demonstrates a display floor
   above the 16 ms budget on this configuration; quiet-host check remains open.
 - Three live editor screenshots were saved and inspected under
-  `docs/plan/readback/BBEOD02/EDITOR/`.
+  `docs/plan/readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/EDITOR/`.
 - Editor evidence: `docs/plan/bench/bb_GENERAL/EDITOR.md` and
-  `docs/plan/readback/BBEOD02/EDITOR/bb_EDITOR.md`.
+  `docs/plan/readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/EDITOR/bb_EDITOR.md`.
 
 - BBEOD02-B start: merged `origin/master` into `bbeod-02-editor`; resolved four
   fixture project rename conflicts in favor of the `_*.csproj` backbone names.
@@ -68,7 +68,7 @@
   (same-directory temporary file plus rename and failure tests).
 
 - BBEOD02-A Explorer (backback_2): GPUI shell, model tests, screenshots in
-  `docs/plan/readback/BBEOD02/`; first gate 62 tests.
+  `docs/plan/readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/`; first gate 62 tests.
 
 ## BBEOD03-A (backback_1, branch `bbeod-03-intel`, worktree `backback_wt/bbeod-03-intel`)
 
