@@ -107,9 +107,9 @@ fn open_waits_until_every_project_of_the_solution_has_loaded() {
         .filter_map(|l: &str| l.split("Completed (re)load of ").nth(1))
         .filter_map(|rest: &str| rest.split(' ').next()?.parse::<usize>().ok())
         .sum();
-    assert_eq!(loaded, 4, "{log}");
+    assert_eq!(loaded, 3, "{log}");
     assert!(
-        run.out.contains("until all 4 projects loaded"),
+        run.out.contains("until all 3 projects loaded"),
         "{}",
         run.out
     );
@@ -173,18 +173,14 @@ fn probe_leaves_the_solution_tree_unchanged() {
 }
 
 #[test]
-fn probe_rename_lists_three_files_and_changes_none() {
+fn probe_rename_lists_two_files_and_changes_none() {
     let core: PathBuf = harness().join("Core/Greeter.cs");
     let before: String = std::fs::read_to_string(&core).unwrap();
     let run: Run = bb(&["probe", &spec(), "13:10", "rename=Welcomer"]);
     let after: String = std::fs::read_to_string(&core).unwrap();
     assert_eq!(run.code, Some(0), "{}", run.all());
-    assert!(run.out.contains("result    : 3 files"), "{}", run.out);
-    assert!(
-        run.out.contains("  McpServer/GreetTool.cs ("),
-        "{}",
-        run.out
-    );
+    assert!(run.out.contains("result    : 2 files"), "{}", run.out);
+    assert!(run.out.contains("  Core/Greeter.cs ("), "{}", run.out);
     assert_eq!(after, before);
 }
 

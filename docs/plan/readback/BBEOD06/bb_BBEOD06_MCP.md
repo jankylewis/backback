@@ -1,5 +1,7 @@
 # BBEOD06-A MCP readback, 2026-11-01
 
+> Removed by headmate ruling 2026-11-01 (BBEOD06-REMOVE): backback has no MCP server ability. History only.
+
 - Seat `backback_2`; branch `bbeod-06-mcp`; source `978f75f`.
 - Fixture: `_Harness/McpServer` only. No real fleet MCP server was started.
 - `bb mcp list fixtures/_Harness/Harness.slnx` listed `_McpServer.csproj` with `dotnet run --project`.

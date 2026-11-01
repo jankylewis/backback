@@ -56,8 +56,6 @@ fn package_capability(package: &str) -> Option<Capability> {
         Some(Capability::Playwright)
     } else if is_family(&p, "apex") {
         Some(Capability::Apex)
-    } else if is_family(&p, "modelcontextprotocol") {
-        Some(Capability::Mcp)
     } else if is_family(&p, "microsoft.testing.platform") {
         Some(Capability::TestingPlatform)
     } else {

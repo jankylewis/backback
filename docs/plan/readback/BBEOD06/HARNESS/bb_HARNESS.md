@@ -1,5 +1,7 @@
 # BBEOD06-B Harness readback, 2026-11-01
 
+> Removed by headmate ruling 2026-11-01 (BBEOD06-REMOVE): backback has no MCP server ability. History only.
+
 - Opened the fixture `_Harness` in the desktop app. The panel listed one executable MCP project, `_McpServer`, as stopped. `HARNESS_STOPPED.png` is a `screencapture -l` capture of the running window.
 - In the same desktop build, the fixture-only debug drive started `_McpServer`, selected Greet, entered `Ada`, and called it. `HARNESS_GREET.png` shows running status, the tool list, form, and JSON text `hi Ada`. It is a window-ID capture, inspected after capture.
 - The in-process GPUI test drove a simulated mouse click on Start, dispatched a keystroke to the form, then stopped the fixture. The model test covered Greet, a crash during Hold, and no remaining process after Stop.

@@ -1,5 +1,10 @@
 # Backback progress
 
+- BBEOD06-REMOVE (`backback_1`, 2026-11-01): headmate ruling, no MCP.
+  Removed `bb-mcp` crate, `bb mcp` commands, desktop Harness panel,
+  `_Harness/McpServer` fixture, `Capability::Mcp`. `bb_group` lives on
+  in BBEOD08-REAP `bb-process`. AGENTS.md gains the Scope law.
+
 - BBEOD07-MERGE (`backback_2`): merged `origin/master` `6b5e68b` on
   `bbeod-07-release`. Final gate: 301 passed in 46 suites, 0 failed,
   0 ignored; format, all-feature Clippy, deny, audit, path guard passed.

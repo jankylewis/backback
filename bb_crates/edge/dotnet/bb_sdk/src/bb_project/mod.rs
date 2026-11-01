@@ -1,5 +1,5 @@
 //! What a C# project *is*, read from its `.csproj` and the `Directory.Build.props`
-//! files above it: test framework, browser stack (Apex, Playwright), MCP server,
+//! files above it: test framework, browser stack (Apex, Playwright),
 //! test platform, output kind, runsettings.
 
 mod bb_capability;
@@ -24,8 +24,6 @@ pub enum Capability {
     Playwright,
     /// Apex, MODEC's C# browser framework (package `Apex*` or a project reference).
     Apex,
-    /// An MCP server or client (`ModelContextProtocol*`).
-    Mcp,
     /// Runs on Microsoft.Testing.Platform instead of `VSTest`.
     TestingPlatform,
 }

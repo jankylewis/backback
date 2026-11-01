@@ -19,31 +19,16 @@ fn parses_debug_breakpoint_and_rejects_bad_line() {
 }
 
 #[test]
-fn merge_keeps_debug_and_each_mcp_command() {
-    assert!(matches!(
-        parse(&args(&["debug", "App.csproj", "--break", "Program.cs:12"])),
-        Ok(Command::Debug { line: 12, .. })
-    ));
-    assert_eq!(
-        parse(&args(&["mcp", "list", "A.slnx"])),
-        Ok(Command::Mcp(McpCommand::List(PathBuf::from("A.slnx"))))
-    );
-    assert_eq!(
-        parse(&args(&["mcp", "tools", "A.csproj"])),
-        Ok(Command::Mcp(McpCommand::Tools(PathBuf::from("A.csproj"))))
-    );
-    assert_eq!(
-        parse(&args(&["mcp", "log", "A.csproj"])),
-        Ok(Command::Mcp(McpCommand::Log(PathBuf::from("A.csproj"))))
-    );
-    assert_eq!(
-        parse(&args(&["mcp", "call", "A.csproj", "Greet", "{}"])),
-        Ok(Command::Mcp(McpCommand::Call {
-            project: PathBuf::from("A.csproj"),
-            tool: "Greet".to_owned(),
-            arguments: "{}".to_owned(),
-        }))
-    );
+fn no_mcp_entry_point_in_the_command_list() {
+    // Headmate ruling 2026-11-01: backback has no MCP server ability.
+    for sub in ["list", "tools", "log", "call"] {
+        assert_eq!(
+            parse(&args(&["mcp", sub, "A.csproj"])),
+            Err(CliError::Unknown("mcp".to_owned())),
+            "{sub}"
+        );
+    }
+    assert!(!USAGE.to_lowercase().contains("mcp"), "{USAGE}");
 }
 
 fn args(list: &[&str]) -> Vec<String> {
@@ -118,6 +103,10 @@ fn rejects_bad_input() {
     assert_eq!(parse(&args(&[])), Err(CliError::Missing));
     assert_eq!(
         parse(&args(&["fly"])),
+        Err(CliError::Unknown("fly".to_owned()))
+    );
+    assert_eq!(
+        parse(&args(&["fly", "A.slnx", "x"])),
         Err(CliError::Unknown("fly".to_owned()))
     );
 }

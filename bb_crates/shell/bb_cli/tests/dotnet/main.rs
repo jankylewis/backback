@@ -7,6 +7,4 @@ mod common;
 #[cfg(test)]
 mod bb_testing;
 #[cfg(test)]
-mod mcp_signal;
-#[cfg(test)]
 mod scan_outline;

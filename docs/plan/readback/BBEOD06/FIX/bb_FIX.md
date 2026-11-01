@@ -1,5 +1,7 @@
 # BBEOD06-FIX readback and lessons, 2026-11-01
 
+> Removed by headmate ruling 2026-11-01 (BBEOD06-REMOVE): backback has no MCP server ability. History only.
+
 Fixes for the BBEOD06-VERIFY findings on `bbeod-06-gui` (backback_1).
 Each fix had a test that failed on the old code first.
 

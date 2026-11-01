@@ -1,5 +1,7 @@
 # BBEOD06-MERGE readback
 
+> Removed by headmate ruling 2026-11-01 (BBEOD06-REMOVE): backback has no MCP server ability. History only.
+
 Date: 2026-11-01. Seat: `backback_2`. Branch: `bbeod-06-gui`.
 Merged `origin/master` `3d83ae0` into MCP panel base `616fc14`. No push.
 
