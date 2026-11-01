@@ -8,7 +8,7 @@ use tokio::io::{AsyncBufReadExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdout};
 
 use super::process::stop_tree;
-use super::{build, shadow, Call, Finished, StopFlag, TempDir, Workspace};
+use super::{assembly_of, build, shadow, Call, Finished, StopFlag, TempDir, Workspace};
 use crate::bb_engine::{Deadlines, Selection, TestBackend};
 use crate::model::{Fqn, SpecList};
 use crate::parse::{parse_apex_list, parse_host_pid, ApexList, ApexSettings, CommandLine, HostPid};
@@ -164,21 +164,34 @@ impl TestBackend for ApexBackend {
     }
 
     async fn list(&self, project: &ProjectPath) -> Result<SpecList, TestkitError> {
+        let original: PathBuf = assembly_of(
+            &self.sdk,
+            project,
+            &self.settings.configuration,
+            self.deadlines.list,
+            self.stop.as_ref(),
+        )
+        .await?;
         let folder: TempDir = TempDir::new()?;
-        let safe_project: PathBuf = shadow::project(project.as_path(), &folder)?;
-        let mut call: Call = self
-            .base(&ProjectPath::from_path(safe_project.clone()))
-            .args(["--list", "--json", "--no-build"]);
+        let safe_assembly: PathBuf = shadow::assembly(&original, &folder)?;
+        let stub: PathBuf = shadow::stub_project(project.as_path(), &safe_assembly, &folder)?;
+        let mut call: Call =
+            self.base(&ProjectPath::from_path(stub))
+                .args(["--list", "--json", "--no-build"]);
         if let Some(flag) = &self.stop {
             call = call.stoppable(flag.clone());
         }
         let done: Finished = call.discover(self.deadlines.list).await?;
         let list: ApexList = parse_apex_list(&done.stdout)?;
-        let original_assembly: PathBuf =
-            shadow::original_assembly(project.as_path(), &safe_project, &list.assembly)?;
+        if list.assembly != safe_assembly {
+            return Err(TestkitError::Io {
+                path: list.assembly,
+                source: std::io::Error::from(std::io::ErrorKind::InvalidData),
+            });
+        }
         Ok(SpecList {
             project: list.project,
-            assembly: original_assembly,
+            assembly: original,
             specs: list.specs,
             elapsed: done.elapsed,
         })

@@ -1,28 +1,28 @@
 # BBEOD02 progress
 
-- BBEOD04-B (backback_2, 2026-11-01): `bbeod-04-gui` from `a10a5f3`;
-  Test Explorer and native discovery fix. Scratch GUI readback: two specs,
-  one pass/one fail, failure source jump. Gate: fmt, Clippy, 230 tests, deny,
-  audit clean. Bench median 996.2 ms under load1 10.63; quiet comparison
-  open. Debug disabled; DAP attach follows BBEOD05 integration. Records:
-  `readback/BBEOD03/BBEOD04_B/`, `bench/TEST_DISCOVERY/bb_BBEOD04_B.md`.
-
-- BBEOD03-FIX (backback_2, 2026-11-01): claimed `backback_wt/bbeod-03-gui`;
-  merged `origin/master` at `c07f7bf`. Discovery now uses temp shadow output;
-  real child death yields Stopped within 1 s and restart answers completion.
-  Gate: fmt, Clippy, 224 tests, deny, `bb audit` clean. Records:
-  `readback/BBEOD03/BBEOD03_FIX.md`, `bench/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet-host
-  timing and the absent GUI test explorer path remain open.
+- BBEOD04-B merge (backback_2, 2026-11-01): `origin/master` plus
+  cancellation, in-place `TargetPath`, temp stub. GPUI passed; gate: fmt,
+  Clippy, 234 tests, deny, audit clean. One earlier Roslyn batch was red.
+- BBEOD04-B (backback_2, 2026-11-01): `bbeod-04-gui` from `a10a5f3`.
+  Test Explorer GUI readback: two specs, one pass/fail, failure jump.
+  Prior gate: 230 tests; bench 996.2 ms at load1 10.63, quiet check open.
+  Debug awaits BBEOD05. Records: `readback/BBEOD03/BBEOD04_B/`,
+  `bench/TEST_DISCOVERY/bb_BBEOD04_B.md`.
+- BBEOD03-FIX2 (backback_1, 2026-11-01): TargetPath stub, MbTx 11/11,
+  0 writes, diagnostics clear. `readback/BBEOD03/BBEOD03_FIX/BBEOD03_FIX2.md`.
+- BBEOD03-FIX (backback_2, 2026-11-01): merge `c07f7bf`, temp discovery;
+  child death gives Stopped within 1 s; restart works. Gate: 224 tests,
+  fmt, Clippy, deny, audit. `readback/BBEOD03/BBEOD03_FIX/bb_BBEOD03_FIX.md`,
+  `bench/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet timing remains open.
 
 - BBEOD02-MEM (backback_1, 2026-11-01): 20 MB file RSS 1,008 -> 166 MB; the
   holder was the whole-file tree-sitter tree (862 MB). Large files now parse
   a window around the view. Record: `bench/BBEOD02/BBEOD02_FIX.md`.
 
-- Hygiene-ctx (`backback_2`, 2026-11-01): moved five tracked ctx summaries
-  unchanged to the external rawctxhub; removed the repo copies and added an
-  ignore rule and external-hub instruction. Public-path review found two
-  absolute home paths; a tracked-text guard failed on both before removal.
-  Revised gate: fmt, Clippy, 126 tests, deny, and `bb audit` passed.
+- Hygiene-ctx (`backback_2`, 2026-11-01): moved five ctx summaries to
+  external rawctxhub; added ignore and external-hub rule. Removed two
+  absolute home paths found by a failing tracked-text guard. Revised gate:
+  fmt, Clippy, 126 tests, deny, and `bb audit` passed.
 
 - BBEOD02-FIX (backback_1, 2026-11-01): fixes for verification bugs B1-B3.
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms

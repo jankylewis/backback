@@ -3,6 +3,7 @@
 
 mod bb_accept;
 pub(crate) mod popups;
+mod status;
 #[cfg(test)]
 mod tests;
 
@@ -16,45 +17,7 @@ use bb_intel::{Diagnostic, Severity};
 pub(crate) use bb_accept::{fits, freshness, Freshness};
 pub(crate) use bb_accept::{InFlight, Now, Pending, Question};
 use popups::{ActionsPopup, CompletionPopup, HoverPopup, PlacesPanel, RenameInput, RenamePreview};
-
-/// Where the solution load stands, as the status bar shows it.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum LoadStatus {
-    /// The workspace holds no solution; intel stays off.
-    NoSolution,
-    /// Projects loaded so far.
-    Loading { loaded: usize, total: usize },
-    /// Every project loaded.
-    Ready,
-    /// The active server connection closed.
-    Stopped,
-    /// The server failed; the text says why.
-    Failed(String),
-}
-
-impl LoadStatus {
-    /// A batch line counted `loaded` of `total` projects. Only a load in
-    /// progress moves: Roslyn logs batch lines after the load too (a
-    /// decompiled metadata document loads one), and they must not turn
-    /// `Ready` or `Failed` back into `Loading`.
-    pub(crate) fn progress(&mut self, loaded: usize, total: usize) {
-        match self {
-            Self::Loading { .. } => *self = Self::Loading { loaded, total },
-            Self::NoSolution | Self::Ready | Self::Stopped | Self::Failed(_) => {}
-        }
-    }
-
-    /// The status bar text.
-    pub(crate) fn label(&self) -> String {
-        match self {
-            Self::NoSolution => String::from("No solution"),
-            Self::Loading { loaded, total } => format!("Loading {loaded}/{total} projects"),
-            Self::Ready => String::from("Ready"),
-            Self::Stopped => String::from("C# server stopped — Restart"),
-            Self::Failed(reason) => format!("C# server failed: {reason}"),
-        }
-    }
-}
+pub(crate) use status::LoadStatus;
 
 /// One answered question's stage times, for the latency budget.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -153,14 +116,17 @@ impl IntelModel {
         }
     }
 
-    /// Fail all questions and clear stale server-owned UI state.
-    pub(crate) fn server_stopped(&mut self) {
-        self.status = LoadStatus::Stopped;
+    /// The server is gone (`status` says how): fail all questions and drop
+    /// every answer it gave, squiggles and Problems included.
+    pub(crate) fn server_gone(&mut self, status: LoadStatus) {
+        self.status = status;
         self.in_flight.clear();
         self.dismiss();
+        self.diagnostics.clear();
         self.references = None;
         self.jump = None;
         self.undrawn = None;
+        self.rename_asked = None;
     }
 
     /// Keep the newest diagnostics of one document.

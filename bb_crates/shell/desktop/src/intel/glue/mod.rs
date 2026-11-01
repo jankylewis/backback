@@ -163,7 +163,8 @@ fn send(view: &mut ExplorerView, request: Request) {
     };
     if !link.send(request) {
         view.link = None;
-        view.intel.status = LoadStatus::Failed(String::from("server thread stopped"));
+        view.intel
+            .server_gone(LoadStatus::Failed(String::from("server thread stopped")));
     }
 }
 
@@ -177,14 +178,17 @@ pub(crate) fn on_event(
     match event {
         Event::Stopped => {
             view.link = None;
-            view.intel.server_stopped();
+            view.intel.server_gone(LoadStatus::Stopped);
         }
         Event::Progress { loaded, total } => view.intel.status.progress(loaded, total),
         Event::Ready { took } => {
             view.intel.status = LoadStatus::Ready;
             eprintln!("intel_ready_ms={}", took.as_millis());
         }
-        Event::Failed(reason) => view.intel.status = LoadStatus::Failed(reason),
+        Event::Failed(reason) => {
+            view.link = None;
+            view.intel.server_gone(LoadStatus::Failed(reason));
+        }
         Event::Diagnostics { path, list } => {
             if view.tabs.tab_mut(&path).is_some() {
                 view.intel.set_diagnostics(path, list);
