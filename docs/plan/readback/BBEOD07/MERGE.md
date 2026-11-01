@@ -29,9 +29,11 @@ family; the repository self-audit guards the full tree.
 
 ## Verification
 
-- Final full gate: pending. The two Roslyn probe tests hit their 30-second
-  deadline under load near 11. A direct probe finished in 41.7 seconds.
-  Format, all-feature Clippy, deny, audit, and the path guard passed.
+- The post-commit full gate passed: format, all-feature Clippy, 301 tests
+  in 46 suites, 0 failed, 0 ignored, deny, and `bb audit ..`.
+- Earlier attempts hit the 30-second Roslyn probe deadline under load near
+  11. A direct probe took 41.7 seconds. Both probes passed in the final gate.
+- The tracked absolute-path guard and `git diff --check` passed.
 - Rebuilt app bundle: `codesign --verify --deep --strict` and `plutil -lint`
   passed. The bundled icon matches the asset and extracts to 10 PNG sizes.
 - `verify_bundle.sh` found the GUI executable and visible window `20495`.

@@ -1,8 +1,10 @@
 # Backback progress
 
-- BBEOD07-MERGE (`backback_2`, in progress): merging `origin/master`
-  `6b5e68b`; identical BBEOD02 readback files use master's
-  `bb_EXPLORER` layout. Full gate and served bundle readback pending.
+- BBEOD07-MERGE (`backback_2`): merged `origin/master` `6b5e68b` on
+  `bbeod-07-release`. Final gate: 301 passed in 46 suites, 0 failed,
+  0 ignored; format, all-feature Clippy, deny, audit, path guard passed.
+  Bundle opened a visible window and quit with 0 leftover processes.
+  Icon corrections and conflict table: `readback/BBEOD07/MERGE.md`.
 
 - BBEOD06-MERGE (`backback_2`): merged MCP panel branch `bbeod-06-gui`
   with master debugger work. Stock full gate: 301 passed, 0 failed,
