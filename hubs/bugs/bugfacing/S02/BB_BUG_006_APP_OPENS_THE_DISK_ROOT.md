@@ -2,14 +2,14 @@
 
 id: BB-BUG-006
 family: UIX
-status: OBSERVED
+status: FIXED
 date: 2026-11-01
 signature: EXPLORER / No solution
 source: `bb_crates/shell/desktop/src/app/args.rs:12` (folder or solution only from argv)
 source: `bb_crates/shell/desktop/src/app/bb_launch.rs:69` (menus: no File > Open)
 observed: headmate screenshot: Explorer root `/` (Applications, System, usr...),
   status bar "No solution"
-links: fix=no lesson=no evidence=no toolgap=none
+links: fix=yes lesson=no evidence=yes toolgap=none
 
 ## Steps
 

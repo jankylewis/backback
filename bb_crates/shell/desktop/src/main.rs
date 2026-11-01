@@ -15,6 +15,8 @@ mod launch;
 mod navigation;
 #[path = "bb_explorer/panels/tests_panel/panel.rs"]
 mod panel;
+#[path = "bb_explorer/panels/bb_quick_open/mod.rs"]
+mod quick_open;
 #[path = "app/script.rs"]
 mod script;
 #[path = "bb_explorer/panels/tests_panel/mod.rs"]
@@ -61,6 +63,9 @@ struct ExplorerView {
     editor_scroll: UniformListScrollHandle,
     tests: tests_panel::TestsState,
     pending_test_jump: Option<(PathBuf, usize)>,
+    /// The open Go to File box, and its focus.
+    quick_open: Option<quick_open::QuickOpen>,
+    quick_focus: FocusHandle,
 }
 impl ExplorerView {
     fn editor_key_down(
@@ -198,6 +203,14 @@ impl Render for ExplorerView {
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
             .on_action(cx.listener(ExplorerView::restart_server))
+            .on_action(cx.listener(
+                |v: &mut Self,
+                 _: &quick_open::GoToFile,
+                 window: &mut Window,
+                 cx: &mut Context<Self>| {
+                    quick_open::show(v, window, cx);
+                },
+            ))
             .child(match self.tests.side {
                 tests_panel::Side::Files => panel::explorer_panel(self, cx).into_any_element(),
                 tests_panel::Side::Tests => tests_panel::panel(self, cx).into_any_element(),
@@ -222,6 +235,7 @@ impl Render for ExplorerView {
                         cx,
                     )),
             )
+            .children(quick_open::overlay(self, cx))
     }
 }
 

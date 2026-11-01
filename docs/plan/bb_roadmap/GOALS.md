@@ -19,7 +19,7 @@ Last update: 2026-11-01. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD10 | Standard macOS keys: Cmd+M minimize, Cmd+H hide, Home/End | Done | BBEOD10 PR; readback `docs/plan/readback/FIXES/S01/BBEOD10/` |
 | BBEOD11 | Integrated terminal: minimal, native, fast, never laggy | Todo | Requested |
 | BBEOD12 | **Critical:** cursor shifts the text; draw it as an overlay | Done | BBEOD12 PR; readback `docs/plan/readback/FIXES/S02/BBEOD12/` |
-| BBEOD13 | Core C# loop: Open Solution (Cmd+O), Build + error list, Go to File, Go to Symbol, Back/Forward | Todo | BB-BUG-006 |
+| BBEOD13 | Core C# loop: Open Solution (Cmd+O), Build + error list, Go to File, Go to Symbol, Back/Forward | Partial | Open, recent, Go to File done (BB-BUG-006); Build, Go to Symbol, Back/Forward to do |
 | BBEOD14 | Zoom the whole app: Cmd+= in, Cmd+- out, Cmd+0 reset | Todo | Requested |
 
 ## Gaps behind a Done or Partial state

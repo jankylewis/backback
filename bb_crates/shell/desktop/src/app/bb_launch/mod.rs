@@ -10,18 +10,16 @@ use gpui::{
 use std::{path::PathBuf, time::Instant};
 
 mod bb_window;
+mod open;
+pub(crate) mod recent;
 pub(crate) use bb_window::on_view as window_actions;
 
 pub(crate) fn launch() {
-    let start: Instant = Instant::now();
     let wanted: Start = crate::args::parse_args();
-    let tree: Explorer = match Explorer::open(&wanted.root) {
-        Ok(tree) => tree,
-        Err(error) => {
-            eprintln!("{error}");
-            std::process::exit(1);
-        }
-    };
+    if let Err(error) = Explorer::open(&wanted.root) {
+        eprintln!("{error}");
+        std::process::exit(1);
+    }
     if let Err(error) = bb_process::exit_on_signal(true) {
         eprintln!("bb: cannot watch fatal signals: {error}");
     }
@@ -35,21 +33,41 @@ pub(crate) fn launch() {
         .detach();
         bind_keys(cx);
         bb_window::register(cx);
+        open::register(cx);
         cx.set_menus(menus());
-        let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(1000.0), px(700.0)), cx);
-        let result: gpui::Result<gpui::WindowHandle<ExplorerView>> = cx.open_window(
-            WindowOptions {
-                window_bounds: Some(WindowBounds::Windowed(bounds)),
-                ..Default::default()
-            },
-            |window: &mut Window, cx: &mut App| build_window(tree, &wanted, start, window, cx),
-        );
-        if let Err(error) = result {
-            eprintln!("{error}");
-            cx.quit();
+        let (ask, no_write): (bool, bool) = (wanted.ask, wanted.no_write);
+        open_workspace(&wanted, cx);
+        if ask {
+            open::ask(cx, no_write);
         }
         cx.activate(true);
     });
+}
+
+/// Open `wanted` in a new window and remember it as the newest workspace.
+pub(crate) fn open_workspace(wanted: &Start, cx: &mut App) {
+    let start: Instant = Instant::now();
+    let tree: Explorer = match Explorer::open(&wanted.root) {
+        Ok(tree) => tree,
+        Err(error) => {
+            eprintln!("{error}");
+            return;
+        }
+    };
+    if !wanted.ask {
+        recent::remember(&wanted.root);
+    }
+    let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(1000.0), px(700.0)), cx);
+    let result: gpui::Result<gpui::WindowHandle<ExplorerView>> = cx.open_window(
+        WindowOptions {
+            window_bounds: Some(WindowBounds::Windowed(bounds)),
+            ..Default::default()
+        },
+        |window: &mut Window, cx: &mut App| build_window(tree, wanted, start, window, cx),
+    );
+    if let Err(error) = result {
+        eprintln!("{error}");
+    }
 }
 
 fn build_window(
@@ -87,6 +105,7 @@ fn menus() -> Vec<Menu> {
                 .into_iter()
                 .chain([MenuItem::action("Quit Backback", Quit)]),
         ),
+        open::file_menu(),
         Menu::new("View").items([
             MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
             MenuItem::action("Follow macOS Appearance", FollowAppearance),
@@ -142,6 +161,8 @@ pub(crate) fn fresh_view(
         editor_scroll: gpui::UniformListScrollHandle::new(),
         tests: crate::tests_panel::TestsState::new(),
         pending_test_jump: None,
+        quick_open: None,
+        quick_focus: cx.focus_handle(),
     }
 }
 
@@ -168,6 +189,7 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("cmd-shift-r", RestartServer, None),
     ]);
     cx.bind_keys(bb_window::bindings());
+    cx.bind_keys(open::bindings());
 }
 
 #[cfg(test)]

@@ -18,3 +18,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-007 | FIXED | `docs/plan/readback/FIXES/S01/BBEOD10/STATE_LOG.txt` |
 | BB-PRC-001 | FIXED | `docs/plan/readback/FIXES/S01/BBEOD08/QUIT_CHECK.txt` |
 | BB-LSP-004 | OBSERVED | CI runs 41329770963 (red) and 41329776988 (green), same commit |
+| BB-BUG-006 | FIXED | `docs/plan/readback/FIXES/S02/BBEOD13/FINDER_LAUNCH.png` |
