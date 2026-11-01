@@ -15,7 +15,36 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             .target
-          key: cargo-${{ runner.os }}-${{ hashFiles('bb_crates/Cargo.lock') }}
+            ~/.ci-tools
+          key: cargo-tools-${{ runner.os }}-dotnet-10.0.403-roslyn-5.13.0-1.26514.10-netcoredbg-3.2.0-1092-${{ hashFiles('bb_crates/Cargo.lock') }}
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: 10.0.403
+      - name: Install pinned test tools
+        run: |
+          set -euo pipefail
+          tools="$HOME/.ci-tools"
+          mkdir -p "$tools/roslyn" "$tools/netcoredbg"
+          if [[ ! -x $tools/roslyn/roslyn-language-server ]]; then
+            dotnet tool install roslyn-language-server --tool-path $tools/roslyn --version 5.13.0-1.26514.10
+          fi
+          archive=$tools/netcoredbg-osx-arm64.zip
+          if [[ ! -f "$archive" ]]; then
+            curl --fail --location --retry 3 \
+              https://github.com/Samsung/netcoredbg/releases/download/3.2.0-1092/netcoredbg-osx-arm64.zip \
+              --output "$archive"
+          fi
+          echo "f4fa33b3ff874910cc184b4bb3b9c56d0abdf5c6521cee0b144d7c6e4a6e59ea  $archive" | shasum -a 256 --check
+          if [[ ! -x $tools/netcoredbg/netcoredbg ]]; then
+            unzip -q -o "$archive" -d "$tools"
+          fi
+          echo "BACKBACK_ROSLYN_LS=$tools/roslyn/roslyn-language-server" >> "$GITHUB_ENV"
+          echo "BACKBACK_NETCOREDBG=$tools/netcoredbg/netcoredbg" >> "$GITHUB_ENV"
+          echo "$tools/roslyn" >> "$GITHUB_PATH"
+          echo "$tools/netcoredbg" >> "$GITHUB_PATH"
+          dotnet --version
+          dotnet tool list --tool-path $tools/roslyn
+          $tools/netcoredbg/netcoredbg --version
       - name: Install cargo-deny
         run: cargo install --locked cargo-deny
       - name: Format
@@ -25,7 +54,19 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
         working-directory: bb_crates
       - name: Tests
-        run: cargo test --workspace
+        # These 9 call the Apex CLI, a private package that is not on
+        # nuget.org (BB-TG-004); the local gate in AGENTS.md runs them.
+        run: >-
+          cargo test --workspace --no-fail-fast --
+          --skip bb_testing::list_leaves_the_built_solution_tree_unchanged
+          --skip bb_testing::list_prints_each_test_project_as_a_tree_with_its_backend_and_time
+          --skip bb_testing::run_prints_each_outcome_errors_a_missing_spec_and_never_a_secret
+          --skip apex_and_vstest_list_the_same_six_specs
+          --skip an_apex_run_maps_every_outcome_and_errors_a_spec_absent_from_trx
+          --skip a_run_that_writes_no_trx_is_an_error_even_with_exit_zero
+          --skip an_unbuilt_project_and_a_category_on_apex_are_typed_errors
+          --skip an_apex_debug_run_gives_the_waiting_host_and_stop_leaves_no_process_behind
+          --skip a_list_whose_test_host_crashes_is_an_error_not_zero_specs
         working-directory: bb_crates
       - name: Dependency audit
         run: cargo deny check
