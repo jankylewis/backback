@@ -8,8 +8,8 @@ jobs:
   gate:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/cache@v6
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             ~/.cargo/registry
@@ -22,7 +22,7 @@ jobs:
         run: cargo fmt --check
         working-directory: bb_crates
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
         working-directory: bb_crates
       - name: Tests
         run: cargo test --workspace

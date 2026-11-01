@@ -1,6 +1,6 @@
 # Contributing
 
-backback is a macOS-only, C#-only IDE project. The current M0 build is a CLI.
+backback is a macOS-only, C#-only IDE project with a native GUI and a CLI.
 
 ## Set up
 
@@ -13,7 +13,7 @@ Run from `bb_crates/`:
 
 ```sh
 cargo fmt --check
-cargo clippy --all-targets -- -D warnings
+cargo clippy --all-targets --all-features -- -D warnings
 cargo test --workspace
 cargo deny check
 cargo run -p bb -- audit ..

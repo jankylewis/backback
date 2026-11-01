@@ -52,5 +52,14 @@
 
 - Branch `bbeod-07-release`; merged `origin/master` at `3d83ae0`.
 - Prior BBEOD07 release bundled the CLI. This fix bundles the desktop GUI.
-- Fix scope: app launch check, CI gate, original icon, HD layout, readback.
-- Gate and served readback are pending. No push.
+- Served `.app` check passed: GUI executable, visible window screenshot,
+  app quit, and zero leftover processes for this bundle.
+- Icon has rounded dark hair and a clear pack mark; the archive has 10 sizes.
+- CI uses pinned action commits and the all-feature gate. The two HD folders
+  now have five entries each and one marker.
+- Initial gate found two new marker issues. Both were corrected. The final
+  gate passed format, all-feature Clippy, 267 tests in 41 suites, deny,
+  audit, and the tracked absolute-path guard.
+- Five-run benchmark at load 9.41 is noisy. No performance verdict.
+- Records: `readback/BBEOD07/bb_BBEOD07_FIX.md`,
+  `bench/bb_GENERAL/BBEOD07_FIX.md`. No push.

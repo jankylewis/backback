@@ -12,7 +12,7 @@ Merged `origin/master` `0628b87` into debugger ship base `bb1d051`.
 | `bb_crates/shell/bb_cli/src/cli/mod.rs` and `tests.rs` | Debug, probe, and test parsing and their tests all remain. |
 | `docs/plan/PROGRESS.md` | Current BBEOD05 state; master history moved to `HISTORY.md` to stay within 100 lines. |
 | `docs/plan/bench/BBEOD02/` | Master names `bb_BBEOD02.md` and `BBEOD02_FIX.md` win; content matches branch copies. |
-| `docs/plan/readback/BBEOD02_FIX/bb_BBEOD02_FIX.md` | Link points to master bench name. |
+| `docs/plan/readback/BBEOD02/FIX/bb_BBEOD02_FIX.md` | Link points to master bench name. |
 
 The merged taxonomy needed three more folder fixes. Roslyn CLI commands now
 share `bb_intel/`; older bench records live under `bb_GENERAL/`; the BBEOD01
