@@ -9,8 +9,8 @@ mod test_marks;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
+pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
-pub(crate) use bb_line::{Columns, GUTTER_W};
 pub(crate) use status::status_bar;
 
 pub(crate) fn tab_bar(
@@ -171,9 +171,11 @@ fn editor_line(
     };
     let current: bool = tab.document.cursor_line() == index;
     let marks: Vec<Mark> = line_marks(&tab.document, view.intel.diagnostics_of(&tab.path), index);
-    let caret: Option<f32> = current.then(|| caret_x(tab, index, window));
-    let overlay: Option<gpui::AnyElement> = caret
-        .and_then(|x: f32| crate::intel::view::bb_popups::at_cursor(&view.intel, x, view.theme));
+    let fonts: bb_ui::Typography = crate::settings::typography(cx);
+    let caret: Option<f32> = current.then(|| caret_x(tab, index, window, &fonts));
+    let overlay: Option<gpui::AnyElement> = caret.and_then(|x: f32| {
+        crate::intel::view::bb_popups::at_cursor(&view.intel, fonts.gutter_width() + x, view.theme)
+    });
     let row: LineRow = LineRow {
         index,
         current,
@@ -192,14 +194,14 @@ fn editor_line(
 }
 
 /// The cursor's x on its line, measured on the shaped line the row paints.
-fn caret_x(tab: &Tab, index: usize, window: &Window) -> f32 {
+fn caret_x(tab: &Tab, index: usize, window: &Window, fonts: &bb_ui::Typography) -> f32 {
     let start: usize = tab
         .document
         .line_start(index)
         .map_or(0, bb_text::CharIdx::raw);
     let column: usize = tab.document.cursor().raw().saturating_sub(start);
     let text: String = tab.document.line(index).unwrap_or_default();
-    bb_line::Columns::shape(window, text.trim_end_matches(['\r', '\n'])).x_of(column)
+    bb_line::Columns::shape(window, text.trim_end_matches(['\r', '\n']), fonts).x_of(column)
 }
 
 #[cfg(test)]

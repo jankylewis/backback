@@ -11,3 +11,4 @@
 | BB-CIP-002 | FIXED | `runs-on: macos-latest` | `SHIP/CIP/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
 | BB-UIX-002 | FIXED | Minimize/Zoom handled on the root view with its own Window | `APP/UIX/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
 | BB-PRC-001 | FIXED | Own every child's process group; every exit ends the registry | `SYS/PRC/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
+| BB-UIX-003 | FIXED | Gutter width scales with the size | `APP/UIX/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |

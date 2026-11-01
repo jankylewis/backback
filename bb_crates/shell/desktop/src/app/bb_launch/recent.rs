@@ -44,7 +44,8 @@ pub(crate) fn add(paths: Vec<PathBuf>, path: PathBuf) -> Vec<PathBuf> {
     out
 }
 
-fn dir() -> Option<PathBuf> {
+/// Where backback keeps its small state files.
+pub(crate) fn state_dir() -> Option<PathBuf> {
     if let Some(dir) = std::env::var_os("BACKBACK_STATE_DIR") {
         return Some(PathBuf::from(dir));
     }
@@ -64,14 +65,14 @@ fn read(dir: &Path) -> Vec<PathBuf> {
 
 /// The newest recent workspace that still exists.
 pub(crate) fn last() -> Option<PathBuf> {
-    read(&dir()?)
+    read(&state_dir()?)
         .into_iter()
         .find(|path: &PathBuf| path.exists())
 }
 
 /// Put `path` first in the recent list; a write error is reported, not fatal.
 pub(crate) fn remember(path: &Path) {
-    let Some(dir): Option<PathBuf> = dir() else {
+    let Some(dir): Option<PathBuf> = state_dir() else {
         return;
     };
     let paths: Vec<PathBuf> = add(read(&dir), path.to_path_buf());

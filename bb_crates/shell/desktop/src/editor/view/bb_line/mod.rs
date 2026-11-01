@@ -7,7 +7,7 @@ mod bb_runs;
 mod caret;
 mod gutter;
 pub(super) use bb_runs::{styled_line, Run};
-pub(crate) use caret::{Columns, GUTTER_W};
+pub(crate) use caret::Columns;
 use gutter::gutter_cell;
 pub(super) use gutter::TestGutter;
 #[cfg(test)]
@@ -48,11 +48,12 @@ pub(super) fn line_row(
         overlay,
         caret,
     }: LineRow = row;
-    row_frame(index, current, theme, cx)
+    let fonts: bb_ui::Typography = crate::settings::typography(cx);
+    row_frame(index, current, (theme, fonts.line_height()), cx)
         .child(gutter_cell(index, gutter, test, theme, cx))
-        .child(line_text(index, runs, theme))
+        .child(line_text(index, runs, (theme, &fonts)))
         .when_some(caret, |el: gpui::Stateful<gpui::Div>, x: f32| {
-            el.child(caret_quad(x, theme))
+            el.child(caret_quad(x, theme, &fonts))
         })
         .children(overlay)
 }
@@ -61,18 +62,16 @@ pub(super) fn line_row(
 fn row_frame(
     index: usize,
     current: bool,
-    theme: Theme,
+    (theme, height): (Theme, f32),
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Stateful<gpui::Div> {
     div()
         .relative()
         .id(index)
         .debug_selector(|| format!("editor-line-{index}"))
-        .h(px(22.0))
+        .h(px(height))
         .flex()
         .items_center()
-        .font_family("Menlo")
-        .text_size(px(caret::FONT_SIZE))
         .text_color(color(theme.text))
         .bg(color(if current { theme.surface } else { theme.bg }))
         .on_mouse_down(
@@ -98,9 +97,16 @@ fn row_frame(
 
 /// The file's chars as ONE shaped line, so the glyphs sit exactly where
 /// `Columns` measures them; colour, selection and squiggles are run styles.
-fn line_text(index: usize, runs: &[Run], theme: Theme) -> impl IntoElement {
+fn line_text(
+    index: usize,
+    runs: &[Run],
+    (theme, fonts): (Theme, &bb_ui::Typography),
+) -> impl IntoElement {
     let text: String = runs.iter().map(|run: &Run| run.text.as_str()).collect();
-    let styles: Vec<TextRun> = runs.iter().map(|run: &Run| text_run(run, theme)).collect();
+    let styles: Vec<TextRun> = runs
+        .iter()
+        .map(|run: &Run| text_run(run, theme, &fonts.family))
+        .collect();
     div()
         .flex_none()
         .whitespace_nowrap()
@@ -108,7 +114,7 @@ fn line_text(index: usize, runs: &[Run], theme: Theme) -> impl IntoElement {
         .child(StyledText::new(text).with_runs(styles))
 }
 
-fn text_run(run: &Run, theme: Theme) -> TextRun {
+fn text_run(run: &Run, theme: Theme, family: &str) -> TextRun {
     let ink: bb_ui::Rgb = match run.kind {
         HighlightKind::Keyword => theme.keyword,
         HighlightKind::String => theme.string,
@@ -118,7 +124,7 @@ fn text_run(run: &Run, theme: Theme) -> TextRun {
     };
     TextRun {
         len: run.text.len(),
-        font: gpui::font("Menlo"),
+        font: gpui::font(family.to_owned()),
         color: color(ink).into(),
         background_color: run.selected.then(|| color(theme.accent).into()),
         underline: run.mark.map(|s: Ink| gpui::UnderlineStyle {
@@ -131,13 +137,15 @@ fn text_run(run: &Run, theme: Theme) -> TextRun {
 }
 
 /// The caret: a thin quad painted over the text, never a char in it.
-fn caret_quad(x: f32, theme: Theme) -> impl IntoElement {
+/// The caret spans the text height (size + 3), centred in the row.
+fn caret_quad(x: f32, theme: Theme, fonts: &bb_ui::Typography) -> impl IntoElement {
+    let height: f32 = fonts.size() + 3.0;
     div()
         .absolute()
-        .top(px(3.0))
-        .left(px(GUTTER_W + x))
+        .top(px((fonts.line_height() - height) / 2.0))
+        .left(px(fonts.gutter_width() + x))
         .w(px(caret::CARET_W))
-        .h(px(16.0))
+        .h(px(height))
         .bg(color(theme.text))
         .debug_selector(|| "editor-caret".to_owned())
 }
@@ -171,7 +179,9 @@ fn mouse_move(
         return;
     }
     let x: f32 = f32::from(event.position.x);
-    let at: Option<bb_text::CharIdx> = super::super::input::char_at(view, index, x, window);
+    let fonts: bb_ui::Typography = crate::settings::typography(cx);
+    let at: Option<bb_text::CharIdx> =
+        super::super::input::char_at(view, index, x, (window, &fonts));
     let position: (f32, f32) = (x, f32::from(event.position.y));
     crate::intel::glue::hover_move(view, at, position, window, cx);
 }

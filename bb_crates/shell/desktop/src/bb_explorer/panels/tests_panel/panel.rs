@@ -113,14 +113,26 @@ pub(crate) fn resize_edge(theme: Theme, cx: &mut Context<ExplorerView>) -> impl 
 }
 
 impl ExplorerView {
+    /// The editor's left edge in the window: after the tool window and its
+    /// 6 px edge when it docks left, else the window's left edge.
+    pub(crate) fn editor_left(&self, fonts: &bb_ui::Typography) -> f32 {
+        fonts.editor_x(self.panel_width) - fonts.gutter_width()
+    }
+
     pub(crate) fn move_resize(
         &mut self,
         event: &gpui::MouseMoveEvent,
-        _: &mut gpui::Window,
+        window: &mut gpui::Window,
         cx: &mut Context<Self>,
     ) {
         if self.resizing && event.dragging() {
-            self.panel_width = f32::from(event.position.x).clamp(180.0, 800.0);
+            let x: f32 = f32::from(event.position.x);
+            let wide: f32 = if crate::settings::typography(cx).panel_right {
+                f32::from(window.viewport_size().width) - x
+            } else {
+                x
+            };
+            self.panel_width = wide.clamp(180.0, 800.0);
             cx.notify();
         }
     }

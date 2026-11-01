@@ -15,7 +15,7 @@ use crate::intel::model::{IntelModel, TraceRow, Undrawn};
 /// row or widens the window.
 pub(crate) fn one_line(height: f32) -> gpui::Div {
     div()
-        .h(px(height))
+        .min_h(px(height))
         .flex_none()
         .flex()
         .items_center()

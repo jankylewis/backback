@@ -41,8 +41,6 @@ pub(crate) fn bottom(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Opt
             .bg(color(theme.surface))
             .border_t_1()
             .border_color(color(theme.border))
-            .font_family("Menlo")
-            .text_size(px(12.0))
             .text_color(color(theme.text))
             .child(
                 super::one_line(22.0)

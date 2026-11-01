@@ -4,10 +4,6 @@
 
 use gpui::{px, ShapedLine, SharedString, TextRun, Window};
 
-/// The editor font size, as the line rows draw it.
-pub(crate) const FONT_SIZE: f32 = 13.0;
-/// The gutter before the text.
-pub(crate) const GUTTER_W: f32 = 50.0;
 /// The caret quad: thin, so it never covers a glyph.
 pub(crate) const CARET_W: f32 = 2.0;
 
@@ -19,10 +15,10 @@ pub(crate) struct Columns {
 
 impl Columns {
     /// Shape `text` (one line, no line break) in the editor font.
-    pub(crate) fn shape(window: &Window, text: &str) -> Columns {
+    pub(crate) fn shape(window: &Window, text: &str, fonts: &bb_ui::Typography) -> Columns {
         let run: TextRun = TextRun {
             len: text.len(),
-            font: gpui::font("Menlo"),
+            font: gpui::font(fonts.family.clone()),
             color: gpui::black(),
             background_color: None,
             underline: None,
@@ -30,7 +26,7 @@ impl Columns {
         };
         let line: ShapedLine = window.text_system().shape_line(
             SharedString::from(text.to_owned()),
-            px(FONT_SIZE),
+            px(fonts.size()),
             &[run],
             None,
         );

@@ -11,14 +11,15 @@ pub(crate) fn char_at(
     view: &ExplorerView,
     line: usize,
     window_x: f32,
-    window: &Window,
+    (window, fonts): (&Window, &bb_ui::Typography),
 ) -> Option<bb_text::CharIdx> {
-    let left: f32 = view.panel_width + 6.0 + crate::editor::GUTTER_W;
+    let left: f32 = view.editor_left(fonts) + fonts.gutter_width();
     let document: &bb_text::Document = view.tabs.active()?;
     let start: usize = document.line_start(line)?.raw();
     let content: String = document.line(line).unwrap_or_default();
     let visible: &str = content.trim_end_matches(['\r', '\n']);
-    let column: usize = crate::editor::Columns::shape(window, visible).column_at(window_x - left);
+    let column: usize =
+        crate::editor::Columns::shape(window, visible, fonts).column_at(window_x - left);
     Some(bb_text::CharIdx::new(start.saturating_add(column)))
 }
 
@@ -30,7 +31,8 @@ pub(crate) fn pointer_at(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let target: Option<bb_text::CharIdx> = char_at(view, line, window_x, window);
+    let fonts: bb_ui::Typography = crate::settings::typography(cx);
+    let target: Option<bb_text::CharIdx> = char_at(view, line, window_x, (window, &fonts));
     view.intel.dismiss();
     if let (Some(document), Some(target)) = (view.tabs.active_mut(), target) {
         if let Err(error) = document.move_to(target, extend) {

@@ -5,8 +5,10 @@
 //! theme tokens so dark-by-default is a data decision, not a widget decision.
 
 pub mod bb_theme;
+pub mod typography;
 
 pub use bb_theme::{Rgb, Theme, ThemeKind};
+pub use typography::{SettingsError, Typography};
 
 /// Frontend errors.
 #[derive(Debug, thiserror::Error)]

@@ -18,7 +18,7 @@ pub(super) fn gutter_cell(
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Div {
     div()
-        .w(px(super::GUTTER_W))
+        .w(px(crate::settings::typography(cx).gutter_width()))
         .flex_none()
         .whitespace_nowrap()
         .flex()

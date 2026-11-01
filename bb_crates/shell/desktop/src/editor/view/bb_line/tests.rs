@@ -175,3 +175,34 @@ fn home_end_and_cmd_arrows_move_the_cursor(cx: &mut TestAppContext) {
     vcx.simulate_keystrokes("cmd-up");
     assert_eq!(cursor(&rig, vcx), 0);
 }
+
+/// BBEOD14: zoom changes the one size every surface reads: the row height,
+/// the gutter, the caret and the text all scale; nothing stays at 13 pt.
+#[gpui::test]
+fn zoom_scales_the_row_the_gutter_the_caret_and_the_text(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = open(cx);
+    put_cursor(&rig, vcx, 0, 0);
+    let row_13: Bounds<Pixels> = vcx.debug_bounds("editor-line-0").expect("row");
+    let text_13: Bounds<Pixels> = vcx.debug_bounds("editor-text-0").expect("text");
+    let zoomed: bb_ui::Typography = bb_ui::Typography {
+        zoom: 13,
+        ..bb_ui::Typography::default()
+    };
+    vcx.update(|_: &mut gpui::Window, cx: &mut gpui::App| {
+        crate::settings::apply(cx, zoomed.clone());
+    });
+    vcx.run_until_parked();
+    let row_26: Bounds<Pixels> = vcx.debug_bounds("editor-line-0").expect("row");
+    let text_26: Bounds<Pixels> = vcx.debug_bounds("editor-text-0").expect("text");
+    let caret_26: Bounds<Pixels> = vcx.debug_bounds("editor-caret").expect("caret");
+    assert_eq!(f32::from(row_13.size.height), 22.0);
+    assert_eq!(f32::from(row_26.size.height), zoomed.line_height());
+    let ratio: f32 = f32::from(text_26.size.width) / f32::from(text_13.size.width);
+    assert!((ratio - 2.0).abs() < 0.05, "text width x{ratio}, want x2");
+    let gutter: f32 = f32::from(caret_26.origin.x) - f32::from(row_26.origin.x);
+    assert!(
+        (gutter - zoomed.gutter_width()).abs() <= 0.5,
+        "caret after a {gutter} px gutter"
+    );
+    assert_eq!(f32::from(caret_26.size.height), zoomed.size() + 3.0);
+}

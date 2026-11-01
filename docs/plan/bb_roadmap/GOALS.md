@@ -14,13 +14,13 @@ Last update: 2026-11-01. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD05 | M4 Debugging via netcoredbg, Rider-style Set Next Statement | Done | [#6](https://github.com/jankylewis/backback/pull/6) |
 | BBEOD06 | M5 Harness | Reduced | MCP panel [#7](https://github.com/jankylewis/backback/pull/7) removed again in [#9](https://github.com/jankylewis/backback/pull/9) |
 | BBEOD07 | M6 macOS release | Partial | [#8](https://github.com/jankylewis/backback/pull/8): `.app` bundle, mascot, CI and release workflows |
-| BBEOD08 | Settings window, Menlo 13 on every surface, tool window side | Todo | BB-BUG-002 |
+| BBEOD08 | Settings window, Menlo 13 on every surface, tool window side | Done | BBEOD08 PR; readback `docs/plan/readback/FIXES/S02/BBEOD14/` |
 | BBEOD09 | Explorer: git-ignored files and folders shown in pink | Done | BBEOD09 PR; readback `docs/plan/readback/FIXES/S01/BBEOD09/` |
 | BBEOD10 | Standard macOS keys: Cmd+M minimize, Cmd+H hide, Home/End | Done | BBEOD10 PR; readback `docs/plan/readback/FIXES/S01/BBEOD10/` |
 | BBEOD11 | Integrated terminal: minimal, native, fast, never laggy | Todo | Requested |
 | BBEOD12 | **Critical:** cursor shifts the text; draw it as an overlay | Done | BBEOD12 PR; readback `docs/plan/readback/FIXES/S02/BBEOD12/` |
 | BBEOD13 | Core C# loop: Open Solution (Cmd+O), Build + error list, Go to File, Go to Symbol, Back/Forward | Partial | Open, recent, Go to File done (BB-BUG-006); Build, Go to Symbol, Back/Forward to do |
-| BBEOD14 | Zoom the whole app: Cmd+= in, Cmd+- out, Cmd+0 reset | Todo | Requested |
+| BBEOD14 | Zoom the whole app: Cmd+= in, Cmd+- out, Cmd+0 reset | Done | BBEOD08 PR (same change) |
 
 ## Gaps behind a Done or Partial state
 

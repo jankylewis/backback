@@ -2,13 +2,13 @@
 
 id: BB-BUG-002
 family: UIX
-status: OPEN
+status: FIXED
 date: 2026-11-01
 signature: Explorer rows not in Menlo
 source: `bb_crates/shell/desktop/src/editor/view/bb_line.rs:118` (Menlo 13)
 source: `bb_crates/shell/desktop/src/bb_explorer/bb_row_view.rs:66` (16 px, no font family)
 observed: headmate screenshots: Explorer and Tests in the system font, editor in Menlo
-links: fix=no lesson=no evidence=no toolgap=none
+links: fix=yes lesson=no evidence=yes toolgap=none
 
 ## Steps
 

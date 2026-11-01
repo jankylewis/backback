@@ -5,7 +5,7 @@ One row per bug and per failure reason. Grep the signature in your log.
 | Id | Signature | Status | First check |
 |---|---|---|---|
 | BB-BUG-001 | `Cmd+M does nothing` | FIXED | Window menu has a Minimize item bound to `cmd-m` |
-| BB-BUG-002 | `Explorer rows not in Menlo` | OPEN | Every surface reads one font token, not a literal |
+| BB-BUG-002 | `Explorer rows not in Menlo` | FIXED | Every surface reads one font token, not a literal |
 | BB-BUG-003 | `HARNESS Select an MCP server` | FIXED | Build time of the running binary vs `master` (BB-BLD-001) |
 | BB-BUG-004 | `Test Explorer click no response` | OPEN | Reproduce by hand before blaming the input driver |
 | BB-BUG-005 | `text after the cursor shifts right` | FIXED | Cursor is an overlay, never a char in the text runs (BB-UIX-001) |
@@ -23,3 +23,4 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-UIX-002 | `min window_on_screen=23` | FIXED | Window commands use the dispatching Window, not `active_window()` |
 | BB-PRC-001 | `process left after quit` | FIXED | Record the app's process tree before quit; check every pid after |
 | BB-LSP-004 | `open_with_restore_flag_lets_roslyn_restore` | OBSERVED | Does `bb open --restore` wait for the restore to finish? |
+| BB-UIX-003 | `gutter stayed 50 px at zoom` | FIXED | Every width that holds text scales with `Typography` |
