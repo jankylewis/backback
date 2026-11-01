@@ -73,7 +73,7 @@ fn filter(view: &ExplorerView, theme: Theme, cx: &mut Context<ExplorerView>) -> 
     div()
         .id("test-filter")
         .px_2()
-        .h(px(28.0))
+        .min_h(px(28.0))
         .bg(color(theme.overlay))
         .child(format!("Filter: {}", view.tests.filter))
         .on_click(cx.listener(

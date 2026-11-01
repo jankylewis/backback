@@ -10,3 +10,4 @@ One folder per BBEOD after v1, each with its steps, captures and verdict.
 | `S01/BBEOD09` | Git-ignored entries shown in pink |
 | `S01/BBEOD08` | REAP: quit, Cmd+Q and SIGTERM leave no Roslyn process |
 | `S02/BBEOD13` | Part 1: Finder launch, recent, Cmd+O, Go to File |
+| `S02/BBEOD14` | BBEOD08 + BBEOD14: Menlo 13 everywhere, zoom, Settings, tool window side |

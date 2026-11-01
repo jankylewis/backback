@@ -178,7 +178,7 @@ fn pointer(
                 v.editor_scroll.0.borrow();
             let bounds: gpui::Bounds<gpui::Pixels> = state.base_handle.bounds();
             (
-                v.panel_width + 6.0 + crate::editor::GUTTER_W,
+                crate::settings::typography(cx).editor_x(v.panel_width),
                 f32::from(bounds.origin.y),
                 f32::from(state.base_handle.offset().y),
                 v.tabs
@@ -188,8 +188,12 @@ fn pointer(
             )
         });
     let row: f32 = f32::from(u16::try_from(line).unwrap_or(u16::MAX));
-    let columns: crate::editor::Columns =
-        crate::editor::Columns::shape(window, text.trim_end_matches(['\r', '\n']));
+    let height: f32 = crate::settings::typography(cx).line_height();
+    let columns: crate::editor::Columns = crate::editor::Columns::shape(
+        window,
+        text.trim_end_matches(['\r', '\n']),
+        &crate::settings::typography(cx),
+    );
     let x: f32 = if middle {
         f32::midpoint(columns.x_of(col), columns.x_of(col.saturating_add(1)))
     } else {
@@ -197,7 +201,7 @@ fn pointer(
     };
     Some(gpui::point(
         gpui::px(left + x),
-        gpui::px(top + scrolled + 22.0 * row + 11.0),
+        gpui::px(top + scrolled + height * row + height / 2.0),
     ))
 }
 

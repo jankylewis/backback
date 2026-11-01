@@ -47,11 +47,13 @@ pub(crate) fn bindings() -> Vec<KeyBinding> {
 }
 
 /// The app menu items before Quit.
-pub(crate) fn app_items() -> [MenuItem; 4] {
+pub(crate) fn app_items() -> [MenuItem; 6] {
     [
         MenuItem::action("Hide Backback", Hide),
         MenuItem::action("Hide Others", HideOthers),
         MenuItem::action("Show All", ShowAll),
+        MenuItem::separator(),
+        crate::settings::settings_item(),
         MenuItem::separator(),
     ]
 }

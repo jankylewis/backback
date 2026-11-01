@@ -19,6 +19,8 @@ mod panel;
 mod quick_open;
 #[path = "app/script.rs"]
 mod script;
+#[path = "bb_explorer/panels/settings/mod.rs"]
+mod settings;
 #[path = "bb_explorer/panels/tests_panel/mod.rs"]
 mod tests_panel;
 #[path = "app/theme.rs"]
@@ -193,9 +195,13 @@ impl Render for ExplorerView {
         intel::view::note_frame(&mut self.intel);
         let status: String = self.intel.status_label();
         let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
-        launch::window_actions(div())
+        launch::window_actions(settings::root(cx))
             .size_full()
             .flex()
+            .when(
+                settings::typography(cx).panel_right,
+                gpui::Styled::flex_row_reverse,
+            )
             .bg(color(self.theme.bg))
             .on_action(cx.listener(ExplorerView::toggle_theme))
             .on_action(cx.listener(ExplorerView::follow_appearance))
@@ -203,14 +209,7 @@ impl Render for ExplorerView {
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
             .on_action(cx.listener(ExplorerView::restart_server))
-            .on_action(cx.listener(
-                |v: &mut Self,
-                 _: &quick_open::GoToFile,
-                 window: &mut Window,
-                 cx: &mut Context<Self>| {
-                    quick_open::show(v, window, cx);
-                },
-            ))
+            .on_action(cx.listener(quick_open::on_go_to_file))
             .child(match self.tests.side {
                 tests_panel::Side::Files => panel::explorer_panel(self, cx).into_any_element(),
                 tests_panel::Side::Tests => tests_panel::panel(self, cx).into_any_element(),

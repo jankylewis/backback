@@ -5,7 +5,7 @@ use crate::{color, ExplorerView};
 
 pub(super) fn label(text: impl Into<String>, theme: Theme) -> AnyElement {
     div()
-        .h(px(24.0))
+        .min_h(px(24.0))
         .px_2()
         .text_color(color(theme.text_dim))
         .child(text.into())

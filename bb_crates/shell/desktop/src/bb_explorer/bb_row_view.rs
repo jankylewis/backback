@@ -40,7 +40,7 @@ pub(crate) fn row(
     div()
         .id(index)
         .pl_2()
-        .h(px(30.0))
+        .min_h(px(30.0))
         .flex()
         .items_center()
         .gap_0()

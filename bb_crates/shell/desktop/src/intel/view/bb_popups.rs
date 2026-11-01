@@ -12,9 +12,9 @@ use crate::intel::model::IntelModel;
 
 /// Rows a list shows at once.
 const ROWS: usize = 12;
-/// What to draw below the cursor line, if any popup is open. `caret_x` is the
-/// caret's x from the text's left edge, from the shaped line.
-pub(crate) fn at_cursor(model: &IntelModel, caret_x: f32, theme: Theme) -> Option<AnyElement> {
+/// What to draw below the cursor line, if any popup is open, `left` px from
+/// the line row's left edge (the caret's x, gutter included).
+pub(crate) fn at_cursor(model: &IntelModel, left: f32, theme: Theme) -> Option<AnyElement> {
     let body: AnyElement = if let Some(input) = &model.rename_input {
         rename_box(input, theme).into_any_element()
     } else if let Some(popup) = &model.completion {
@@ -24,7 +24,6 @@ pub(crate) fn at_cursor(model: &IntelModel, caret_x: f32, theme: Theme) -> Optio
     } else {
         return None;
     };
-    let left: f32 = crate::editor::GUTTER_W + caret_x;
     Some(
         div()
             .debug_selector(|| "cursor-popup".to_owned())
@@ -45,8 +44,6 @@ fn frame(theme: Theme) -> gpui::Div {
         .bg(color(theme.overlay))
         .border_1()
         .border_color(color(theme.border))
-        .font_family("Menlo")
-        .text_size(px(12.0))
         .text_color(color(theme.text))
 }
 

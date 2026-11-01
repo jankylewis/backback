@@ -34,6 +34,8 @@ pub(crate) fn launch() {
         bind_keys(cx);
         bb_window::register(cx);
         open::register(cx);
+        crate::settings::install(cx);
+        crate::settings::register_zoom(cx);
         cx.set_menus(menus());
         let (ask, no_write): (bool, bool) = (wanted.ask, wanted.no_write);
         open_workspace(&wanted, cx);
@@ -106,10 +108,15 @@ fn menus() -> Vec<Menu> {
                 .chain([MenuItem::action("Quit Backback", Quit)]),
         ),
         open::file_menu(),
-        Menu::new("View").items([
-            MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
-            MenuItem::action("Follow macOS Appearance", FollowAppearance),
-        ]),
+        Menu::new("View").items(
+            [
+                MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
+                MenuItem::action("Follow macOS Appearance", FollowAppearance),
+                MenuItem::separator(),
+            ]
+            .into_iter()
+            .chain(crate::settings::zoom_menu_items()),
+        ),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
         bb_window::window_menu(),
     ]
@@ -190,6 +197,7 @@ fn bind_keys(cx: &mut App) {
     ]);
     cx.bind_keys(bb_window::bindings());
     cx.bind_keys(open::bindings());
+    cx.bind_keys(crate::settings::zoom_bindings());
 }
 
 #[cfg(test)]

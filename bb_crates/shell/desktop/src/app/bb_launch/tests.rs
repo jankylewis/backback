@@ -28,7 +28,17 @@ fn menus_go_app_then_file_then_view_as_on_every_mac() {
     ));
     assert_eq!(configured[1].name.as_ref(), "File");
     assert_eq!(configured[2].name.as_ref(), "View");
-    assert_eq!(configured[2].items.len(), 2);
+    let view: Vec<String> = names(&configured[2]);
+    assert_eq!(view.len(), 6, "{view:?}");
+    assert!(
+        view.iter()
+            .any(|name: &String| name == "Move Tool Window to Other Side"),
+        "{view:?}"
+    );
+    assert!(
+        view.iter().any(|name: &String| name == "Zoom In"),
+        "{view:?}"
+    );
 }
 
 /// Headmate ruling 2026-11-01: no menu opens an MCP or Harness panel.
@@ -78,7 +88,13 @@ fn the_app_menu_can_hide_and_a_window_menu_minimizes_and_zooms() {
     let configured: Vec<Menu> = menus();
     assert_eq!(
         names(&configured[0]),
-        ["Hide Backback", "Hide Others", "Show All", "Quit Backback"]
+        [
+            "Hide Backback",
+            "Hide Others",
+            "Show All",
+            "Settings...",
+            "Quit Backback"
+        ]
     );
     let window: &Menu = configured
         .iter()

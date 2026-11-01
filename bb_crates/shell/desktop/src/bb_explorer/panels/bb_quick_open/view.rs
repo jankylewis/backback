@@ -9,6 +9,15 @@ use crate::{color, ExplorerView};
 #[action(namespace = backback)]
 pub(crate) struct GoToFile;
 
+pub(crate) fn on_go_to_file(
+    view: &mut ExplorerView,
+    _: &GoToFile,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    show(view, window, cx);
+}
+
 pub(crate) fn show(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
     view.quick_open = Some(QuickOpen::new(&view.root));
     window.focus(&view.quick_focus, cx);
