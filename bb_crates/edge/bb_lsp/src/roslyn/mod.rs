@@ -9,6 +9,7 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use bb_dotnet::ProjectPath;
 use lsp_types::{
     ClientCapabilities, InitializeParams, InitializeResult, InitializedParams,
     WorkspaceClientCapabilities,
@@ -20,8 +21,10 @@ use url::Url;
 use crate::bb_client::{LspClient, LspError, Settings};
 
 mod bb_load;
+mod load_state;
 
-pub use bb_load::{batch_projects, drain_log, log_incoming, wait_for_load};
+pub use bb_load::{drain_log, log_incoming, wait_for_load, Loaded};
+pub use load_state::LoadState;
 
 /// Binary name of the official server (installed with `dotnet tool install -g roslyn-language-server --prerelease`).
 pub const BINARY: &str = "roslyn-language-server";
@@ -74,14 +77,19 @@ pub enum RoslynError {
     #[error("path is not absolute or not valid as a URI: {0}")]
     BadPath(PathBuf),
     /// The solution did not finish loading within the deadline.
-    #[error("solution did not finish loading within {after:?}: {loaded} of {expected} projects")]
+    #[error(
+        "solution did not finish loading within {after:?}: {loaded} of {expected} projects; missing: {}",
+        names(missing)
+    )]
     LoadTimeout {
         /// The deadline.
         after: Duration,
-        /// Projects the server reported loaded.
+        /// Distinct projects the server reported loaded.
         loaded: usize,
-        /// Projects the solution declares.
+        /// Distinct projects the solution declares.
         expected: usize,
+        /// Projects with neither a load nor a failure line.
+        missing: Vec<ProjectPath>,
     },
     /// The notification channel was already taken from the client.
     #[error("incoming channel already taken")]
@@ -92,6 +100,26 @@ pub enum RoslynError {
     /// Underlying client error.
     #[error(transparent)]
     Client(#[from] LspError),
+}
+
+impl RoslynError {
+    fn timeout(after: Duration, state: &LoadState) -> Self {
+        Self::LoadTimeout {
+            after,
+            loaded: state.loaded(),
+            expected: state.total(),
+            missing: state.missing(),
+        }
+    }
+}
+
+/// The projects as one comma-separated list of paths.
+fn names(projects: &[ProjectPath]) -> String {
+    projects
+        .iter()
+        .map(|p: &ProjectPath| p.as_path().display().to_string())
+        .collect::<Vec<String>>()
+        .join(", ")
 }
 
 /// Find the server: env override, then `PATH`, then `~/.dotnet/tools`.
@@ -204,5 +232,7 @@ fn file_url(path: &Path) -> Result<Url, RoslynError> {
     Url::from_file_path(path).map_err(|(): ()| RoslynError::BadPath(path.to_path_buf()))
 }
 
+#[cfg(test)]
+mod load_tests;
 #[cfg(test)]
 mod tests;

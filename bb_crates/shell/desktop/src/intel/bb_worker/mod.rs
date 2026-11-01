@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use bb_dotnet::{Solution, SolutionPath};
 use bb_intel::Config;
-use bb_lsp::roslyn::Restore;
+use bb_lsp::roslyn::{LoadState, Restore};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 use protocol::{Event, Request};
@@ -58,7 +58,7 @@ pub(crate) fn start(solution: &Path) -> (Link, UnboundedReceiver<Event>) {
 
 fn serve(solution: &Path, requests: UnboundedReceiver<Request>, events: &UnboundedSender<Event>) {
     match prepare(solution) {
-        Ok((config, total)) => bb_loop::run(&config, total, requests, events),
+        Ok((config, projects)) => bb_loop::run(&config, projects, requests, events),
         Err(reason) => {
             // Nobody listening means the window closed during the load.
             let _sent: Result<(), tokio::sync::mpsc::error::SendError<Event>> =
@@ -67,8 +67,8 @@ fn serve(solution: &Path, requests: UnboundedReceiver<Request>, events: &Unbound
     }
 }
 
-/// Count the solution's projects and make the log and scratch folders.
-fn prepare(solution: &Path) -> Result<(Config, usize), String> {
+/// Track the solution's projects and make the log and scratch folders.
+fn prepare(solution: &Path) -> Result<(Config, LoadState), String> {
     let listing: Solution = SolutionPath::new(solution.to_path_buf())
         .and_then(|path: SolutionPath| Solution::load(&path))
         .map_err(|error: bb_dotnet::SolutionError| error.to_string())?;
@@ -86,7 +86,7 @@ fn prepare(solution: &Path) -> Result<(Config, usize), String> {
         request_timeout: Duration::from_secs(20),
         load_timeout: Duration::from_secs(300),
     };
-    Ok((config, listing.projects.len()))
+    Ok((config, LoadState::new(&listing.projects)))
 }
 
 /// The solution to load for a workspace root: the argument itself when it

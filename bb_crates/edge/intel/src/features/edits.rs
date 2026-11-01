@@ -91,7 +91,7 @@ impl Session {
             text_document: doc_id,
             range: span.to_lsp(),
             context: CodeActionContext {
-                diagnostics: self.raw_diagnostics_in(path, span),
+                diagnostics: self.raw_diagnostics_in(path, span)?,
                 only: None,
                 trigger_kind: None,
             },

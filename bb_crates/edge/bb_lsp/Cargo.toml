@@ -7,6 +7,7 @@ license.workspace = true
 description = "LSP client over stdio, plus the Roslyn language server specifics"
 
 [dependencies]
+bb-dotnet.workspace = true
 bb-framing.workspace = true
 lsp-types.workspace = true
 serde.workspace = true
@@ -17,3 +18,6 @@ url.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

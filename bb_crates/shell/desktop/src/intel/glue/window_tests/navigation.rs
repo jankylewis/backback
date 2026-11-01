@@ -6,12 +6,10 @@ use std::time::Duration;
 use bb_intel::{ActionItem, Diagnostic, Severity, Span};
 use bb_text::LspPoint;
 
-use super::bb_rig::{place, rig_with};
+use super::bb_rig::{place, rig, rig_with, Rig};
 use crate::intel::bb_worker::protocol::{Answer, Ask, Event, Ticket};
-use gpui::{TestAppContext, VisualTestContext};
-
-use super::bb_rig::{rig, Rig};
 use crate::ExplorerView;
+use gpui::{TestAppContext, VisualTestContext};
 
 #[gpui::test]
 fn f12_opens_the_target_and_metadata_outside_the_root_is_read_only(cx: &mut TestAppContext) {
@@ -77,11 +75,14 @@ fn the_status_bar_follows_progress_until_ready(cx: &mut TestAppContext) {
     rig.events
         .send(Event::Ready {
             took: Duration::ZERO,
+            failed: vec![rig.root.join("_NUnitApex/_NUnitApex.csproj")],
         })
         .unwrap();
     vcx.run_until_parked();
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
-        assert_eq!(v.intel.status.label(), "Ready");
+        assert_eq!(v.intel.status, crate::intel::model::LoadStatus::Ready);
+        let shown: &str = "Ready — 1 project failed to load: _NUnitApex.csproj";
+        assert_eq!(v.intel.status_label(), shown);
     });
 }
 
@@ -106,6 +107,7 @@ fn cmd_dot_lists_actions_and_diagnostics_reach_problems(cx: &mut TestAppContext)
     rig.events
         .send(Event::Diagnostics {
             path: rig.file.clone(),
+            version: rig.shown(vcx),
             list: vec![error],
         })
         .unwrap();
@@ -173,6 +175,7 @@ fn long_problem_rows_never_squeeze_the_explorer(cx: &mut TestAppContext) {
     rig.events
         .send(Event::Diagnostics {
             path: rig.file.clone(),
+            version: rig.shown(vcx),
             list: vec![long],
         })
         .unwrap();

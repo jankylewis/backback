@@ -2,10 +2,9 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use bb_dotnet::{Solution, SolutionPath};
+use bb_dotnet::{ProjectPath, Solution, SolutionPath};
 use bb_lsp::roslyn::{self, Restore};
 use bb_lsp::{Incoming, LspClient};
 use lsp_types::PublishDiagnosticsParams;
@@ -15,11 +14,9 @@ use tokio::sync::mpsc;
 use tokio::sync::watch;
 
 use crate::model::bb_doc::{DocVersion, OpenDoc};
+use crate::model::store::{Entry, Recorded, Store};
 use crate::model::{DocPath, DocUri};
 use crate::IntelError;
-
-/// Diagnostics per document, as the server last reported them.
-pub(crate) type Store = Arc<Mutex<HashMap<DocPath, Vec<lsp_types::Diagnostic>>>>;
 
 /// How to start a [`Session`].
 #[derive(Clone, Debug)]
@@ -45,7 +42,7 @@ pub struct Session {
     pub(crate) store: Store,
     pub(crate) request_timeout: Duration,
     scratch: PathBuf,
-    loaded_in: Duration,
+    load: roslyn::Loaded,
     pump: tokio::task::JoinHandle<()>,
 }
 
@@ -83,23 +80,22 @@ impl Session {
             .ok_or(roslyn::RoslynError::NoIncoming)?;
         roslyn::initialize(&client, root).await?;
         roslyn::open_solution(&client, solution.as_path()).await?;
-        let loaded_in: Duration = roslyn::wait_for_load(
+        let load: roslyn::Loaded = roslyn::wait_for_load(
             &mut incoming,
             config.load_timeout,
-            listing.projects.len(),
+            &listing.projects,
             &mut log,
         )
         .await?;
         let store: Store = Store::default();
-        let pump: tokio::task::JoinHandle<()> =
-            tokio::spawn(pump(incoming, Arc::clone(&store), log));
+        let pump: tokio::task::JoinHandle<()> = tokio::spawn(pump(incoming, store.clone(), log));
         Ok(Self {
             client,
             docs: HashMap::new(),
             store,
             request_timeout: config.request_timeout,
             scratch: config.scratch.clone(),
-            loaded_in,
+            load,
             pump,
         })
     }
@@ -107,7 +103,14 @@ impl Session {
     /// How long the solution took to load.
     #[must_use]
     pub fn loaded_in(&self) -> Duration {
-        self.loaded_in
+        self.load.took
+    }
+
+    /// Projects Roslyn reported it could not load (their reasons are in
+    /// the server log).
+    #[must_use]
+    pub fn failed_projects(&self) -> &[ProjectPath] {
+        &self.load.failed
     }
 
     /// Signal when the server closes its connection.
@@ -174,7 +177,7 @@ impl Session {
 
 /// Keep reading server messages so the reader never blocks on a full
 /// channel; write each one to the run log, and keep each pushed
-/// `publishDiagnostics` per document.
+/// `publishDiagnostics` per document unless a newer version is stored.
 async fn pump<W: std::io::Write>(mut incoming: mpsc::Receiver<Incoming>, store: Store, mut log: W) {
     while let Some(message) = incoming.recv().await {
         // A log that stops accepting lines must not stop the drain: the
@@ -191,9 +194,18 @@ async fn pump<W: std::io::Write>(mut incoming: mpsc::Receiver<Incoming>, store: 
         else {
             continue;
         };
-        if let DocUri::File(path) = DocUri::from_url(&report.uri) {
-            if let Ok(mut map) = store.lock() {
-                map.insert(path, report.diagnostics);
+        let DocUri::File(path): DocUri = DocUri::from_url(&report.uri) else {
+            continue;
+        };
+        let entry: Entry = Entry {
+            version: report.version.and_then(DocVersion::from_wire),
+            list: report.diagnostics,
+        };
+        match store.record(&path, entry) {
+            Ok(Recorded::Kept | Recorded::Stale) => {}
+            // Every reader now fails with the same error; the log says when.
+            Err(error) => {
+                let _logged: std::io::Result<()> = writeln!(log, "backback: {error}");
             }
         }
     }

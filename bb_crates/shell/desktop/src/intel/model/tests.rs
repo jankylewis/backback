@@ -1,10 +1,10 @@
 use std::path::{Path, PathBuf};
 
-use bb_intel::{CompletionEntry, Diagnostic, Severity, Span};
+use bb_intel::{CompletionEntry, Diagnostic, DocVersion, Severity, Span};
 use bb_text::{CharIdx, LspPoint};
 
 use super::popups::{CompletionPopup, Pick};
-use super::{fits, freshness, Freshness, IntelModel, LoadStatus, Now, Pending, Question};
+use super::{fits, freshness, Freshness, IntelModel, LoadStatus, Now, Pending, Question, Sent};
 use crate::intel::bb_worker::protocol::{AskKind, Ticket};
 
 const KINDS: [AskKind; 6] = [
@@ -46,7 +46,16 @@ fn entry(label: &str) -> CompletionEntry {
     }
 }
 
-fn diag(line: u32, severity: Option<Severity>) -> Diagnostic {
+/// A model whose window sent `didOpen` for each of `paths`.
+fn opened(paths: &[&str]) -> IntelModel {
+    let mut model: IntelModel = IntelModel::new(LoadStatus::Ready);
+    for path in paths {
+        model.sent(Some(Sent::Open(PathBuf::from(path))));
+    }
+    model
+}
+
+pub(super) fn diag(line: u32, severity: Option<Severity>) -> Diagnostic {
     Diagnostic {
         span: Span {
             start: point(line, 1),
@@ -157,13 +166,15 @@ fn completion_filters_by_prefix_then_by_contains_and_keeps_the_pick_inside() {
 
 #[test]
 fn problems_sort_by_file_line_and_severity_and_leave_with_their_tab() {
-    let mut model: IntelModel = IntelModel::new(LoadStatus::Ready);
+    let mut model: IntelModel = opened(&["/a.cs", "/b.cs"]);
     model.set_diagnostics(
         PathBuf::from("/b.cs"),
+        DocVersion::first(),
         vec![diag(7, Some(Severity::Warning)), diag(2, None)],
     );
     model.set_diagnostics(
         PathBuf::from("/a.cs"),
+        DocVersion::first(),
         vec![
             diag(3, Some(Severity::Hint)),
             diag(3, Some(Severity::Error)),
@@ -214,12 +225,14 @@ fn a_late_batch_line_never_turns_ready_or_failed_back_into_loading() {
 
 #[test]
 fn problems_list_only_files_inside_the_workspace() {
-    let mut model: IntelModel = IntelModel::new(LoadStatus::Ready);
+    let mut model: IntelModel = opened(&["/ws/a.cs", "/tmp/meta/String.cs"]);
+    let first: DocVersion = DocVersion::first();
     model.set_diagnostics(
-        PathBuf::from("/ws/a.cs"),
+        "/ws/a.cs".into(),
+        first,
         vec![diag(1, Some(Severity::Error))],
     );
-    model.set_diagnostics(PathBuf::from("/tmp/meta/String.cs"), vec![diag(2, None)]);
+    model.set_diagnostics("/tmp/meta/String.cs".into(), first, vec![diag(2, None)]);
     let listed: Vec<String> = model
         .problems_in(Path::new("/ws"))
         .iter()

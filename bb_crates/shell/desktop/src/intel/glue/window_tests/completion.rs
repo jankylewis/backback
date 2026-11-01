@@ -127,6 +127,7 @@ fn draw_one_error_and_ask(rig: &mut Rig, vcx: &mut VisualTestContext) {
     rig.events
         .send(Event::Diagnostics {
             path: rig.file.clone(),
+            version: rig.shown(vcx),
             list: vec![error],
         })
         .unwrap();

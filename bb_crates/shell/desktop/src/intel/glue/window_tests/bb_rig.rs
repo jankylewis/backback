@@ -31,6 +31,14 @@ pub(crate) fn rig(cx: &mut TestAppContext, no_write: bool) -> (Rig, &mut VisualT
     rig_with(cx, no_write, true, A)
 }
 
+/// The fake server's `Ready`: instant, nothing failed.
+fn ready_event() -> Event {
+    Event::Ready {
+        took: Duration::ZERO,
+        failed: Vec::new(),
+    }
+}
+
 /// A window with `A.cs` holding `text` open; the fake server is ready only
 /// if `ready`.
 pub(crate) fn rig_with<'a>(
@@ -81,11 +89,7 @@ pub(crate) fn rig_with<'a>(
 
 fn send_ready(events: &UnboundedSender<Event>, ready: bool) {
     if ready {
-        events
-            .send(Event::Ready {
-                took: Duration::ZERO,
-            })
-            .unwrap();
+        events.send(ready_event()).unwrap();
     }
 }
 
@@ -138,6 +142,13 @@ impl Rig {
                 doc.set_cursor(bb_text::CharIdx::new(at)).unwrap();
             },
         );
+    }
+
+    /// The server version of the text the window shows for the rig file.
+    pub(super) fn shown(&self, vcx: &mut VisualTestContext) -> bb_intel::DocVersion {
+        self.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+            v.intel.shown_version(&self.file).unwrap()
+        })
     }
 
     pub(crate) fn text(&self, vcx: &mut VisualTestContext) -> String {

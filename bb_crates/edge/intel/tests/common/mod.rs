@@ -6,8 +6,13 @@ use std::time::Duration;
 use bb_intel::{Config, DocPath, Session};
 use bb_lsp::roslyn::Restore;
 
-/// Deadline for one feature request in these tests.
-pub const DEADLINE: Duration = Duration::from_secs(30);
+/// Deadline for one feature request in these tests: `bb`'s own request
+/// deadline. A request under load (~10) takes far longer than idle.
+pub const DEADLINE: Duration = Duration::from_secs(60);
+/// Outer deadline for the load. `Session::start` waits on the readiness
+/// event (every distinct project loaded) and its typed `LoadTimeout`
+/// names the projects still missing; under load the harness takes ~42 s.
+const LOAD: Duration = Duration::from_secs(300);
 
 /// The harness copy and a loaded session on it.
 pub struct Harness {
@@ -50,7 +55,7 @@ pub async fn start_logged<W: std::io::Write + Send + 'static>(name: &str, log: W
         log_dir: base.join("logs"),
         scratch: base.join("scratch"),
         request_timeout: DEADLINE,
-        load_timeout: Duration::from_secs(120),
+        load_timeout: LOAD,
     };
     let session: Session = Session::start(&config, log).await.unwrap();
     Harness { root, session }

@@ -2,59 +2,71 @@
 
 use std::time::{Duration, Instant};
 
-use super::{RoslynError, PROJECT_INIT_COMPLETE};
+use bb_dotnet::ProjectPath;
+
+use super::{LoadState, RoslynError, PROJECT_INIT_COMPLETE};
 use crate::bb_client::{Incoming, LspError};
 
-/// The log line Roslyn writes after each batch of project loads.
-const BATCH_MARK: &str = "Completed (re)load of ";
+/// How a finished load ended: how long it took, and the projects Roslyn
+/// reported it could not load (each one logged its reason).
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
+pub struct Loaded {
+    /// From the call until the last project settled.
+    pub took: Duration,
+    /// Projects that failed to load and never loaded after.
+    pub failed: Vec<ProjectPath>,
+}
 
 /// Drain incoming messages until the solution is loaded: the server has sent
-/// `projectInitializationComplete` and its batch lines add up to `expected`
-/// projects. Returns how long it took.
+/// `projectInitializationComplete` and every distinct project of `projects`
+/// has a load or a failure line. Returns how long it took and what failed.
 ///
 /// The signal alone is not enough: Roslyn sends it after the first batch
 /// (observed: 1 of 27 projects on `Apex`, 1 of 17 on `MbTx`) while the rest are
-/// still loading, so a request right after it hits an unloaded project.
+/// still loading. Batch counts are not enough either: a batch can reload a
+/// project already loaded (bus 066), so readiness is counted by path.
 ///
 /// Every `window/logMessage` and `window/showMessage` on the way is written to
 /// `log` as one line, so the run leaves the server's own account behind.
 ///
 /// # Errors
-/// [`RoslynError::LoadTimeout`] past `deadline` (with the counts), the server
-/// closes, or `log` cannot be written.
+/// [`RoslynError::LoadTimeout`] past `deadline` (naming the projects still
+/// missing), the server closes, or `log` cannot be written.
 pub async fn wait_for_load<W: std::io::Write>(
     incoming: &mut tokio::sync::mpsc::Receiver<Incoming>,
     deadline: Duration,
-    expected: usize,
+    projects: &[ProjectPath],
     log: &mut W,
-) -> Result<Duration, RoslynError> {
+) -> Result<Loaded, RoslynError> {
     let started: Instant = Instant::now();
     let mut signalled: bool = false;
-    let mut loaded: usize = 0;
-    while !(signalled && loaded >= expected) {
-        let timeout: RoslynError = RoslynError::LoadTimeout {
-            after: deadline,
-            loaded,
-            expected,
-        };
+    let mut state: LoadState = LoadState::new(projects);
+    while !(signalled && state.settled()) {
         let Some(remaining): Option<Duration> = deadline.checked_sub(started.elapsed()) else {
-            return Err(timeout);
+            return Err(RoslynError::timeout(deadline, &state));
         };
-        let next: Option<Incoming> = tokio::time::timeout(remaining, incoming.recv())
-            .await
-            .map_err(|_: tokio::time::error::Elapsed| timeout)?;
+        let Ok(next): Result<Option<Incoming>, tokio::time::error::Elapsed> =
+            tokio::time::timeout(remaining, incoming.recv()).await
+        else {
+            return Err(RoslynError::timeout(deadline, &state));
+        };
         match next {
             Some(Incoming::Notification { method, .. }) if method == PROJECT_INIT_COMPLETE => {
                 signalled = true;
             }
             Some(message) => {
                 let text: &str = log_incoming(&message, log)?;
-                loaded = loaded.saturating_add(batch_projects(text));
+                // Whether it changed the state matters only to a progress view.
+                let _changed: bool = state.observe(text);
             }
             None => return Err(RoslynError::Client(LspError::Closed)),
         }
     }
-    Ok(started.elapsed())
+    Ok(Loaded {
+        took: started.elapsed(),
+        failed: state.failed(),
+    })
 }
 
 /// Write one server message to `log` the way the run log keeps it: a
@@ -100,16 +112,6 @@ pub async fn drain_log<W: std::io::Write>(
         }
     }
     Ok(())
-}
-
-/// The project count of a `Completed (re)load of N project(s)` log line,
-/// else 0. A progress view sums it the way [`wait_for_load`] does.
-#[must_use]
-pub fn batch_projects(text: &str) -> usize {
-    text.split_once(BATCH_MARK)
-        .and_then(|(_, rest): (&str, &str)| rest.split(' ').next())
-        .and_then(|n: &str| n.parse::<usize>().ok())
-        .unwrap_or(0)
 }
 
 /// Write each section a `workspace/configuration` request asked for.

@@ -171,9 +171,12 @@ impl LspClient {
     ) -> Result<R, LspError> {
         let id: i64 = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (tx, rx): (oneshot::Sender<Reply>, oneshot::Receiver<Reply>) = oneshot::channel();
-        if let Ok(mut map) = self.pending.lock() {
-            map.insert(id, tx);
-        }
+        // A poisoned map can never deliver the reply: fail now, not at the
+        // deadline.
+        self.pending
+            .lock()
+            .map_err(|_: std::sync::PoisonError<_>| LspError::Closed)?
+            .insert(id, tx);
         let message: Value =
             json!({ "jsonrpc": "2.0", "id": id, "method": method, "params": params });
         self.send(&message).await?;

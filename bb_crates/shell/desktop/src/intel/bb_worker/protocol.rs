@@ -3,7 +3,9 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use bb_intel::{ActionItem, CompletionEntry, Diagnostic, Edit, FileChange, HoverInfo, Location};
+use bb_intel::{
+    ActionItem, CompletionEntry, Diagnostic, DocVersion, Edit, FileChange, HoverInfo, Location,
+};
 use bb_text::LspPoint;
 
 /// Which question an answer belongs to; only the newest one per kind counts.
@@ -136,13 +138,18 @@ pub(crate) enum Event {
     Stopped,
     /// Projects loaded so far, of all in the solution.
     Progress { loaded: usize, total: usize },
-    /// Every project has loaded.
-    Ready { took: Duration },
+    /// Every project has loaded or failed to load (`failed`).
+    Ready {
+        took: Duration,
+        failed: Vec<PathBuf>,
+    },
     /// The server could not start or load; intel stays off.
     Failed(String),
-    /// The diagnostics of one open document.
+    /// The diagnostics of one open document at one version; they belong on
+    /// that version's text only.
     Diagnostics {
         path: PathBuf,
+        version: DocVersion,
         list: Vec<Diagnostic>,
     },
     /// The answer to the question with this ticket.

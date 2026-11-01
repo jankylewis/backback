@@ -37,7 +37,6 @@ Last update: 2026-11-01. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 
 | Branch | Content | Local gate |
 |---|---|---|
-| `bbeod-03-diagver` | Roslyn readiness: count loaded projects once, wait on readiness not a fixed time | 289 / 0 |
 | `bbeod-08-reap` | No child processes left after quit (Roslyn, test host, debugger) | 304 / 0 |
 
 Each needs an independent verify before its PR.

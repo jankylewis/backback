@@ -2,6 +2,7 @@
 
 pub(crate) mod bb_doc;
 pub(crate) mod results;
+pub(crate) mod store;
 pub(crate) mod unique;
 
 use std::path::{Path, PathBuf};

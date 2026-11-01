@@ -24,6 +24,12 @@ impl DocVersion {
         self.0.checked_add(1).map(Self)
     }
 
+    /// A version read from the wire; `None` below 1, which no document has.
+    #[must_use]
+    pub fn from_wire(raw: i32) -> Option<Self> {
+        (raw >= 1).then_some(Self(raw))
+    }
+
     /// The raw number, for the wire.
     #[must_use]
     pub const fn raw(self) -> i32 {

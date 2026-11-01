@@ -186,7 +186,7 @@ impl Render for ExplorerView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         intel::glue::flush(self);
         intel::view::note_frame(&mut self.intel);
-        let status: String = self.intel.status.label();
+        let status: String = self.intel.status_label();
         let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
         div()
             .size_full()
