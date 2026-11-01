@@ -2,13 +2,13 @@
 
 id: BB-CIP-001
 family: CIP
-status: OBSERVED
+status: FIXED
 date: 2026-11-01
 signature: roslyn-language-server not found; set BACKBACK_ROSLYN_LS
 source: `.github/workflows/bb_ci.yml` (no install step for either tool)
 observed: GitHub Actions run 41273164163 on `master` (PR #9 merge): 3 tests in
   `intel::bb_worker::tests` FAILED with the signature above
-links: fix=no lesson=no evidence=no toolgap=none
+links: fix=yes lesson=yes evidence=yes toolgap=BB-TG-004
 
 ## What it is
 

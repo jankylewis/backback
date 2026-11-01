@@ -7,3 +7,4 @@
 | BB-LSP-001 | OBSERVED | Wait on a condition, never a wall; a flake is a finding | `APP/LSP/BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` |
 | BB-PRF-001 | FIXED | Profile who holds the bytes before changing code | `SYS/PRF/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
 | BB-UIX-001 | FIXED | Nothing outside the file goes into the text; every x comes from the shaped line | `APP/UIX/BB_UIX_001_CURSOR_DRAWN_AS_A_TEXT_CHARACTER.md` |
+| BB-CIP-001 | FIXED | CI installs every external tool, pinned; `--no-fail-fast` | `SHIP/CIP/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |

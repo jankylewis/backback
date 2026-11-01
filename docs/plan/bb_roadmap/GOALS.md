@@ -28,8 +28,8 @@ Last update: 2026-11-01. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
   before building (scope law).
 - BBEOD07: the `.app` is not signed or notarised yet (`sign_release.sh` is
   ready, no certificate run); no Homebrew cask, no v1.0 tag or GitHub release.
-- CI on `master` is red since #8: the runner lacks roslyn-language-server and
-  netcoredbg, so three Roslyn worker tests fail. Local gate: 270 passed, 0 failed.
+- CI installs pinned Roslyn and netcoredbg (BB-CIP-001). It skips the 9
+  tests that need the private Apex CLI (BB-TG-004); the local gate runs them.
 - Test Explorer clicks did not respond in one real-app readback; not yet
   confirmed as a product bug.
 
@@ -44,7 +44,7 @@ Each needs an independent verify before its PR.
 
 ## Next, in order
 
-1. BBEOD12 (cursor), then CI green on `master`.
+1. BBEOD12 (cursor, done), then CI green on `master` (done).
 2. Install one app from `master` to `/Applications` (BB-BLD-001).
 3. Verify and merge the two branches above; BBEOD10.
 4. BBEOD13, BBEOD08 with BBEOD14, BBEOD11, BBEOD09.

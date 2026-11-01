@@ -5,7 +5,8 @@ Paths only. Never copy logs with secrets, personal paths or account values.
 | Id | Status | Artifact |
 |---|---|---|
 | BB-BLD-002 | FIXED | `docs/plan/readback/V1/BBEOD07/` |
-| BB-CIP-001 | OBSERVED | GitHub Actions run 41273164163 (failed tests log) |
+| BB-CIP-001 | FIXED | Runs 41273164163 (red), 41325098190 (Roslyn green, Apex CLI red) and the BBEOD07-CI2 PR run |
+| BB-CIP-002 | FIXED | Run 41323338161 (queued, cancelled) |
 | BB-PRF-001 | FIXED | `docs/plan/bench/BBEOD02/` |
 | BB-BUG-003 | FIXED | PR #9 description and its no-MCP screenshot |
 | BB-BUG-005 | FIXED | `docs/plan/readback/FIXES/BBEOD12/` (captures + pixel diff) |
