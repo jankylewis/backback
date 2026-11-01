@@ -7,8 +7,8 @@ use bb_dotnet::{ProjectPath, Sdk};
 use tokio::io::{AsyncBufReadExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdout};
 
-use super::tree::stop_tree;
-use super::{build, shadow, Call, Finished, TempDir, Workspace};
+use super::process::stop_tree;
+use super::{build, shadow, Call, Finished, StopFlag, TempDir, Workspace};
 use crate::bb_engine::{Deadlines, Selection, TestBackend};
 use crate::model::{Fqn, SpecList};
 use crate::parse::{parse_apex_list, parse_host_pid, ApexList, ApexSettings, CommandLine, HostPid};
@@ -21,6 +21,7 @@ pub struct ApexBackend {
     workspace: Workspace,
     sdk: Sdk,
     deadlines: Deadlines,
+    stop: Option<StopFlag>,
 }
 
 /// A debug run waiting for a debugger: the test host's process id. The
@@ -43,6 +44,7 @@ impl ApexBackend {
             workspace,
             sdk: Sdk::locate()?,
             deadlines: Deadlines::default(),
+            stop: None,
         })
     }
 
@@ -151,6 +153,12 @@ impl DebugHost {
 }
 
 impl TestBackend for ApexBackend {
+    fn with_stop(&self, stop: StopFlag) -> Self {
+        let mut backend: Self = self.clone();
+        backend.stop = Some(stop);
+        backend
+    }
+
     fn name(&self) -> &'static str {
         "apex"
     }
@@ -158,11 +166,13 @@ impl TestBackend for ApexBackend {
     async fn list(&self, project: &ProjectPath) -> Result<SpecList, TestkitError> {
         let folder: TempDir = TempDir::new()?;
         let safe_project: PathBuf = shadow::project(project.as_path(), &folder)?;
-        let done: Finished = self
+        let mut call: Call = self
             .base(&ProjectPath::from_path(safe_project.clone()))
-            .args(["--list", "--json", "--no-build"])
-            .discover(self.deadlines.list)
-            .await?;
+            .args(["--list", "--json", "--no-build"]);
+        if let Some(flag) = &self.stop {
+            call = call.stoppable(flag.clone());
+        }
+        let done: Finished = call.discover(self.deadlines.list).await?;
         let list: ApexList = parse_apex_list(&done.stdout)?;
         let original_assembly: PathBuf =
             shadow::original_assembly(project.as_path(), &safe_project, &list.assembly)?;
@@ -185,6 +195,7 @@ impl TestBackend for ApexBackend {
             &self.settings.configuration,
             self.workspace.root(),
             self.deadlines.build,
+            self.stop.as_ref(),
         )
         .await
     }
@@ -201,8 +212,10 @@ impl TestBackend for ApexBackend {
                 what: "filter by category (the Apex CLI selects by --specs or --topic)",
             });
         }
-        self.run_call(project, &selection.specs, trx)
-            .finish(self.deadlines.run)
-            .await
+        let mut call: Call = self.run_call(project, &selection.specs, trx);
+        if let Some(stop) = &self.stop {
+            call = call.stoppable(stop.clone());
+        }
+        call.finish(self.deadlines.run).await
     }
 }

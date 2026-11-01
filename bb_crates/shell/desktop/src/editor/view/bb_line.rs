@@ -5,6 +5,10 @@ use bb_syntax::{HighlightKind, HighlightSpan};
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, Context, IntoElement, Window};
 use std::time::Instant;
+#[path = "gutter.rs"]
+mod gutter;
+use gutter::gutter_cell;
+pub(super) use gutter::TestGutter;
 
 pub(super) struct Run {
     text: String,
@@ -20,6 +24,7 @@ pub(super) struct LineRow {
     pub(super) current: bool,
     /// The worst diagnostic on the line, for the gutter dot.
     pub(super) gutter: Option<Ink>,
+    pub(super) test: Option<TestGutter>,
     /// A popup anchored below the cursor.
     pub(super) overlay: Option<gpui::AnyElement>,
 }
@@ -101,6 +106,7 @@ pub(super) fn line_row(
         index,
         current,
         gutter,
+        test,
         overlay,
     }: LineRow = row;
     div()
@@ -132,28 +138,12 @@ pub(super) fn line_row(
                 mouse_move(index, view, event, window, cx);
             },
         ))
-        .child(gutter_cell(index, gutter, theme))
+        .child(gutter_cell(index, gutter, test, theme, cx))
         .children(
             runs.into_iter()
                 .map(move |run: Run| run_segment(run, current, theme)),
         )
         .children(overlay)
-}
-
-/// The line number and, when the line has a diagnostic, a dot in its ink.
-fn gutter_cell(index: usize, gutter: Option<Ink>, theme: Theme) -> gpui::Div {
-    div()
-        .w(px(50.0))
-        .flex()
-        .text_color(color(theme.text_dim))
-        .child(format!("{:>4}", index.saturating_add(1)))
-        .child(
-            div()
-                .w(px(10.0))
-                .when_some(gutter, |dot: gpui::Div, s: Ink| {
-                    dot.text_color(color(severity_ink(s, theme))).child("●")
-                }),
-        )
 }
 
 fn run_segment(run: Run, current: bool, theme: Theme) -> impl IntoElement {

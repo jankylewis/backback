@@ -222,10 +222,15 @@ pub(super) fn schedule_parse(
             view.update_in(
                 cx,
                 |view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>| {
-                    let outcome: Option<Result<(), bb_syntax::SyntaxError>> = view
-                        .tabs
-                        .tab_mut(&path)
-                        .map(|tab: &mut super::Tab| tab.live.finish_parse(parsed));
+                    let outcome: Option<Result<(), bb_syntax::SyntaxError>> =
+                        view.tabs.tab_mut(&path).map(|tab: &mut super::Tab| {
+                            let outcome: Result<(), bb_syntax::SyntaxError> =
+                                tab.live.finish_parse(parsed);
+                            if outcome.is_ok() {
+                                tab.refresh_test_methods();
+                            }
+                            outcome
+                        });
                     if let Some(Err(error)) = outcome {
                         view.report(&error);
                     }

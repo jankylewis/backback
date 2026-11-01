@@ -429,6 +429,7 @@ dependencies = [
  "bb-intel",
  "bb-lsp",
  "bb-syntax",
+ "bb-testkit",
  "bb-text",
  "bb-ui",
  "gpui",

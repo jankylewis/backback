@@ -6,9 +6,11 @@
 
 mod bb_highlight;
 mod live;
+mod test_marks;
 
 pub use bb_highlight::{HighlightKind, HighlightSpan};
 pub use live::{LiveTree, ParseJob, Parsed};
+pub use test_marks::{test_methods, TestMethod};
 pub use tree_sitter::Tree;
 use tree_sitter::{Language, Node, Parser, Query, TreeCursor};
 

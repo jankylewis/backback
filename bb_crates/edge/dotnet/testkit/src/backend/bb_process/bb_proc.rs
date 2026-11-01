@@ -8,8 +8,8 @@ use std::time::{Duration, Instant};
 use tokio::io::{AsyncRead, AsyncReadExt};
 use tokio::process::{Child, Command};
 use tokio::task::JoinHandle;
-use tokio::time::error::Elapsed;
 
+use super::StopFlag;
 use crate::TestkitError;
 
 /// Lines of error output kept in a [`TestkitError::Failed`].
@@ -26,6 +26,7 @@ pub struct Call {
     pub cwd: PathBuf,
     /// Extra environment variables.
     pub env: Vec<(String, String)>,
+    stop: Option<StopFlag>,
 }
 
 /// What a finished process left.
@@ -49,6 +50,7 @@ impl Call {
             args: Vec::new(),
             cwd: cwd.to_path_buf(),
             env: Vec::new(),
+            stop: None,
         }
     }
 
@@ -56,6 +58,12 @@ impl Call {
     #[must_use]
     pub fn args<I: IntoIterator<Item = S>, S: Into<OsString>>(mut self, args: I) -> Self {
         self.args.extend(args.into_iter().map(Into::into));
+        self
+    }
+
+    #[must_use]
+    pub fn stoppable(mut self, stop: StopFlag) -> Self {
+        self.stop = Some(stop);
         self
     }
 
@@ -101,17 +109,17 @@ impl Call {
             .map_err(|source: std::io::Error| self.spawn_error(source))?;
         let stdout: JoinHandle<Vec<u8>> = tokio::spawn(read_all(child.stdout.take()));
         let stderr: JoinHandle<Vec<u8>> = tokio::spawn(read_all(child.stderr.take()));
-        let Ok(waited): Result<std::io::Result<ExitStatus>, Elapsed> =
-            tokio::time::timeout(deadline, child.wait()).await
-        else {
-            super::tree::stop_tree(&mut child).await;
-            return Err(TestkitError::Timeout {
-                what: self.name(),
-                after: deadline,
-            });
+        let status: ExitStatus = tokio::select! {
+            waited = child.wait() => waited.map_err(|source: std::io::Error| self.spawn_error(source))?,
+            () = tokio::time::sleep(deadline) => {
+                super::tree::stop_tree(&mut child).await;
+                return Err(TestkitError::Timeout { what: self.name(), after: deadline });
+            }
+            () = wait_stop(self.stop.as_ref()) => {
+                super::tree::stop_tree(&mut child).await;
+                return Err(TestkitError::Cancelled);
+            }
         };
-        let status: ExitStatus =
-            waited.map_err(|source: std::io::Error| self.spawn_error(source))?;
         Ok(Finished {
             code: status.code(),
             stdout: String::from_utf8_lossy(&stdout.await.unwrap_or_default()).into_owned(),
@@ -171,6 +179,13 @@ impl Call {
     }
 }
 
+async fn wait_stop(stop: Option<&StopFlag>) {
+    match stop {
+        Some(flag) => flag.wait().await,
+        None => std::future::pending::<()>().await,
+    }
+}
+
 async fn read_all<R: AsyncRead + Unpin>(pipe: Option<R>) -> Vec<u8> {
     let mut bytes: Vec<u8> = Vec::new();
     if let Some(mut pipe) = pipe {
@@ -181,39 +196,5 @@ async fn read_all<R: AsyncRead + Unpin>(pipe: Option<R>) -> Vec<u8> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn a_timed_out_call_leaves_none_of_its_processes_behind() {
-        let pids: PathBuf =
-            std::env::temp_dir().join(format!("bb-proc-tree-{}.txt", std::process::id()));
-        let _fresh: std::io::Result<()> = std::fs::remove_file(&pids);
-        let script: String = format!(
-            "sleep 30 & echo $! >> {0}; sleep 30 & echo $! >> {0}; wait",
-            pids.display()
-        );
-        let call: Call = Call::new("sh", &std::env::temp_dir()).args(["-c", script.as_str()]);
-        let outcome: Result<Finished, TestkitError> = call.finish(Duration::from_millis(500)).await;
-        tokio::time::sleep(Duration::from_millis(300)).await;
-        let written: String = std::fs::read_to_string(&pids).unwrap();
-        let _gone: std::io::Result<()> = std::fs::remove_file(&pids);
-        let children: Vec<&str> = written.lines().collect();
-        let alive: Vec<&&str> = children
-            .iter()
-            .filter(|pid: &&&str| {
-                std::process::Command::new("kill")
-                    .args(["-0", pid])
-                    .status()
-                    .unwrap()
-                    .success()
-            })
-            .collect();
-        assert!(
-            matches!(outcome, Err(TestkitError::Timeout { .. })),
-            "{outcome:?}"
-        );
-        assert_eq!(children.len(), 2, "{written}");
-        assert!(alive.is_empty(), "children left running: {alive:?}");
-    }
-}
+#[path = "tests.rs"]
+mod tests;

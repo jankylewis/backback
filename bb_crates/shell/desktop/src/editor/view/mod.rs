@@ -5,10 +5,11 @@ use gpui::{div, prelude::*, px, uniform_list, Context, FocusHandle, IntoElement,
 use super::bb_tabs::Tab;
 mod bb_line;
 mod status;
+mod test_marks;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
-use bb_line::{line_row, styled_line, LineRow};
+use bb_line::{line_row, styled_line, LineRow, TestGutter};
 pub(crate) use status::status_bar;
 
 pub(crate) fn tab_bar(
@@ -160,6 +161,7 @@ fn editor_line(
             index,
             current: false,
             gutter: None,
+            test: None,
             overlay: None,
         };
         return line_row(row, Vec::new(), view.theme, cx);
@@ -180,6 +182,13 @@ fn editor_line(
         index,
         current,
         gutter: crate::intel::view::marks::worst(&marks),
+        test: tab
+            .test_methods
+            .iter()
+            .any(|method: &bb_syntax::TestMethod| method.line == index)
+            .then(|| TestGutter {
+                target: test_marks::target(view, tab, index),
+            }),
         overlay,
     };
     line_row(row, styled_line(tab, index, &marks), view.theme, cx)

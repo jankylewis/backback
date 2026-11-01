@@ -29,9 +29,28 @@ pub(crate) async fn run(
             pause(cx, 1_500).await;
         }
         ["state"] => state(view, cx),
+        ["tests"] => tests(view, cx, false),
+        ["tests", "expand"] => tests(view, cx, true),
         _ => return false,
     }
     true
+}
+
+fn tests(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, expand: bool) {
+    let _gone: gpui::Result<()> = view.update_in(
+        cx,
+        |v: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>| {
+            if expand {
+                let path: Option<std::path::PathBuf> =
+                    v.tests.model.projects().keys().next().cloned();
+                if let Some(path) = path {
+                    crate::tests_panel::toggle_project(v, path, window, cx);
+                }
+            } else {
+                crate::tests_panel::open(v, window, cx);
+            }
+        },
+    );
 }
 
 fn ready(view: &ExplorerView) -> bool {
@@ -154,5 +173,11 @@ fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext) {
             v.intel.problems().len(),
             v.status,
         );
+        let discovered: usize = v.tests.model.projects().values()
+            .map(|project: &crate::tests_panel::model::ProjectTests| project.specs.len()).sum();
+        let loading: usize = v.tests.model.projects().values()
+            .filter(|project: &&crate::tests_panel::model::ProjectTests| project.loading).count();
+        eprintln!("bb_tests_state projects={} discovered={discovered} loading={loading}",
+            v.tests.model.projects().len());
     });
 }

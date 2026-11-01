@@ -21,10 +21,11 @@ pub(super) async fn list(
 ) -> Result<SpecList, TestkitError> {
     let folder: TempDir = TempDir::new()?;
     let safe_assembly: PathBuf = shadow::assembly(&assembly, &folder)?;
-    let done: Finished = app(backend, &safe_assembly)
-        .args(["--list-tests"])
-        .discover(backend.deadlines.list)
-        .await?;
+    let mut call: Call = app(backend, &safe_assembly).args(["--list-tests"]);
+    if let Some(flag) = &backend.stop {
+        call = call.stoppable(flag.clone());
+    }
+    let done: Finished = call.discover(backend.deadlines.list).await?;
     Ok(SpecList {
         project: project_name(project),
         specs: parse_mtp_list(&done.stdout)?,
@@ -49,12 +50,15 @@ pub(super) async fn execute(
     } else {
         ("--report-trx", "--report-trx-filename")
     };
-    app(backend, assembly)
+    let call: Call = app(backend, assembly)
         .args(filters(selection))
         .args(["--results-directory".into(), folder.as_os_str().to_owned()])
-        .args([report.to_owned(), report_name.to_owned(), file])
-        .finish(backend.deadlines.run)
-        .await
+        .args([report.to_owned(), report_name.to_owned(), file]);
+    let call: Call = match &backend.stop {
+        Some(stop) => call.stoppable(stop.clone()),
+        None => call,
+    };
+    call.finish(backend.deadlines.run).await
 }
 
 /// `--filter-method` per spec (method level: arguments dropped) and

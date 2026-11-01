@@ -16,8 +16,8 @@ mod bb_engine;
 mod model;
 mod parse;
 
-pub use backend::{ApexBackend, DebugHost, DotnetBackend, Workspace};
-pub use bb_engine::{run, Deadlines, Selection, TestBackend};
+pub use backend::{ApexBackend, DebugHost, DotnetBackend, StopFlag, Workspace};
+pub use bb_engine::{run, run_with_stop, Deadlines, Selection, TestBackend};
 pub use model::{
     Category, Configuration, Fqn, FqnError, FqnParts, Leaf, Outcome, RunReport, SpecList,
     SpecResult, Verdict,
@@ -34,6 +34,9 @@ use std::time::Duration;
 /// Everything the engine can fail with.
 #[derive(Debug, thiserror::Error)]
 pub enum TestkitError {
+    /// The caller stopped the active process tree.
+    #[error("test run stopped")]
+    Cancelled,
     /// A process could not be started.
     #[error("cannot start {program}: {source}")]
     Spawn {

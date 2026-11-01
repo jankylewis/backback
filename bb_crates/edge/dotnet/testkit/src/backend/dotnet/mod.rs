@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use bb_dotnet::testing::TestPlatform;
 use bb_dotnet::{Capability, ProjectInfo, ProjectPath, Sdk};
 
-use super::{assembly_of, build, Finished, Workspace};
+use super::{assembly_of, build, Finished, StopFlag, Workspace};
 use crate::bb_engine::{Deadlines, Selection, TestBackend};
 use crate::model::{Configuration, SpecList};
 use crate::TestkitError;
@@ -26,6 +26,7 @@ pub struct DotnetBackend {
     pub(crate) settings: Option<PathBuf>,
     pub(crate) deadlines: Deadlines,
     pub(crate) build_first: bool,
+    pub(crate) stop: Option<StopFlag>,
 }
 
 impl DotnetBackend {
@@ -50,6 +51,7 @@ impl DotnetBackend {
             settings,
             deadlines: Deadlines::default(),
             build_first,
+            stop: None,
         })
     }
 
@@ -62,6 +64,11 @@ impl DotnetBackend {
 }
 
 impl TestBackend for DotnetBackend {
+    fn with_stop(&self, stop: StopFlag) -> Self {
+        let mut backend: Self = self.clone();
+        backend.stop = Some(stop);
+        backend
+    }
     fn name(&self) -> &'static str {
         match self.platform {
             TestPlatform::VsTest => "vstest",
@@ -70,8 +77,14 @@ impl TestBackend for DotnetBackend {
     }
 
     async fn list(&self, project: &ProjectPath) -> Result<SpecList, TestkitError> {
-        let assembly: PathBuf =
-            assembly_of(&self.sdk, project, &self.configuration, self.deadlines.list).await?;
+        let assembly: PathBuf = assembly_of(
+            &self.sdk,
+            project,
+            &self.configuration,
+            self.deadlines.list,
+            self.stop.as_ref(),
+        )
+        .await?;
         match self.platform {
             TestPlatform::VsTest => bb_vstest::list(self, project, assembly).await,
             TestPlatform::Mtp => mtp::list(self, project, assembly).await,
@@ -89,6 +102,7 @@ impl TestBackend for DotnetBackend {
             &self.configuration,
             self.workspace.root(),
             self.deadlines.build,
+            self.stop.as_ref(),
         )
         .await
     }
@@ -102,9 +116,14 @@ impl TestBackend for DotnetBackend {
         match self.platform {
             TestPlatform::VsTest => bb_vstest::execute(self, project, selection, trx).await,
             TestPlatform::Mtp => {
-                let assembly: PathBuf =
-                    assembly_of(&self.sdk, project, &self.configuration, self.deadlines.list)
-                        .await?;
+                let assembly: PathBuf = assembly_of(
+                    &self.sdk,
+                    project,
+                    &self.configuration,
+                    self.deadlines.list,
+                    self.stop.as_ref(),
+                )
+                .await?;
                 mtp::execute(self, &assembly, selection, trx).await
             }
         }

@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use bb_dotnet::ProjectPath;
 
-use crate::backend::{Finished, TempDir};
+use crate::backend::{Finished, StopFlag, TempDir};
 use crate::model::{Category, Fqn, Leaf, RunReport, SpecList, SpecResult};
 use crate::parse::parse_trx;
 use crate::TestkitError;
@@ -45,6 +45,9 @@ pub struct Selection {
 
 /// A way to list and run the tests of one project.
 pub trait TestBackend {
+    /// Copy this backend with a stop signal for its process calls.
+    #[must_use]
+    fn with_stop(&self, stop: StopFlag) -> Self;
     /// A short name for messages (`apex`, `vstest`, `mtp`).
     fn name(&self) -> &'static str;
 
@@ -103,7 +106,22 @@ pub async fn run<B: TestBackend + Sync>(
         leaves: leaves(&expected, results),
         exit_code: done.code,
         elapsed: done.elapsed,
+        stdout: done.stdout,
+        stderr: done.stderr,
     })
+}
+
+/// Run with a stop signal that kills the active process tree.
+///
+/// # Errors
+/// See [`run`], including [`TestkitError::Cancelled`].
+pub async fn run_with_stop<B: TestBackend + Sync>(
+    backend: &B,
+    project: &ProjectPath,
+    selection: &Selection,
+    stop: StopFlag,
+) -> Result<RunReport, TestkitError> {
+    run(&backend.with_stop(stop), project, selection).await
 }
 
 /// Each expected name takes the next unused result of that name, else it
@@ -180,6 +198,8 @@ mod tests {
             ],
             exit_code: Some(1),
             elapsed: Duration::ZERO,
+            stdout: String::new(),
+            stderr: String::new(),
         };
         assert_eq!(report.counts(), (1, 1, 2, 1));
     }

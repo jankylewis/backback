@@ -1,10 +1,17 @@
 # BBEOD02 progress
 
+- BBEOD04-B (backback_2, 2026-11-01): `bbeod-04-gui` from `a10a5f3`;
+  Test Explorer and native discovery fix. Scratch GUI readback: two specs,
+  one pass/one fail, failure source jump. Gate: fmt, Clippy, 230 tests, deny,
+  audit clean. Bench median 996.2 ms under load1 10.63; quiet comparison
+  open. Debug disabled; DAP attach follows BBEOD05 integration. Records:
+  `readback/BBEOD03/BBEOD04_B/`, `bench/TEST_DISCOVERY/bb_BBEOD04_B.md`.
+
 - BBEOD03-FIX (backback_2, 2026-11-01): claimed `backback_wt/bbeod-03-gui`;
   merged `origin/master` at `c07f7bf`. Discovery now uses temp shadow output;
   real child death yields Stopped within 1 s and restart answers completion.
   Gate: fmt, Clippy, 224 tests, deny, `bb audit` clean. Records:
-  `readback/BBEOD03/BBEOD03_FIX.md`, `bench/BBEOD03_FIX.md`. Quiet-host
+  `readback/BBEOD03/BBEOD03_FIX.md`, `bench/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet-host
   timing and the absent GUI test explorer path remain open.
 
 - BBEOD02-MEM (backback_1, 2026-11-01): 20 MB file RSS 1,008 -> 166 MB; the
