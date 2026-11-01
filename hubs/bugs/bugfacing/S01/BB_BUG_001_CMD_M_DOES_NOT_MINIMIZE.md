@@ -2,12 +2,12 @@
 
 id: BB-BUG-001
 family: UIX
-status: OPEN
+status: FIXED
 date: 2026-11-01
 signature: Cmd+M does nothing
 source: master 7b0f241: no `minimize` binding and no Window menu in `bb_crates/shell/desktop/src`
 observed: headmate report: Cmd+M hides other Mac apps; in backback only the yellow button works
-links: fix=no lesson=no evidence=no toolgap=none
+links: fix=yes lesson=no evidence=yes toolgap=none
 
 ## Steps
 

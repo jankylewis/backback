@@ -148,3 +148,30 @@ fn a_cursor_popup_is_anchored_at_the_caret_x(cx: &mut TestAppContext) {
         "{popup:?} vs {caret:?}"
     );
 }
+
+fn cursor(rig: &Rig, vcx: &mut VisualTestContext) -> usize {
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.tabs.active().unwrap().cursor().raw()
+    })
+}
+
+/// BB-BUG-007: Home, End and the Cmd+arrows reach the cursor through the
+/// editor's own key handling, as typed.
+#[gpui::test]
+fn home_end_and_cmd_arrows_move_the_cursor(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = open(cx);
+    let end: usize = LINE.chars().count();
+    put_cursor(&rig, vcx, 0, 14);
+    vcx.simulate_keystrokes("end");
+    assert_eq!(cursor(&rig, vcx), end);
+    vcx.simulate_keystrokes("home");
+    assert_eq!(cursor(&rig, vcx), 1, "first non-blank after the tab");
+    vcx.simulate_keystrokes("cmd-right");
+    assert_eq!(cursor(&rig, vcx), end);
+    vcx.simulate_keystrokes("cmd-left cmd-left");
+    assert_eq!(cursor(&rig, vcx), 0, "smart Home twice: column 0");
+    vcx.simulate_keystrokes("cmd-down");
+    assert_eq!(cursor(&rig, vcx), TEXT.chars().count());
+    vcx.simulate_keystrokes("cmd-up");
+    assert_eq!(cursor(&rig, vcx), 0);
+}

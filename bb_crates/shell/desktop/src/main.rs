@@ -9,7 +9,7 @@ mod icons;
 mod intel;
 #[path = "app/latency.rs"]
 mod latency;
-#[path = "app/bb_launch.rs"]
+#[path = "app/bb_launch/mod.rs"]
 mod launch;
 #[path = "bb_explorer/navigation.rs"]
 mod navigation;
@@ -188,7 +188,7 @@ impl Render for ExplorerView {
         intel::view::note_frame(&mut self.intel);
         let status: String = self.intel.status_label();
         let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
-        div()
+        launch::window_actions(div())
             .size_full()
             .flex()
             .bg(color(self.theme.bg))

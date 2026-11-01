@@ -14,3 +14,5 @@ Paths only. Never copy logs with secrets, personal paths or account values.
 
 Capture next time: the build time of the binary that was read back.
 | BB-LSP-003 | OPEN | `docs/plan/readback/FIXES/BBEOD03/STATE_LOG.txt` |
+| BB-BUG-001 | FIXED | `docs/plan/readback/FIXES/BBEOD10/WINDOW_ON_SCREEN.txt` |
+| BB-BUG-007 | FIXED | `docs/plan/readback/FIXES/BBEOD10/STATE_LOG.txt` |

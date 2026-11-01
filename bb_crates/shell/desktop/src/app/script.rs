@@ -211,8 +211,13 @@ fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext) {
             .and_then(|h: &crate::intel::model::popups::HoverPopup| h.text.lines().next())
             .unwrap_or_default()
             .to_owned();
+        let col: usize = tab.map_or(0, |t: &crate::editor::Tab| {
+            let line: usize = t.document.cursor_line();
+            let start: usize = t.document.line_start(line).map_or(0, bb_text::CharIdx::raw);
+            t.document.cursor().raw().saturating_sub(start).saturating_add(1)
+        });
         eprintln!(
-            "bb_state status={:?} tab={:?} line={} read_only={} completion={:?} hover={hover:?} refs={:?} rename={:?} actions={:?} problems={} message={:?}",
+            "bb_state status={:?} tab={:?} line={} col={col} read_only={} completion={:?} hover={hover:?} refs={:?} rename={:?} actions={:?} problems={} message={:?}",
             v.intel.status_label(),
             tab.map(|t: &crate::editor::Tab| t.path.display().to_string()),
             tab.map_or(0, |t: &crate::editor::Tab| t.document.cursor_line().saturating_add(1)),

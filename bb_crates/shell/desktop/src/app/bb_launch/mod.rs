@@ -9,6 +9,9 @@ use gpui::{
 };
 use std::{path::PathBuf, time::Instant};
 
+mod bb_window;
+pub(crate) use bb_window::on_view as window_actions;
+
 pub(crate) fn launch() {
     let start: Instant = Instant::now();
     let wanted: Start = crate::args::parse_args();
@@ -21,6 +24,7 @@ pub(crate) fn launch() {
     };
     gpui_platform::application().run(move |cx: &mut App| {
         bind_keys(cx);
+        bb_window::register(cx);
         cx.set_menus(menus());
         let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(1000.0), px(700.0)), cx);
         let result: gpui::Result<gpui::WindowHandle<ExplorerView>> = cx.open_window(
@@ -68,12 +72,17 @@ fn build_window(
 
 fn menus() -> Vec<Menu> {
     vec![
-        Menu::new("Backback").items([MenuItem::action("Quit Backback", Quit)]),
+        Menu::new("Backback").items(
+            bb_window::app_items()
+                .into_iter()
+                .chain([MenuItem::action("Quit Backback", Quit)]),
+        ),
         Menu::new("View").items([
             MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
             MenuItem::action("Follow macOS Appearance", FollowAppearance),
         ]),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
+        bb_window::window_menu(),
     ]
 }
 
@@ -148,55 +157,8 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("cmd-q", Quit, None),
         KeyBinding::new("cmd-shift-r", RestartServer, None),
     ]);
+    cx.bind_keys(bb_window::bindings());
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use bb_ui::bb_theme::ThemeKind;
-
-    #[test]
-    fn absent_preference_is_dark_and_system_light_is_live_source() {
-        assert_eq!(resolved_theme(None, None).kind, ThemeKind::Dark);
-        assert_eq!(
-            resolved_theme(None, Some(WindowAppearance::Light)).kind,
-            ThemeKind::Light
-        );
-        assert_eq!(
-            resolved_theme(None, Some(WindowAppearance::Dark)).kind,
-            ThemeKind::Dark
-        );
-        assert_eq!(
-            resolved_theme(Some(ThemeKind::Dark), Some(WindowAppearance::Light)).kind,
-            ThemeKind::Dark
-        );
-    }
-
-    #[test]
-    fn view_is_a_separate_mac_menu_after_application_menu() {
-        let configured: Vec<Menu> = menus();
-        assert_eq!(configured[0].name.as_ref(), "Backback");
-        assert!(matches!(
-            configured[0].items.first(),
-            Some(MenuItem::Action { name, .. }) if name.as_ref() == "Quit Backback"
-        ));
-        assert_eq!(configured[1].name.as_ref(), "View");
-        assert_eq!(configured[1].items.len(), 2);
-    }
-
-    /// Headmate ruling 2026-11-01: no menu opens an MCP or Harness panel.
-    #[test]
-    fn no_menu_item_opens_an_mcp_panel() {
-        for menu in menus() {
-            for item in &menu.items {
-                if let MenuItem::Action { name, .. } = item {
-                    let lower: String = name.to_lowercase();
-                    assert!(
-                        !lower.contains("mcp") && !lower.contains("harness"),
-                        "{name}"
-                    );
-                }
-            }
-        }
-    }
-}
+mod tests;

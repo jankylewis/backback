@@ -1,0 +1,12 @@
+bb_state status="No solution" tab=CapturedOutboundRequest.cs line=3 col=33 read_only=false completion=None hover="" refs=None rename=None actions=None problems=0 message=None
+bb_mark mid
+bb_state status="No solution" tab=CapturedOutboundRequest.cs line=3 col=46 read_only=false completion=None hover="" refs=None rename=None actions=None problems=0 message=None
+bb_mark end
+bb_state status="No solution" tab=CapturedOutboundRequest.cs line=3 col=1 read_only=false completion=None hover="" refs=None rename=None actions=None problems=0 message=None
+bb_mark home
+bb_state status="No solution" tab=CapturedOutboundRequest.cs line=3 col=1 read_only=false completion=None hover="" refs=None rename=None actions=None problems=0 message=None
+bb_mark col0
+bb_state status="No solution" tab=CapturedOutboundRequest.cs line=5 col=1 read_only=false completion=None hover="" refs=None rename=None actions=None problems=0 message=None
+bb_state status="No solution" tab=CapturedOutboundRequest.cs line=1 col=1 read_only=false completion=None hover="" refs=None rename=None actions=None problems=0 message=None
+bb_mark min
+bb_keys sent=6 ui_work_p50_us=1007 ui_work_p99_us=1381 ui_work_max_us=4592 parse_jobs=0 parse_mean_ms=0

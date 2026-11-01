@@ -2,6 +2,8 @@ use gpui::{Context, KeyDownEvent, Window};
 use std::time::Instant;
 
 use crate::ExplorerView;
+mod bb_keys;
+use bb_keys::{command_key, text_key};
 
 /// The char under window position `window_x` on `line` of the active tab.
 /// Measured on the same shaped line the row paints (BB-UIX-001).
@@ -138,57 +140,6 @@ fn refused(view: &ExplorerView, event: &KeyDownEvent) -> Option<String> {
         .active_tab()
         .is_some_and(|tab: &super::Tab| tab.read_only);
     (edits && read_only).then(|| String::from("read-only file: edit refused"))
-}
-
-fn command_key(
-    view: &mut ExplorerView,
-    key: &str,
-    shift: bool,
-) -> Option<Result<(), bb_text::DocumentError>> {
-    let result: Result<(), bb_text::DocumentError> = match key {
-        "s" => view
-            .tabs
-            .active_mut()
-            .map_or(Ok(()), bb_text::Document::save),
-        "w" => {
-            view.tabs.close_active();
-            Ok(())
-        }
-        "z" if shift => view
-            .tabs
-            .active_mut()
-            .map_or(Ok(()), bb_text::Document::redo),
-        "z" => view
-            .tabs
-            .active_mut()
-            .map_or(Ok(()), bb_text::Document::undo),
-        "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => {
-            if let Ok(number) = key.parse::<usize>() {
-                view.tabs.switch(number.saturating_sub(1));
-            }
-            Ok(())
-        }
-        _ => return None,
-    };
-    Some(result)
-}
-
-fn text_key(
-    document: &mut bb_text::Document,
-    event: &KeyDownEvent,
-    shift: bool,
-) -> Option<Result<(), bb_text::DocumentError>> {
-    let result: Result<(), bb_text::DocumentError> = match event.keystroke.key.as_str() {
-        "backspace" => document.backspace(),
-        "delete" => document.delete(),
-        "enter" | "return" => document.enter(),
-        "left" => document.left(shift),
-        "right" => document.right(shift),
-        "up" => document.vertical(false, shift),
-        "down" => document.vertical(true, shift),
-        _ => document.insert(event.keystroke.key_char.as_deref()?),
-    };
-    Some(result)
 }
 
 /// Start a background parse for the tab at `path` when edits wait and none
