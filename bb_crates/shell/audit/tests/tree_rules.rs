@@ -1,5 +1,5 @@
 //! Folder-level rules on throwaway trees: HD cap, agent files, file caps, and
-//! C# `var` found through the walk.
+//! C# `var` and vacuous test skips found through the walk.
 
 #[cfg(test)]
 mod common;
@@ -53,6 +53,23 @@ fn file_caps_and_csharp_var_are_reported_with_paths() {
     );
     assert!(
         rules.contains(&("App/App.cs".to_owned(), Rule::CsVar)),
+        "{rules:?}"
+    );
+}
+
+#[test]
+fn vacuous_tool_skip_is_reported_in_test_files_only() {
+    let s: Scratch = Scratch::new("skip");
+    let skip: &str = "fn t() {\n    if bb_dap::locate().is_err() {\n        return;\n    }\n}\n";
+    s.file("crate/tests/live.rs", skip);
+    s.file("crate/src/lib.rs", skip);
+    let rules: Vec<(String, Rule)> = s.rules();
+    assert!(
+        rules.contains(&("crate/tests/live.rs".to_owned(), Rule::VacuousSkip)),
+        "{rules:?}"
+    );
+    assert!(
+        !rules.contains(&("crate/src/lib.rs".to_owned(), Rule::VacuousSkip)),
         "{rules:?}"
     );
 }

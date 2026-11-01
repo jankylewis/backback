@@ -54,6 +54,8 @@ pub enum Rule {
     ClosureType,
     /// A C# `var` declaration.
     CsVar,
+    /// A test returns early, green, when its tool is missing.
+    VacuousSkip,
 }
 
 /// One broken rule at one place.

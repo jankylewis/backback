@@ -13,7 +13,8 @@ use bb_intel::{
 use bb_lsp::roslyn::Restore;
 use bb_text::{Buffer, CharIdx, LspPoint};
 
-use super::{bb_open, CommandError};
+use super::super::CommandError;
+use super::bb_open;
 use crate::cli::{Feature, Probe};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
@@ -48,7 +49,7 @@ pub(crate) enum Answer {
 
 pub(crate) async fn run(probe: &Probe) -> Result<(), CommandError> {
     let file: PathBuf = canonical(&probe.file)?;
-    let at: LspPoint = to_point(&super::read(&file)?, probe.at)?;
+    let at: LspPoint = to_point(&super::super::read(&file)?, probe.at)?;
     let solution: PathBuf = match &probe.solution {
         Some(given) => canonical(given)?,
         None => find_solution(&file)?,
