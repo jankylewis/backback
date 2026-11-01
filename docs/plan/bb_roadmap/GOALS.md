@@ -17,7 +17,7 @@ Last update: 2026-11-01. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD08 | Settings window, Menlo 13 on every surface, tool window side | Done | BBEOD08 PR; readback `docs/plan/readback/FIXES/S02/BBEOD14/` |
 | BBEOD09 | Explorer: git-ignored files and folders shown in pink | Done | BBEOD09 PR; readback `docs/plan/readback/FIXES/S01/BBEOD09/` |
 | BBEOD10 | Standard macOS keys: Cmd+M minimize, Cmd+H hide, Home/End | Done | BBEOD10 PR; readback `docs/plan/readback/FIXES/S01/BBEOD10/` |
-| BBEOD11 | Integrated terminal: minimal, native, fast, never laggy | Todo | Requested |
+| BBEOD11 | Integrated terminal: minimal, native, fast, never laggy | Done | BBEOD11 PR; readback `docs/plan/readback/FIXES/S02/BBEOD11/` |
 | BBEOD12 | **Critical:** cursor shifts the text; draw it as an overlay | Done | BBEOD12 PR; readback `docs/plan/readback/FIXES/S02/BBEOD12/` |
 | BBEOD13 | Core C# loop: Open Solution (Cmd+O), Build + error list, Go to File, Go to Symbol, Back/Forward | Done | PR 18 (Open, Go to File) + part 2 PR (Build, Go to Symbol, Back/Forward) |
 | BBEOD14 | Zoom the whole app: Cmd+= in, Cmd+- out, Cmd+0 reset | Done | BBEOD08 PR (same change) |

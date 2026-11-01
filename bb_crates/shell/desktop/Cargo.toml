@@ -18,6 +18,7 @@ tokio.workspace = true
 thiserror.workspace = true
 bb-ui.workspace = true
 bb-process.workspace = true
+alacritty_terminal.workspace = true
 gpui = { workspace = true, features = ["profiler"] }
 gpui_platform.workspace = true
 

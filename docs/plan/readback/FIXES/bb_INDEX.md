@@ -12,3 +12,4 @@ One folder per BBEOD after v1, each with its steps, captures and verdict.
 | `S02/BBEOD13` | Part 1: Finder launch, recent, Cmd+O, Go to File |
 | `S02/BBEOD14` | BBEOD08 + BBEOD14: Menlo 13 everywhere, zoom, Settings, tool window side |
 | `S03/BLD001` | Install from `master` to `/Applications`: build stamp, launch, Dock mascot (BB-BLD-001) |
+| `S02/BBEOD11` | The terminal: real shell, keys, 100k lines in 636 ms |
