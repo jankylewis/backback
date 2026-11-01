@@ -4,21 +4,20 @@ use std::time::Instant;
 use crate::ExplorerView;
 
 /// The char under window position `window_x` on `line` of the active tab.
-pub(crate) fn char_at(view: &ExplorerView, line: usize, window_x: f32) -> Option<bb_text::CharIdx> {
-    let left: f32 = view.panel_width + 56.0;
+/// Measured on the same shaped line the row paints (BB-UIX-001).
+pub(crate) fn char_at(
+    view: &ExplorerView,
+    line: usize,
+    window_x: f32,
+    window: &Window,
+) -> Option<bb_text::CharIdx> {
+    let left: f32 = view.panel_width + 6.0 + crate::editor::GUTTER_W;
     let document: &bb_text::Document = view.tabs.active()?;
     let start: usize = document.line_start(line)?.raw();
     let content: String = document.line(line).unwrap_or_default();
-    let visible: usize = content.trim_end_matches(['\r', '\n']).chars().count();
-    let column: usize = (0..visible)
-        .take_while(|index: &usize| {
-            let step: u16 = u16::try_from(index.saturating_add(1)).unwrap_or(u16::MAX);
-            7.8 * f32::from(step) <= (window_x - left).max(0.0)
-        })
-        .count();
-    Some(bb_text::CharIdx::new(
-        start.saturating_add(column.min(visible)),
-    ))
+    let visible: &str = content.trim_end_matches(['\r', '\n']);
+    let column: usize = crate::editor::Columns::shape(window, visible).column_at(window_x - left);
+    Some(bb_text::CharIdx::new(start.saturating_add(column)))
 }
 
 pub(crate) fn pointer_at(
@@ -29,7 +28,7 @@ pub(crate) fn pointer_at(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let target: Option<bb_text::CharIdx> = char_at(view, line, window_x);
+    let target: Option<bb_text::CharIdx> = char_at(view, line, window_x, window);
     view.intel.dismiss();
     if let (Some(document), Some(target)) = (view.tabs.active_mut(), target) {
         if let Err(error) = document.move_to(target, extend) {

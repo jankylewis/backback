@@ -46,6 +46,24 @@ async fn next(events: &mut UnboundedReceiver<Event>) -> Event {
         .expect("the server thread is alive")
 }
 
+/// The first diagnostics after an Open. A late project-load batch may still
+/// report `Progress` after Ready (BB-LSP-002); any other event fails, named.
+async fn first_diagnostics(events: &mut UnboundedReceiver<Event>) {
+    loop {
+        match next(events).await {
+            Event::Diagnostics { .. } => return,
+            Event::Progress { .. } => {}
+            other @ (Event::Stopped
+            | Event::Ready { .. }
+            | Event::Failed(_)
+            | Event::Answer { .. }
+            | Event::SyncFailed(_)) => {
+                panic!("expected diagnostics after Open, got {other:?}")
+            }
+        }
+    }
+}
+
 async fn answer(events: &mut UnboundedReceiver<Event>, wanted: Ticket) -> (Answer, Stages) {
     loop {
         if let Event::Answer {
@@ -126,7 +144,7 @@ async fn loaded(name: &str) -> Live {
         path: spec.clone(),
         text,
     }));
-    assert!(matches!(next(&mut events).await, Event::Diagnostics { .. }));
+    first_diagnostics(&mut events).await;
     Live {
         link,
         events,

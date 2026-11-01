@@ -19,7 +19,7 @@ entries. This merge widened the folder. I moved `TEST_DISCOVERY` under
 `bb_GENERAL` and updated its two links in `HISTORY.md`. The same self-audit
 then passed all three tests. This is the folder-fanout merge family; the
 repository self-audit is its independent guard. I grouped the harness
-screenshots and record under `readback/BBEOD06/HARNESS/` so this new record
+screenshots and record under `readback/V1/BBEOD06/HARNESS/` so this new record
 also stays within the five-entry limit.
 
 ## Gates

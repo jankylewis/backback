@@ -2,14 +2,14 @@
 
 id: BB-BUG-005
 family: UIX
-status: OBSERVED
+status: FIXED
 date: 2026-11-01
 signature: text after the cursor shifts right
 source: `bb_crates/shell/desktop/src/editor/view/bb_line.rs:51` and `:68`
 observed: headmate screenshot: `CapturedOut│boundRequest(`, the line wider by
   one column at the cursor
 cause: BB-UIX-001
-links: fix=no lesson=no evidence=no toolgap=none
+links: fix=yes lesson=yes evidence=yes toolgap=none
 
 ## Steps
 

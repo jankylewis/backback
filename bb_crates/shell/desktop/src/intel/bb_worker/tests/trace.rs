@@ -6,7 +6,7 @@ use std::time::SystemTime;
 
 use tokio::sync::mpsc::UnboundedReceiver;
 
-use super::{harness, next, start, wait_ready};
+use super::{first_diagnostics, harness, start, wait_ready};
 use crate::intel::bb_worker::protocol::{Event, Request};
 use crate::intel::bb_worker::Link;
 
@@ -35,6 +35,6 @@ async fn gui_solution_open_and_document_sync_leave_no_trace() {
     let path: PathBuf = root.join("_NUnitApex/GreeterSpec.cs");
     let text: String = std::fs::read_to_string(&path).unwrap();
     assert!(link.send(Request::Open { path, text }));
-    assert!(matches!(next(&mut events).await, Event::Diagnostics { .. }));
+    first_diagnostics(&mut events).await;
     assert_eq!(snapshot(&root), before);
 }

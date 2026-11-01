@@ -1,4 +1,4 @@
-mod bb_rig;
+pub(crate) mod bb_rig;
 mod completion;
 mod navigation;
 mod rename;

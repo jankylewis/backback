@@ -9,15 +9,15 @@
   `bbeod-07-release`. Final gate: 301 passed in 46 suites, 0 failed,
   0 ignored; format, all-feature Clippy, deny, audit, path guard passed.
   Bundle opened a visible window and quit with 0 leftover processes.
-  Icon corrections and conflict table: `readback/BBEOD07/MERGE.md`.
+  Icon corrections and conflict table: `readback/V1/BBEOD07/MERGE.md`.
 
 - BBEOD06-MERGE (`backback_2`): merged MCP panel branch `bbeod-06-gui`
   with master debugger work. Stock full gate: 301 passed, 0 failed,
   0 ignored in 46 suites. MCP panel and Test Explorer GPUI tests passed;
-  stock debug fixture stopped at line 14. `readback/BBEOD06/MERGE.md`.
+  stock debug fixture stopped at line 14. `readback/V1/BBEOD06/MERGE.md`.
 - BBEOD06-FIX2 (`backback_1`, 2026-11-01): B1 orphan group on
   signal/drop/quit, B2 Stop cancels a hung Start. Lessons:
-  `readback/BBEOD06/FIX/bb_FIX.md`.
+  `readback/V1/BBEOD06/FIX/bb_FIX.md`.
 - BBEOD06-FIX (`backback_1`): B3-B8 + F1 fixed test-first on `9d7ea08`.
 - BBEOD06-B (`backback_2`): MCP harness panel + engine. Bench:
   `bench/MCP/BBEOD06_GUI.md`, `bench/MCP/bb_BBEOD06_MCP.md`.
@@ -29,7 +29,7 @@
 - Stock and patched gates: 267 passed, 0 failed, 0 ignored each;
   41 suites each. Format, all-feature Clippy, deny, audit, path guard passed.
 - Served readbacks: patched Set Next, stock `bb debug`, Test Explorer GPUI.
-  Evidence and conflict table: `readback/BBEOD05/MERGE.md`.
+  Evidence and conflict table: `readback/V1/BBEOD05/MERGE.md`.
 - Source research found no `runInTerminal` reverse request. No push.
 
 ## BBEOD05-EXITCODE (`backback_1`)
@@ -40,7 +40,7 @@
   capability. Stock is `Unverified`.
 - Before merge: stock and patched each passed 159 tests; no adapter caused
   13 adapter tests to fail with `NotFound`.
-- Readback: `readback/BBEOD05/EXITCODE.md`.
+- Readback: `readback/V1/BBEOD05/EXITCODE.md`.
 
 ## BBEOD05-FIX (`backback_1`)
 
@@ -48,7 +48,7 @@
   B4 no vacuous skip; typed condition error.
 - Before merge: stock and patched each passed 153 tests. No adapter caused
   12 adapter tests to fail with a clear message.
-- Records: `readback/BBEOD05/FIX.md`, `bench/BBEOD05/FIX.md`,
+- Records: `readback/V1/BBEOD05/FIX.md`, `bench/BBEOD05/FIX.md`,
   `docs/rnd/NETCOREDBG_EXIT_CODE.md`.
 
 ## BBEOD05 debugger and Set Next (`backback_2`)
@@ -63,7 +63,7 @@
 - Debugger readback stopped GreeterSpec, showed locals, stepped, and finished
   both tests. Probe CLI stopped at a console fixture and showed stack and locals.
 - Five-pair A/B benchmark was noisy, with no evidenced regression.
-- Records: `readback/BBEOD05/`, `bench/BBEOD05/`.
+- Records: `readback/V1/BBEOD05/`, `bench/BBEOD05/`.
 
 ## Earlier work
 
@@ -93,5 +93,5 @@
   gate passed format, all-feature Clippy, 267 tests in 41 suites, deny,
   audit, and the tracked absolute-path guard.
 - Five-run benchmark at load 9.41 is noisy. No performance verdict.
-- Records: `readback/BBEOD07/bb_BBEOD07_FIX.md`,
+- Records: `readback/V1/BBEOD07/bb_BBEOD07_FIX.md`,
   `bench/bb_GENERAL/BBEOD07_FIX.md`. No push.

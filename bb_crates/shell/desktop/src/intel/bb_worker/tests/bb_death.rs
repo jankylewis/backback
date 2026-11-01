@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 
 use tokio::sync::mpsc::UnboundedReceiver;
 
-use super::{answer, ask, loaded, next, start, wait_ready, Live, CLASS_USE};
+use super::{answer, ask, first_diagnostics, loaded, next, start, wait_ready, Live, CLASS_USE};
 use crate::intel::bb_worker::protocol::{Answer, Ask, Event, Request, Ticket};
 use crate::intel::bb_worker::Link;
 
@@ -33,7 +33,7 @@ async fn a_dead_server_stops_within_one_second_and_restart_answers_again() {
         path: live.spec.clone(),
         text,
     }));
-    assert!(matches!(next(&mut events).await, Event::Diagnostics { .. }));
+    first_diagnostics(&mut events).await;
     let ticket: Ticket = ask(&link, &live.spec, 1, Ask::Completion(CLASS_USE));
     assert!(matches!(
         answer(&mut events, ticket).await.0,

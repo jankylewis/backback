@@ -6,7 +6,7 @@ mod answers;
 mod asks;
 pub(crate) mod bb_keys;
 #[cfg(test)]
-mod window_tests;
+pub(crate) mod window_tests;
 
 use std::path::{Path, PathBuf};
 

@@ -10,6 +10,7 @@ use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
+pub(crate) use bb_line::{Columns, GUTTER_W};
 pub(crate) use status::status_bar;
 
 pub(crate) fn tab_bar(
@@ -115,7 +116,7 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
                      row_cx: &mut Context<ExplorerView>| {
                         follow_view(view, &range, window, row_cx);
                         range
-                            .map(|index: usize| editor_line(view, index, row_cx))
+                            .map(|index: usize| editor_line(view, index, window, row_cx))
                             .collect::<Vec<_>>()
                     },
                 ),
@@ -154,6 +155,7 @@ fn follow_view(
 fn editor_line(
     view: &ExplorerView,
     index: usize,
+    window: &Window,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
     let Some(tab): Option<&Tab> = view.tabs.active_tab() else {
@@ -163,21 +165,15 @@ fn editor_line(
             gutter: None,
             test: None,
             overlay: None,
+            caret: None,
         };
-        return line_row(row, Vec::new(), view.theme, cx);
+        return line_row(row, &[], view.theme, cx);
     };
     let current: bool = tab.document.cursor_line() == index;
     let marks: Vec<Mark> = line_marks(&tab.document, view.intel.diagnostics_of(&tab.path), index);
-    let overlay: Option<gpui::AnyElement> = current
-        .then(|| {
-            let start: usize = tab
-                .document
-                .line_start(index)
-                .map_or(0, bb_text::CharIdx::raw);
-            let column: usize = tab.document.cursor().raw().saturating_sub(start);
-            crate::intel::view::bb_popups::at_cursor(&view.intel, column, view.theme)
-        })
-        .flatten();
+    let caret: Option<f32> = current.then(|| caret_x(tab, index, window));
+    let overlay: Option<gpui::AnyElement> = caret
+        .and_then(|x: f32| crate::intel::view::bb_popups::at_cursor(&view.intel, x, view.theme));
     let row: LineRow = LineRow {
         index,
         current,
@@ -190,8 +186,20 @@ fn editor_line(
                 target: test_marks::target(view, tab, index),
             }),
         overlay,
+        caret,
     };
-    line_row(row, styled_line(tab, index, &marks), view.theme, cx)
+    line_row(row, &styled_line(tab, index, &marks), view.theme, cx)
+}
+
+/// The cursor's x on its line, measured on the shaped line the row paints.
+fn caret_x(tab: &Tab, index: usize, window: &Window) -> f32 {
+    let start: usize = tab
+        .document
+        .line_start(index)
+        .map_or(0, bb_text::CharIdx::raw);
+    let column: usize = tab.document.cursor().raw().saturating_sub(start);
+    let text: String = tab.document.line(index).unwrap_or_default();
+    bb_line::Columns::shape(window, text.trim_end_matches(['\r', '\n'])).x_of(column)
 }
 
 #[cfg(test)]

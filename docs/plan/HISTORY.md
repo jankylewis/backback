@@ -6,13 +6,13 @@
 - BBEOD04-B (backback_2, 2026-11-01): `bbeod-04-gui` from `a10a5f3`.
   Test Explorer GUI readback: two specs, one pass/fail, failure jump.
   Prior gate: 230 tests; bench 996.2 ms at load1 10.63, quiet check open.
-  Debug awaits BBEOD05. Records: `readback/BBEOD03/BBEOD04_B/`,
+  Debug awaits BBEOD05. Records: `readback/V1/BBEOD03/BBEOD04_B/`,
   `bench/bb_GENERAL/TEST_DISCOVERY/bb_BBEOD04_B.md`.
 - BBEOD03-FIX2 (backback_1, 2026-11-01): TargetPath stub, MbTx 11/11,
-  0 writes, diagnostics clear. `readback/BBEOD03/BBEOD03_FIX/BBEOD03_FIX2.md`.
+  0 writes, diagnostics clear. `readback/V1/BBEOD03/BBEOD03_FIX/BBEOD03_FIX2.md`.
 - BBEOD03-FIX (backback_2, 2026-11-01): merge `c07f7bf`, temp discovery;
   child death gives Stopped within 1 s; restart works. Gate: 224 tests,
-  fmt, Clippy, deny, audit. `readback/BBEOD03/BBEOD03_FIX/bb_BBEOD03_FIX.md`,
+  fmt, Clippy, deny, audit. `readback/V1/BBEOD03/BBEOD03_FIX/bb_BBEOD03_FIX.md`,
   `bench/bb_GENERAL/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet timing remains open.
 
 - BBEOD02-MEM (backback_1, 2026-11-01): 20 MB file RSS 1,008 -> 166 MB; the
@@ -77,7 +77,7 @@
   project); completion `null` as the first request; references repeated the
   declaration; an edit inside a CRLF pair drifted the server text; a
   timed-out request left its waiter behind.
-- Readback: 16 probes on MbTx and Apex, record `readback/BBEOD03/bb_BBEOD03_A.md`.
+- Readback: 16 probes on MbTx and Apex, record `readback/V1/BBEOD03/bb_BBEOD03_A.md`.
 - Open: references ~500 ms server floor; session drops log lines after load.
 
 ## BBEOD04-A (backback_1, same branch and worktree)
@@ -89,7 +89,7 @@
 - Test engine `edge/dotnet/testkit` (`bb-testkit`): Apex CLI + VSTest + MTP
   backends, TRX/list/settings readers, `bb test list|run`; e2e green.
 - MbTx list readback done on a filtered scratch copy (MbTx: 0 writes).
-- Gate 140 passed / 0 failed, deny ok. Record `readback/BBEOD03/BBEOD04_A.md`.
+- Gate 140 passed / 0 failed, deny ok. Record `readback/V1/BBEOD03/BBEOD04_A.md`.
 
 ## BBEOD03-B (backback_1, branch `bbeod-03-gui`, worktree `backback_wt/bbeod-03-gui`)
 
@@ -97,4 +97,4 @@
 - `370ac90`: GUI code intelligence (`desktop/src/intel/`: server thread,
   model, glue, view); bb_text char log, `replace_many`, write lock.
 - Live readback (harness, MbTx, Apex `--no-write`, 0 writes) found 4 issues,
-  each fixed failing-first. Record `readback/BBEOD03/BBEOD03_B/`.
+  each fixed failing-first. Record `readback/V1/BBEOD03/BBEOD03_B/`.
