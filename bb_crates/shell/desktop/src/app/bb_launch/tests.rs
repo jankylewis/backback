@@ -19,15 +19,16 @@ fn absent_preference_is_dark_and_system_light_is_live_source() {
 }
 
 #[test]
-fn view_is_a_separate_mac_menu_after_application_menu() {
+fn menus_go_app_then_file_then_view_as_on_every_mac() {
     let configured: Vec<Menu> = menus();
     assert_eq!(configured[0].name.as_ref(), "Backback");
     assert!(matches!(
         configured[0].items.first(),
         Some(MenuItem::Action { name, .. }) if name.as_ref() == "Hide Backback"
     ));
-    assert_eq!(configured[1].name.as_ref(), "View");
-    assert_eq!(configured[1].items.len(), 2);
+    assert_eq!(configured[1].name.as_ref(), "File");
+    assert_eq!(configured[2].name.as_ref(), "View");
+    assert_eq!(configured[2].items.len(), 2);
 }
 
 /// Headmate ruling 2026-11-01: no menu opens an MCP or Harness panel.
@@ -84,4 +85,28 @@ fn the_app_menu_can_hide_and_a_window_menu_minimizes_and_zooms() {
         .find(|menu: &&Menu| menu.name.as_ref() == "Window")
         .expect("a Window menu");
     assert_eq!(names(window), ["Minimize", "Zoom"]);
+}
+
+/// BBEOD13: File > Open... and Cmd+O, as every Mac app has them.
+#[test]
+fn cmd_o_and_the_file_menu_open_a_workspace() {
+    let typed: gpui::Keystroke = gpui::Keystroke::parse("cmd-o").unwrap();
+    let binding: &KeyBinding = &open::bindings()[0];
+    assert_eq!(
+        binding.match_keystrokes(std::slice::from_ref(&typed)),
+        Some(false)
+    );
+    assert!(binding.action().partial_eq(&open::OpenWorkspace));
+    let go: &KeyBinding = &open::bindings()[1];
+    let typed_go: gpui::Keystroke = gpui::Keystroke::parse("cmd-shift-o").unwrap();
+    assert_eq!(
+        go.match_keystrokes(std::slice::from_ref(&typed_go)),
+        Some(false)
+    );
+    assert!(go.action().partial_eq(&crate::quick_open::GoToFile));
+    let file: Menu = menus()
+        .into_iter()
+        .find(|menu: &Menu| menu.name.as_ref() == "File")
+        .expect("a File menu");
+    assert_eq!(names(&file), ["Open...", "Go to File..."]);
 }
