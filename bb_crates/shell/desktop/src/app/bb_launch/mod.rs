@@ -174,6 +174,7 @@ pub(crate) fn fresh_view(
         pending_test_jump: None,
         quick_open: None,
         quick_focus: cx.focus_handle(),
+        terminal: crate::terminal::Terminal::new(cx.focus_handle()),
     }
 }
 
@@ -199,6 +200,7 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("cmd-q", Quit, None),
         KeyBinding::new("cmd-shift-r", RestartServer, None),
         KeyBinding::new("cmd-shift-b", crate::build::BuildSolution, None),
+        KeyBinding::new("ctrl-`", crate::terminal::ToggleTerminal, None),
     ]);
     cx.bind_keys(bb_window::bindings());
     cx.bind_keys(open::bindings());

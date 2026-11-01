@@ -23,6 +23,8 @@ mod quick_open;
 mod script;
 #[path = "bb_explorer/panels/settings/mod.rs"]
 mod settings;
+#[path = "bb_explorer/panels/terminal/mod.rs"]
+mod terminal;
 #[path = "bb_explorer/panels/tests_panel/mod.rs"]
 mod tests_panel;
 #[path = "app/theme.rs"]
@@ -67,9 +69,9 @@ struct ExplorerView {
     editor_scroll: UniformListScrollHandle,
     tests: tests_panel::TestsState,
     pending_test_jump: Option<(PathBuf, usize)>,
-    /// The open Go to File box, and its focus.
     quick_open: Option<quick_open::QuickOpen>,
     quick_focus: FocusHandle,
+    terminal: terminal::Terminal,
 }
 impl ExplorerView {
     fn editor_key_down(
@@ -192,11 +194,12 @@ impl ExplorerView {
 }
 
 impl Render for ExplorerView {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         intel::glue::flush(self);
         intel::view::note_frame(&mut self.intel);
         let status: String = self.intel.status_label();
         let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
+        let shell: Option<gpui::AnyElement> = terminal::panel(self, window, cx);
         launch::window_actions(settings::root(cx))
             .size_full()
             .flex()
@@ -211,6 +214,7 @@ impl Render for ExplorerView {
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
             .on_action(cx.listener(ExplorerView::restart_server))
+            .on_action(cx.listener(terminal::on_toggle))
             .on_action(cx.listener(quick_open::on_go_to_file))
             .child(match self.tests.side {
                 tests_panel::Side::Files => panel::explorer_panel(self, cx).into_any_element(),
@@ -228,6 +232,7 @@ impl Render for ExplorerView {
                     .child(editor::tab_bar(&self.tabs, self.theme, cx))
                     .child(editor::editor_body(self, cx))
                     .children(panel)
+                    .children(shell)
                     .child(editor::status_bar(
                         self.status.as_deref(),
                         &status,
