@@ -16,6 +16,8 @@ Fleet: `backback` — matemaster `backback_mm`, mates `backback_1` (cca),
   `mm/`, `swqc/`. Readback on those solutions is READ-ONLY.
 - Claim before writing a shared tree: `agentfarm claim <label> <path>`.
 - One local browser runner at a time; at most 2 test workers per seat.
+- Never write Claude/Codex auto-memory; handoff state goes to
+  `docs/plan/PROGRESS.md` or the external ctx hub.
 
 ## Git (Rule 63 grant for this repo only)
 
@@ -54,3 +56,4 @@ cargo test --workspace && cargo deny check`
 
 Post READY with: branch, commits, gate output counts, readback and bench
 deltas. Write state to `docs/plan/PROGRESS.md` before any long run.
+Write ctx summaries to the fleet ctx hub outside this repo (path given in your brief or env BACKBACK_CTX_HUB), never inside the repo.

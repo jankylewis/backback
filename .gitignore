@@ -4,6 +4,7 @@
 .DS_Store
 /.idea
 /.vscode
+/rawctxhub/
 # never commit env files or auth material
 .env
 .env.*

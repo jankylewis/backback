@@ -70,6 +70,16 @@ pub struct Theme {
     pub comment: Rgb,
     /// Types.
     pub ty: Rgb,
+    /// C# file icon.
+    pub icon_csharp: Rgb,
+    /// Markdown file icon.
+    pub icon_markdown: Rgb,
+    /// Folder icon.
+    pub icon_folder: Rgb,
+    /// Project and solution icons.
+    pub icon_project: Rgb,
+    /// Generic file icon.
+    pub icon_file: Rgb,
 }
 
 /// The default theme.
@@ -90,6 +100,11 @@ pub const DARK: Theme = Theme {
     string: Rgb::new(0xf6, 0xc1, 0x77),
     comment: Rgb::new(0x6e, 0x6a, 0x86),
     ty: Rgb::new(0xc4, 0xa7, 0xe7),
+    icon_csharp: Rgb::new(0x56, 0x9c, 0xd6),
+    icon_markdown: Rgb::new(0x9f, 0xb4, 0xc7),
+    icon_folder: Rgb::new(0xb7, 0xb3, 0xc9),
+    icon_project: Rgb::new(0xc4, 0xa7, 0xe7),
+    icon_file: Rgb::new(0x90, 0x8c, 0xaa),
 };
 
 /// The light theme.
@@ -110,6 +125,11 @@ pub const LIGHT: Theme = Theme {
     string: Rgb::new(0xea, 0x9d, 0x34),
     comment: Rgb::new(0x98, 0x93, 0xa5),
     ty: Rgb::new(0x90, 0x7a, 0xa9),
+    icon_csharp: Rgb::new(0x28, 0x69, 0x83),
+    icon_markdown: Rgb::new(0x6c, 0x84, 0x9c),
+    icon_folder: Rgb::new(0x79, 0x75, 0x93),
+    icon_project: Rgb::new(0x90, 0x7a, 0xa9),
+    icon_file: Rgb::new(0x79, 0x75, 0x93),
 };
 
 impl Theme {

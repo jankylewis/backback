@@ -1,9 +1,12 @@
 //! Command implementations. Each prints plain lines so the output can be
 //! pasted into docs as evidence.
 
-mod bb_open;
+mod bb_intel;
 mod bench;
-mod scan;
+mod debug;
+mod dotnet;
+
+pub(crate) use dotnet::scan;
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -49,6 +52,15 @@ pub enum CommandError {
     /// `bb bench` problem.
     #[error(transparent)]
     Bench(#[from] bench::BenchError),
+    /// Debugger problem.
+    #[error(transparent)]
+    Debug(#[from] debug::DebugError),
+    /// `bb probe` problem.
+    #[error(transparent)]
+    Probe(#[from] bb_intel::probe::ProbeError),
+    /// `bb test` problem.
+    #[error(transparent)]
+    Test(#[from] dotnet::TestError),
     /// `bb doctor` found a required tool missing or broken (already printed).
     #[error("required tools not usable: {}", .0.join(", "))]
     Doctor(Vec<&'static str>),
@@ -74,10 +86,19 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
     match command {
         Command::Doctor => doctor().await,
         Command::Scan { solution } => scan::run(&solution),
-        Command::Open { solution, restore } => bb_open::run(&solution, restore).await,
+        Command::Open { solution, restore } => bb_intel::bb_open::run(&solution, restore).await,
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
         Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
+        Command::Debug {
+            target,
+            source,
+            line,
+        } => debug::run(&target, &source, line)
+            .await
+            .map_err(CommandError::from),
+        Command::Probe(probe) => bb_intel::probe::run(&probe).await,
+        Command::Test(args) => dotnet::test(&args).await,
     }
 }
 

@@ -58,7 +58,7 @@ backback/
       ui/               bb-ui       theme tokens (dark default)
       audit/            bb-audit    convention audit; `cargo test` runs it on the repo
   docs/                 design, plan, R&D
-  fixtures/_Harness/    small C# solution the e2e tests run `bb` on
+  bb_crates/shell/desktop/fixtures/_Harness/    small C# solution for readback
 ```
 
 Conventions (enforced by `bb-audit`, rules in [AGENTS.md](AGENTS.md)): at most
@@ -75,7 +75,7 @@ cargo fmt --check && cargo clippy --all-targets -- -D warnings \
   && cargo test --workspace && cargo deny check
 
 cargo run -p bb -- doctor
-cargo run -p bb -- scan ../fixtures/_Harness/Harness.slnx
+cargo run -p bb -- scan shell/desktop/fixtures/_Harness/Harness.slnx
 cargo run -p bb -- open path/to/Solution.slnx
 cargo run -p bb -- outline path/to/File.cs
 cargo run -p bb -- audit ..

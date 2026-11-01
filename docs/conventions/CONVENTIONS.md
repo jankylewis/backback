@@ -19,8 +19,15 @@
 
 - "Explicit types: every Rust `let` and closure parameter is typed; C# never
   uses `var`. No `unwrap`/`expect`/`panic`/`as` casts/`[i]` outside tests."
-- `fixtures/_Harness/.editorconfig` sets all three C# `csharp_style_var_*`
+- `bb_crates/shell/desktop/fixtures/_Harness/.editorconfig` sets all three C# `csharp_style_var_*`
   rules to `false:error`, disables IDE0007, and sets IDE0008 to `error`.
+
+## No vacuous skip
+
+- A test whose tool is missing (netcoredbg, dotnet, Roslyn) fails with a
+  clear message; it never returns early and green. `bb audit` rule
+  `VacuousSkip` flags a bare `return` or `return Ok(())` under a tool probe
+  (`locate(`, `which(`, `.exists()`, `Command::new(` ...) in test code.
 
 ## Gate
 
