@@ -1,10 +1,12 @@
 //! One child process with a deadline: the only way the engine runs tools.
 
 use std::ffi::OsString;
+use std::num::NonZeroU32;
 use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Stdio};
 use std::time::{Duration, Instant};
 
+use bb_process::OwnedGroup;
 use tokio::io::{AsyncRead, AsyncReadExt};
 use tokio::process::{Child, Command};
 use tokio::task::JoinHandle;
@@ -74,6 +76,7 @@ impl Call {
             .current_dir(&self.cwd)
             .envs(self.env.iter().map(|(k, v): &(String, String)| (k, v)))
             .stdin(Stdio::null())
+            .process_group(0)
             .kill_on_drop(true);
         cmd
     }
@@ -107,19 +110,24 @@ impl Call {
             .stderr(Stdio::piped())
             .spawn()
             .map_err(|source: std::io::Error| self.spawn_error(source))?;
+        let mut group: Option<OwnedGroup> = child
+            .id()
+            .and_then(NonZeroU32::new)
+            .map(OwnedGroup::register);
         let stdout: JoinHandle<Vec<u8>> = tokio::spawn(read_all(child.stdout.take()));
         let stderr: JoinHandle<Vec<u8>> = tokio::spawn(read_all(child.stderr.take()));
         let status: ExitStatus = tokio::select! {
             waited = child.wait() => waited.map_err(|source: std::io::Error| self.spawn_error(source))?,
             () = tokio::time::sleep(deadline) => {
-                super::tree::stop_tree(&mut child).await;
+                drop(group.take());
                 return Err(TestkitError::Timeout { what: self.name(), after: deadline });
             }
             () = wait_stop(self.stop.as_ref()) => {
-                super::tree::stop_tree(&mut child).await;
+                drop(group.take());
                 return Err(TestkitError::Cancelled);
             }
         };
+        drop(group.take());
         Ok(Finished {
             code: status.code(),
             stdout: String::from_utf8_lossy(&stdout.await.unwrap_or_default()).into_owned(),

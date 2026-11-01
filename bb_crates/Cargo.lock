@@ -428,6 +428,7 @@ dependencies = [
  "bb-explorer",
  "bb-intel",
  "bb-lsp",
+ "bb-process",
  "bb-syntax",
  "bb-testkit",
  "bb-text",
@@ -494,6 +495,7 @@ name = "bb-dap"
 version = "0.0.1"
 dependencies = [
  "bb-framing",
+ "bb-process",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
@@ -551,6 +553,7 @@ version = "0.0.1"
 dependencies = [
  "bb-dotnet",
  "bb-framing",
+ "bb-process",
  "lsp-types",
  "proptest",
  "serde",
@@ -558,6 +561,13 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "bb-process"
+version = "0.0.1"
+dependencies = [
+ "tokio",
 ]
 
 [[package]]
@@ -577,6 +587,7 @@ name = "bb-testkit"
 version = "0.0.1"
 dependencies = [
  "bb-dotnet",
+ "bb-process",
  "proptest",
  "roxmltree 0.20.0",
  "serde",

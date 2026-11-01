@@ -4,7 +4,7 @@ id: BB-BUG-001
 family: UIX
 status: FIXED
 source: `bb_crates/shell/desktop/src/app/bb_launch/bb_window.rs`
-source: `docs/plan/readback/FIXES/BBEOD10/bb_READBACK.md`
+source: `docs/plan/readback/FIXES/S01/BBEOD10/bb_READBACK.md`
 
 ## The change
 

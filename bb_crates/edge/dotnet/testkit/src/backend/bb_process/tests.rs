@@ -1,6 +1,39 @@
 use super::*;
 
 #[tokio::test]
+async fn cancelling_a_run_reaps_its_descendant() {
+    let file: PathBuf =
+        std::env::temp_dir().join(format!("bb-cancel-descendant-{}.txt", std::process::id()));
+    let mut call: Call = Call::new("sh", &std::env::temp_dir())
+        .args(["-c", "sleep 30 & echo $! > \"$BB_PID_FILE\"; wait"]);
+    call.env
+        .push(("BB_PID_FILE".into(), file.display().to_string()));
+    let task: tokio::task::JoinHandle<Result<Finished, TestkitError>> =
+        tokio::spawn(async move { call.finish(Duration::from_secs(30)).await });
+    let started: std::time::Instant = std::time::Instant::now();
+    while !file.exists() && started.elapsed() < Duration::from_secs(2) {
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    let pid: String = std::fs::read_to_string(&file).unwrap().trim().to_owned();
+    task.abort();
+    let _joined: Result<Result<Finished, TestkitError>, _> = task.await;
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    let alive: bool = std::process::Command::new("/bin/kill")
+        .args(["-0", &pid])
+        .status()
+        .unwrap()
+        .success();
+    if alive {
+        let _cleaned: std::io::Result<std::process::ExitStatus> =
+            std::process::Command::new("/bin/kill")
+                .args(["-KILL", &pid])
+                .status();
+    }
+    let _removed: std::io::Result<()> = std::fs::remove_file(file);
+    assert!(!alive, "cancelled runner left descendant {pid}");
+}
+
+#[tokio::test]
 async fn a_timed_out_call_leaves_none_of_its_processes_behind() {
     let pids: PathBuf =
         std::env::temp_dir().join(format!("bb-proc-tree-{}.txt", std::process::id()));

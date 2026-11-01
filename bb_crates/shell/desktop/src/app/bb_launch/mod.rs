@@ -22,7 +22,17 @@ pub(crate) fn launch() {
             std::process::exit(1);
         }
     };
+    if let Err(error) = bb_process::exit_on_signal(true) {
+        eprintln!("bb: cannot watch fatal signals: {error}");
+    }
     gpui_platform::application().run(move |cx: &mut App| {
+        // Quit ends every owned child group (Roslyn, test hosts, debugger);
+        // gpui gives quit hooks 200 ms.
+        cx.on_app_quit(|_: &mut App| {
+            bb_process::shutdown();
+            std::future::ready(())
+        })
+        .detach();
         bind_keys(cx);
         bb_window::register(cx);
         cx.set_menus(menus());

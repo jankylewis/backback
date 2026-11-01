@@ -4,7 +4,7 @@ id: BB-BUG-007
 family: UIX
 status: FIXED
 source: `bb_crates/bb_core/bb_text/src/document/movement/mod.rs` (`home`, `end`, `document_edge`)
-source: `docs/plan/readback/FIXES/BBEOD10/bb_READBACK.md`
+source: `docs/plan/readback/FIXES/S01/BBEOD10/bb_READBACK.md`
 
 ## The change
 

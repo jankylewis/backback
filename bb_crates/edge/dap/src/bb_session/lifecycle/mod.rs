@@ -16,7 +16,6 @@ use crate::DapError;
 
 pub(super) use attach::watch_target;
 pub(super) use bb_exit::Watcher;
-pub(super) use group::kill_group;
 
 use super::{Pending, Reply};
 

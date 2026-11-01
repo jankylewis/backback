@@ -5,7 +5,7 @@ family: LSP
 status: OPEN
 date: 2026-11-01
 signature: problems=18 after backspace
-source: `docs/plan/readback/FIXES/BBEOD03/STATE_LOG.txt` (run 1)
+source: `docs/plan/readback/FIXES/S01/BBEOD03/STATE_LOG.txt` (run 1)
 observed: 1 of 3 runs where the typing landed; load ~8-10
 links: fix=no lesson=no evidence=yes toolgap=none
 

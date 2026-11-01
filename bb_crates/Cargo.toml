@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
   "bb_core/bb_text",
+  "bb_core/process",
   "bb_core/syntax",
   "bb_core/explorer",
   "edge/bb_lsp",
@@ -29,6 +30,7 @@ description = "backback: a very lightweight, dark-by-default, open-source C# IDE
 # The version keeps cargo deny from reading a path dep as a wildcard; keep it
 # equal to workspace.package.version.
 bb-text = { path = "bb_core/bb_text", version = "0.0.1" }
+bb-process = { path = "bb_core/process", version = "0.0.1" }
 bb-syntax = { path = "bb_core/syntax", version = "0.0.1" }
 bb-explorer = { path = "bb_core/explorer", version = "0.0.1" }
 bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }

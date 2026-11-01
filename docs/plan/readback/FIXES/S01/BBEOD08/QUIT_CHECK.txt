@@ -1,0 +1,12 @@
+[quit] app 11456 tree:
+  11464 roslyn-language-server
+  11465 Microsoft.CodeAnalysis.LanguageServer
+[quit] app: exited
+[quit] gone: 11464
+[quit] gone: 11465
+[cmdq] app 11823 tree:
+  11826 roslyn-language-server
+  11827 Microsoft.CodeAnalysis.LanguageServer
+[cmdq] app: exited
+[cmdq] gone: 11826
+[cmdq] gone: 11827

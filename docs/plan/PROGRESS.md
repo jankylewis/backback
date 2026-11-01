@@ -1,5 +1,13 @@
 # Backback progress
 
+- BBEOD08-REAP (`backback_2`): `bbeod-08-reap` from `1391b5c`.
+  Shared group ownership covers testkit, Roslyn, and DAP. Red-first tests passed. Gate: 304 passed in 49 suites,
+  0 failed or ignored; format, Clippy, deny, and audit passed. Desktop SIGTERM
+  reaped two Roslyn processes; GUI test and debug remain unverified
+  (`readback/bb_FOUNDATION/BBEOD08/REAP.md`); bench was noisy
+  (load1 7.08), with no regression verdict
+  (`bench/bb_GENERAL/TEST_DISCOVERY/BBEOD08_REAP.md`). No push.
+
 - BBEOD06-REMOVE (`backback_1`, 2026-11-01): headmate ruling, no MCP.
   Removed `bb-mcp` crate, `bb mcp` commands, desktop Harness panel,
   `_Harness/McpServer` fixture, `Capability::Mcp`. `bb_group` lives on

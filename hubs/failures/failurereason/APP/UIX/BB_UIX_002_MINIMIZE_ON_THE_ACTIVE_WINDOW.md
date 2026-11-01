@@ -5,7 +5,7 @@ family: UIX
 status: FIXED
 date: 2026-11-01
 signature: min window_on_screen=23
-source: `docs/plan/readback/FIXES/BBEOD10/bb_READBACK.md`
+source: `docs/plan/readback/FIXES/S01/BBEOD10/bb_READBACK.md`
 observed: first BBEOD10 readback build: after `cmd-m` the window list still
   showed the window; the app was not the active app
 links: fix=yes lesson=yes evidence=yes toolgap=BB-TG-005

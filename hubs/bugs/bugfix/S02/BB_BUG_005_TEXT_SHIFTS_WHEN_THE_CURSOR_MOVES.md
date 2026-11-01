@@ -4,7 +4,7 @@ id: BB-BUG-005
 family: UIX
 status: FIXED
 source: branch `bbeod-12-cursor` (BBEOD12 PR)
-source: `docs/plan/readback/FIXES/BBEOD12/bb_READBACK.md`
+source: `docs/plan/readback/FIXES/S02/BBEOD12/bb_READBACK.md`
 
 ## The change
 
