@@ -1,6 +1,6 @@
 # Roadmap: macOS and C# only
 
-Source of truth: `AGENTS.md` and the AgentFarm `backback` goals board. Each BBEOD
+Source of truth: `AGENTS.md` and the goals board, `GOALS.md` (live status). Each BBEOD
 closes one milestone with a demonstrated exit result.
 
 | Unit | Milestone | Exit result |
@@ -12,6 +12,8 @@ closes one milestone with a demonstrated exit result.
 | BBEOD05 | M4 Debugging | netcoredbg breakpoints, step, locals, stack, watch, one-test debug, set-next-statement; one MbTx spec debugged end to end. |
 | BBEOD06 | M5 Harness | MCP harness removed by headmate ruling 2026-11-01. Terminal and find in files: not built; propose before building. |
 | BBEOD07 | M6 Open-source v1 | Signed, notarised macOS app; original logo, Homebrew cask, docs, CONTRIBUTING, published benchmarks, v1.0 release. |
+| BBEOD08 | Settings | Settings window, one font everywhere (Menlo 13), tool window left or right. |
+| BBEOD09 | Ignored files | Explorer shows git-ignored files and folders in pink. |
 
 ## Seven test layers
 
