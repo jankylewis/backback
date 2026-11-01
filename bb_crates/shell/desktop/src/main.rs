@@ -4,6 +4,8 @@ mod args;
 #[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
 mod editor;
+#[path = "bb_explorer/panels/bb_harness/mod.rs"]
+mod harness;
 #[path = "bb_explorer/icons.rs"]
 mod icons;
 mod intel;
@@ -13,11 +15,11 @@ mod latency;
 mod launch;
 #[path = "bb_explorer/navigation.rs"]
 mod navigation;
-#[path = "bb_explorer/tests_panel/panel.rs"]
+#[path = "bb_explorer/panels/tests_panel/panel.rs"]
 mod panel;
 #[path = "app/script.rs"]
 mod script;
-#[path = "bb_explorer/tests_panel/mod.rs"]
+#[path = "bb_explorer/panels/tests_panel/mod.rs"]
 mod tests_panel;
 #[path = "app/theme.rs"]
 mod theme;
@@ -39,6 +41,9 @@ struct ExplorerView {
     selected: usize,
     focus: FocusHandle,
     editor_focus: FocusHandle,
+    harness_focus: FocusHandle,
+    harness: harness::Harness,
+    show_harness: harness::HarnessVisibility,
     tabs: Tabs,
     keypresses: usize,
     latency_before: Option<gpui::profiler::InputLatencySnapshot>,
@@ -71,26 +76,6 @@ impl ExplorerView {
     ) {
         editor::handle_key(self, event, window, cx);
     }
-    fn move_resize(
-        &mut self,
-        event: &gpui::MouseMoveEvent,
-        _: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        if self.resizing && event.dragging() {
-            self.panel_width = f32::from(event.position.x).clamp(180.0, 800.0);
-            cx.notify();
-        }
-    }
-
-    fn finish_resize(&mut self, _: &gpui::MouseUpEvent, _: &mut Window, _: &mut Context<Self>) {
-        self.resizing = false;
-    }
-
-    fn start_resize(&mut self, _: &gpui::MouseDownEvent, _: &mut Window, _: &mut Context<Self>) {
-        self.resizing = true;
-    }
-
     /// Show an error in the status bar (and on stderr for logs).
     pub(crate) fn report(&mut self, error: &dyn std::fmt::Display) {
         let text: String = error.to_string();
@@ -214,6 +199,7 @@ impl Render for ExplorerView {
             .bg(color(self.theme.bg))
             .on_action(cx.listener(ExplorerView::toggle_theme))
             .on_action(cx.listener(ExplorerView::follow_appearance))
+            .on_action(cx.listener(ExplorerView::toggle_harness))
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
@@ -242,6 +228,7 @@ impl Render for ExplorerView {
                         cx,
                     )),
             )
+            .children(harness::visible_panel(self, cx))
     }
 }
 

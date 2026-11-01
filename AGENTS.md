@@ -40,8 +40,8 @@ This grant does not extend to any other repository.
 
 ## Gate (run from `bb_crates/`, all must pass, quote real counts)
 
-`cargo fmt --check && cargo clippy --all-targets -- -D warnings &&
-cargo test --workspace && cargo deny check`
+`cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings &&
+cargo test --workspace && cargo deny check && cargo run -p bb -- audit ..`
 
 ## Loops (every BBEOD)
 

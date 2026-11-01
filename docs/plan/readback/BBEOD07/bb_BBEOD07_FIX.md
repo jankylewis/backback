@@ -24,7 +24,9 @@
 
 ## Icon
 
-- The mascot now has warm dark rounded hair and no cheek wedge.
-- The strap moved left, exposing the pack's `</>` mark.
-- The `.icns` archive contains 10 PNG sizes. Previews measure 16, 32,
-  128, and 1024 pixels in [the contact sheet](../../../release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png).
+- The mascot had warm dark hair, but the fringe retained a pointed wedge.
+- The strap moved left. The pack mark still showed two chevrons without
+  the intended slash. BBEOD07-MERGE corrected the mark and fringe.
+- The `.icns` archive contains 10 PNG sizes. BBEOD07-MERGE regenerated
+  [the contact sheet](../../../release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
+  to show all 10 on dark.

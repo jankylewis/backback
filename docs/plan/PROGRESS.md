@@ -1,15 +1,31 @@
-# BBEOD05 merge progress
+# Backback progress
 
-- Seat `backback_2`, branch `bbeod-05-ship`, base `bb1d051`.
-- Merged `origin/master` (`0628b87`): debugger and Set Next coexist with
-  Test Explorer, code intelligence, test CLI, and master document names.
-- Stock and patched full gates: 267 passed, 0 failed, 0 ignored each;
-  41 suites each. Format, all-feature Clippy, deny, audit, and path guard pass.
+- BBEOD07-MERGE (`backback_2`, in progress): merging `origin/master`
+  `6b5e68b`; identical BBEOD02 readback files use master's
+  `bb_EXPLORER` layout. Full gate and served bundle readback pending.
+
+- BBEOD06-MERGE (`backback_2`): merged MCP panel branch `bbeod-06-gui`
+  with master debugger work. Stock full gate: 301 passed, 0 failed,
+  0 ignored in 46 suites. MCP panel and Test Explorer GPUI tests passed;
+  stock debug fixture stopped at line 14. `readback/BBEOD06/MERGE.md`.
+- BBEOD06-FIX2 (`backback_1`, 2026-11-01): B1 orphan group on
+  signal/drop/quit, B2 Stop cancels a hung Start. Lessons:
+  `readback/BBEOD06/FIX/bb_FIX.md`.
+- BBEOD06-FIX (`backback_1`): B3-B8 + F1 fixed test-first on `9d7ea08`.
+- BBEOD06-B (`backback_2`): MCP harness panel + engine. Bench:
+  `bench/MCP/BBEOD06_GUI.md`, `bench/MCP/bb_BBEOD06_MCP.md`.
+
+## BBEOD05 merge
+
+- Branch `bbeod-05-ship` merged master debugger and Set Next work with
+  Test Explorer, code intelligence, and test CLI.
+- Stock and patched gates: 267 passed, 0 failed, 0 ignored each;
+  41 suites each. Format, all-feature Clippy, deny, audit, path guard passed.
 - Served readbacks: patched Set Next, stock `bb debug`, Test Explorer GPUI.
   Evidence and conflict table: `readback/BBEOD05/MERGE.md`.
 - Source research found no `runInTerminal` reverse request. No push.
 
-## BBEOD05-EXITCODE (backback_1)
+## BBEOD05-EXITCODE (`backback_1`)
 
 - Local netcoredbg `9731de2` on `local-setnext`: kqueue `NOTE_EXITSTATUS`
   gives launch exit code; capability `netcoredbgLaunchExitCodeIsProcessStatus`.
@@ -19,7 +35,7 @@
   13 adapter tests to fail with `NotFound`.
 - Readback: `readback/BBEOD05/EXITCODE.md`.
 
-## BBEOD05-FIX (backback_1)
+## BBEOD05-FIX (`backback_1`)
 
 - B1 liveness from adapter exit; B2 attach target exit; B3 status truth;
   B4 no vacuous skip; typed condition error.
@@ -28,9 +44,9 @@
 - Records: `readback/BBEOD05/FIX.md`, `bench/BBEOD05/FIX.md`,
   `docs/rnd/NETCOREDBG_EXIT_CODE.md`.
 
-## BBEOD05 debugger and Set Next (backback_2)
+## BBEOD05 debugger and Set Next (`backback_2`)
 
-- Merged `bbeod-05-debug` and `bbeod-05-setnext` before this master merge.
+- Merged `bbeod-05-debug` and `bbeod-05-setnext` before the master merge.
 - Stock and patched netcoredbg passed the capability-aware Set Next instrument.
 - Before merge: patched gate passed fmt, Clippy, 131 tests, deny, audit,
   and tracked absolute-path guard.
@@ -44,7 +60,15 @@
 
 ## Earlier work
 
-- BBEOD02 through BBEOD04 state from master: `docs/plan/HISTORY.md`.
+- BBEOD02-FIX (`backback_1`, 2026-11-01): B1 safe save; B2 rope edit log and
+  background open/parse; B3 virtual Explorer, status bar, natural sort, Quit.
+  Evidence: `bench/BBEOD02/BBEOD02_FIX.md`, `readback/bb_FOUNDATION/BBEOD02/FIX/`.
+  Open: FS watcher, 1 GB RSS on 20 MB file.
+- BBEOD02-B (`backback_2`): rope editor, guarded tabs, atomic save, C#
+  highlighting, light theme and View toggle. Evidence:
+  `bench/bb_GENERAL/EDITOR.md`,
+  `readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/EDITOR/bb_EDITOR.md`.
+- BBEOD02 through BBEOD04 details: `docs/plan/HISTORY.md`.
 - Hygiene-ctx moved five summaries to the external rawctxhub and removed
   two tracked absolute home paths. The guard failed before that fix.
 
@@ -54,7 +78,8 @@
 - Prior BBEOD07 release bundled the CLI. This fix bundles the desktop GUI.
 - Served `.app` check passed: GUI executable, visible window screenshot,
   app quit, and zero leftover processes for this bundle.
-- Icon has rounded dark hair and a clear pack mark; the archive has 10 sizes.
+- The first icon had a pointed fringe and a two-chevron pack mark.
+  BBEOD07-MERGE corrected both; the archive has 10 sizes.
 - CI uses pinned action commits and the all-feature gate. The two HD folders
   now have five entries each and one marker.
 - Initial gate found two new marker issues. Both were corrected. The final

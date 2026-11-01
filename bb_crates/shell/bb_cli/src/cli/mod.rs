@@ -8,6 +8,9 @@ pub use test_args::{BackendChoice, TestAction, TestArgs};
 
 use std::path::PathBuf;
 
+mod mcp;
+pub use mcp::McpCommand;
+
 use bb_lsp::roslyn::Restore;
 
 /// Usage text.
@@ -31,7 +34,12 @@ pub const USAGE: &str = "usage:
                             list specs as Project > Namespace > Class > Spec (no build)
   bb test run <project> [--specs A,B] [--category X] [--settings FILE] [--build]
                             [--backend apex|dotnet] [--apex-command CMD] [-c CONFIG]
-                            run specs and print each outcome and time from the TRX";
+                            run specs and print each outcome and time from the TRX
+  bb mcp list <solution>    list MCP server projects and run commands
+  bb mcp tools <project>    list tools from one MCP server
+  bb mcp call <project> <tool> '<json>'
+                            call one tool with JSON arguments
+  bb mcp log <project>      follow timestamped server stderr";
 
 /// Default measured runs per bench item.
 pub const DEFAULT_RUNS: usize = 5;
@@ -72,6 +80,8 @@ pub enum Command {
         /// Measured runs per item, after one warm-up.
         runs: usize,
     },
+    /// MCP discovery and client commands.
+    Mcp(McpCommand),
     /// Launch a managed program and stop at one source line.
     Debug {
         /// Project or built DLL.
@@ -105,6 +115,9 @@ pub enum CliError {
     /// An argument the command does not take.
     #[error("unexpected argument: {0}")]
     Extra(String),
+    /// Unknown MCP subcommand.
+    #[error("unknown mcp command: {0}")]
+    McpCommand(String),
     /// A breakpoint was missing or malformed.
     #[error("--break needs File.cs:LINE with a positive line number")]
     BadBreak,
@@ -132,6 +145,9 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     let word: &String = it.next().ok_or(CliError::Missing)?;
     if word == "bench" {
         return bench(it.as_slice());
+    }
+    if word == "mcp" {
+        return mcp::parse(it.as_slice()).map(Command::Mcp);
     }
     if word == "debug" {
         return debug(it.as_slice());

@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 
+use crate::common;
 use crate::common::{bb, harness, Run};
 use scan_run::{line_of, scan};
 
@@ -131,4 +132,44 @@ fn bench_with_a_missing_project_exits_non_zero_and_names_it() {
     let _gone: std::io::Result<()> = std::fs::remove_dir_all(sln.parent().unwrap());
     assert_eq!(run.code, Some(1), "{}", run.all());
     assert!(run.err.contains("Gone.csproj"), "{}", run.all());
+}
+
+#[test]
+fn lists_fixture_mcp_project_with_run_command() {
+    let solution: String = common::harness().join("Harness.slnx").display().to_string();
+    let run: common::Run = common::bb(&["mcp", "list", &solution]);
+    assert_eq!(run.code, Some(0), "{}", run.err);
+    assert!(run.out.contains("_McpServer.csproj"));
+    assert!(run.out.contains("dotnet run --project"));
+    assert!(run.all().contains("_McpServer.csproj"));
+}
+
+#[test]
+fn calls_fixture_greet_and_reports_bad_arguments() {
+    let project: String = common::harness()
+        .join("McpServer/_McpServer.csproj")
+        .display()
+        .to_string();
+    let good: common::Run = common::bb(&["mcp", "call", &project, "Greet", "{\"name\":\"Vinh\"}"]);
+    assert_eq!(good.code, Some(0), "{}", good.err);
+    assert!(good.out.contains("hi Vinh"));
+    let bad: common::Run = common::bb(&["mcp", "call", &project, "Greet", "{}"]);
+    assert_eq!(bad.code, Some(1), "{}", bad.all());
+    assert!(bad.err.contains("isError") || bad.err.contains("MCP error"));
+}
+
+#[test]
+fn mcp_without_dotnet_on_path_names_the_missing_program() {
+    let project: String = common::harness()
+        .join("McpServer/_McpServer.csproj")
+        .display()
+        .to_string();
+    let run: common::Run =
+        common::bb_env(&["mcp", "tools", &project], &[("PATH", "/usr/bin:/bin")]);
+    assert_eq!(run.code, Some(1), "{}", run.all());
+    assert!(
+        run.err.contains("cannot start `dotnet`: not found on PATH"),
+        "{}",
+        run.err
+    );
 }

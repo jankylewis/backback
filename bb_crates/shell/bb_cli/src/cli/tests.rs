@@ -18,6 +18,34 @@ fn parses_debug_breakpoint_and_rejects_bad_line() {
     );
 }
 
+#[test]
+fn merge_keeps_debug_and_each_mcp_command() {
+    assert!(matches!(
+        parse(&args(&["debug", "App.csproj", "--break", "Program.cs:12"])),
+        Ok(Command::Debug { line: 12, .. })
+    ));
+    assert_eq!(
+        parse(&args(&["mcp", "list", "A.slnx"])),
+        Ok(Command::Mcp(McpCommand::List(PathBuf::from("A.slnx"))))
+    );
+    assert_eq!(
+        parse(&args(&["mcp", "tools", "A.csproj"])),
+        Ok(Command::Mcp(McpCommand::Tools(PathBuf::from("A.csproj"))))
+    );
+    assert_eq!(
+        parse(&args(&["mcp", "log", "A.csproj"])),
+        Ok(Command::Mcp(McpCommand::Log(PathBuf::from("A.csproj"))))
+    );
+    assert_eq!(
+        parse(&args(&["mcp", "call", "A.csproj", "Greet", "{}"])),
+        Ok(Command::Mcp(McpCommand::Call {
+            project: PathBuf::from("A.csproj"),
+            tool: "Greet".to_owned(),
+            arguments: "{}".to_owned(),
+        }))
+    );
+}
+
 fn args(list: &[&str]) -> Vec<String> {
     list.iter().map(|s: &&str| (*s).to_owned()).collect()
 }

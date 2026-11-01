@@ -7,13 +7,13 @@
   Test Explorer GUI readback: two specs, one pass/fail, failure jump.
   Prior gate: 230 tests; bench 996.2 ms at load1 10.63, quiet check open.
   Debug awaits BBEOD05. Records: `readback/BBEOD03/BBEOD04_B/`,
-  `bench/TEST_DISCOVERY/bb_BBEOD04_B.md`.
+  `bench/bb_GENERAL/TEST_DISCOVERY/bb_BBEOD04_B.md`.
 - BBEOD03-FIX2 (backback_1, 2026-11-01): TargetPath stub, MbTx 11/11,
   0 writes, diagnostics clear. `readback/BBEOD03/BBEOD03_FIX/BBEOD03_FIX2.md`.
 - BBEOD03-FIX (backback_2, 2026-11-01): merge `c07f7bf`, temp discovery;
   child death gives Stopped within 1 s; restart works. Gate: 224 tests,
   fmt, Clippy, deny, audit. `readback/BBEOD03/BBEOD03_FIX/bb_BBEOD03_FIX.md`,
-  `bench/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet timing remains open.
+  `bench/bb_GENERAL/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet timing remains open.
 
 - BBEOD02-MEM (backback_1, 2026-11-01): 20 MB file RSS 1,008 -> 166 MB; the
   holder was the whole-file tree-sitter tree (862 MB). Large files now parse
@@ -28,7 +28,7 @@
   B1 safe save, B2 rope edit log + background open/parse (key p99 244 ms
   -> 2.6 ms), B3 virtual Explorer (frame 439 -> 197 ms, RSS 471 -> 112 MiB),
   status bar, natural sort, Quit. Evidence: `bench/BBEOD02/BBEOD02_FIX.md`,
-  `readback/BBEOD02/FIX/`. Open: FS watcher, 1 GB RSS on 20 MB file.
+  `readback/bb_FOUNDATION/BBEOD02/FIX/`. Open: FS watcher, 1 GB RSS on 20 MB file.
 
 - BBEOD02-B follow-up opened after acceptance: add light theme that follows
   macOS appearance, live View toggle, and screenshots of both modes.
@@ -55,9 +55,9 @@
   reported a 20.833 ms refresh interval. This demonstrates a display floor
   above the 16 ms budget on this configuration; quiet-host check remains open.
 - Three live editor screenshots were saved and inspected under
-  `docs/plan/readback/BBEOD02/bb_CORE/EDITOR/`.
+  `docs/plan/readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/EDITOR/`.
 - Editor evidence: `docs/plan/bench/bb_GENERAL/EDITOR.md` and
-  `docs/plan/readback/BBEOD02/bb_CORE/EDITOR/bb_EDITOR.md`.
+  `docs/plan/readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/EDITOR/bb_EDITOR.md`.
 
 - BBEOD02-B start: merged `origin/master` into `bbeod-02-editor`; resolved four
   fixture project rename conflicts in favor of the `_*.csproj` backbone names.
@@ -68,7 +68,7 @@
   (same-directory temporary file plus rename and failure tests).
 
 - BBEOD02-A Explorer (backback_2): GPUI shell, model tests, screenshots in
-  `docs/plan/readback/BBEOD02/bb_CORE/`; first gate 62 tests.
+  `docs/plan/readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/`; first gate 62 tests.
 
 ## BBEOD03-A (backback_1, branch `bbeod-03-intel`, worktree `backback_wt/bbeod-03-intel`)
 

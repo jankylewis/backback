@@ -8,11 +8,9 @@ server and Samsung's `netcoredbg`.
 The `bb` command line provides doctor, scan, open, outline, and audit tools.
 See [the roadmap](docs/plan/bb_roadmap/bb_ROADMAP.md) for planned work.
 
-The [backback mascot](docs/release/bb_assets/bb_mascot/bb_mascot.svg) is an original
-chibi scientist with a coding rucksack. Its [icon previews](docs/release/bb_assets/bb_mascot/previews/)
-show the 16, 32, and 128 px sizes; [the main PNG](docs/release/bb_assets/bb_mascot/icon.png)
-is 1024 px. The [readback notes](docs/plan/readback/) document real use.
-The [release readback](docs/plan/readback/BBEOD07/bb_BBEOD07_FIX.md) records the GUI bundle check.
+The [mascot](docs/release/bb_assets/bb_mascot/bb_mascot.svg) is an original
+chibi scientist. Its [dark contact sheet](docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
+shows all 10 sizes; the [main PNG](docs/release/bb_assets/bb_mascot/icon.png) is 1024 px.
 
 ## Why
 
@@ -74,13 +72,15 @@ dotnet tool install --global roslyn-language-server --prerelease
 cd bb_crates
 cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings \
   && cargo test --workspace && cargo deny check
-
 cargo run -p bb -- doctor
 cargo run -p bb -- scan shell/desktop/fixtures/_Harness/Harness.slnx
 cargo run -p bb -- open path/to/Solution.slnx
 cargo run -p bb -- outline path/to/File.cs
 cargo run -p bb -- audit ..
 ```
+
+`netcoredbg` is optional for editing; `bb debug` and debugger tests need it.
+Set `BACKBACK_NETCOREDBG=/path/to/netcoredbg` or put it on `PATH`.
 
 ## macOS app bundle
 

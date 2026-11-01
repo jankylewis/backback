@@ -17,10 +17,13 @@ bb-testkit.workspace = true
 tokio.workspace = true
 thiserror.workspace = true
 bb-ui.workspace = true
+bb-mcp.workspace = true
+serde_json.workspace = true
 gpui = { workspace = true, features = ["profiler"] }
 gpui_platform.workspace = true
 
 [dev-dependencies]
+proptest.workspace = true
 tempfile = "3"
 # In-process window tests: TestAppContext, dispatch_keystroke.
 gpui = { workspace = true, features = ["profiler", "test-support"] }
