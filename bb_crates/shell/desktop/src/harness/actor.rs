@@ -4,6 +4,8 @@ use std::thread;
 use std::time::Duration;
 
 use bb_mcp::{CallResult, Session, Tool};
+
+use super::model::RowText;
 use serde_json::Value;
 use tokio::sync::mpsc::{self as async_mpsc, UnboundedReceiver, UnboundedSender};
 
@@ -36,7 +38,8 @@ pub(crate) enum Event {
         generation: u64,
     },
     Called {
-        result: CallResult,
+        text: RowText,
+        is_error: bool,
         generation: u64,
     },
     Log {
@@ -184,7 +187,7 @@ async fn call(
         return;
     };
     let event: Event = match session.call(&name, arguments).await {
-        Ok(result) => Event::Called { result, generation },
+        Ok(result) => called(&result, generation),
         Err(error) => Event::Crashed {
             error: error.to_string(),
             generation,
@@ -196,6 +199,17 @@ async fn call(
         if let Some(old) = state.session.take() {
             let _stopped: bool = old.stop().await.is_ok();
         }
+    }
+}
+
+/// Pretty-print and cut into rows here, off the UI thread.
+fn called(result: &CallResult, generation: u64) -> Event {
+    let pretty: String = serde_json::to_string_pretty(&result.content)
+        .unwrap_or_else(|error: serde_json::Error| format!("cannot show result: {error}"));
+    Event::Called {
+        text: RowText::from(pretty),
+        is_error: result.is_error,
+        generation,
     }
 }
 

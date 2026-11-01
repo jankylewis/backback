@@ -1,29 +1,45 @@
 //! Child process lifecycle and timestamped stderr logging.
 
-use std::path::Path;
+use std::ffi::OsString;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use serde_json::{json, Value};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, Mutex};
 use tokio::time::timeout;
 
 use crate::session::Session;
 use crate::types::McpError;
+use crate::wire::{self, Input};
 
 const STOP_DEADLINE: Duration = Duration::from_secs(2);
+const BUILD_DEADLINE: Duration = Duration::from_secs(300);
+const BUILD_TAIL_LINES: usize = 20;
+
+static BUILDS: Mutex<()> = Mutex::const_new(());
 
 impl Session {
-    /// Start `dotnet run --project`, then perform the MCP handshake.
+    /// Build the project, then run its output with `dotnet` and perform the
+    /// MCP handshake. Build output never reaches the protocol channel.
+    ///
+    /// # Errors
+    /// Build, process, or protocol failures.
+    pub async fn start(project: &Path) -> Result<Self, McpError> {
+        let target: PathBuf = build(project).await?;
+        Self::launch("dotnet", &[target.into_os_string()]).await
+    }
+
+    /// Start any stdio MCP server program, then perform the MCP handshake.
     ///
     /// # Errors
     /// Process or protocol failures.
-    pub async fn start(project: &Path) -> Result<Self, McpError> {
-        let mut command: Command = Command::new("dotnet");
-        command.args(["run", "--no-launch-profile", "--project"]);
-        command.arg(project);
+    pub async fn launch(program: &str, args: &[OsString]) -> Result<Self, McpError> {
+        let mut command: Command = Command::new(program);
+        command.args(args);
         command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -31,7 +47,13 @@ impl Session {
         command.kill_on_drop(true);
         #[cfg(unix)]
         command.process_group(0);
-        let mut child: Child = command.spawn()?;
+        let mut child: Child =
+            command
+                .spawn()
+                .map_err(|source: std::io::Error| McpError::Spawn {
+                    program: program.to_owned(),
+                    source,
+                })?;
         let input: ChildStdin = child
             .stdin
             .take()
@@ -45,10 +67,11 @@ impl Session {
             .take()
             .ok_or_else(|| McpError::Protocol("missing stderr".into()))?;
         let logs: broadcast::Receiver<String> = capture_logs(stderr);
+        let input: Input = Arc::new(Mutex::new(Some(input)));
         let mut session: Self = Self {
             child,
+            inbound: wire::spawn_reader(output, input.clone()),
             input,
-            output: BufReader::new(output),
             logs,
             next_id: 1,
         };
@@ -81,22 +104,23 @@ impl Session {
     /// # Errors
     /// Process shutdown failures.
     pub async fn stop(mut self) -> Result<std::process::ExitStatus, McpError> {
-        timeout(STOP_DEADLINE, self.input.shutdown())
+        let closed: Option<ChildStdin> = timeout(STOP_DEADLINE, self.input.lock())
             .await
-            .map_err(|_e: tokio::time::error::Elapsed| McpError::Timeout("stdin close"))??;
+            .map_err(|_e: tokio::time::error::Elapsed| stop_timeout("stdin close"))?
+            .take();
+        drop(closed);
         if let Ok(result) = timeout(STOP_DEADLINE, self.child.wait()).await {
-            return Ok(result?);
+            return result.map_err(wait_failed);
         }
         self.kill_tree("-TERM").await?;
         if let Ok(result) = timeout(STOP_DEADLINE, self.child.wait()).await {
-            return Ok(result?);
+            return result.map_err(wait_failed);
         }
         self.kill_tree("-KILL").await?;
-        let status: std::process::ExitStatus =
-            timeout(STOP_DEADLINE, self.child.wait())
-                .await
-                .map_err(|_e: tokio::time::error::Elapsed| McpError::Timeout("stop"))??;
-        Ok(status)
+        timeout(STOP_DEADLINE, self.child.wait())
+            .await
+            .map_err(|_e: tokio::time::error::Elapsed| stop_timeout("stop"))?
+            .map_err(wait_failed)
     }
 
     /// Stop and start the same project in one explicit operation.
@@ -108,19 +132,98 @@ impl Session {
         Self::start(project).await
     }
 
-    async fn kill_tree(&self, signal: &str) -> Result<(), McpError> {
+    async fn kill_tree(&mut self, signal: &str) -> Result<(), McpError> {
         if let Some(pid) = self.child.id() {
             let group: String = format!("-{pid}");
             let mut command: Command = Command::new("/bin/kill");
             command.args([signal, &group]);
             let status: std::process::ExitStatus = timeout(STOP_DEADLINE, command.status())
                 .await
-                .map_err(|_e: tokio::time::error::Elapsed| McpError::Timeout("kill tree"))??;
-            if !status.success() {
-                return Err(McpError::Protocol(format!("kill tree failed: {status}")));
+                .map_err(|_e: tokio::time::error::Elapsed| stop_timeout("kill tree"))?
+                .map_err(|source: std::io::Error| McpError::Io {
+                    operation: "kill server process group",
+                    source,
+                })?;
+            let exited: bool = self.child.try_wait().ok().flatten().is_some();
+            if !status.success() && !exited {
+                return Err(McpError::Protocol(format!(
+                    "kill {signal} of process group {pid} failed: {status}"
+                )));
             }
         }
         Ok(())
+    }
+}
+
+async fn build(project: &Path) -> Result<PathBuf, McpError> {
+    let _one_build_at_a_time: tokio::sync::MutexGuard<'_, ()> = BUILDS.lock().await;
+    let mut command: Command = Command::new("dotnet");
+    command
+        .args(["build", "-nologo", "-t:Build", "-getProperty:TargetPath"])
+        .arg(project)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .kill_on_drop(true);
+    let child: Child = command
+        .spawn()
+        .map_err(|source: std::io::Error| McpError::Spawn {
+            program: "dotnet".into(),
+            source,
+        })?;
+    let output: std::process::Output = timeout(BUILD_DEADLINE, child.wait_with_output())
+        .await
+        .map_err(|_e: tokio::time::error::Elapsed| McpError::Timeout {
+            operation: "dotnet build",
+            seconds: BUILD_DEADLINE.as_secs(),
+        })?
+        .map_err(|source: std::io::Error| McpError::Io {
+            operation: "dotnet build",
+            source,
+        })?;
+    let stdout: String = String::from_utf8_lossy(&output.stdout).into_owned();
+    let target: Option<PathBuf> = stdout
+        .lines()
+        .map(str::trim)
+        .rfind(|line: &&str| !line.is_empty())
+        .map(PathBuf::from)
+        .filter(|path: &PathBuf| path.is_file());
+    match target {
+        Some(path) if output.status.success() => Ok(path),
+        Some(_) | None => Err(McpError::Build {
+            project: project.display().to_string(),
+            status: output.status.to_string(),
+            output: tail(&stdout, &String::from_utf8_lossy(&output.stderr)),
+        }),
+    }
+}
+
+fn tail(stdout: &str, stderr: &str) -> String {
+    let lines: Vec<&str> = stdout
+        .lines()
+        .chain(stderr.lines())
+        .filter(|line: &&str| !line.trim().is_empty())
+        .collect();
+    let skip: usize = lines.len().saturating_sub(BUILD_TAIL_LINES);
+    lines
+        .iter()
+        .skip(skip)
+        .copied()
+        .collect::<Vec<&str>>()
+        .join("\n")
+}
+
+fn wait_failed(source: std::io::Error) -> McpError {
+    McpError::Io {
+        operation: "wait for server exit",
+        source,
+    }
+}
+
+fn stop_timeout(operation: &'static str) -> McpError {
+    McpError::Timeout {
+        operation,
+        seconds: STOP_DEADLINE.as_secs(),
     }
 }
 

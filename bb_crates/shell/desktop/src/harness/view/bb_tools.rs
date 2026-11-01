@@ -1,4 +1,4 @@
-use super::super::model::{FieldKind, FormField, Server, ToolView};
+use super::super::model::{enum_label, FieldKind, FormField, Server, ToolView};
 use super::button;
 use crate::{color, ExplorerView};
 use bb_ui::bb_theme::Theme;
@@ -20,7 +20,7 @@ pub(super) fn tools(
         body = body.child(tool_form(view, tool, theme, cx));
     }
     if let Some(result) = &server.result {
-        body = body.child(result_view(result, theme, cx));
+        body = body.child(super::result::result_view(view, result.rows(), theme, cx));
     }
     div()
         .id("tools-scroll")
@@ -95,31 +95,6 @@ fn tool_form(
         ))
 }
 
-fn result_view(result: &str, theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
-    div()
-        .child(
-            div()
-                .id("tool-result")
-                .px_2()
-                .py_2()
-                .child(result.to_owned()),
-        )
-        .child(button("copy-result".into(), "Copy", theme, cx, copy_result))
-}
-
-fn copy_result(view: &mut ExplorerView, cx: &mut Context<ExplorerView>) {
-    if let Some(index) = view.harness.selected {
-        if let Some(result) = view
-            .harness
-            .servers
-            .get(index)
-            .and_then(|server: &Server| server.result.as_ref())
-        {
-            cx.write_to_clipboard(gpui::ClipboardItem::new_string(result.clone()));
-        }
-    }
-}
-
 fn field_row(
     index: usize,
     field: &FormField,
@@ -136,7 +111,10 @@ fn field_row(
     let suffix: &'static str = match field.kind {
         FieldKind::Boolean => " (click to toggle)",
         FieldKind::Enum(_) => " (click to choose)",
+        FieldKind::Integer => " (integer)",
         FieldKind::Number => " (number)",
+        FieldKind::Array(_) => " (a, b or JSON array)",
+        FieldKind::Json => " (JSON)",
         FieldKind::String => "",
     };
     div()
@@ -186,15 +164,22 @@ fn activate_field(
     match &field.kind {
         FieldKind::Boolean => field.value = (field.value != "true").to_string(),
         FieldKind::Enum(options) => {
-            let next: usize = options
+            let labels: Vec<String> = options.iter().map(enum_label).collect();
+            let next: usize = labels
                 .iter()
-                .position(|option: &String| option == &field.value)
-                .map_or(0, |position: usize| (position + 1) % options.len().max(1));
-            if let Some(option) = options.get(next) {
-                field.value = option.clone();
+                .position(|label: &String| label == &field.value)
+                .map_or(0, |position: usize| {
+                    position.saturating_add(1) % labels.len().max(1)
+                });
+            if let Some(label) = labels.get(next) {
+                field.value.clone_from(label);
             }
         }
-        FieldKind::String | FieldKind::Number => view.harness.edit = Some(index),
+        FieldKind::String
+        | FieldKind::Integer
+        | FieldKind::Number
+        | FieldKind::Array(_)
+        | FieldKind::Json => view.harness.edit = Some(index),
     }
     window.focus(&view.harness_focus, cx);
     cx.notify();

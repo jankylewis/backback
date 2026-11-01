@@ -1,7 +1,6 @@
 //! Typed MCP results, pages, and errors.
 
 use serde::Deserialize;
-use serde_json::json;
 use serde_json::Value;
 
 /// An MCP tool advertised by a server.
@@ -50,18 +49,57 @@ pub(crate) struct ResourcePage {
     pub(crate) next_cursor: Option<String>,
 }
 
-/// Process, transport, and protocol failures.
+/// Process, transport, and protocol failures. Every message names its cause.
 #[derive(Debug, thiserror::Error)]
 pub enum McpError {
-    /// OS I/O failure.
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-    /// JSON parsing failure.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
+    /// The server program could not start.
+    #[error("cannot start `{program}`: {}", spawn_cause(.source))]
+    Spawn {
+        /// Program name.
+        program: String,
+        /// OS failure.
+        source: std::io::Error,
+    },
+    /// `dotnet build` of the server project failed.
+    #[error("`dotnet build` failed for {project} ({status}):\n{output}")]
+    Build {
+        /// Project path.
+        project: String,
+        /// Exit status.
+        status: String,
+        /// Last lines of build output.
+        output: String,
+    },
+    /// OS I/O failure during one named operation.
+    #[error("MCP {operation} failed: {source}")]
+    Io {
+        /// What was running.
+        operation: &'static str,
+        /// OS failure.
+        source: std::io::Error,
+    },
+    /// The server wrote a line that is not JSON to the protocol channel.
+    #[error("MCP server wrote non-JSON to stdout, which is the protocol channel (log to stderr); first bytes: {first_bytes:?}")]
+    NotJson {
+        /// Start of the bad line.
+        first_bytes: String,
+    },
+    /// A result did not have the shape MCP defines.
+    #[error("invalid MCP {operation} result: {source}")]
+    Shape {
+        /// Request method.
+        operation: &'static str,
+        /// Decode failure.
+        source: serde_json::Error,
+    },
     /// Request or shutdown exceeded its deadline.
-    #[error("MCP {0} timed out")]
-    Timeout(&'static str),
+    #[error("MCP {operation} timed out after {seconds} s")]
+    Timeout {
+        /// What was running.
+        operation: &'static str,
+        /// Deadline.
+        seconds: u64,
+    },
     /// Server closed the protocol channel.
     #[error("MCP server exited while waiting for {operation} (status: {status:?})")]
     Exited {
@@ -83,77 +121,94 @@ pub enum McpError {
     },
 }
 
-pub(crate) fn page_params(cursor: Option<&str>) -> Value {
-    cursor.map_or_else(|| json!({}), |value: &str| json!({"cursor":value}))
-}
-
-pub(crate) fn response(line: &str, id: u64, method: &str) -> Result<Option<Value>, McpError> {
-    let envelope: Value = serde_json::from_str(line)?;
-    if envelope.get("id").is_none() {
-        return Ok(None);
+fn spawn_cause(source: &std::io::Error) -> String {
+    if source.kind() == std::io::ErrorKind::NotFound {
+        "not found on PATH (install it or fix PATH)".to_owned()
+    } else {
+        source.to_string()
     }
-    if envelope.get("jsonrpc") != Some(&json!("2.0")) || envelope.get("id") != Some(&json!(id)) {
-        return Err(McpError::Protocol(format!(
-            "mismatched envelope for {method}"
-        )));
-    }
-    if let Some(error) = envelope.get("error") {
-        return Err(McpError::Remote {
-            code: error.get("code").and_then(Value::as_i64).unwrap_or(-1),
-            message: error
-                .get("message")
-                .and_then(Value::as_str)
-                .unwrap_or("missing message")
-                .to_owned(),
-        });
-    }
-    envelope
-        .get("result")
-        .cloned()
-        .map(Some)
-        .ok_or_else(|| McpError::Protocol("missing result".into()))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{response, McpError};
-    use proptest::prelude::*;
-    use serde_json::json;
+    use super::McpError;
 
-    #[test]
-    fn checks_response_identity_and_error_shape() {
-        assert_eq!(
-            response(r#"{"jsonrpc":"2.0","method":"notice"}"#, 4, "ping").unwrap(),
-            None
-        );
-        assert_eq!(
-            response(r#"{"jsonrpc":"2.0","id":4,"result":{}}"#, 4, "ping").unwrap(),
-            Some(json!({}))
-        );
-        assert!(matches!(
-            response(r#"{"jsonrpc":"2.0","id":5,"result":{}}"#, 4, "ping"),
-            Err(McpError::Protocol(_))
-        ));
-        assert!(matches!(
-            response(
-                r#"{"jsonrpc":"2.0","id":4,"error":{"code":-1,"message":"bad"}}"#,
-                4,
-                "ping"
+    fn process_error_cases() -> Vec<(McpError, &'static str)> {
+        let bad_json: serde_json::Error = serde_json::from_str::<u8>("x").unwrap_err();
+        vec![
+            (
+                McpError::Spawn {
+                    program: "dotnet".into(),
+                    source: std::io::ErrorKind::NotFound.into(),
+                },
+                "cannot start `dotnet`: not found on PATH",
             ),
-            Err(McpError::Remote { code: -1, .. })
-        ));
-        assert!(matches!(
-            response("garbage", 4, "ping"),
-            Err(McpError::Json(_))
-        ));
+            (
+                McpError::Build {
+                    project: "a.csproj".into(),
+                    status: "exit status: 1".into(),
+                    output: "CS0029".into(),
+                },
+                "`dotnet build` failed for a.csproj",
+            ),
+            (
+                McpError::Io {
+                    operation: "write to server stdin",
+                    source: std::io::ErrorKind::BrokenPipe.into(),
+                },
+                "MCP write to server stdin failed",
+            ),
+            (
+                McpError::NotJson {
+                    first_bytes: "Hello".into(),
+                },
+                "non-JSON to stdout",
+            ),
+            (
+                McpError::Shape {
+                    operation: "tools/list",
+                    source: bad_json,
+                },
+                "invalid MCP tools/list result",
+            ),
+        ]
     }
 
-    proptest! {
-        #[test]
-        fn valid_response_roundtrips_any_id_and_text(id in any::<u64>(), text in ".*") {
-            let wire: String = json!({"jsonrpc":"2.0","id":id,"result":{"text":text}}).to_string();
-            let result: Option<serde_json::Value> = response(&wire, id, "ping").unwrap();
-            prop_assert_eq!(result, Some(json!({"text":text})));
+    fn protocol_error_cases() -> Vec<(McpError, &'static str)> {
+        vec![
+            (
+                McpError::Timeout {
+                    operation: "initialize",
+                    seconds: 30,
+                },
+                "MCP initialize timed out after 30 s",
+            ),
+            (
+                McpError::Exited {
+                    operation: "tools/call",
+                    status: None,
+                },
+                "exited while waiting for tools/call",
+            ),
+            (McpError::Protocol("x".into()), "invalid MCP response: x"),
+            (
+                McpError::Remote {
+                    code: -32601,
+                    message: "nope".into(),
+                },
+                "MCP error -32601: nope",
+            ),
+        ]
+    }
+
+    #[test]
+    fn every_error_message_names_its_cause() {
+        for (error, wanted) in process_error_cases()
+            .into_iter()
+            .chain(protocol_error_cases())
+        {
+            let text: String = error.to_string();
+            assert!(text.contains(wanted), "{text:?} lacks {wanted:?}");
         }
     }
 }

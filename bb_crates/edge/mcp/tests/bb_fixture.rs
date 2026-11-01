@@ -1,6 +1,6 @@
 //! MCP process and protocol checks against the local C# fixture only.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
 
@@ -10,6 +10,41 @@ use serde_json::json;
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../shell/desktop/fixtures/_Harness/McpServer/_McpServer.csproj")
+}
+
+fn copy_tree(from: &Path, to: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry: std::fs::DirEntry = entry?;
+        let name: std::ffi::OsString = entry.file_name();
+        if name == "bin" || name == "obj" {
+            continue;
+        }
+        if entry.file_type()?.is_dir() {
+            copy_tree(&entry.path(), &to.join(&name))?;
+        } else {
+            std::fs::copy(entry.path(), to.join(&name))?;
+        }
+    }
+    Ok(())
+}
+
+fn fixture_with_build_warning() -> std::io::Result<PathBuf> {
+    let root: PathBuf = std::env::temp_dir().join(format!("bb-mcp-warning-{}", std::process::id()));
+    let _fresh: std::io::Result<()> = std::fs::remove_dir_all(&root);
+    let source: PathBuf = fixture()
+        .ancestors()
+        .nth(2)
+        .map(Path::to_path_buf)
+        .ok_or_else(|| std::io::Error::other("fixture project has no solution folder"))?;
+    for project in ["McpServer", "Core"] {
+        copy_tree(&source.join(project), &root.join(project))?;
+    }
+    std::fs::write(
+        root.join("McpServer/Warn.cs"),
+        "namespace Harness.McpServer;\npublic static class Warn { public static void W() { int unused; } }\n",
+    )?;
+    Ok(root)
 }
 
 fn group_alive(pid: u32) -> bool {
@@ -38,8 +73,11 @@ async fn greet_bad_arguments_and_stop_leave_no_group() {
     assert!(!group_alive(pid));
     restarted.ping().await.unwrap();
     let restarted_pid: u32 = restarted.pid().unwrap();
+    let stopping: std::time::Instant = std::time::Instant::now();
     let status: std::process::ExitStatus = restarted.stop().await.unwrap();
+    let stop_time: Duration = stopping.elapsed();
     assert!(status.success());
+    assert!(stop_time < Duration::from_secs(1), "{stop_time:?}");
     assert!(!group_alive(restarted_pid));
 }
 
@@ -58,7 +96,7 @@ async fn killing_server_mid_call_fails_waiter_without_orphan() {
     let call: Result<bb_mcp::CallResult, McpError> = session.call("Hold", json!({})).await;
     assert!(matches!(
         call,
-        Err(McpError::Exited { .. } | McpError::Io(_))
+        Err(McpError::Exited { .. } | McpError::Io { .. })
     ));
     assert!(killer.await.unwrap().unwrap().success());
     assert!(!group_alive(pid));
@@ -74,4 +112,15 @@ async fn startup_stderr_survives_the_handshake() {
         .unwrap();
     assert!(line.contains("fixture boot"));
     session.stop().await.unwrap();
+}
+
+#[tokio::test]
+async fn build_warnings_never_reach_the_protocol_channel() {
+    let root: PathBuf = fixture_with_build_warning().unwrap();
+    let started: Result<Session, McpError> =
+        Session::start(&root.join("McpServer/_McpServer.csproj")).await;
+    let mut session: Session = started.unwrap();
+    session.ping().await.unwrap();
+    session.stop().await.unwrap();
+    std::fs::remove_dir_all(&root).unwrap();
 }

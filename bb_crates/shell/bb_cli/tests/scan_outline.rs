@@ -159,3 +159,19 @@ fn calls_fixture_greet_and_reports_bad_arguments() {
     assert_eq!(bad.code, Some(1), "{}", bad.all());
     assert!(bad.err.contains("isError") || bad.err.contains("MCP error"));
 }
+
+#[test]
+fn mcp_without_dotnet_on_path_names_the_missing_program() {
+    let project: String = common::harness()
+        .join("McpServer/_McpServer.csproj")
+        .display()
+        .to_string();
+    let run: common::Run =
+        common::bb_env(&["mcp", "tools", &project], &[("PATH", "/usr/bin:/bin")]);
+    assert_eq!(run.code, Some(1), "{}", run.all());
+    assert!(
+        run.err.contains("cannot start `dotnet`: not found on PATH"),
+        "{}",
+        run.err
+    );
+}

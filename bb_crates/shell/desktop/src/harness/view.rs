@@ -1,10 +1,12 @@
 #[path = "view/logs.rs"]
 mod bb_logs;
 mod bb_tools;
+mod result;
 use bb_logs::logs;
 pub(crate) use bb_tools::key_down;
 use bb_tools::tools;
 use bb_ui::bb_theme::Theme;
+use bb_ui::Rgb;
 use gpui::{div, prelude::*, px, AnyElement, Context, IntoElement, Window};
 
 use super::model::{Server, ServerStatus};
@@ -46,13 +48,7 @@ fn server_row(
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
-    let state: &'static str = match server.status {
-        ServerStatus::Stopped => "○ stopped",
-        ServerStatus::Starting => "◌ starting",
-        ServerStatus::Stopping => "◌ stopping",
-        ServerStatus::Running => "● running",
-        ServerStatus::Crashed(_) => "● crashed",
-    };
+    let (state, state_colour): (&'static str, Rgb) = status_badge(&server.status, theme);
     let name: String = server.name.clone();
     div()
         .id(format!("server-{index}"))
@@ -70,7 +66,7 @@ fn server_row(
                 .flex()
                 .gap_2()
                 .child(name)
-                .child(div().text_color(color(theme.text_dim)).child(state)),
+                .child(div().text_color(color(state_colour)).child(state)),
         )
         .child(server_controls(index, theme, cx))
         .on_click(cx.listener(
@@ -84,6 +80,17 @@ fn server_row(
                 cx.notify();
             },
         ))
+}
+
+/// Label and colour token for one server state; every state differs in both.
+pub(super) fn status_badge(status: &ServerStatus, theme: Theme) -> (&'static str, Rgb) {
+    match status {
+        ServerStatus::Stopped => ("○ stopped", theme.text_dim),
+        ServerStatus::Starting => ("◌ starting", theme.accent),
+        ServerStatus::Stopping => ("◌ stopping", theme.warn),
+        ServerStatus::Running => ("● running", theme.ok),
+        ServerStatus::Crashed(_) => ("✕ crashed", theme.error),
+    }
 }
 
 fn server_controls(index: usize, theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {

@@ -1,5 +1,9 @@
 # Backback progress
 
+## BBEOD06-FIX (backback_1, 2026-11-01)
+
+- `bbeod-06-gui` from `9d7ea08`. B3-B8 + F1 fixed test-first; lessons in `readback/BBEOD06/FIX/bb_FIX.md`.
+
 ## BBEOD06-B ready for review (backback_2, 2026-11-01)
 
 - Branch `bbeod-06-gui`, claimed worktree `backback_wt/bbeod-06-gui`.
@@ -89,7 +93,6 @@
   and `docs/bb_design/BBEOD02_RESIZED.png`.
 
 - BBEOD01-E: renamed plan marker to `bb_roadmap/`; independent frozen worktree gate pending.
-
 ## BBEOD06-A engine (backback_2, 2026-11-01)
 
 - `bbeod-06-mcp` merged into BBEOD06-B. Discovery, stdio client, CLI, fixture, tests, and guards are in the merge.

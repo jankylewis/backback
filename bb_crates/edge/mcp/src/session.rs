@@ -3,20 +3,20 @@
 use std::time::Duration;
 
 use serde_json::{json, Value};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::process::{Child, ChildStdin, ChildStdout};
-use tokio::sync::broadcast;
+use tokio::process::Child;
+use tokio::sync::{broadcast, mpsc};
 use tokio::time::timeout;
 
 const DEADLINE: Duration = Duration::from_secs(30);
 
 use crate::types::{CallResult, McpError, Resource, ResourcePage, Tool, ToolPage};
+use crate::wire::{self, Inbound, Input};
 
 /// Owns exactly one MCP child and its stdio channel.
 pub struct Session {
     pub(crate) child: Child,
-    pub(crate) input: ChildStdin,
-    pub(crate) output: BufReader<ChildStdout>,
+    pub(crate) input: Input,
+    pub(crate) inbound: mpsc::UnboundedReceiver<Inbound>,
     pub(crate) logs: broadcast::Receiver<String>,
     pub(crate) next_id: u64,
 }
@@ -41,9 +41,9 @@ impl Session {
         let mut cursor: Option<String> = None;
         loop {
             let value: Value = self
-                .request("tools/list", crate::types::page_params(cursor.as_deref()))
+                .request("tools/list", wire::page_params(cursor.as_deref()))
                 .await?;
-            let page: ToolPage = serde_json::from_value(value)?;
+            let page: ToolPage = decode(value, "tools/list")?;
             all.extend(page.tools);
             cursor = page.next_cursor;
             if cursor.is_none() {
@@ -61,12 +61,9 @@ impl Session {
         let mut cursor: Option<String> = None;
         loop {
             let value: Value = self
-                .request(
-                    "resources/list",
-                    crate::types::page_params(cursor.as_deref()),
-                )
+                .request("resources/list", wire::page_params(cursor.as_deref()))
                 .await?;
-            let page: ResourcePage = serde_json::from_value(value)?;
+            let page: ResourcePage = decode(value, "resources/list")?;
             all.extend(page.resources);
             cursor = page.next_cursor;
             if cursor.is_none() {
@@ -83,14 +80,14 @@ impl Session {
         let value: Value = self
             .request("tools/call", json!({"name":name,"arguments":arguments}))
             .await?;
-        Ok(serde_json::from_value(value)?)
+        decode(value, "tools/call")
     }
 
-    pub(crate) async fn notify(&mut self, method: &str) -> Result<(), McpError> {
+    pub(crate) async fn notify(&mut self, method: &'static str) -> Result<(), McpError> {
         let body: Value = json!({"jsonrpc":"2.0","method":method});
-        timeout(DEADLINE, self.write(&body))
+        timeout(DEADLINE, wire::write(&self.input, &body))
             .await
-            .map_err(|_e: tokio::time::error::Elapsed| McpError::Timeout("notification"))?
+            .map_err(|_e: tokio::time::error::Elapsed| timed_out(method))?
     }
 
     pub(crate) async fn request(
@@ -105,34 +102,52 @@ impl Session {
             .ok_or_else(|| McpError::Protocol("request id overflow".into()))?;
         let body: Value = json!({"jsonrpc":"2.0","id":id,"method":method,"params":params});
         timeout(DEADLINE, async {
-            self.write(&body).await?;
+            wire::write(&self.input, &body).await?;
             loop {
-                let mut line: String = String::new();
-                if self.output.read_line(&mut line).await? == 0 {
-                    let status: Option<String> = timeout(Duration::from_secs(2), self.child.wait())
-                        .await
-                        .ok()
-                        .and_then(Result::ok)
-                        .map(|value: std::process::ExitStatus| value.to_string());
-                    return Err(McpError::Exited {
-                        operation: method,
-                        status,
-                    });
-                }
-                if let Some(value) = crate::types::response(&line, id, method)? {
-                    return Ok(value);
+                match self.inbound.recv().await {
+                    Some(Inbound::Response(envelope)) => {
+                        if let Some(value) = wire::result(&envelope, id, method)? {
+                            return Ok(value);
+                        }
+                    }
+                    Some(Inbound::NotJson(first_bytes)) => {
+                        return Err(McpError::NotJson { first_bytes });
+                    }
+                    Some(Inbound::Failed(source)) => {
+                        return Err(McpError::Io {
+                            operation: "read server stdout",
+                            source,
+                        });
+                    }
+                    None => return Err(self.exited(method).await),
                 }
             }
         })
         .await
-        .map_err(|_e: tokio::time::error::Elapsed| McpError::Timeout(method))?
+        .map_err(|_e: tokio::time::error::Elapsed| timed_out(method))?
     }
 
-    async fn write(&mut self, body: &Value) -> Result<(), McpError> {
-        let mut bytes: Vec<u8> = serde_json::to_vec(body)?;
-        bytes.push(b'\n');
-        self.input.write_all(&bytes).await?;
-        self.input.flush().await?;
-        Ok(())
+    async fn exited(&mut self, operation: &'static str) -> McpError {
+        let status: Option<String> = timeout(Duration::from_secs(2), self.child.wait())
+            .await
+            .ok()
+            .and_then(Result::ok)
+            .map(|value: std::process::ExitStatus| value.to_string());
+        McpError::Exited { operation, status }
+    }
+}
+
+fn decode<T: serde::de::DeserializeOwned>(
+    value: Value,
+    operation: &'static str,
+) -> Result<T, McpError> {
+    serde_json::from_value(value)
+        .map_err(|source: serde_json::Error| McpError::Shape { operation, source })
+}
+
+fn timed_out(operation: &'static str) -> McpError {
+    McpError::Timeout {
+        operation,
+        seconds: DEADLINE.as_secs(),
     }
 }

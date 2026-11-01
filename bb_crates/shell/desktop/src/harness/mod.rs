@@ -1,15 +1,15 @@
 mod actor;
 #[cfg(test)]
-#[path = "view/tests.rs"]
+#[path = "view/tests/mod.rs"]
 mod bb_tests;
 #[cfg(debug_assertions)]
 #[path = "view/demo.rs"]
 pub(crate) mod demo;
-#[path = "bb_model.rs"]
+#[path = "bb_model/mod.rs"]
 mod model;
 mod view;
 
-use gpui::ScrollHandle;
+use gpui::{ScrollStrategy, UniformListScrollHandle};
 use std::path::Path;
 
 use actor::{Actor, Command, Event};
@@ -39,7 +39,8 @@ pub(crate) struct Harness {
     pub(crate) search: String,
     pub(crate) edit: Option<usize>,
     pub(crate) search_edit: bool,
-    pub(crate) log_scroll: ScrollHandle,
+    pub(crate) log_scroll: UniformListScrollHandle,
+    pub(crate) result_scroll: UniformListScrollHandle,
 }
 
 impl Harness {
@@ -56,7 +57,8 @@ impl Harness {
             search: String::new(),
             edit: None,
             search_edit: false,
-            log_scroll: ScrollHandle::new(),
+            log_scroll: UniformListScrollHandle::new(),
+            result_scroll: UniformListScrollHandle::new(),
         })
     }
 
@@ -71,7 +73,8 @@ impl Harness {
             search: String::new(),
             edit: None,
             search_edit: false,
-            log_scroll: ScrollHandle::new(),
+            log_scroll: UniformListScrollHandle::new(),
+            result_scroll: UniformListScrollHandle::new(),
         }
     }
 
@@ -140,7 +143,7 @@ impl Harness {
                             generation: server.generation,
                         })
                         .is_ok();
-                    server.result = Some("Calling…".into());
+                    server.result = Some(String::from("Calling…").into());
                     server.error = None;
                 }
             }
@@ -181,14 +184,15 @@ impl Harness {
                         server.error = Some(error);
                         server.pid = None;
                     }
-                    Event::Called { result, .. } => {
-                        server.result = serde_json::to_string_pretty(&result.content).ok();
-                        server.error = result.is_error.then(|| "tool returned an error".into());
+                    Event::Called { text, is_error, .. } => {
+                        server.result = Some(text);
+                        server.error = is_error.then(|| "tool returned an error".into());
                     }
                     Event::Log { line, .. } => {
                         server.logs.push(line);
                         if self.follow && self.selected == Some(index) {
-                            self.log_scroll.scroll_to_bottom();
+                            let last: usize = server.logs.len().saturating_sub(1);
+                            self.log_scroll.scroll_to_item(last, ScrollStrategy::Bottom);
                         }
                     }
                 }

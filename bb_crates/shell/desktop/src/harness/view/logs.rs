@@ -2,7 +2,11 @@ use super::super::model::Server;
 use super::button;
 use crate::ExplorerView;
 use bb_ui::bb_theme::Theme;
-use gpui::{div, prelude::*, AnyElement, Context, IntoElement, StatefulInteractiveElement, Window};
+use gpui::{div, prelude::*, uniform_list, AnyElement, Context, IntoElement, Window};
+use std::ops::Range;
+
+/// A longer log line shows its first characters only; Copy is not affected.
+const LOG_ROW_CHARS: usize = 1000;
 
 pub(super) fn logs(
     view: &ExplorerView,
@@ -10,13 +14,7 @@ pub(super) fn logs(
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> AnyElement {
-    let search: String = view.harness.search.to_lowercase();
-    let visible: Vec<AnyElement> = server
-        .logs
-        .iter()
-        .filter(|line: &&String| line.to_lowercase().contains(&search))
-        .map(|line: &String| div().px_2().child(line.clone()).into_any_element())
-        .collect();
+    let count: usize = matching(&view.harness.search, server).len();
     div()
         .flex_1()
         .flex()
@@ -24,14 +22,60 @@ pub(super) fn logs(
         .child(log_controls(view, theme, cx))
         .child(search_box(view, cx))
         .child(
-            div()
-                .id("logs-scroll")
-                .flex_1()
-                .overflow_y_scroll()
-                .track_scroll(&view.harness.log_scroll)
-                .children(visible),
+            uniform_list(
+                "logs-scroll",
+                count,
+                cx.processor(
+                    |view: &mut ExplorerView,
+                     range: Range<usize>,
+                     _: &mut Window,
+                     _: &mut Context<ExplorerView>| log_rows(view, range),
+                ),
+            )
+            .track_scroll(&view.harness.log_scroll)
+            .flex_1(),
         )
         .into_any_element()
+}
+
+/// Indices of the log lines that match the search, in order.
+fn matching(search: &str, server: &Server) -> Vec<usize> {
+    let needle: String = search.to_lowercase();
+    server
+        .logs
+        .iter()
+        .enumerate()
+        .filter(|(_, line): &(usize, &String)| {
+            needle.is_empty() || line.to_lowercase().contains(&needle)
+        })
+        .map(|(index, _): (usize, &String)| index)
+        .collect()
+}
+
+fn log_rows(view: &ExplorerView, range: Range<usize>) -> Vec<AnyElement> {
+    let Some(server): Option<&Server> = view
+        .harness
+        .selected
+        .and_then(|index: usize| view.harness.servers.get(index))
+    else {
+        return Vec::new();
+    };
+    let lines: Vec<usize> = matching(&view.harness.search, server);
+    range
+        .filter_map(|row: usize| {
+            lines
+                .get(row)
+                .and_then(|line: &usize| server.logs.get(*line))
+        })
+        .map(|line: &String| {
+            let shown: String = line.chars().take(LOG_ROW_CHARS).collect();
+            div()
+                .px_2()
+                .whitespace_nowrap()
+                .child(shown)
+                .into_any_element()
+        })
+        .collect()
 }
 
 fn log_controls(

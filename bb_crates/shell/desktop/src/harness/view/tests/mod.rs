@@ -3,11 +3,19 @@ use std::process::{Command as OsCommand, Stdio};
 use std::time::{Duration, Instant};
 
 use super::{Harness, ServerStatus};
-use crate::harness::model::{FormField, ToolView};
+use crate::harness::model::{FormField, RowText, Server, ToolView};
 use gpui::{
     point, px, size, Bounds, Modifiers, TestAppContext, VisualTestContext, WindowBounds,
     WindowOptions,
 };
+
+fn report(server: &Server) -> String {
+    let recent: Vec<&String> = server.logs.iter().rev().take(5).collect();
+    format!(
+        "status {:?}, error {:?}, recent logs {recent:?}",
+        server.status, server.error
+    )
+}
 
 fn wait_for(harness: &mut Harness, wanted: impl Fn(&Harness) -> bool) {
     let deadline: Instant = Instant::now() + Duration::from_secs(20);
@@ -16,9 +24,18 @@ fn wait_for(harness: &mut Harness, wanted: impl Fn(&Harness) -> bool) {
         if wanted(harness) {
             return;
         }
+        if let ServerStatus::Crashed(error) = &harness.servers[0].status {
+            panic!(
+                "MCP fixture crashed: {error}; {}",
+                report(&harness.servers[0])
+            );
+        }
         std::thread::sleep(Duration::from_millis(25));
     }
-    panic!("MCP fixture transition timed out");
+    panic!(
+        "MCP fixture transition timed out: {}",
+        report(&harness.servers[0])
+    );
 }
 
 fn process_exists(pid: u32) -> bool {
@@ -63,7 +80,7 @@ fn call_greet(harness: &mut Harness) {
         state.servers[0]
             .result
             .as_ref()
-            .is_some_and(|result: &String| result.contains("Ada"))
+            .is_some_and(|result: &RowText| result.as_str().contains("Ada"))
     });
 }
 
@@ -123,6 +140,8 @@ fn focus_name_field(view: &gpui::Entity<crate::ExplorerView>, visual: &mut Visua
                     kind: crate::harness::model::FieldKind::String,
                     value: String::new(),
                     required: true,
+                    parents: Vec::new(),
+                    nullable: false,
                 }],
             }];
             window.focus(&state.harness_focus, cx);
@@ -136,22 +155,28 @@ fn wait_window_status(
     wanted: &ServerStatus,
 ) {
     let deadline: Instant = Instant::now() + Duration::from_secs(20);
+    let mut last: String = String::new();
     while Instant::now() < deadline {
-        let status: ServerStatus = view.update_in(
+        let (status, seen): (ServerStatus, String) = view.update_in(
             visual,
             |state: &mut crate::ExplorerView,
              _: &mut gpui::Window,
              _: &mut gpui::Context<crate::ExplorerView>| {
                 state.harness.poll();
-                state.harness.servers[0].status.clone()
+                let server: &Server = &state.harness.servers[0];
+                (server.status.clone(), report(server))
             },
         );
         if &status == wanted {
             return;
         }
+        if let ServerStatus::Crashed(error) = &status {
+            panic!("window MCP server crashed: {error}; {seen}");
+        }
+        last = seen;
         std::thread::sleep(Duration::from_millis(25));
     }
-    panic!("window MCP status timed out");
+    panic!("window MCP status {wanted:?} timed out: {last}");
 }
 
 #[gpui::test]
@@ -204,3 +229,6 @@ fn window_mouse_start_and_keystroke_edit_reach_harness(cx: &mut TestAppContext) 
     wait_window_status(&view, &mut visual, &ServerStatus::Stopped);
     assert!(!process_exists(pid));
 }
+
+#[path = "bb_render.rs"]
+mod render;

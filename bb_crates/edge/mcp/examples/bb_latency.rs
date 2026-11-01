@@ -1,6 +1,6 @@
-//! Measure the local fixture server after one warm-up and five calls.
+//! Measure the local fixture server: cold start, five warm calls, five stops.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use bb_mcp::Session;
@@ -31,5 +31,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         samples.get(2).copied().unwrap_or_default()
     );
     session.stop().await?;
+    let stops: Vec<u128> = stop_samples(&project).await?;
+    println!(
+        "stop_ms={stops:?} stop_median_ms={}",
+        stops.get(2).copied().unwrap_or_default()
+    );
     Ok(())
+}
+
+/// One warm-up stop, then five timed graceful stops, sorted.
+async fn stop_samples(project: &Path) -> Result<Vec<u128>, Box<dyn std::error::Error>> {
+    let mut samples: Vec<u128> = Vec::new();
+    for run in 0..6 {
+        let session: Session = Session::start(project).await?;
+        let before: Instant = Instant::now();
+        let status: std::process::ExitStatus = session.stop().await?;
+        if !status.success() {
+            return Err(format!("stop ended with {status}").into());
+        }
+        if run > 0 {
+            samples.push(before.elapsed().as_millis());
+        }
+    }
+    samples.sort_unstable();
+    Ok(samples)
 }

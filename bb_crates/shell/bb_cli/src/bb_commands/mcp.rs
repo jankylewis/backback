@@ -61,26 +61,31 @@ pub async fn run(command: McpCommand) -> Result<(), McpCommandError> {
             }
             Ok(())
         }
-        McpCommand::Log(path) => {
-            let mut session: Session = start(&path).await?;
-            let logs: &mut tokio::sync::broadcast::Receiver<String> = session.logs();
-            loop {
-                tokio::select! {
-                    line = logs.recv() => match line {
-                        Ok(text) => eprintln!("{text}"),
-                        Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {},
-                        Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
-                    },
-                    signal = tokio::signal::ctrl_c() => {
-                        signal.map_err(McpError::from)?;
-                        break;
-                    }
-                }
+        McpCommand::Log(path) => log(&path).await,
+    }
+}
+
+async fn log(path: &Path) -> Result<(), McpCommandError> {
+    let mut session: Session = start(path).await?;
+    let logs: &mut tokio::sync::broadcast::Receiver<String> = session.logs();
+    loop {
+        tokio::select! {
+            line = logs.recv() => match line {
+                Ok(text) => eprintln!("{text}"),
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {},
+                Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+            },
+            signal = tokio::signal::ctrl_c() => {
+                signal.map_err(|source: std::io::Error| McpError::Io {
+                    operation: "wait for Ctrl-C",
+                    source,
+                })?;
+                break;
             }
-            session.stop().await?;
-            Ok(())
         }
     }
+    session.stop().await?;
+    Ok(())
 }
 
 fn list(solution: &Path) -> Result<(), McpCommandError> {

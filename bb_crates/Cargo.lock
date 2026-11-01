@@ -432,6 +432,7 @@ dependencies = [
  "bb-ui",
  "gpui",
  "gpui_platform",
+ "proptest",
  "serde_json",
  "tempfile",
  "thiserror 2.0.21",
