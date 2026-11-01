@@ -1,5 +1,7 @@
-//! Completion keys: `.`, Ctrl+Space, filter, Enter, stale answers.
+//! Completion keys: `.`, Ctrl+Space, filter, Enter, stale answers; what a
+//! dead server leaves on screen.
 
+use bb_intel::{Diagnostic, Severity, Span};
 use bb_text::LspPoint;
 
 use super::bb_rig::items;
@@ -109,4 +111,81 @@ fn stopped_status_fails_questions_and_replays_unsaved_text(cx: &mut TestAppConte
     );
     let sent: Request = requests.try_recv().unwrap();
     assert!(matches!(sent, Request::Open { path, text } if path == rig.file && text == current));
+}
+
+fn draw_one_error_and_ask(rig: &mut Rig, vcx: &mut VisualTestContext) {
+    let at: LspPoint = LspPoint {
+        line: 0,
+        character: 21,
+    };
+    let error: Diagnostic = Diagnostic {
+        span: Span { start: at, end: at },
+        severity: Some(Severity::Error),
+        code: Some(String::from("CS0103")),
+        message: String::from("The name 'x' does not exist"),
+    };
+    rig.events
+        .send(Event::Diagnostics {
+            path: rig.file.clone(),
+            list: vec![error],
+        })
+        .unwrap();
+    rig.cursor_after(vcx, "{ x");
+    vcx.simulate_keystrokes("ctrl-space");
+    rig.last_ask();
+    rig.view
+        .read_with(vcx, |view: &ExplorerView, _: &gpui::App| {
+            assert_eq!(view.intel.diagnostics_of(&rig.file).len(), 1);
+            assert!(view.intel.in_flight.waiting(AskKind::Completion));
+        });
+}
+
+fn assert_no_server_state(rig: &Rig, vcx: &mut VisualTestContext, label: &str) {
+    rig.view
+        .read_with(vcx, |view: &ExplorerView, _: &gpui::App| {
+            assert_eq!(view.intel.status.label(), label);
+            assert_eq!(
+                view.intel.diagnostics_of(&rig.file),
+                Vec::<Diagnostic>::new()
+            );
+            assert_eq!(
+                view.intel.problems(),
+                Vec::<(&std::path::Path, &Diagnostic)>::new()
+            );
+            assert!(!view.intel.in_flight.waiting(AskKind::Completion));
+        });
+}
+
+#[gpui::test]
+fn a_stopped_server_leaves_no_squiggles_or_problems(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    draw_one_error_and_ask(&mut rig, vcx);
+    rig.events.send(Event::Stopped).unwrap();
+    vcx.run_until_parked();
+    assert_no_server_state(&rig, vcx, "C# server stopped — Restart");
+}
+
+#[gpui::test]
+fn a_failed_server_leaves_no_squiggles_or_problems(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    draw_one_error_and_ask(&mut rig, vcx);
+    rig.events
+        .send(Event::Failed(String::from("gone")))
+        .unwrap();
+    vcx.run_until_parked();
+    assert_no_server_state(&rig, vcx, "C# server failed: gone");
+}
+
+#[gpui::test]
+fn a_closed_server_thread_leaves_no_squiggles_or_problems(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    draw_one_error_and_ask(&mut rig, vcx);
+    let (_unused, fresh): (
+        tokio::sync::mpsc::UnboundedSender<Request>,
+        tokio::sync::mpsc::UnboundedReceiver<Request>,
+    ) = tokio::sync::mpsc::unbounded_channel();
+    drop(std::mem::replace(&mut rig.requests, fresh));
+    vcx.simulate_keystrokes("y");
+    vcx.run_until_parked();
+    assert_no_server_state(&rig, vcx, "C# server failed: server thread stopped");
 }

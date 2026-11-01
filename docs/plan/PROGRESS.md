@@ -1,5 +1,10 @@
 # BBEOD02 progress
 
+- BBEOD03-FIX2 (backback_1, 2026-11-01): Apex list evaluates `TargetPath` in
+  place and lists a temp copy through a stub project; MbTx 11/11, 0 writes.
+  A dead server now drops its squiggles and Problems on every gone path.
+  Record: `readback/BBEOD03/BBEOD03_FIX2.md`.
+
 - BBEOD03-FIX (backback_2, 2026-11-01): claimed `backback_wt/bbeod-03-gui`;
   merged `origin/master` at `c07f7bf`. Discovery now uses temp shadow output;
   real child death yields Stopped within 1 s and restart answers completion.
