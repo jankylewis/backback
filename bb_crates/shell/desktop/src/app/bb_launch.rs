@@ -1,5 +1,6 @@
 use crate::args::Start;
 use crate::editor::{Quit, Tabs};
+use crate::harness::{Harness, HarnessVisibility, ToggleHarness};
 use crate::theme::{install_appearance_observer, resolved_theme, FollowAppearance, ToggleTheme};
 use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open, RestartServer};
 use bb_explorer::Explorer;
@@ -19,7 +20,16 @@ pub(crate) fn launch() {
             std::process::exit(1);
         }
     };
+    if let Err(error) = bb_mcp::exit_on_signal(true) {
+        eprintln!("bb: cannot watch fatal signals: {error}");
+    }
     gpui_platform::application().run(move |cx: &mut App| {
+        // Quit ends every MCP server group; gpui gives quit hooks 200 ms.
+        cx.on_app_quit(|_: &mut App| {
+            bb_mcp::end_all_servers();
+            std::future::ready(())
+        })
+        .detach();
         bind_keys(cx);
         cx.set_menus(menus());
         let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(1000.0), px(700.0)), cx);
@@ -51,15 +61,24 @@ fn build_window(
     window.focus(&focus, cx);
     install_close_guard(window, &view, cx);
     install_appearance_observer(window, &view, cx);
+    crate::harness::install_poll(window, &view, cx);
     view.update(
         cx,
         |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            state.harness = Harness::load(&wanted.root).unwrap_or_else(
+                |error: crate::harness::HarnessError| {
+                    state.report(&error);
+                    Harness::empty()
+                },
+            );
             crate::intel::glue::connect(state, window, cx);
             if let Some(file) = &wanted.file {
                 state.open_file(file, window, cx);
             }
         },
     );
+    #[cfg(debug_assertions)]
+    crate::harness::demo::start(&view, window, cx);
     window.on_next_frame(move |_: &mut Window, _: &mut App| {
         eprintln!("first_frame_ms={}", start.elapsed().as_millis());
     });
@@ -72,6 +91,7 @@ fn menus() -> Vec<Menu> {
         Menu::new("View").items([
             MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
             MenuItem::action("Follow macOS Appearance", FollowAppearance),
+            MenuItem::action("Toggle Harness", ToggleHarness),
         ]),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
     ]
@@ -102,6 +122,9 @@ pub(crate) fn fresh_view(
         selected: 0,
         focus: cx.focus_handle(),
         editor_focus: cx.focus_handle(),
+        harness_focus: cx.focus_handle(),
+        harness: Harness::empty(),
+        show_harness: HarnessVisibility::Visible,
         tabs,
         keypresses: 0,
         latency_before: None,
@@ -181,6 +204,6 @@ mod tests {
             Some(MenuItem::Action { name, .. }) if name.as_ref() == "Quit Backback"
         ));
         assert_eq!(configured[1].name.as_ref(), "View");
-        assert_eq!(configured[1].items.len(), 2);
+        assert_eq!(configured[1].items.len(), 3);
     }
 }

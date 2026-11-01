@@ -111,3 +111,35 @@ pub(crate) fn resize_edge(theme: Theme, cx: &mut Context<ExplorerView>) -> impl 
         .bg(color(theme.border))
         .on_mouse_down(MouseButton::Left, cx.listener(ExplorerView::start_resize))
 }
+
+impl ExplorerView {
+    pub(crate) fn move_resize(
+        &mut self,
+        event: &gpui::MouseMoveEvent,
+        _: &mut gpui::Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.resizing && event.dragging() {
+            self.panel_width = f32::from(event.position.x).clamp(180.0, 800.0);
+            cx.notify();
+        }
+    }
+
+    pub(crate) fn finish_resize(
+        &mut self,
+        _: &gpui::MouseUpEvent,
+        _: &mut gpui::Window,
+        _: &mut Context<Self>,
+    ) {
+        self.resizing = false;
+    }
+
+    fn start_resize(
+        &mut self,
+        _: &gpui::MouseDownEvent,
+        _: &mut gpui::Window,
+        _: &mut Context<Self>,
+    ) {
+        self.resizing = true;
+    }
+}

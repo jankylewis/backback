@@ -32,8 +32,14 @@ pub fn harness() -> PathBuf {
 
 /// Run `bb` with `args`; kill it and fail the test after [`DEADLINE`].
 pub fn bb(args: &[&str]) -> Run {
+    bb_env(args, &[])
+}
+
+/// Run `bb` with `args` and extra environment variables.
+pub fn bb_env(args: &[&str], env: &[(&str, &str)]) -> Run {
     let mut child: Child = Command::new(env!("CARGO_BIN_EXE_bb"))
         .args(args)
+        .envs(env.iter().copied())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()

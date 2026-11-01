@@ -6,7 +6,7 @@ mod bench;
 mod debug;
 mod dotnet;
 
-pub(crate) use dotnet::scan;
+pub(crate) use dotnet::{mcp, scan};
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -52,6 +52,9 @@ pub enum CommandError {
     /// `bb bench` problem.
     #[error(transparent)]
     Bench(#[from] bench::BenchError),
+    /// MCP problem.
+    #[error(transparent)]
+    Mcp(#[from] mcp::McpCommandError),
     /// Debugger problem.
     #[error(transparent)]
     Debug(#[from] debug::DebugError),
@@ -90,6 +93,7 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
         Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
+        Command::Mcp(command) => mcp::run(command).await.map_err(CommandError::from),
         Command::Debug {
             target,
             source,

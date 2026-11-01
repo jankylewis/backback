@@ -1,6 +1,7 @@
-//! The .NET project commands: `bb scan` and `bb test`.
+//! The .NET project commands: `bb scan`, `bb test` and `bb mcp`.
 
 mod bb_testing;
+pub(crate) mod mcp;
 pub(crate) mod scan;
 mod tree;
 

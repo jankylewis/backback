@@ -428,12 +428,15 @@ dependencies = [
  "bb-explorer",
  "bb-intel",
  "bb-lsp",
+ "bb-mcp",
  "bb-syntax",
  "bb-testkit",
  "bb-text",
  "bb-ui",
  "gpui",
  "gpui_platform",
+ "proptest",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
@@ -469,6 +472,7 @@ dependencies = [
  "bb-dotnet",
  "bb-intel",
  "bb-lsp",
+ "bb-mcp",
  "bb-syntax",
  "bb-testkit",
  "bb-text",
@@ -555,6 +559,17 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "bb-mcp"
+version = "0.0.1"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
 ]
 
 [[package]]

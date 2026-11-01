@@ -7,13 +7,13 @@
   Test Explorer GUI readback: two specs, one pass/fail, failure jump.
   Prior gate: 230 tests; bench 996.2 ms at load1 10.63, quiet check open.
   Debug awaits BBEOD05. Records: `readback/BBEOD03/BBEOD04_B/`,
-  `bench/TEST_DISCOVERY/bb_BBEOD04_B.md`.
+  `bench/bb_GENERAL/TEST_DISCOVERY/bb_BBEOD04_B.md`.
 - BBEOD03-FIX2 (backback_1, 2026-11-01): TargetPath stub, MbTx 11/11,
   0 writes, diagnostics clear. `readback/BBEOD03/BBEOD03_FIX/BBEOD03_FIX2.md`.
 - BBEOD03-FIX (backback_2, 2026-11-01): merge `c07f7bf`, temp discovery;
   child death gives Stopped within 1 s; restart works. Gate: 224 tests,
   fmt, Clippy, deny, audit. `readback/BBEOD03/BBEOD03_FIX/bb_BBEOD03_FIX.md`,
-  `bench/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet timing remains open.
+  `bench/bb_GENERAL/TEST_DISCOVERY/BBEOD03_FIX.md`. Quiet timing remains open.
 
 - BBEOD02-MEM (backback_1, 2026-11-01): 20 MB file RSS 1,008 -> 166 MB; the
   holder was the whole-file tree-sitter tree (862 MB). Large files now parse
