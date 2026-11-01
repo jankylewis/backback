@@ -98,6 +98,7 @@ fn activate(
             view.report(&error);
         }
     } else {
+        view.tabs.leave_here();
         view.open_file(&action.path, window, cx);
     }
     cx.notify();

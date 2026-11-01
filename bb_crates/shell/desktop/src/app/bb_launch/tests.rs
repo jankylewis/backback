@@ -124,5 +124,21 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
         .into_iter()
         .find(|menu: &Menu| menu.name.as_ref() == "File")
         .expect("a File menu");
-    assert_eq!(names(&file), ["Open...", "Go to File..."]);
+    assert_eq!(
+        names(&file),
+        [
+            "Open...",
+            "Go to File...",
+            "Go to Symbol...",
+            "Back",
+            "Forward"
+        ]
+    );
+    let back: &KeyBinding = &open::bindings()[2];
+    let typed_back: gpui::Keystroke = gpui::Keystroke::parse("cmd-[").unwrap();
+    assert_eq!(
+        back.match_keystrokes(std::slice::from_ref(&typed_back)),
+        Some(false)
+    );
+    assert!(back.action().partial_eq(&crate::editor::GoBack));
 }

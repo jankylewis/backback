@@ -117,6 +117,10 @@ fn menus() -> Vec<Menu> {
             .into_iter()
             .chain(crate::settings::zoom_menu_items()),
         ),
+        Menu::new("Build").items([MenuItem::action(
+            "Build Solution",
+            crate::build::BuildSolution,
+        )]),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
         bb_window::window_menu(),
     ]
@@ -194,6 +198,7 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("enter", Open, Some("Explorer")),
         KeyBinding::new("cmd-q", Quit, None),
         KeyBinding::new("cmd-shift-r", RestartServer, None),
+        KeyBinding::new("cmd-shift-b", crate::build::BuildSolution, None),
     ]);
     cx.bind_keys(bb_window::bindings());
     cx.bind_keys(open::bindings());

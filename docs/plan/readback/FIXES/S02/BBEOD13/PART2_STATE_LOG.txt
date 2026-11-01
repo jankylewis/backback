@@ -1,0 +1,13 @@
+== Back/Forward + Go to Symbol run
+bb_wait_ms=6305
+bb_state status="Ready" tab=GreeterSpec.cs line=13 col=11 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_wait_ms=51
+bb_state status="Ready" tab=Greeter.cs line=3 col=21 read_only=false completion=None refs=None rename=None actions=None problems=14 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=13 col=11 read_only=false completion=None refs=None rename=None actions=None problems=14 message=None
+bb_state status="Ready" tab=Greeter.cs line=3 col=21 read_only=false completion=None refs=None rename=None actions=None problems=14 message=None
+bb_state status="Ready" tab=Greeter.cs line=5 col=1 read_only=false completion=None refs=None rename=None actions=None problems=14 message=None
+bb_keys sent=10 ui_work_p50_us=140 ui_work_p99_us=772 ui_work_max_us=1824 parse_jobs=0 parse_mean_ms=0
+== Build run (planted CS0103)
+bb_state status="Loading 0/3 projects" tab=Greeter.cs line=1 col=1 read_only=false completion=None refs=None rename=None actions=None problems=0 message=Some("Building Harness.slnx...")
+bb_state status="Ready" tab=Greeter.cs line=1 col=1 read_only=false completion=None refs=Some(1) rename=None actions=None problems=4 message=Some("Build failed: 1 errors, 0 warnings")
+bb_keys sent=1 ui_work_p50_us=3146 ui_work_p99_us=3146 ui_work_max_us=3146 parse_jobs=0 parse_mean_ms=0

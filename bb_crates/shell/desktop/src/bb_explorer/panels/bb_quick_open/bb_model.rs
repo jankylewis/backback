@@ -1,5 +1,6 @@
 //! Go to File (Cmd+Shift+O): every file under the root, filtered by a typed
-//! query as a fuzzy subsequence; names that match rank first.
+//! query as a fuzzy subsequence; names that match rank first. Go to Symbol
+//! (Cmd+F12): the active file's outline in the same box, in source order.
 
 use std::path::{Path, PathBuf};
 
@@ -10,11 +11,26 @@ const MAX_FILES: usize = 50_000;
 /// Rows shown at once.
 pub(crate) const ROWS: usize = 14;
 
+/// What Enter picked.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum Chosen {
+    /// A file to open.
+    File(PathBuf),
+    /// A 0-based line of the active file.
+    Line(usize),
+}
+
+struct Item {
+    label: PathBuf,
+    line: usize,
+}
+
 pub(crate) struct QuickOpen {
     pub(crate) query: String,
     pub(crate) selected: usize,
-    root: PathBuf,
-    files: Vec<PathBuf>,
+    /// `Some` for Go to File (labels are paths under it), `None` for symbols.
+    root: Option<PathBuf>,
+    items: Vec<Item>,
 }
 
 impl QuickOpen {
@@ -25,19 +41,53 @@ impl QuickOpen {
         QuickOpen {
             query: String::new(),
             selected: 0,
-            root: root.to_path_buf(),
-            files,
+            root: Some(root.to_path_buf()),
+            items: files
+                .into_iter()
+                .map(|label: PathBuf| Item { label, line: 0 })
+                .collect(),
+        }
+    }
+
+    /// Go to Symbol over `outline`: (label, 0-based line), in source order.
+    pub(crate) fn symbols(outline: Vec<(String, usize)>) -> QuickOpen {
+        QuickOpen {
+            query: String::new(),
+            selected: 0,
+            root: None,
+            items: outline
+                .into_iter()
+                .map(|(label, line): (String, usize)| Item {
+                    label: PathBuf::from(label),
+                    line,
+                })
+                .collect(),
+        }
+    }
+
+    /// The box's title.
+    pub(crate) fn title(&self) -> &'static str {
+        if self.root.is_some() {
+            "Go to File"
+        } else {
+            "Go to Symbol"
         }
     }
 
     /// The best matches, relative to the root, best first.
     pub(crate) fn matches(&self) -> Vec<&Path> {
         let query: String = self.query.to_lowercase();
+        let files: bool = self.root.is_some();
         let mut scored: Vec<(u8, usize, &Path)> = self
-            .files
+            .items
             .iter()
-            .filter_map(|file: &PathBuf| {
-                score(file, &query).map(|s: u8| (s, file.as_os_str().len(), file.as_path()))
+            .filter_map(|item: &Item| {
+                let order: usize = if files {
+                    item.label.as_os_str().len()
+                } else {
+                    item.line
+                };
+                score(&item.label, &query).map(|s: u8| (s, order, item.label.as_path()))
             })
             .collect();
         scored.sort_by(|a: &(u8, usize, &Path), b: &(u8, usize, &Path)| {
@@ -50,12 +100,18 @@ impl QuickOpen {
             .collect()
     }
 
-    /// The absolute path of the selected match.
-    pub(crate) fn chosen(&self) -> Option<PathBuf> {
+    /// The selected match: a file to open, or a line of the active file.
+    pub(crate) fn chosen(&self) -> Option<Chosen> {
         let matches: Vec<&Path> = self.matches();
-        matches
-            .get(self.selected)
-            .map(|path: &&Path| self.root.join(path))
+        let label: &Path = matches.get(self.selected)?;
+        let item: &Item = self
+            .items
+            .iter()
+            .find(|item: &&Item| std::ptr::eq(item.label.as_path(), label))?;
+        Some(match &self.root {
+            Some(root) => Chosen::File(root.join(&item.label)),
+            None => Chosen::Line(item.line),
+        })
     }
 
     pub(crate) fn type_text(&mut self, text: &str) {
@@ -159,7 +215,7 @@ mod tests {
         quick.step(true);
         assert_eq!(
             quick.chosen(),
-            Some(dir.path().join("Specs/GreeterSpec.cs"))
+            Some(Chosen::File(dir.path().join("Specs/GreeterSpec.cs")))
         );
         quick.type_text("zzz");
         assert_eq!(quick.chosen(), None);
@@ -167,5 +223,19 @@ mod tests {
         quick.backspace();
         quick.backspace();
         assert_eq!(quick.matches().len(), 2);
+    }
+
+    #[test]
+    fn symbols_keep_source_order_and_enter_gives_the_line() {
+        let mut quick: QuickOpen = QuickOpen::symbols(vec![
+            ("class Greeter".to_owned(), 2),
+            ("  method Hello".to_owned(), 4),
+            ("  method Help".to_owned(), 9),
+        ]);
+        assert_eq!(quick.title(), "Go to Symbol");
+        assert_eq!(quick.matches().len(), 3);
+        quick.type_text("hel");
+        quick.step(true);
+        assert_eq!(quick.chosen(), Some(Chosen::Line(9)));
     }
 }

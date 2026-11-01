@@ -13,3 +13,20 @@ Date 2026-11-02, by backback_mm. Release `backback` from `bbeod-13-open`,
 
 Not covered: choosing a path in the macOS open panel (a system dialog, not
 driven here); the code path after it is the one the Finder launch uses.
+
+## Part 2: Back/Forward, Go to Symbol, Build (2026-11-02)
+
+Release `backback` from `bbeod-13-build`, harness copy (`PART2_STATE_LOG.txt`).
+
+| Check | How | Result |
+|---|---|---|
+| F12 | click `Greeter` on line 13, F12 | `Greeter.cs` 3:21 (the class) |
+| Back | Cmd+[ | `GreeterSpec.cs` 13:11 |
+| Forward | Cmd+] | `Greeter.cs` 3:21 |
+| Go to Symbol | Cmd+F12, `hello`, Enter | line 5 (`Hello`) |
+| Build | writable copy with `int broken = notDeclared;`, Cmd+Shift+B | "Build failed: 1 error, 0 warnings", one clickable place |
+
+Found while reading back: the first Build never finished (BB-PRC-002): a
+process spawned from a background-QoS thread is throttled on macOS; the
+build now starts on the UI thread and only waits in the background. A build
+with `--no-write` is refused (it would write bin/ and obj/).

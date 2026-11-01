@@ -4,4 +4,4 @@ mod bb_model;
 mod view;
 
 pub(crate) use bb_model::QuickOpen;
-pub(crate) use view::{on_go_to_file, overlay, GoToFile};
+pub(crate) use view::{on_go_to_file, on_go_to_symbol, overlay, GoToFile, GoToSymbol};

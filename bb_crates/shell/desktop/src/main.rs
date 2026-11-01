@@ -3,6 +3,8 @@
 mod args;
 #[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
+#[path = "bb_explorer/panels/build/mod.rs"]
+mod build;
 mod editor;
 #[path = "bb_explorer/icons.rs"]
 mod icons;
