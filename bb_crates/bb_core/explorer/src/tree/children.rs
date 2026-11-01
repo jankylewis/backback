@@ -24,7 +24,7 @@ pub(super) fn read_children_from(
             };
             let rules: std::sync::Arc<Vec<ignore::gitignore::Gitignore>> =
                 ignore_rules::extend(&parent.ignore_rules, location)?;
-            Ok(solution_children(location, projects, parent.dimmed, &rules))
+            Ok(solution_children(location, projects, parent, &rules))
         }
     }
 }
@@ -46,6 +46,21 @@ pub(super) fn expand_entry(source: &Source, entry: &mut Entry) -> Result<usize, 
     Ok(count)
 }
 
+/// The parent's rules, plus the folder's own `.gitignore` when it has one.
+fn folder_rules(
+    parent: &Entry,
+    items: &[fs::DirEntry],
+) -> Result<std::sync::Arc<Vec<ignore::gitignore::Gitignore>>, ExplorerError> {
+    if items
+        .iter()
+        .any(|item: &fs::DirEntry| item.file_name() == ".gitignore")
+    {
+        ignore_rules::extend(&parent.ignore_rules, &parent.path)
+    } else {
+        Ok(parent.ignore_rules.clone())
+    }
+}
+
 fn read_folder(parent: &Entry) -> Result<Vec<Entry>, ExplorerError> {
     let path: &Path = &parent.path;
     let items: Vec<fs::DirEntry> = fs::read_dir(path)
@@ -58,14 +73,7 @@ fn read_folder(parent: &Entry) -> Result<Vec<Entry>, ExplorerError> {
             path: path.to_path_buf(),
             source,
         })?;
-    let rules: std::sync::Arc<Vec<ignore::gitignore::Gitignore>> = if items
-        .iter()
-        .any(|item: &fs::DirEntry| item.file_name() == ".gitignore")
-    {
-        ignore_rules::extend(&parent.ignore_rules, path)?
-    } else {
-        parent.ignore_rules.clone()
-    };
+    let rules: std::sync::Arc<Vec<ignore::gitignore::Gitignore>> = folder_rules(parent, &items)?;
     let mut children: Vec<Entry> = Vec::new();
     for item in items {
         let name: String = item.file_name().to_string_lossy().into_owned();
@@ -86,10 +94,14 @@ fn read_folder(parent: &Entry) -> Result<Vec<Entry>, ExplorerError> {
         } else {
             EntryKind::Other
         };
-        let dimmed: bool = parent.dimmed
-            || dim_name(&name)
-            || ignore_rules::ignored(&rules, &item.path(), metadata.is_dir());
-        children.push(Entry::new(item.path(), kind, dimmed).with_rules(rules.clone()));
+        let ignored: bool =
+            parent.git.ignored || ignore_rules::ignored(&rules, &item.path(), metadata.is_dir());
+        let dimmed: bool = parent.dimmed || dim_name(&name) || ignored;
+        children.push(
+            Entry::new(item.path(), kind, dimmed)
+                .with_rules(rules.clone())
+                .with_git(parent.git.in_repo, ignored),
+        );
     }
     sort_entries(&mut children);
     Ok(children)
@@ -98,7 +110,7 @@ fn read_folder(parent: &Entry) -> Result<Vec<Entry>, ExplorerError> {
 fn solution_children(
     parent: &Path,
     projects: &[PathBuf],
-    inherited_dim: bool,
+    owner: &Entry,
     rules: &std::sync::Arc<Vec<ignore::gitignore::Gitignore>>,
 ) -> Vec<Entry> {
     let mut children: Vec<Entry> = Vec::new();
@@ -125,10 +137,14 @@ fn solution_children(
         } else {
             EntryKind::Folder
         };
-        let dimmed: bool = inherited_dim
-            || dim_name(&component.to_string_lossy())
-            || ignore_rules::ignored(rules, &path, kind == EntryKind::Folder);
-        children.push(Entry::new(path, kind, dimmed).with_rules(rules.clone()));
+        let ignored: bool =
+            owner.git.ignored || ignore_rules::ignored(rules, &path, kind == EntryKind::Folder);
+        let dimmed: bool = owner.dimmed || dim_name(&component.to_string_lossy()) || ignored;
+        children.push(
+            Entry::new(path, kind, dimmed)
+                .with_rules(rules.clone())
+                .with_git(owner.git.in_repo, ignored),
+        );
     }
     sort_entries(&mut children);
     children

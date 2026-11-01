@@ -23,6 +23,13 @@ pub enum EntryKind {
     Other,
 }
 
+/// Git's view of an entry: inside a work tree, and ignored by git there.
+#[derive(Debug, Clone, Copy, Default)]
+pub(super) struct GitState {
+    pub(super) in_repo: bool,
+    pub(super) ignored: bool,
+}
+
 /// One tree entry, with children loaded only on expansion.
 #[derive(Debug, Clone)]
 pub struct Entry {
@@ -30,6 +37,7 @@ pub struct Entry {
     name: String,
     pub(super) kind: EntryKind,
     pub(super) dimmed: bool,
+    pub(super) git: GitState,
     pub(super) expanded: bool,
     pub(super) children: Option<Vec<Entry>>,
     pub(super) ignore_rules: Arc<Vec<Gitignore>>,
@@ -46,6 +54,7 @@ impl Entry {
             name,
             kind,
             dimmed,
+            git: GitState::default(),
             expanded: false,
             children: None,
             ignore_rules: Arc::new(Vec::new()),
@@ -54,6 +63,15 @@ impl Entry {
 
     pub(super) fn with_rules(mut self, rules: Arc<Vec<Gitignore>>) -> Self {
         self.ignore_rules = rules;
+        self
+    }
+
+    /// Git state: inside a repo, and whether git ignores this entry.
+    pub(super) fn with_git(mut self, in_repo: bool, ignored: bool) -> Self {
+        self.git = GitState {
+            in_repo,
+            ignored: in_repo && ignored,
+        };
         self
     }
 
@@ -76,6 +94,11 @@ impl Entry {
     #[must_use]
     pub fn dimmed(&self) -> bool {
         self.dimmed
+    }
+    /// Whether git ignores this entry (an ignored folder covers its subtree).
+    #[must_use]
+    pub fn ignored(&self) -> bool {
+        self.git.ignored
     }
     /// Whether descendants are visible.
     #[must_use]

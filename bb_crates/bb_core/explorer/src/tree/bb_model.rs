@@ -53,6 +53,20 @@ pub struct Explorer {
     source: Source,
 }
 
+/// The root entry with the ignore rules above it and its git state.
+fn root_entry(absolute: PathBuf, kind: EntryKind, source: &Source) -> Result<Entry, ExplorerError> {
+    let rule_directory: &Path = match source {
+        Source::Folder => &absolute,
+        Source::Solution { directory, .. } => directory,
+    };
+    let rules: std::sync::Arc<Vec<ignore::gitignore::Gitignore>> =
+        ignore_rules::ancestors(rule_directory)?;
+    let in_repo: bool = ignore_rules::repo_root(rule_directory).is_some();
+    Ok(Entry::new(absolute, kind, false)
+        .with_rules(rules)
+        .with_git(in_repo, false))
+}
+
 impl Explorer {
     /// Open a root and read its first level.
     ///
@@ -93,14 +107,8 @@ impl Explorer {
         } else {
             return Err(ExplorerError::InvalidRoot(absolute));
         };
-        let rule_directory: &Path = match &source {
-            Source::Folder => &absolute,
-            Source::Solution { directory, .. } => directory,
-        };
-        let rules: std::sync::Arc<Vec<ignore::gitignore::Gitignore>> =
-            ignore_rules::ancestors(rule_directory)?;
         let mut tree: Self = Self {
-            root: Entry::new(absolute, kind, false).with_rules(rules),
+            root: root_entry(absolute, kind, &source)?,
             source,
         };
         let children: Vec<Entry> = tree.read_children(&tree.root)?;

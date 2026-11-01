@@ -34,6 +34,9 @@ pub(crate) fn icon(entry: &Entry, tint: Rgba) -> Svg {
 }
 
 pub(crate) fn tint(entry: &Entry, theme: &Theme) -> Rgb {
+    if entry.ignored() {
+        return theme.ignored;
+    }
     if entry.dimmed() {
         return theme.text_dim;
     }
