@@ -199,3 +199,30 @@ proptest::proptest! {
         proptest::prop_assert_eq!(state.settled(), loaded.len() + failed.len() == NAMES.len());
     }
 }
+
+#[tokio::test]
+async fn a_restore_wait_ends_on_the_restore_end_line_and_logs_what_came_before() {
+    let (tx, mut rx): (mpsc::Sender<Incoming>, mpsc::Receiver<Incoming>) = mpsc::channel(8);
+    let start: String = format!("Restoring _Core.csproj: Running dotnet restore on {ROOT}/Core");
+    for text in [
+        start.as_str(),
+        "[LanguageServerProjectSystem] Restore complete",
+        "after",
+    ] {
+        tx.send(log(text)).await.unwrap();
+    }
+    let mut sink: Vec<u8> = Vec::new();
+    let ended: bool = wait_for_restore(&mut rx, Duration::from_secs(5), &mut sink)
+        .await
+        .unwrap();
+    let text: String = String::from_utf8(sink).unwrap();
+    assert!(ended);
+    assert!(
+        text.contains("Running dotnet restore") && !text.contains("after"),
+        "{text}"
+    );
+    let silent: bool = wait_for_restore(&mut rx, Duration::from_millis(50), &mut Vec::new())
+        .await
+        .unwrap();
+    assert!(!silent, "a stream with no end line times out as false");
+}

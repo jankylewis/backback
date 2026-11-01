@@ -14,3 +14,4 @@
 | BB-UIX-003 | FIXED | Gutter width scales with the size | `APP/UIX/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |
 | BB-PRC-002 | FIXED | Spawn on the UI thread, wait in the background | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
 | BB-BLD-001 | FIXED | `install.sh` from clean `master` to `/Applications`; `BBCommit` stamp | `SHIP/BLD/BB_BLD_001_INSTALL_FROM_MASTER.md` |
+| BB-LSP-004 | FIXED | `bb open --restore` waits for a restore end line before shutdown | `APP/LSP/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
