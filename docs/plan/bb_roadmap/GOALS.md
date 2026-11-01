@@ -16,9 +16,9 @@ Last update: 2026-11-01. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD07 | M6 macOS release | Partial | [#8](https://github.com/jankylewis/backback/pull/8): `.app` bundle, mascot, CI and release workflows |
 | BBEOD08 | Settings window, Menlo 13 on every surface, tool window side | Todo | BB-BUG-002 |
 | BBEOD09 | Explorer: git-ignored files and folders shown in pink | Todo | Parked |
-| BBEOD10 | Standard macOS window keys: Cmd+M minimize, Cmd+H hide | Todo | BB-BUG-001 |
+| BBEOD10 | Standard macOS keys: Cmd+M minimize, Cmd+H hide, Home/End | Todo | BB-BUG-001, BB-BUG-007 |
 | BBEOD11 | Integrated terminal: minimal, native, fast, never laggy | Todo | Requested |
-| BBEOD12 | **Critical:** cursor shifts the text; draw it as an overlay | Todo | BB-BUG-005 |
+| BBEOD12 | **Critical:** cursor shifts the text; draw it as an overlay | Done | BBEOD12 PR; readback `docs/plan/readback/FIXES/BBEOD12/` |
 | BBEOD13 | Core C# loop: Open Solution (Cmd+O), Build + error list, Go to File, Go to Symbol, Back/Forward | Todo | BB-BUG-006 |
 | BBEOD14 | Zoom the whole app: Cmd+= in, Cmd+- out, Cmd+0 reset | Todo | Requested |
 

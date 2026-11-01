@@ -28,5 +28,5 @@
 - The strap moved left. The pack mark still showed two chevrons without
   the intended slash. BBEOD07-MERGE corrected the mark and fringe.
 - The `.icns` archive contains 10 PNG sizes. BBEOD07-MERGE regenerated
-  [the contact sheet](../../../release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
+  [the contact sheet](../../../../release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
   to show all 10 on dark.

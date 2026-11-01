@@ -15,32 +15,34 @@ use crate::intel::bb_worker::protocol::{Answer, Ask, Event, Place, Request, Stag
 use crate::intel::bb_worker::Link;
 use crate::ExplorerView;
 
-pub(super) const A: &str = "class A { void M() { x } }\n";
+pub(crate) const A: &str = "class A { void M() { x } }\n";
 
-pub(super) struct Rig {
+pub(crate) struct Rig {
     _dir: tempfile::TempDir,
-    pub(super) root: PathBuf,
-    pub(super) file: PathBuf,
-    pub(super) view: Entity<ExplorerView>,
-    pub(super) requests: UnboundedReceiver<Request>,
-    pub(super) events: UnboundedSender<Event>,
+    pub(crate) root: PathBuf,
+    pub(crate) file: PathBuf,
+    pub(crate) view: Entity<ExplorerView>,
+    pub(crate) requests: UnboundedReceiver<Request>,
+    pub(crate) events: UnboundedSender<Event>,
 }
 
 /// A window with `A.cs` open and the fake server ready.
-pub(super) fn rig(cx: &mut TestAppContext, no_write: bool) -> (Rig, &mut VisualTestContext) {
-    rig_with(cx, no_write, true)
+pub(crate) fn rig(cx: &mut TestAppContext, no_write: bool) -> (Rig, &mut VisualTestContext) {
+    rig_with(cx, no_write, true, A)
 }
 
-/// A window with `A.cs` open; the fake server is ready only if `ready`.
-pub(super) fn rig_with(
-    cx: &mut TestAppContext,
+/// A window with `A.cs` holding `text` open; the fake server is ready only
+/// if `ready`.
+pub(crate) fn rig_with<'a>(
+    cx: &'a mut TestAppContext,
     no_write: bool,
     ready: bool,
-) -> (Rig, &mut VisualTestContext) {
+    text: &str,
+) -> (Rig, &'a mut VisualTestContext) {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let root: PathBuf = dir.path().canonicalize().unwrap();
     let file: PathBuf = root.join("A.cs");
-    std::fs::write(&file, A).unwrap();
+    std::fs::write(&file, text).unwrap();
     let tree: bb_explorer::Explorer = bb_explorer::Explorer::open(&root).unwrap();
     let workspace: (PathBuf, bool) = (root.clone(), no_write);
     let (view, vcx): (Entity<ExplorerView>, &mut VisualTestContext) =
@@ -59,13 +61,7 @@ pub(super) fn rig_with(
             v.open_file(&opened, window, cx);
         },
     );
-    if ready {
-        events
-            .send(Event::Ready {
-                took: Duration::ZERO,
-            })
-            .unwrap();
-    }
+    send_ready(&events, ready);
     vcx.run_until_parked();
     let mut rig: Rig = Rig {
         _dir: dir,
@@ -83,8 +79,18 @@ pub(super) fn rig_with(
     (rig, vcx)
 }
 
+fn send_ready(events: &UnboundedSender<Event>, ready: bool) {
+    if ready {
+        events
+            .send(Event::Ready {
+                took: Duration::ZERO,
+            })
+            .unwrap();
+    }
+}
+
 impl Rig {
-    pub(super) fn drain(&mut self) -> Vec<Request> {
+    pub(crate) fn drain(&mut self) -> Vec<Request> {
         let mut out: Vec<Request> = Vec::new();
         while let Ok(request) = self.requests.try_recv() {
             out.push(request);
@@ -92,7 +98,7 @@ impl Rig {
         out
     }
 
-    pub(super) fn last_ask(&mut self) -> (Ticket, Ask) {
+    pub(crate) fn last_ask(&mut self) -> (Ticket, Ask) {
         self.drain()
             .into_iter()
             .rev()
@@ -106,7 +112,7 @@ impl Rig {
             .expect("a question was sent")
     }
 
-    pub(super) fn reply(&self, vcx: &mut VisualTestContext, ticket: Ticket, answer: Answer) {
+    pub(crate) fn reply(&self, vcx: &mut VisualTestContext, ticket: Ticket, answer: Answer) {
         let now: Instant = Instant::now();
         let stages: Stages = Stages {
             sent: now,
@@ -123,7 +129,7 @@ impl Rig {
         vcx.run_until_parked();
     }
 
-    pub(super) fn cursor_after(&self, vcx: &mut VisualTestContext, needle: &str) {
+    pub(crate) fn cursor_after(&self, vcx: &mut VisualTestContext, needle: &str) {
         self.view.update(
             vcx,
             |v: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
@@ -134,14 +140,14 @@ impl Rig {
         );
     }
 
-    pub(super) fn text(&self, vcx: &mut VisualTestContext) -> String {
+    pub(crate) fn text(&self, vcx: &mut VisualTestContext) -> String {
         self.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
             v.tabs.active().unwrap().text()
         })
     }
 }
 
-pub(super) fn items(labels: &[&str]) -> Answer {
+pub(crate) fn items(labels: &[&str]) -> Answer {
     Answer::Completion(
         labels
             .iter()
@@ -154,7 +160,7 @@ pub(super) fn items(labels: &[&str]) -> Answer {
     )
 }
 
-pub(super) fn place(path: &Path, line: u32) -> Place {
+pub(crate) fn place(path: &Path, line: u32) -> Place {
     Place {
         location: Location {
             uri: DocUri::File(DocPath::new(path.to_path_buf()).unwrap()),
@@ -183,7 +189,7 @@ fn total_at(line: u32, from: u32, to: u32) -> TextChange {
     }
 }
 
-pub(super) fn rename_plan(open: &Path, closed: &Path) -> Answer {
+pub(crate) fn rename_plan(open: &Path, closed: &Path) -> Answer {
     Answer::Rename(vec![
         FileChange::Edit {
             uri: DocUri::File(DocPath::new(open.to_path_buf()).unwrap()),
@@ -196,7 +202,7 @@ pub(super) fn rename_plan(open: &Path, closed: &Path) -> Answer {
     ])
 }
 
-pub(super) fn ask_rename(rig: &mut Rig, vcx: &mut VisualTestContext) -> Ticket {
+pub(crate) fn ask_rename(rig: &mut Rig, vcx: &mut VisualTestContext) -> Ticket {
     rig.cursor_after(vcx, "M() { ");
     vcx.simulate_keystrokes("f2 backspace T o t a l enter");
     let (ticket, ask): (Ticket, Ask) = rig.last_ask();

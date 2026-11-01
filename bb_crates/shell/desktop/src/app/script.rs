@@ -1,8 +1,9 @@
 //! Script steps for live readback, mixed into `BB_KEYS` with the keys:
 //! `wait:ready`, `wait:answer`, `sleep:<ms>`, `goto:<line>:<col>` (1-based),
-//! `hover:<line>:<col>` (a real mouse move), `mark:<name>` (prints a line a
-//! capture script waits for, then pauses), `state` (prints what the window
-//! shows). Keys and mouse go through the window's own dispatch.
+//! `hover:<line>:<col>` (a real mouse move), `click:<line>:<col>` (a real
+//! click), `mark:<name>` (prints a line a capture script waits for, then
+//! pauses), `state` (prints what the window shows). Keys and mouse go
+//! through the window's own dispatch.
 
 use std::time::{Duration, Instant};
 
@@ -24,6 +25,7 @@ pub(crate) async fn run(
         ["sleep", ms] => pause(cx, ms.parse::<u64>().unwrap_or(0)).await,
         ["goto", line, col] => goto(view, cx, (number(line), number(col))),
         ["hover", line, col] => hover(view, cx, (number(line), number(col))),
+        ["click", line, col] => click(view, cx, (number(line), number(col))),
         ["mark", name] => {
             eprintln!("bb_mark {name}");
             pause(cx, 1_500).await;
@@ -113,41 +115,90 @@ fn goto(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, (line, col
 }
 
 /// Move the mouse to the middle of char `col` on `line`, as the window draws it.
-fn hover(
-    view: &WeakEntity<ExplorerView>,
-    cx: &mut AsyncWindowContext,
-    (line, col): (usize, usize),
-) {
+fn hover(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, at: (usize, usize)) {
     let _gone: gpui::Result<()> = cx.update(|window: &mut Window, cx: &mut gpui::App| {
-        let Some(view): Option<gpui::Entity<ExplorerView>> = view.upgrade() else {
+        if let Some(position) = pointer(view, window, cx, at, true) {
+            window.dispatch_event(
+                PlatformInput::MouseMove(MouseMoveEvent {
+                    position,
+                    pressed_button: None,
+                    modifiers: gpui::Modifiers::default(),
+                }),
+                cx,
+            );
+        }
+    });
+}
+
+/// A real left click on the boundary before char `col` on `line`: it
+/// focuses the editor and puts the cursor there, as a person's click does.
+fn click(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, at: (usize, usize)) {
+    let _gone: gpui::Result<()> = cx.update(|window: &mut Window, cx: &mut gpui::App| {
+        let Some(position): Option<gpui::Point<gpui::Pixels>> =
+            pointer(view, window, cx, at, false)
+        else {
             return;
         };
-        let (left, top, scrolled): (f32, f32, f32) =
-            view.read_with(cx, |v: &ExplorerView, _: &gpui::App| {
-                let state: std::cell::Ref<'_, gpui::UniformListScrollState> =
-                    v.editor_scroll.0.borrow();
-                let bounds: gpui::Bounds<gpui::Pixels> = state.base_handle.bounds();
-                (
-                    v.panel_width + 56.0,
-                    f32::from(bounds.origin.y),
-                    f32::from(state.base_handle.offset().y),
-                )
-            });
-        let row: f32 = f32::from(u16::try_from(line).unwrap_or(u16::MAX));
-        let column: f32 = f32::from(u16::try_from(col).unwrap_or(u16::MAX));
-        let position: gpui::Point<gpui::Pixels> = gpui::point(
-            gpui::px(left + 7.8 * column + 3.9),
-            gpui::px(top + scrolled + 22.0 * row + 11.0),
+        let (button, modifiers): (gpui::MouseButton, gpui::Modifiers) =
+            (gpui::MouseButton::Left, gpui::Modifiers::default());
+        window.dispatch_event(
+            PlatformInput::MouseDown(gpui::MouseDownEvent {
+                button,
+                position,
+                modifiers,
+                click_count: 1,
+                first_mouse: false,
+            }),
+            cx,
         );
         window.dispatch_event(
-            PlatformInput::MouseMove(MouseMoveEvent {
+            PlatformInput::MouseUp(gpui::MouseUpEvent {
+                button,
                 position,
-                pressed_button: None,
-                modifiers: gpui::Modifiers::default(),
+                modifiers,
+                click_count: 1,
             }),
             cx,
         );
     });
+}
+
+/// Where char `col` of `line` is drawn: its middle, or the boundary before it.
+fn pointer(
+    view: &WeakEntity<ExplorerView>,
+    window: &Window,
+    cx: &mut gpui::App,
+    (line, col): (usize, usize),
+    middle: bool,
+) -> Option<gpui::Point<gpui::Pixels>> {
+    let view: gpui::Entity<ExplorerView> = view.upgrade()?;
+    let (left, top, scrolled, text): (f32, f32, f32, String) =
+        view.read_with(cx, |v: &ExplorerView, _: &gpui::App| {
+            let state: std::cell::Ref<'_, gpui::UniformListScrollState> =
+                v.editor_scroll.0.borrow();
+            let bounds: gpui::Bounds<gpui::Pixels> = state.base_handle.bounds();
+            (
+                v.panel_width + 6.0 + crate::editor::GUTTER_W,
+                f32::from(bounds.origin.y),
+                f32::from(state.base_handle.offset().y),
+                v.tabs
+                    .active()
+                    .and_then(|doc: &bb_text::Document| doc.line(line))
+                    .unwrap_or_default(),
+            )
+        });
+    let row: f32 = f32::from(u16::try_from(line).unwrap_or(u16::MAX));
+    let columns: crate::editor::Columns =
+        crate::editor::Columns::shape(window, text.trim_end_matches(['\r', '\n']));
+    let x: f32 = if middle {
+        f32::midpoint(columns.x_of(col), columns.x_of(col.saturating_add(1)))
+    } else {
+        columns.x_of(col)
+    };
+    Some(gpui::point(
+        gpui::px(left + x),
+        gpui::px(top + scrolled + 22.0 * row + 11.0),
+    ))
 }
 
 fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext) {

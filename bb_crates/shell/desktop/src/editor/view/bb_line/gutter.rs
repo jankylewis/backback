@@ -18,7 +18,9 @@ pub(super) fn gutter_cell(
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Div {
     div()
-        .w(px(50.0))
+        .w(px(super::GUTTER_W))
+        .flex_none()
+        .whitespace_nowrap()
         .flex()
         .text_color(color(theme.text_dim))
         .child(format!("{:>4}", index.saturating_add(1)))

@@ -63,7 +63,7 @@ fn shift_f12_lists_references_and_escape_closes_the_panel(cx: &mut TestAppContex
 
 #[gpui::test]
 fn the_status_bar_follows_progress_until_ready(cx: &mut TestAppContext) {
-    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, false);
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, false, super::bb_rig::A);
     rig.events
         .send(Event::Progress {
             loaded: 1,
