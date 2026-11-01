@@ -15,6 +15,8 @@ const LSP_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 const SOLUTION_LOAD_TIMEOUT: Duration = Duration::from_secs(300);
 /// How long the server's last lines may take after `shutdown`.
 const DRAIN_TIMEOUT: Duration = Duration::from_secs(5);
+/// How long `--restore` waits for Roslyn's restore to end after the load.
+const RESTORE_TIMEOUT: Duration = Duration::from_secs(120);
 
 pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(), CommandError> {
     let (sln, listing): (SolutionPath, Solution) = describe(solution, restore)?;
@@ -53,14 +55,31 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
     }
     println!("total     : {:?}", started.elapsed());
     println!("log       : {}", log_path.display());
-    if restore == roslyn::Restore::Off {
-        println!("obj       : {} (removed at exit)", scratch.display());
-    }
+    finish_restore(restore, &scratch, &mut incoming, &mut log).await?;
     let stopped: Result<(), bb_lsp::LspError> = client.shutdown().await;
     roslyn::drain_log(&mut incoming, DRAIN_TIMEOUT, &mut log).await?;
     // Best effort: a scratch folder left behind is only temp space.
     let _removed: std::io::Result<()> = std::fs::remove_dir_all(&scratch);
     stopped.map_err(roslyn::RoslynError::Client)?;
+    Ok(())
+}
+
+/// Restore off: name the scratch folder. Restore on: wait until Roslyn's
+/// restore has ended, so the run log holds it (BB-LSP-004).
+async fn finish_restore(
+    restore: roslyn::Restore,
+    scratch: &Path,
+    incoming: &mut mpsc::Receiver<Incoming>,
+    log: &mut std::fs::File,
+) -> Result<(), CommandError> {
+    match restore {
+        roslyn::Restore::Off => println!("obj       : {} (removed at exit)", scratch.display()),
+        roslyn::Restore::On => {
+            let started: Instant = Instant::now();
+            let ended: bool = roslyn::wait_for_restore(incoming, RESTORE_TIMEOUT, log).await?;
+            println!("restored  : {ended} after {:?}", started.elapsed());
+        }
+    }
     Ok(())
 }
 

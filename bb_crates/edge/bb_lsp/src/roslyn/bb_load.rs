@@ -114,6 +114,36 @@ pub async fn drain_log<W: std::io::Write>(
     Ok(())
 }
 
+/// Lines Roslyn writes when a restore it started has ended, either way.
+const RESTORE_ENDS: [&str; 3] = ["Restore complete", "restore was canceled", "restore failed"];
+
+/// With restore on, Roslyn starts `dotnet restore` after the load, so a run
+/// that stops at the load can exit first (BB-LSP-004). Log every message
+/// until a restore end line; `true` when one came, `false` when `deadline`
+/// passed or the server closed first.
+///
+/// # Errors
+/// [`RoslynError::Log`] when `log` cannot be written.
+pub async fn wait_for_restore<W: std::io::Write>(
+    incoming: &mut tokio::sync::mpsc::Receiver<Incoming>,
+    deadline: Duration,
+    log: &mut W,
+) -> Result<bool, RoslynError> {
+    let started: Instant = Instant::now();
+    while let Some(remaining) = deadline.checked_sub(started.elapsed()) {
+        match tokio::time::timeout(remaining, incoming.recv()).await {
+            Ok(Some(message)) => {
+                let text: &str = log_incoming(&message, log)?;
+                if RESTORE_ENDS.iter().any(|end: &&str| text.contains(end)) {
+                    return Ok(true);
+                }
+            }
+            Ok(None) | Err(_) => break,
+        }
+    }
+    Ok(false)
+}
+
 /// Write each section a `workspace/configuration` request asked for.
 fn log_configuration<W: std::io::Write>(
     method: &str,

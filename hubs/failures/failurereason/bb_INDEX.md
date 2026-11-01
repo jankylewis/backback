@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 15 — FIXED 11, OBSERVED 3, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 15 — FIXED 13, OBSERVED 1, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -15,7 +15,7 @@ One file per failure mechanism. This hub owns the id. Entries: 15 — FIXED 11, 
 | BB-LSP-003 | Problems still counted a deleted error 6 s after the edit | OPEN | no | no | none | `APP/LSP/BB_LSP_003_DIAGNOSTICS_LAG_AFTER_A_DELETE.md` |
 | BB-UIX-002 | Minimize acted on `cx.active_window()`, None while another app is active | FIXED | yes | yes | BB-TG-005 | `APP/UIX/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
 | BB-PRC-001 | A child process group outlives its owner | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
-| BB-LSP-004 | `open --restore` can exit before Roslyn logs the restore | OBSERVED | no | no | none | `APP/LSP/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
+| BB-LSP-004 | `open --restore` can exit before Roslyn logs the restore | FIXED | yes | no | none | `APP/LSP/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
 | BB-UIX-003 | The gutter kept 50 px when zoomed, so line numbers ran into the code | FIXED | yes | no | none | `APP/UIX/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |
 | BB-PRC-002 | `dotnet build` spawned from a background thread never finished | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
 | BB-PRC-003 | Roslyn and test runs are also spawned from background threads | OBSERVED | no | no | none | `SYS/PRC/BB_PRC_003_TOOLS_SPAWNED_FROM_BACKGROUND_THREADS.md` |

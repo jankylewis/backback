@@ -135,6 +135,7 @@ fn open_with_restore_flag_lets_roslyn_restore() {
     let log: String = log_of(&run);
     let _gone: std::io::Result<()> = std::fs::remove_dir_all(&dir);
     assert!(log.contains("Running dotnet restore"), "{log}");
+    assert!(run.out.contains("restored  : true"), "{}", run.out);
 }
 
 #[test]
