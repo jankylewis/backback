@@ -54,6 +54,8 @@ pub struct Theme {
     pub text: Rgb,
     /// Secondary text.
     pub text_dim: Rgb,
+    /// Explorer entries git ignores (BBEOD09): pink, softer than `error`.
+    pub ignored: Rgb,
     /// Selection, focus, links.
     pub accent: Rgb,
     /// Errors.
@@ -92,6 +94,7 @@ pub const DARK: Theme = Theme {
     border: Rgb::new(0x6e, 0x6a, 0x86),
     text: Rgb::new(0xe0, 0xde, 0xf4),
     text_dim: Rgb::new(0x90, 0x8c, 0xaa),
+    ignored: Rgb::new(0xf5, 0xa9, 0xc8),
     accent: Rgb::new(0x9c, 0xcf, 0xd8),
     error: Rgb::new(0xeb, 0x6f, 0x92),
     warn: Rgb::new(0xf6, 0xc1, 0x77),
@@ -117,6 +120,7 @@ pub const LIGHT: Theme = Theme {
     border: Rgb::new(0x98, 0x93, 0xa5),
     text: Rgb::new(0x57, 0x52, 0x79),
     text_dim: Rgb::new(0x79, 0x75, 0x93),
+    ignored: Rgb::new(0xc7, 0x50, 0x9a),
     accent: Rgb::new(0x56, 0x94, 0x9f),
     error: Rgb::new(0xb4, 0x63, 0x7a),
     warn: Rgb::new(0xea, 0x9d, 0x34),

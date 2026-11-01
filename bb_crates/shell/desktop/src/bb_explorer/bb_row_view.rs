@@ -69,7 +69,9 @@ pub(crate) fn row(
 }
 
 fn row_text_color(entry: &Entry, theme: Theme) -> gpui::Rgba {
-    color(if entry.dimmed() {
+    color(if entry.ignored() {
+        theme.ignored
+    } else if entry.dimmed() {
         theme.text_dim
     } else {
         theme.text
