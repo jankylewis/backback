@@ -84,10 +84,10 @@ Set `BACKBACK_NETCOREDBG=/path/to/netcoredbg` or put it on `PATH`.
 
 ## macOS app bundle
 
-Run `bash docs/release/scripts/bb_bundle.sh` from the repo root.
-It builds `.target/bundle/backback.app` with the current Cargo version and
-an ad-hoc signature. Open the app to launch the native GUI. The `bb` CLI ships
-at `backback.app/Contents/Resources/bb`. macOS 13 or newer is required.
+`bash docs/release/scripts/bb_bundle.sh` builds `.target/bundle/backback.app`
+(Cargo version, ad-hoc signature). `install.sh` (same folder) builds it from a clean `master`
+and installs `/Applications/backback.app`. The `bb` CLI ships at
+`backback.app/Contents/Resources/bb`; macOS 13+.
 For public distribution, the maintainer must use a Developer ID and Apple
 notarization via [`sign_release.sh`](docs/release/scripts/sign_release.sh).
 See [security](docs/release/community/SECURITY.md), [conduct](docs/release/community/CODE_OF_CONDUCT.md), and
