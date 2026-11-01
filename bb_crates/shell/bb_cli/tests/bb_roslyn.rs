@@ -3,6 +3,9 @@
 
 #[cfg(test)]
 mod common;
+#[cfg(test)]
+#[path = "common/bb_watch.rs"]
+mod watch_tests;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -102,12 +105,13 @@ fn open_waits_until_every_project_of_the_solution_has_loaded() {
     let run: Run = open(&dir, &[]);
     let log: String = log_of(&run);
     let _gone: std::io::Result<()> = std::fs::remove_dir_all(&dir);
-    let loaded: usize = log
+    // Distinct paths, never summed batch lines: a batch can reload a project.
+    let loaded: std::collections::BTreeSet<&str> = log
         .lines()
-        .filter_map(|l: &str| l.split("Completed (re)load of ").nth(1))
-        .filter_map(|rest: &str| rest.split(' ').next()?.parse::<usize>().ok())
-        .sum();
-    assert_eq!(loaded, 3, "{log}");
+        .filter_map(|l: &str| l.split("Successfully completed load of ").nth(1))
+        .map(str::trim_end)
+        .collect();
+    assert_eq!(loaded.len(), 3, "{log}");
     assert!(
         run.out.contains("until all 3 projects loaded"),
         "{}",

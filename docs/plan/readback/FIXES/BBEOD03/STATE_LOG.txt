@@ -1,0 +1,30 @@
+== run app
+intel_ready_ms=4199
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=0 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=18 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=18 message=None
+bb_keys sent=6 ui_work_p50_us=1578 ui_work_p99_us=2405 ui_work_max_us=3730 parse_jobs=6 parse_mean_ms=0
+== run app2
+intel_ready_ms=5586
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=18 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_keys sent=6 ui_work_p50_us=186 ui_work_p99_us=441 ui_work_max_us=3135 parse_jobs=6 parse_mean_ms=0
+== run app_a
+intel_ready_ms=3517
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=0 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_keys sent=6 ui_work_p50_us=166 ui_work_p99_us=187 ui_work_max_us=7243 parse_jobs=6 parse_mean_ms=0
+== run app_b
+intel_ready_ms=3842
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=0 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=18 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_state status="Ready" tab=GreeterSpec.cs line=1 read_only=false completion=None refs=None rename=None actions=None problems=12 message=None
+bb_keys sent=6 ui_work_p50_us=194 ui_work_p99_us=238 ui_work_max_us=1258 parse_jobs=6 parse_mean_ms=0

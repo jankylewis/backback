@@ -44,7 +44,7 @@ pub(crate) fn ask_at_cursor(
 /// Send one question about `path`; flushes first.
 pub(crate) fn ask(view: &mut ExplorerView, path: PathBuf, ask: Ask, anchor: CharIdx) -> bool {
     if view.link.is_none() || view.intel.status != LoadStatus::Ready {
-        view.report(&format!("C# server: {}", view.intel.status.label()));
+        view.report(&format!("C# server: {}", view.intel.status_label()));
         return false;
     }
     super::flush(view);

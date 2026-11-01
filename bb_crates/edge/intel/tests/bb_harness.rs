@@ -4,8 +4,8 @@
 mod common;
 
 use bb_intel::{
-    ActionItem, CompletionEntry, Diagnostic, DocPath, DocUri, Edit, FileChange, HoverInfo,
-    IntelError, Location, Severity, Span,
+    ActionItem, CompletionEntry, Diagnostic, DiagnosticsReport, DocPath, DocUri, DocVersion, Edit,
+    FileChange, HoverInfo, IntelError, Location, Severity, Span,
 };
 use bb_text::{Buffer, CharIdx, LspPoint};
 use common::{start, Harness, DEADLINE};
@@ -107,14 +107,23 @@ async fn completion_after_an_incremental_edit_lists_hello() {
         to: at,
         text: "        greeter.\n".to_owned(),
     };
-    let version: bb_intel::DocVersion = h.session.change(&spec, &[typed]).await.unwrap();
+    let version: DocVersion = h.session.change(&spec, &[typed]).await.unwrap();
     let dot: LspPoint = LspPoint {
         line: 14,
         character: 16,
     };
     let items: Vec<CompletionEntry> = h.session.completion(&spec, dot, DEADLINE).await.unwrap();
+    let after: DiagnosticsReport = h.session.diagnostics(&spec, DEADLINE).await.unwrap();
     h.finish().await;
     assert_eq!(version.raw(), 2);
+    assert_eq!(after.version, version);
+    assert!(
+        after
+            .list
+            .iter()
+            .any(|d: &Diagnostic| d.severity == Some(Severity::Error)),
+        "{after:?}"
+    );
     let labels: Vec<&str> = items
         .iter()
         .map(|i: &CompletionEntry| i.label.as_str())
@@ -128,9 +137,10 @@ async fn a_broken_file_yields_an_error_and_code_actions_are_listed() {
     let mut h: Harness = start("broken").await;
     let broken: DocPath = h.doc("Core/Broken.cs");
     let text: &str = "namespace Harness.Core;\nclass B { void M() { int x = } }\n";
-    h.session.open_text(&broken, text).await.unwrap();
-    let found: Vec<Diagnostic> = h.session.diagnostics(&broken, DEADLINE).await.unwrap();
-    let kept: Vec<Diagnostic> = h.session.collected(&broken);
+    let first: DiagnosticsReport = h.session.open_text(&broken, text).await.unwrap();
+    let report: DiagnosticsReport = h.session.diagnostics(&broken, DEADLINE).await.unwrap();
+    let kept: Option<DiagnosticsReport> = h.session.collected(&broken).unwrap();
+    let found: Vec<Diagnostic> = report.list.clone();
     let spec: DocPath = h.doc(SPEC);
     h.session.open(&spec).await.unwrap();
     let call: Span = Span {
@@ -156,7 +166,10 @@ async fn a_broken_file_yields_an_error_and_code_actions_are_listed() {
         "{found:?}"
     );
     assert_eq!(errors[0].span.start.line, 1);
-    assert_eq!(kept, found);
+    // A second pull of the same version gives the same list.
+    assert_eq!(first, report);
+    assert_eq!(report.version, DocVersion::first());
+    assert_eq!(kept, Some(report));
     assert!(
         actions.iter().any(|a: &ActionItem| a
             .kind
@@ -173,7 +186,7 @@ async fn features_refuse_a_document_that_is_not_open() {
     let early: Result<Vec<Location>, IntelError> =
         h.session.definition(&spec, GREETER_USE, DEADLINE).await;
     h.session.open(&spec).await.unwrap();
-    let twice: Result<Vec<Diagnostic>, IntelError> = h.session.open(&spec).await;
+    let twice: Result<DiagnosticsReport, IntelError> = h.session.open(&spec).await;
     h.session.close(&spec).await.unwrap();
     let closed: Result<Vec<CompletionEntry>, IntelError> =
         h.session.completion(&spec, GREETER_USE, DEADLINE).await;

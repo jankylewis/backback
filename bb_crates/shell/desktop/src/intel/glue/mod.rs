@@ -17,7 +17,7 @@ use tokio::sync::mpsc::UnboundedReceiver;
 use crate::editor::{Tab, TabEvent};
 use crate::intel::bb_worker::protocol::{Event, Request};
 use crate::intel::bb_worker::{self, Link};
-use crate::intel::model::{LoadStatus, Now, Pending};
+use crate::intel::model::{LoadStatus, Now, Pending, Sent};
 use crate::ExplorerView;
 
 pub(crate) use answers::apply_rename;
@@ -161,7 +161,10 @@ fn send(view: &mut ExplorerView, request: Request) {
     let Some(link): Option<&Link> = view.link.as_ref() else {
         return;
     };
-    if !link.send(request) {
+    let sent: Option<Sent> = Sent::of(&request);
+    if link.send(request) {
+        view.intel.sent(sent);
+    } else {
         view.link = None;
         view.intel
             .server_gone(LoadStatus::Failed(String::from("server thread stopped")));
@@ -181,17 +184,21 @@ pub(crate) fn on_event(
             view.intel.server_gone(LoadStatus::Stopped);
         }
         Event::Progress { loaded, total } => view.intel.status.progress(loaded, total),
-        Event::Ready { took } => {
-            view.intel.status = LoadStatus::Ready;
+        Event::Ready { took, failed } => {
             eprintln!("intel_ready_ms={}", took.as_millis());
+            view.intel.ready(failed);
         }
         Event::Failed(reason) => {
             view.link = None;
             view.intel.server_gone(LoadStatus::Failed(reason));
         }
-        Event::Diagnostics { path, list } => {
+        Event::Diagnostics {
+            path,
+            version,
+            list,
+        } => {
             if view.tabs.tab_mut(&path).is_some() {
-                view.intel.set_diagnostics(path, list);
+                view.intel.set_diagnostics(path, version, list);
             }
         }
         Event::Answer {

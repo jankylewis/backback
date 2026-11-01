@@ -36,17 +36,21 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
     println!("initialize: {:?} (server {server})", started.elapsed());
     roslyn::open_solution(&client, sln.as_path()).await?;
     let (log_path, mut log): (PathBuf, std::fs::File) = create_log(&log_dir)?;
-    let loaded_in: Duration = roslyn::wait_for_load(
+    let load: roslyn::Loaded = roslyn::wait_for_load(
         &mut incoming,
         SOLUTION_LOAD_TIMEOUT,
-        listing.projects.len(),
+        &listing.projects,
         &mut log,
     )
     .await?;
+    let total: usize = roslyn::LoadState::new(&listing.projects).total();
     println!(
-        "loaded    : {loaded_in:?} until all {} projects loaded",
-        listing.projects.len()
+        "loaded    : {:?} until all {total} projects loaded",
+        load.took
     );
+    for failed in &load.failed {
+        println!("failed    : {}", failed.as_path().display());
+    }
     println!("total     : {:?}", started.elapsed());
     println!("log       : {}", log_path.display());
     if restore == roslyn::Restore::Off {

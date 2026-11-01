@@ -2,7 +2,7 @@
 
 id: BB-LSP-001
 family: LSP
-status: OBSERVED
+status: FIXED
 source: branch `bbeod-03-diagver` commit `28699aa`
 
 ## Who believed what

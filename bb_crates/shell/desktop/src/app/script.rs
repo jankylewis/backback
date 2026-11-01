@@ -213,7 +213,7 @@ fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext) {
             .to_owned();
         eprintln!(
             "bb_state status={:?} tab={:?} line={} read_only={} completion={:?} hover={hover:?} refs={:?} rename={:?} actions={:?} problems={} message={:?}",
-            v.intel.status.label(),
+            v.intel.status_label(),
             tab.map(|t: &crate::editor::Tab| t.path.display().to_string()),
             tab.map_or(0, |t: &crate::editor::Tab| t.document.cursor_line().saturating_add(1)),
             tab.is_some_and(|t: &crate::editor::Tab| t.read_only),
@@ -224,6 +224,13 @@ fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext) {
             v.intel.problems().len(),
             v.status,
         );
+        if let Some(tab) = tab {
+            let at: Vec<String> = v.intel.diagnostics_of(&tab.path).iter()
+                .map(|d: &bb_intel::Diagnostic| format!("{}:{}", d.span.start.line.saturating_add(1), d.span.start.character.saturating_add(1)))
+                .collect();
+            eprintln!("bb_diag_state version={:?} squiggles={at:?}",
+                v.intel.shown_version(&tab.path).map(bb_intel::DocVersion::raw));
+        }
         let discovered: usize = v.tests.model.projects().values()
             .map(|project: &crate::tests_panel::model::ProjectTests| project.specs.len()).sum();
         let loading: usize = v.tests.model.projects().values()

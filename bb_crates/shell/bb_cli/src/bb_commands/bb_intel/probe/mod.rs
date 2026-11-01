@@ -80,6 +80,9 @@ pub(crate) async fn run(probe: &Probe) -> Result<(), CommandError> {
         session.loaded_in(),
         started.elapsed()
     );
+    for failed in session.failed_projects() {
+        println!("failed    : {}", failed.as_path().display());
+    }
     let asked: Result<(), ProbeError> =
         ask_and_print(&mut session, &file, (probe, at), &root).await;
     let stopped: Result<(), IntelError> = session.shutdown().await;
@@ -96,7 +99,7 @@ async fn ask_and_print(
 ) -> Result<(), ProbeError> {
     let doc: DocPath = DocPath::new(file.to_path_buf())?;
     let opened: Instant = Instant::now();
-    let found: Vec<Diagnostic> = session.open(&doc).await?;
+    let found: Vec<Diagnostic> = session.open(&doc).await?.list;
     println!(
         "open      : {:?} ({} diagnostics)",
         opened.elapsed(),
@@ -137,7 +140,7 @@ async fn ask(
             let span: Span = Span { start: at, end: at };
             Answer::Actions(session.code_actions(doc, span, t).await?)
         }
-        Feature::Diagnostics => Answer::Diagnostics(session.diagnostics(doc, t).await?),
+        Feature::Diagnostics => Answer::Diagnostics(session.diagnostics(doc, t).await?.list),
     })
 }
 

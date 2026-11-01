@@ -3,6 +3,7 @@
 
 #[path = "bb_death.rs"]
 mod death;
+mod events;
 mod trace;
 
 use std::path::{Path, PathBuf};
@@ -14,9 +15,12 @@ use tokio::sync::mpsc::UnboundedReceiver;
 
 use super::protocol::{Answer, Ask, Event, Place, Request, Stages, Ticket};
 use super::{find_solution, start, Link};
+use events::{answer, ask, first_diagnostics, next, wait_ready};
 
 const SPEC: &str = "_NUnitApex/GreeterSpec.cs";
 const WAIT: Duration = Duration::from_secs(180);
+/// One deadline for the whole load (~42 s under load ~10), not one per event.
+const LOAD: Duration = Duration::from_secs(300);
 
 fn copy_tree(from: &Path, to: &Path) {
     std::fs::create_dir_all(to).unwrap();
@@ -37,72 +41,6 @@ fn harness(name: &str) -> PathBuf {
     let source: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/_Harness");
     copy_tree(&source, &base);
     std::fs::canonicalize(base).unwrap()
-}
-
-async fn next(events: &mut UnboundedReceiver<Event>) -> Event {
-    tokio::time::timeout(WAIT, events.recv())
-        .await
-        .expect("an event before the deadline")
-        .expect("the server thread is alive")
-}
-
-/// The first diagnostics after an Open. A late project-load batch may still
-/// report `Progress` after Ready (BB-LSP-002); any other event fails, named.
-async fn first_diagnostics(events: &mut UnboundedReceiver<Event>) {
-    loop {
-        match next(events).await {
-            Event::Diagnostics { .. } => return,
-            Event::Progress { .. } => {}
-            other @ (Event::Stopped
-            | Event::Ready { .. }
-            | Event::Failed(_)
-            | Event::Answer { .. }
-            | Event::SyncFailed(_)) => {
-                panic!("expected diagnostics after Open, got {other:?}")
-            }
-        }
-    }
-}
-
-async fn answer(events: &mut UnboundedReceiver<Event>, wanted: Ticket) -> (Answer, Stages) {
-    loop {
-        if let Event::Answer {
-            ticket,
-            answer,
-            stages,
-        } = next(events).await
-        {
-            if ticket == wanted {
-                return (answer, stages);
-            }
-        }
-    }
-}
-
-fn ask(link: &Link, path: &Path, ticket: u64, ask: Ask) -> Ticket {
-    let ticket: Ticket = Ticket(ticket);
-    assert!(link.send(Request::Ask {
-        ticket,
-        path: path.to_path_buf(),
-        ask,
-        sent: std::time::Instant::now(),
-    }));
-    ticket
-}
-
-async fn wait_ready(events: &mut UnboundedReceiver<Event>) -> Vec<(usize, usize)> {
-    let mut progress: Vec<(usize, usize)> = Vec::new();
-    loop {
-        match next(events).await {
-            Event::Progress { loaded, total } => progress.push((loaded, total)),
-            Event::Ready { .. } => return progress,
-            Event::Stopped => panic!("server stopped before ready"),
-            other @ (Event::Failed(_)
-            | Event::Diagnostics { .. }
-            | Event::Answer { .. }
-            | Event::SyncFailed(_)) => panic!("before ready: {other:?}"),
-        }
-    }
 }
 
 struct Live {
@@ -194,18 +132,30 @@ async fn complete_after_an_edit(live: &mut Live) {
     );
     assert!(stages.queued() < Duration::from_millis(500), "{stages:?}");
     assert!(stages.server() > Duration::ZERO);
-    let errors: Vec<Diagnostic> = loop {
-        if let Event::Diagnostics { path, list } = next(&mut live.events).await {
-            assert_eq!(path, live.spec);
-            break list;
-        }
-    };
+    let errors: Vec<Diagnostic> = edited_diagnostics(live).await;
     assert!(
         errors
             .iter()
             .any(|d: &Diagnostic| d.severity == Some(Severity::Error)),
         "{errors:?}"
     );
+}
+
+/// The first diagnostics after the edit: for the edited text, never an
+/// older list (BBEOD03-DIAGVER: one run once saw an empty batch).
+async fn edited_diagnostics(live: &mut Live) -> Vec<Diagnostic> {
+    loop {
+        if let Event::Diagnostics {
+            path,
+            version,
+            list,
+        } = next(&mut live.events).await
+        {
+            assert_eq!(path, live.spec);
+            assert_eq!(version.raw(), 2, "{list:?}");
+            return list;
+        }
+    }
 }
 
 const CLASS_USE: LspPoint = LspPoint {

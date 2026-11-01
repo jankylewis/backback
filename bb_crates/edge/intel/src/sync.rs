@@ -8,7 +8,7 @@ use lsp_types::{
 };
 
 use crate::model::bb_doc::{full_text, DocVersion, Edit, OpenDoc};
-use crate::model::results::Diagnostic;
+use crate::model::results::DiagnosticsReport;
 use crate::model::DocPath;
 use crate::{IntelError, Session};
 
@@ -17,7 +17,7 @@ impl Session {
     ///
     /// # Errors
     /// The file cannot be read, or see [`Session::open_text`].
-    pub async fn open(&mut self, path: &DocPath) -> Result<Vec<Diagnostic>, IntelError> {
+    pub async fn open(&mut self, path: &DocPath) -> Result<DiagnosticsReport, IntelError> {
         let text: String =
             std::fs::read_to_string(path.as_path()).map_err(|source: std::io::Error| {
                 IntelError::Read {
@@ -42,7 +42,7 @@ impl Session {
         &mut self,
         path: &DocPath,
         text: &str,
-    ) -> Result<Vec<Diagnostic>, IntelError> {
+    ) -> Result<DiagnosticsReport, IntelError> {
         if self.docs.contains_key(path) {
             return Err(IntelError::AlreadyOpen(path.as_path().to_path_buf()));
         }
@@ -114,10 +114,7 @@ impl Session {
         };
         self.client.notify("textDocument/didClose", params).await?;
         self.docs.remove(path);
-        if let Ok(mut map) = self.store.lock() {
-            map.remove(path);
-        }
-        Ok(())
+        self.store.remove(path)
     }
 
     fn doc_mut(&mut self, path: &DocPath) -> Result<&mut OpenDoc, IntelError> {

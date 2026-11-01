@@ -2,7 +2,7 @@
 
 id: BB-LSP-001
 family: LSP
-status: OBSERVED
+status: FIXED
 source: branch `bbeod-03-diagver` commit `28699aa`
 
 ## The fix
@@ -16,5 +16,6 @@ Raising the 30 s limit, or rerunning until green.
 
 ## Proof
 
-Branch gate 289 passed / 0 failed. Not yet independently verified and not on
-`master`, so status stays OBSERVED.
+Branch gate 289 passed / 0 failed (backback_1, loops 20/20 x3); rebased on
+`master` 7ce4c96 with the MCP removal (3 harness projects, not 4) and a
+full gate before merge (BBEOD03-DIAGVER PR).

@@ -32,66 +32,30 @@
   Evidence and conflict table: `readback/V1/BBEOD05/MERGE.md`.
 - Source research found no `runInTerminal` reverse request. No push.
 
-## BBEOD05-EXITCODE (`backback_1`)
+## BBEOD03-LOADCOUNT (backback_1)
 
-- Local netcoredbg `9731de2` on `local-setnext`: kqueue `NOTE_EXITSTATUS`
-  gives launch exit code; capability `netcoredbgLaunchExitCodeIsProcessStatus`.
-- Backback marks launch status `Verified` or `Signaled` only with that
-  capability. Stock is `Unverified`.
-- Before merge: stock and patched each passed 159 tests; no adapter caused
-  13 adapter tests to fail with `NotFound`.
-- Readback: `readback/V1/BBEOD05/EXITCODE.md`.
+- Same branch. Families: load state from summed batch lines; fixed test
+  walls around Roslyn readiness. `LoadState` counts distinct paths; tests
+  wait on the readiness line, then a request budget; failed projects reach
+  `bb open`, `bb probe` and the status bar.
+- Gate: 41 suites, 289 passed, 0 failed. Loops 20/20. MbTx 17/17, 0 written.
+  Record: `readback/V1/BBEOD03/BBEOD03_FIX/BBEOD03_LOADCOUNT.md`.
 
-## BBEOD05-FIX (`backback_1`)
+## BBEOD03-DIAGVER (backback_1)
 
-- B1 liveness from adapter exit; B2 attach target exit; B3 status truth;
-  B4 no vacuous skip; typed condition error.
-- Before merge: stock and patched each passed 153 tests. No adapter caused
-  12 adapter tests to fail with a clear message.
-- Records: `readback/V1/BBEOD05/FIX.md`, `bench/BBEOD05/FIX.md`,
-  `docs/rnd/NETCOREDBG_EXIT_CODE.md`.
+- Branch `bbeod-03-diagver` from `3d83ae0`. Family: diagnostics not tied
+  to the document version. Versioned store, pull returns its own answer,
+  poison is an error, `Event::Diagnostics` carries `DocVersion`, the window
+  shows a list only for the version it shows.
+- Readback found a first-fix bug: Roslyn "unchanged" after an edit put the
+  old list one edit behind. Fix: always pull the full list.
+- Gate: 41 suites, 279 passed, 0 failed. Worker loop 20/20 at 2 threads.
+- Open: Roslyn reload lines double-count a project (`_Core` twice, sum 5
+  of 4). Next unit after BBEOD07-VERIFY2.
+- Record: `readback/V1/BBEOD03/BBEOD03_FIX/BBEOD03_DIAGVER.md`.
 
-## BBEOD05 debugger and Set Next (`backback_2`)
+## Earlier units
 
-- Merged `bbeod-05-debug` and `bbeod-05-setnext` before the master merge.
-- Stock and patched netcoredbg passed the capability-aware Set Next instrument.
-- Before merge: patched gate passed fmt, Clippy, 131 tests, deny, audit,
-  and tracked absolute-path guard.
-- Local DAP goto patch passed same-method re-execution, stale IDs,
-  cross-method, catch, and finally gates. Full netcoredbg build and six CTests
-  passed. No publication.
-- Debugger readback stopped GreeterSpec, showed locals, stepped, and finished
-  both tests. Probe CLI stopped at a console fixture and showed stack and locals.
-- Five-pair A/B benchmark was noisy, with no evidenced regression.
-- Records: `readback/V1/BBEOD05/`, `bench/BBEOD05/`.
-
-## Earlier work
-
-- BBEOD02-FIX (`backback_1`, 2026-11-01): B1 safe save; B2 rope edit log and
-  background open/parse; B3 virtual Explorer, status bar, natural sort, Quit.
-  Evidence: `bench/BBEOD02/BBEOD02_FIX.md`, `readback/bb_FOUNDATION/BBEOD02/FIX/`.
-  Open: FS watcher, 1 GB RSS on 20 MB file.
-- BBEOD02-B (`backback_2`): rope editor, guarded tabs, atomic save, C#
-  highlighting, light theme and View toggle. Evidence:
-  `bench/bb_GENERAL/EDITOR.md`,
-  `readback/bb_FOUNDATION/BBEOD02/bb_EXPLORER/EDITOR/bb_EDITOR.md`.
-- BBEOD02 through BBEOD04 details: `docs/plan/HISTORY.md`.
-- Hygiene-ctx moved five summaries to the external rawctxhub and removed
-  two tracked absolute home paths. The guard failed before that fix.
-
-## BBEOD07-FIX (backback_2)
-
-- Branch `bbeod-07-release`; merged `origin/master` at `3d83ae0`.
-- Prior BBEOD07 release bundled the CLI. This fix bundles the desktop GUI.
-- Served `.app` check passed: GUI executable, visible window screenshot,
-  app quit, and zero leftover processes for this bundle.
-- The first icon had a pointed fringe and a two-chevron pack mark.
-  BBEOD07-MERGE corrected both; the archive has 10 sizes.
-- CI uses pinned action commits and the all-feature gate. The two HD folders
-  now have five entries each and one marker.
-- Initial gate found two new marker issues. Both were corrected. The final
-  gate passed format, all-feature Clippy, 267 tests in 41 suites, deny,
-  audit, and the tracked absolute-path guard.
-- Five-run benchmark at load 9.41 is noisy. No performance verdict.
-- Records: `readback/V1/BBEOD07/bb_BBEOD07_FIX.md`,
-  `bench/bb_GENERAL/BBEOD07_FIX.md`. No push.
+BBEOD05 (debugger, Set Next, exit code), BBEOD05-FIX and BBEOD07-FIX: see
+`HISTORY.md`, the goals board `bb_roadmap/GOALS.md`, the readbacks under
+`readback/V1/` and `git log`. Bugs and failures: `hubs/TRIAGE.md`.

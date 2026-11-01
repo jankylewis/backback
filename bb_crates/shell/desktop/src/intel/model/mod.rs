@@ -3,21 +3,22 @@
 
 mod bb_accept;
 pub(crate) mod popups;
-mod status;
+pub(crate) mod shown;
 #[cfg(test)]
 mod tests;
 
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use bb_intel::{Diagnostic, Severity};
+use bb_intel::{Diagnostic, DocVersion, Severity};
 
 #[cfg(test)]
 pub(crate) use bb_accept::{fits, freshness, Freshness};
 pub(crate) use bb_accept::{InFlight, Now, Pending, Question};
 use popups::{ActionsPopup, CompletionPopup, HoverPopup, PlacesPanel, RenameInput, RenamePreview};
-pub(crate) use status::LoadStatus;
+use shown::Diags;
+pub(crate) use shown::LoadStatus;
+pub(crate) use shown::Sent;
 
 /// One answered question's stage times, for the latency budget.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -60,9 +61,11 @@ pub(crate) struct Undrawn {
 pub(crate) struct IntelModel {
     /// The load.
     pub(crate) status: LoadStatus,
+    /// Projects Roslyn reported it could not load.
+    pub(crate) failed_projects: Vec<PathBuf>,
     /// Questions in flight.
     pub(crate) in_flight: InFlight,
-    diagnostics: BTreeMap<PathBuf, Vec<Diagnostic>>,
+    diagnostics: Diags,
     /// The completion list.
     pub(crate) completion: Option<CompletionPopup>,
     /// The hover text.
@@ -97,8 +100,9 @@ impl IntelModel {
     pub(crate) fn new(status: LoadStatus) -> Self {
         Self {
             status,
+            failed_projects: Vec::new(),
             in_flight: InFlight::default(),
-            diagnostics: BTreeMap::new(),
+            diagnostics: Diags::default(),
             completion: None,
             hover: None,
             actions: None,
@@ -129,23 +133,41 @@ impl IntelModel {
         self.rename_asked = None;
     }
 
-    /// Keep the newest diagnostics of one document.
-    pub(crate) fn set_diagnostics(&mut self, path: PathBuf, list: Vec<Diagnostic>) {
-        self.diagnostics.insert(path, list);
+    /// The window sent a request; a sync step moves the server's version.
+    pub(crate) fn sent(&mut self, sent: Option<Sent>) {
+        let Some(sent): Option<Sent> = sent else {
+            return;
+        };
+        self.diagnostics.sent(sent);
     }
 
-    /// The diagnostics of one document.
+    /// The server version of the text the tab of `path` shows.
+    pub(crate) fn shown_version(&self, path: &Path) -> Option<DocVersion> {
+        self.diagnostics.shown(path)
+    }
+
+    /// Keep the diagnostics of one document unless newer ones are kept.
+    pub(crate) fn set_diagnostics(
+        &mut self,
+        path: PathBuf,
+        version: DocVersion,
+        list: Vec<Diagnostic>,
+    ) {
+        let _kept: bool = self.diagnostics.set(path, version, list);
+    }
+
+    /// The diagnostics of one document, for the version its tab shows.
     pub(crate) fn diagnostics_of(&self, path: &Path) -> &[Diagnostic] {
-        self.diagnostics.get(path).map_or(&[], Vec::as_slice)
+        self.diagnostics.of(path)
     }
 
     /// Every diagnostic, by path, then line, then worst first.
     pub(crate) fn problems(&self) -> Vec<(&Path, &Diagnostic)> {
         let mut all: Vec<(&Path, &Diagnostic)> = self
             .diagnostics
-            .iter()
-            .flat_map(|(path, list): (&PathBuf, &Vec<Diagnostic>)| {
-                list.iter().map(move |d: &Diagnostic| (path.as_path(), d))
+            .all()
+            .flat_map(|(path, list): (&Path, &[Diagnostic])| {
+                list.iter().map(move |d: &Diagnostic| (path, d))
             })
             .collect();
         all.sort_by_key(|(path, d): &(&Path, &Diagnostic)| {
@@ -169,7 +191,7 @@ impl IntelModel {
 
     /// A tab closed: drop what belongs to it.
     pub(crate) fn closed(&mut self, path: &Path) {
-        self.diagnostics.remove(path);
+        self.diagnostics.closed(path);
         self.in_flight.forget(path);
         if self
             .completion

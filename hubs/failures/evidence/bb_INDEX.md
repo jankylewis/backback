@@ -13,3 +13,4 @@ Paths only. Never copy logs with secrets, personal paths or account values.
 | BB-BUG-007 | OBSERVED | `docs/plan/readback/FIXES/BBEOD12/bb_READBACK.md` (End did not move) |
 
 Capture next time: the build time of the binary that was read back.
+| BB-LSP-003 | OPEN | `docs/plan/readback/FIXES/BBEOD03/STATE_LOG.txt` |

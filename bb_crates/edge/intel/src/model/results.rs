@@ -59,6 +59,16 @@ impl Diagnostic {
     }
 }
 
+/// The diagnostics of one document at one version: squiggles from this list
+/// belong on that version's text and on no other.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DiagnosticsReport {
+    /// The document version the list is for.
+    pub version: super::bb_doc::DocVersion,
+    /// The problems.
+    pub list: Vec<Diagnostic>,
+}
+
 /// One completion item.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CompletionEntry {

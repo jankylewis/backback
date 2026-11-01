@@ -5,14 +5,16 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use bb_intel::{Config, DocPath, IntelError, Session, Span};
+use bb_intel::{Config, DiagnosticsReport, DocPath, IntelError, Session, Span};
+use bb_lsp::roslyn::LoadState;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 mod bb_helpers;
+mod load;
 
-use super::progress::ProgressLog;
 use super::protocol::{Answer, Ask, Event, Request, Stages, Ticket};
 use bb_helpers::{doc, places, send};
+use load::load;
 
 /// How long the request queue must stay quiet before changed documents get
 /// their diagnostics pulled again.
@@ -21,7 +23,7 @@ const PULL_AFTER: Duration = Duration::from_millis(250);
 /// Run the server thread until the UI drops its sender.
 pub(crate) fn run(
     config: &Config,
-    total: usize,
+    projects: LoadState,
     requests: UnboundedReceiver<Request>,
     events: &UnboundedSender<Event>,
 ) {
@@ -35,33 +37,18 @@ pub(crate) fn run(
             return;
         }
     };
-    runtime.block_on(serve(config, total, requests, events));
+    runtime.block_on(serve(config, projects, requests, events));
 }
 
 async fn serve(
     config: &Config,
-    total: usize,
+    projects: LoadState,
     mut requests: UnboundedReceiver<Request>,
     events: &UnboundedSender<Event>,
 ) {
-    let log: std::fs::File = match std::fs::File::create(config.log_dir.join("backback-roslyn.log"))
-    {
-        Ok(file) => file,
-        Err(error) => return send(events, Event::Failed(format!("run log: {error}"))),
+    let Some(mut session): Option<Session> = load(config, projects, events).await else {
+        return;
     };
-    send(events, Event::Progress { loaded: 0, total });
-    let started: Result<Session, IntelError> =
-        Session::start(config, ProgressLog::new(log, events.clone(), total)).await;
-    let mut session: Session = match started {
-        Ok(session) => session,
-        Err(error) => return send(events, Event::Failed(error.to_string())),
-    };
-    send(
-        events,
-        Event::Ready {
-            took: session.loaded_in(),
-        },
-    );
     let mut changed: BTreeSet<PathBuf> = BTreeSet::new();
     let mut closed: tokio::sync::watch::Receiver<bool> = session.closed_signal();
     loop {
@@ -120,12 +107,12 @@ async fn handle(
             }
         }
         Request::Open { path, text } => {
-            let opened: Result<Vec<bb_intel::Diagnostic>, IntelError> = match doc(&path) {
+            let opened: Result<DiagnosticsReport, IntelError> = match doc(&path) {
                 Ok(at) => session.open_text(&at, &text).await,
                 Err(error) => Err(error),
             };
             match opened {
-                Ok(list) => send(events, Event::Diagnostics { path, list }),
+                Ok(report) => send(events, diagnostics(path, report)),
                 Err(error) => send(events, Event::SyncFailed(error.to_string())),
             }
         }
@@ -166,15 +153,17 @@ async fn pull(session: &Session, path: &Path, events: &UnboundedSender<Event>) {
     };
     let timeout: Duration = Duration::from_secs(10);
     match session.diagnostics(&at, timeout).await {
-        Ok(list) => send(
-            events,
-            Event::Diagnostics {
-                path: path.to_path_buf(),
-                list,
-            },
-        ),
+        Ok(report) => send(events, diagnostics(path.to_path_buf(), report)),
         Err(IntelError::NotOpen(_)) => {}
         Err(error) => send(events, Event::SyncFailed(error.to_string())),
+    }
+}
+
+fn diagnostics(path: PathBuf, report: DiagnosticsReport) -> Event {
+    Event::Diagnostics {
+        path,
+        version: report.version,
+        list: report.list,
     }
 }
 

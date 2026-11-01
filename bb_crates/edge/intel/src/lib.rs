@@ -14,7 +14,8 @@ mod sync;
 pub use bb_session::{Config, Session};
 pub use model::bb_doc::{DocVersion, Edit};
 pub use model::results::{
-    ActionItem, CompletionEntry, Diagnostic, FileChange, HoverInfo, Severity, TextChange,
+    ActionItem, CompletionEntry, Diagnostic, DiagnosticsReport, FileChange, HoverInfo, Severity,
+    TextChange,
 };
 pub use model::{DocPath, DocUri, Location, Span};
 
@@ -58,6 +59,12 @@ pub enum IntelError {
         /// Server message.
         message: String,
     },
+    /// The diagnostics store lock was poisoned; its lists cannot be trusted.
+    #[error("diagnostics store poisoned")]
+    StorePoisoned,
+    /// The server answered a pull with no full list and none is stored.
+    #[error("no diagnostics for {0}: the server sent no full report")]
+    NoReport(PathBuf),
     /// A file could not be read.
     #[error("cannot read {path}: {source}")]
     Read {
