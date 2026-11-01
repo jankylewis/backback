@@ -10,3 +10,4 @@
 | BB-CIP-001 | FIXED | CI installs every external tool, pinned; `--no-fail-fast` | `SHIP/CIP/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
 | BB-UIX-002 | FIXED | A window command acts on the window the event reached | `APP/UIX/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
 | BB-PRC-001 | FIXED | Own the group, not the pid | `SYS/PRC/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
+| BB-PRC-002 | FIXED | Spawn tools on a normal-QoS thread | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |

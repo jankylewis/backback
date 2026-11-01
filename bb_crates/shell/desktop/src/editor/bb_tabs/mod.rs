@@ -2,9 +2,11 @@ use std::path::{Path, PathBuf};
 
 use bb_text::{Document, DocumentError};
 
+mod history;
 mod tab;
 mod window;
 
+pub(crate) use history::{go_back, go_forward, GoBack, GoForward, History};
 pub(crate) use tab::{Tab, TabError, TabEvent};
 
 #[cfg(test)]
@@ -18,13 +20,11 @@ pub(crate) struct Tabs {
     pending_close: Option<usize>,
     events: Vec<TabEvent>,
     no_write: bool,
+    /// Back / Forward across jumps.
+    pub(crate) history: History,
 }
 
 impl Tabs {
-    pub(crate) fn new() -> Self {
-        Self::default()
-    }
-
     /// Lock saves in every tab, now and later (readback on real solutions).
     pub(crate) fn set_no_write(&mut self) {
         self.no_write = true;

@@ -105,6 +105,10 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .key_context("Editor")
         .track_focus(focus)
         .on_key_down(cx.listener(ExplorerView::editor_key_down))
+        .on_action(cx.listener(super::go_back))
+        .on_action(cx.listener(crate::build::on_build))
+        .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
+        .on_action(cx.listener(super::go_forward))
         .child(
             uniform_list(
                 "editor-lines",

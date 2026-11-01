@@ -137,8 +137,21 @@ pub(crate) fn jump(
         .canonicalize()
         .unwrap_or_else(|_: std::io::Error| path.as_path().to_path_buf());
     let at: LspPoint = place.location.span.start;
+    view.tabs.leave_here();
+    goto_point(view, &path, at, window, cx);
+}
+
+/// Show `at` in `path`: switch to its tab, or open it and move there once it
+/// has loaded. Outside the workspace the file opens read-only.
+pub(crate) fn goto_point(
+    view: &mut ExplorerView,
+    path: &Path,
+    at: LspPoint,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
     let read_only: bool = !path.starts_with(&view.root);
-    if view.tabs.tab_mut(&path).is_some() {
+    if view.tabs.tab_mut(path).is_some() {
         if let Some(index) = view
             .tabs
             .items()
@@ -147,16 +160,16 @@ pub(crate) fn jump(
         {
             view.tabs.switch(index);
         }
-        move_cursor(view, &path, at);
+        move_cursor(view, path, at);
         window.focus(&view.editor_focus, cx);
         return;
     }
     view.intel.jump = Some(Jump {
-        path: path.clone(),
+        path: path.to_path_buf(),
         at,
         read_only,
     });
-    view.open_file(&path, window, cx);
+    view.open_file(path, window, cx);
 }
 
 /// A tab finished opening: run the jump that waited for it.

@@ -24,3 +24,5 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-PRC-001 | `process left after quit` | FIXED | Record the app's process tree before quit; check every pid after |
 | BB-LSP-004 | `open_with_restore_flag_lets_roslyn_restore` | OBSERVED | Does `bb open --restore` wait for the restore to finish? |
 | BB-UIX-003 | `gutter stayed 50 px at zoom` | FIXED | Every width that holds text scales with `Typography` |
+| BB-PRC-002 | `Building Harness.slnx... (never ends)` | FIXED | `ps -o stat` of the child: `SN` = spawned from a background thread |
+| BB-PRC-003 | `SN roslyn-language-server` | OBSERVED | Which thread spawns the tool? Spawn on the UI thread |

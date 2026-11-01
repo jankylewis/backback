@@ -21,7 +21,7 @@ use crate::intel::model::{LoadStatus, Now, Pending, Sent};
 use crate::ExplorerView;
 
 pub(crate) use answers::apply_rename;
-pub(crate) use answers::{jump, opened};
+pub(crate) use answers::{goto_point, jump, opened};
 pub(crate) use asks::{hover_move, word_start};
 pub(crate) use bb_keys::RestartServer;
 
