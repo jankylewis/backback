@@ -3,6 +3,24 @@ use std::time::Instant;
 
 use crate::ExplorerView;
 
+/// The char under window position `window_x` on `line` of the active tab.
+pub(crate) fn char_at(view: &ExplorerView, line: usize, window_x: f32) -> Option<bb_text::CharIdx> {
+    let left: f32 = view.panel_width + 56.0;
+    let document: &bb_text::Document = view.tabs.active()?;
+    let start: usize = document.line_start(line)?.raw();
+    let content: String = document.line(line).unwrap_or_default();
+    let visible: usize = content.trim_end_matches(['\r', '\n']).chars().count();
+    let column: usize = (0..visible)
+        .take_while(|index: &usize| {
+            let step: u16 = u16::try_from(index.saturating_add(1)).unwrap_or(u16::MAX);
+            7.8 * f32::from(step) <= (window_x - left).max(0.0)
+        })
+        .count();
+    Some(bb_text::CharIdx::new(
+        start.saturating_add(column.min(visible)),
+    ))
+}
+
 pub(crate) fn pointer_at(
     view: &mut ExplorerView,
     line: usize,
@@ -11,19 +29,9 @@ pub(crate) fn pointer_at(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let left: f32 = view.panel_width + 56.0;
-    if let Some(document) = view.tabs.active_mut() {
-        let start: usize = document.line_start(line).map_or(0, bb_text::CharIdx::raw);
-        let content: String = document.line(line).unwrap_or_default();
-        let visible: usize = content.trim_end_matches(['\r', '\n']).chars().count();
-        let column: usize = (0..visible)
-            .take_while(|index: &usize| {
-                let step: u16 = u16::try_from(index.saturating_add(1)).unwrap_or(u16::MAX);
-                7.8 * f32::from(step) <= (window_x - left).max(0.0)
-            })
-            .count();
-        let target: bb_text::CharIdx =
-            bb_text::CharIdx::new(start.saturating_add(column.min(visible)));
+    let target: Option<bb_text::CharIdx> = char_at(view, line, window_x);
+    view.intel.dismiss();
+    if let (Some(document), Some(target)) = (view.tabs.active_mut(), target) {
         if let Err(error) = document.move_to(target, extend) {
             view.status = Some(error.to_string());
         }
@@ -38,6 +46,11 @@ pub(crate) fn handle_key(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
+    if intercepted(view, event) {
+        cx.stop_propagation();
+        cx.notify();
+        return;
+    }
     let key: &str = event.keystroke.key.as_str();
     let shift: bool = event.keystroke.modifiers.shift;
     let timed: bool = event.keystroke.key_char.is_some() && !event.keystroke.modifiers.platform;
@@ -64,11 +77,7 @@ pub(crate) fn handle_key(
         Err(error) => view.report(&error),
     }
     let reparse_start: Instant = Instant::now();
-    if let Some(tab) = view.tabs.active_tab_mut() {
-        tab.sync_edits();
-        let path: std::path::PathBuf = tab.path.clone();
-        schedule_parse(view, path, window, cx);
-    }
+    after_key(view, event, window, cx);
     if timed {
         view.reparse_ns = view
             .reparse_ns
@@ -77,6 +86,59 @@ pub(crate) fn handle_key(
     }
     cx.stop_propagation();
     cx.notify();
+}
+
+/// Move the edits onto the tree and start a parse; keep the completion list
+/// in step with what was typed.
+fn after_key(
+    view: &mut ExplorerView,
+    event: &KeyDownEvent,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    if let Some(tab) = view.tabs.active_tab_mut() {
+        tab.sync_edits();
+        let path: std::path::PathBuf = tab.path.clone();
+        schedule_parse(view, path, window, cx);
+    }
+    if !event.keystroke.modifiers.platform {
+        crate::intel::glue::bb_keys::after_edit(view, event.keystroke.key_char.as_deref());
+    }
+}
+
+/// Intel popups and commands take the key first; then a refused edit or
+/// save stops it with a status line.
+fn intercepted(view: &mut ExplorerView, event: &KeyDownEvent) -> bool {
+    if crate::intel::glue::bb_keys::key(view, event) {
+        return true;
+    }
+    let Some(why): Option<String> = refused(view, event) else {
+        return false;
+    };
+    view.report(&why);
+    true
+}
+
+/// Why the key must not run here, if it changes text in a read-only tab or
+/// saves in no-write mode.
+fn refused(view: &ExplorerView, event: &KeyDownEvent) -> Option<String> {
+    let stroke: &gpui::Keystroke = &event.keystroke;
+    let key: &str = stroke.key.as_str();
+    let platform: bool = stroke.modifiers.platform;
+    let saves: bool = platform && key == "s";
+    if saves && view.tabs.no_write() {
+        return Some(String::from("no-write mode: save refused"));
+    }
+    let edits: bool = if platform {
+        key == "s" || key == "z"
+    } else {
+        matches!(key, "backspace" | "delete" | "enter" | "return") || stroke.key_char.is_some()
+    };
+    let read_only: bool = view
+        .tabs
+        .active_tab()
+        .is_some_and(|tab: &super::Tab| tab.read_only);
+    (edits && read_only).then(|| String::from("read-only file: edit refused"))
 }
 
 fn command_key(
@@ -132,7 +194,7 @@ fn text_key(
 
 /// Start a background parse for the tab at `path` when edits wait and none
 /// runs; on completion install it and start the next one if typing went on.
-fn schedule_parse(
+pub(super) fn schedule_parse(
     view: &mut ExplorerView,
     path: std::path::PathBuf,
     window: &mut Window,
@@ -141,7 +203,9 @@ fn schedule_parse(
     let Some(tab): Option<&mut super::Tab> = view.tabs.tab_mut(&path) else {
         return;
     };
-    let Some(job): Option<bb_syntax::ParseJob> = tab.live.start_parse(tab.document.rope()) else {
+    let scope: Option<(bb_text::BytePoint, bb_text::BytePoint)> = tab.parse_window();
+    let Some(job): Option<bb_syntax::ParseJob> = tab.live.start_parse(tab.document.rope(), scope)
+    else {
         return;
     };
     let parse: gpui::Task<(bb_syntax::Parsed, std::time::Duration)> =

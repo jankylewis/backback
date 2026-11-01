@@ -3,9 +3,9 @@
 //! other server request with `null`, forward notifications.
 
 use serde_json::{json, Value};
-use tokio::io::AsyncReadExt;
-use tokio::process::ChildStdout;
-use tokio::sync::{mpsc, oneshot};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::process::{ChildStdin, ChildStdout};
+use tokio::sync::{mpsc, oneshot, watch};
 
 use bb_framing::{Decoder, FrameError};
 
@@ -19,6 +19,7 @@ pub(crate) struct Reader {
     pub(crate) incoming: mpsc::Sender<Incoming>,
     pub(crate) outgoing: mpsc::Sender<Vec<u8>>,
     pub(crate) settings: Arc<Settings>,
+    pub(crate) closed: watch::Sender<bool>,
 }
 
 impl Reader {
@@ -40,6 +41,7 @@ impl Reader {
                 let _dropped: Result<(), Result<Value, LspError>> = tx.send(Err(LspError::Closed));
             }
         }
+        self.closed.send_replace(true);
     }
 
     async fn drain(&self, decoder: &mut Decoder) {
@@ -101,6 +103,14 @@ impl Reader {
     }
 }
 
+pub(crate) async fn write_loop(mut stdin: ChildStdin, mut rx: mpsc::Receiver<Vec<u8>>) {
+    while let Some(bytes) = rx.recv().await {
+        if stdin.write_all(&bytes).await.is_err() {
+            break;
+        }
+    }
+}
+
 /// One value per requested item: the setting for its `section`, else `null`.
 pub(crate) fn configuration_reply(params: Option<&Value>, settings: &Settings) -> Value {
     let items: &[Value] = params
@@ -137,6 +147,7 @@ pub(crate) fn response_outcome(message: &Value) -> Result<Value, LspError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn result_and_error_responses_map_to_outcomes() {
@@ -147,6 +158,19 @@ mod tests {
         let err: Result<Value, LspError> =
             response_outcome(&json!({"id": 3, "error": {"code": -32601, "message": "nope"}}));
         assert!(matches!(err, Err(LspError::Server { code: -32601, .. })));
+    }
+
+    #[tokio::test]
+    async fn a_timed_out_request_leaves_no_waiter_behind() {
+        let mut command: tokio::process::Command = tokio::process::Command::new("sleep");
+        command.arg("5");
+        let client: crate::LspClient =
+            crate::LspClient::spawn(command, Duration::from_secs(5), Settings::new()).unwrap();
+        let reply: Result<Value, LspError> = client
+            .request_within("never/answered", Value::Null, Duration::from_millis(50))
+            .await;
+        assert!(matches!(reply, Err(LspError::Timeout { .. })));
+        assert_eq!(client.pending_len(), 0);
     }
 
     #[test]

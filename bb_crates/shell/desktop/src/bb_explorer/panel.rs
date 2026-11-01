@@ -21,6 +21,7 @@ pub(crate) fn explorer_panel(
     div()
         .id("explorer-panel")
         .w(px(view.panel_width))
+        .flex_none()
         .h_full()
         .flex()
         .flex_col()
