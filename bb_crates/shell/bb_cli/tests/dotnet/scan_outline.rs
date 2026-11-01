@@ -33,14 +33,13 @@ mod scan_run {
 #[test]
 fn scan_lists_capabilities_per_project() {
     let run: Run = scan();
-    assert!(run.out.contains("(Slnx, 4 projects)"), "{}", run.out);
+    assert!(run.out.contains("(Slnx, 3 projects)"), "{}", run.out);
     for (name, wants) in [
         ("_NUnitApex", &["test exe", "VsTest", "NUnit", "Apex"][..]),
         (
             "_XunitPlaywright",
             &["test exe", "Mtp", "XUnit", "Playwright"][..],
         ),
-        ("_McpServer", &["lib  exe", "Mcp"][..]),
         ("_Core", &["lib  dll"][..]),
     ] {
         let line: &str = line_of(&run, name);
@@ -134,42 +133,20 @@ fn bench_with_a_missing_project_exits_non_zero_and_names_it() {
     assert!(run.err.contains("Gone.csproj"), "{}", run.all());
 }
 
+/// Headmate ruling 2026-11-01: the real `bb` binary has no MCP entry point,
+/// in its usage text or as a command, and the fixture has no MCP project.
 #[test]
-fn lists_fixture_mcp_project_with_run_command() {
+fn bb_has_no_mcp_entry_point() {
     let solution: String = common::harness().join("Harness.slnx").display().to_string();
     let run: common::Run = common::bb(&["mcp", "list", &solution]);
-    assert_eq!(run.code, Some(0), "{}", run.err);
-    assert!(run.out.contains("_McpServer.csproj"));
-    assert!(run.out.contains("dotnet run --project"));
-    assert!(run.all().contains("_McpServer.csproj"));
-}
-
-#[test]
-fn calls_fixture_greet_and_reports_bad_arguments() {
-    let project: String = common::harness()
-        .join("McpServer/_McpServer.csproj")
-        .display()
-        .to_string();
-    let good: common::Run = common::bb(&["mcp", "call", &project, "Greet", "{\"name\":\"Vinh\"}"]);
-    assert_eq!(good.code, Some(0), "{}", good.err);
-    assert!(good.out.contains("hi Vinh"));
-    let bad: common::Run = common::bb(&["mcp", "call", &project, "Greet", "{}"]);
-    assert_eq!(bad.code, Some(1), "{}", bad.all());
-    assert!(bad.err.contains("isError") || bad.err.contains("MCP error"));
-}
-
-#[test]
-fn mcp_without_dotnet_on_path_names_the_missing_program() {
-    let project: String = common::harness()
-        .join("McpServer/_McpServer.csproj")
-        .display()
-        .to_string();
-    let run: common::Run =
-        common::bb_env(&["mcp", "tools", &project], &[("PATH", "/usr/bin:/bin")]);
-    assert_eq!(run.code, Some(1), "{}", run.all());
+    assert_eq!(run.code, Some(2), "{}", run.all());
+    assert!(run.err.contains("unknown command: mcp"), "{}", run.err);
+    let usage: common::Run = common::bb(&[]);
     assert!(
-        run.err.contains("cannot start `dotnet`: not found on PATH"),
+        !usage.all().to_lowercase().contains("mcp"),
         "{}",
-        run.err
+        usage.all()
     );
+    let scan: common::Run = common::bb(&["scan", &solution]);
+    assert!(!scan.all().to_lowercase().contains("mcp"), "{}", scan.all());
 }

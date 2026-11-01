@@ -81,7 +81,7 @@ fn secret_text_is_never_kept() {
 }
 
 #[test]
-fn playwright_xunit_mcp_and_props_inheritance() {
+fn playwright_xunit_apex_and_props_inheritance() {
     let s: Scratch = Scratch::new("pw");
     s.write(
         "Directory.Build.props",
@@ -101,7 +101,6 @@ fn playwright_xunit_mcp_and_props_inheritance() {
             Capability::XUnit,
             Capability::Playwright,
             Capability::Apex,
-            Capability::Mcp,
             Capability::TestingPlatform
         ]
     );

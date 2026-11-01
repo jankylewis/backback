@@ -115,8 +115,8 @@ async fn loaded(name: &str) -> Live {
     assert_eq!(solution, root.join("Harness.slnx"));
     let (link, mut events): (Link, UnboundedReceiver<Event>) = start(&solution);
     let progress: Vec<(usize, usize)> = wait_ready(&mut events).await;
-    assert_eq!(progress.first(), Some(&(0, 4)), "{progress:?}");
-    assert_eq!(progress.last(), Some(&(4, 4)), "{progress:?}");
+    assert_eq!(progress.first(), Some(&(0, 3)), "{progress:?}");
+    assert_eq!(progress.last(), Some(&(3, 3)), "{progress:?}");
     assert!(progress
         .windows(2)
         .all(|w: &[(usize, usize)]| w[0].0 <= w[1].0));
@@ -223,7 +223,7 @@ async fn rename_changes_no_file(live: &mut Live) {
     let Answer::Rename(changes): Answer = renamed else {
         panic!("{renamed:?}");
     };
-    assert_eq!(changes.len(), 3, "{changes:?}");
+    assert_eq!(changes.len(), 2, "{changes:?}");
     assert!(changes
         .iter()
         .all(|c: &FileChange| matches!(c, FileChange::Edit { .. })));

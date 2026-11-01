@@ -4,8 +4,6 @@ mod args;
 #[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
 mod editor;
-#[path = "bb_explorer/panels/bb_harness/mod.rs"]
-mod harness;
 #[path = "bb_explorer/icons.rs"]
 mod icons;
 mod intel;
@@ -41,9 +39,6 @@ struct ExplorerView {
     selected: usize,
     focus: FocusHandle,
     editor_focus: FocusHandle,
-    harness_focus: FocusHandle,
-    harness: harness::Harness,
-    show_harness: harness::HarnessVisibility,
     tabs: Tabs,
     keypresses: usize,
     latency_before: Option<gpui::profiler::InputLatencySnapshot>,
@@ -199,7 +194,6 @@ impl Render for ExplorerView {
             .bg(color(self.theme.bg))
             .on_action(cx.listener(ExplorerView::toggle_theme))
             .on_action(cx.listener(ExplorerView::follow_appearance))
-            .on_action(cx.listener(ExplorerView::toggle_harness))
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
@@ -228,7 +222,6 @@ impl Render for ExplorerView {
                         cx,
                     )),
             )
-            .children(harness::visible_panel(self, cx))
     }
 }
 

@@ -10,7 +10,7 @@ closes one milestone with a demonstrated exit result.
 | BBEOD03 | M2 Code intelligence | Roslyn completion, diagnostics, definition, references, rename, fixes; no crashes on MbTx, Apex, NmcTx, SI readback. |
 | BBEOD04 | M3 Test automation | NUnit/xUnit/MSTest on VSTest and MTP; one/class/category; runsettings; Playwright traces; Apex reports; ApexTestkit parity on MbTx. |
 | BBEOD05 | M4 Debugging | netcoredbg breakpoints, step, locals, stack, watch, one-test debug, set-next-statement; one MbTx spec debugged end to end. |
-| BBEOD06 | M5 Harness + MCP | Start/stop ApexMcp, SiMcp, NmcMcp; logs, tool call, terminal, find in files. |
+| BBEOD06 | M5 Harness | MCP harness removed by headmate ruling 2026-11-01. Terminal and find in files: not built; propose before building. |
 | BBEOD07 | M6 Open-source v1 | Signed, notarised macOS app; original logo, Homebrew cask, docs, CONTRIBUTING, published benchmarks, v1.0 release. |
 
 ## Seven test layers

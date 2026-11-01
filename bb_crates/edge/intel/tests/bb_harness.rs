@@ -61,17 +61,13 @@ async fn definition_references_and_hover_reach_across_projects() {
     let mut files: Vec<String> = refs.iter().map(|l: &Location| file_of(&l.uri)).collect();
     files.sort();
     files.dedup();
-    assert_eq!(
-        files,
-        ["GreetTool.cs", "Greeter.cs", "GreeterSpec.cs"],
-        "{refs:?}"
-    );
-    assert_eq!(refs.len(), 5, "{refs:?}");
+    assert_eq!(files, ["Greeter.cs", "GreeterSpec.cs"], "{refs:?}");
+    assert_eq!(refs.len(), 3, "{refs:?}");
     assert!(hover.unwrap().text.contains("Greeter.Hello(string name)"));
 }
 
 #[tokio::test]
-async fn rename_returns_edits_in_three_files_and_applies_none() {
+async fn rename_returns_edits_in_two_files_and_applies_none() {
     let mut h: Harness = start("rename").await;
     let spec: DocPath = h.doc(SPEC);
     let before: String = std::fs::read_to_string(h.root.join("Core/Greeter.cs")).unwrap();
@@ -86,11 +82,7 @@ async fn rename_returns_edits_in_three_files_and_applies_none() {
     h.finish().await;
     let mut files: Vec<String> = plan.iter().map(|c: &FileChange| file_of(c.uri())).collect();
     files.sort();
-    assert_eq!(
-        files,
-        ["GreetTool.cs", "Greeter.cs", "GreeterSpec.cs"],
-        "{plan:?}"
-    );
+    assert_eq!(files, ["Greeter.cs", "GreeterSpec.cs"], "{plan:?}");
     assert!(plan.iter().all(
         |c: &FileChange| matches!(c, FileChange::Edit { changes, .. } if !changes.is_empty())
     ));

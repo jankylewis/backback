@@ -16,7 +16,6 @@ bb-dap.workspace = true
 bb-dotnet.workspace = true
 bb-intel.workspace = true
 bb-lsp.workspace = true
-bb-mcp.workspace = true
 bb-syntax.workspace = true
 bb-testkit.workspace = true
 bb-text.workspace = true

@@ -1,5 +1,7 @@
 # BBEOD06-A MCP and fixed-set benchmark, 2026-11-01
 
+> Removed by headmate ruling 2026-11-01 (BBEOD06-REMOVE): backback has no MCP server ability. History only.
+
 - Machine: Apple M4 Pro, macOS 27.0.1.
 - Quiet check: failed. Load1 was 3.39 before MCP timing, 6.09 on the first fixed-set run, and 11.28 on the final tree.
 - MCP fixture: one warm-up, then five `Greet` calls. Final cold start through `tools/list`: 1,309 ms. Warm call p50: 135 µs.

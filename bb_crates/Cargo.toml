@@ -8,7 +8,6 @@ members = [
   "edge/framing",
   "edge/dap",
   "edge/dotnet/bb_sdk",
-  "edge/dotnet/mcp",
   "edge/dotnet/testkit",
   "edge/intel",
   "shell/bb_cli",
@@ -36,7 +35,6 @@ bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
 bb-framing = { path = "edge/framing", version = "0.0.1" }
 bb-dap = { path = "edge/dap", version = "0.0.1" }
 bb-dotnet = { path = "edge/dotnet/bb_sdk", version = "0.0.1" }
-bb-mcp = { path = "edge/dotnet/mcp", version = "0.0.1" }
 bb-testkit = { path = "edge/dotnet/testkit", version = "0.0.1" }
 bb-intel = { path = "edge/intel", version = "0.0.1" }
 bb-ui = { path = "shell/ui", version = "0.0.1" }
