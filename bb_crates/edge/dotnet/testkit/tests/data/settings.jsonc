@@ -1,0 +1,12 @@
+{
+    // The Testing view needs build-based discovery.
+    "dotnet.testWindow.discoverTestsFromSource": false,
+
+    /* Apex Testkit: "//" inside strings is text, not a comment. */
+    "apexTestkit.command": "dotnet apex",
+    "apexTestkit.configuration": "Debug",
+    "apexTestkit.runSettingsPath": "MbAuto/RgvMbDesktop/mbingdt_apextest.runsettings",
+    "apexTestkit.buildBeforeRun": false,
+    "editor.rulers": [100, 120,],
+    "files.exclude": { "**/bin": true, "http://x//y": true, },
+}

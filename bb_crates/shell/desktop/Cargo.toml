@@ -10,19 +10,23 @@ description = "macOS desktop window and Explorer for backback"
 bb-explorer.workspace = true
 bb-text.workspace = true
 bb-syntax.workspace = true
+bb-intel.workspace = true
+bb-lsp.workspace = true
+bb-dotnet.workspace = true
+bb-testkit.workspace = true
+tokio.workspace = true
 thiserror.workspace = true
 bb-ui.workspace = true
-bb-dotnet.workspace = true
 bb-mcp.workspace = true
 serde_json.workspace = true
-tokio.workspace = true
 gpui = { workspace = true, features = ["profiler"] }
 gpui_platform.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
 tempfile = "3"
-gpui = { workspace = true, features = ["test-support"] }
+# In-process window tests: TestAppContext, dispatch_keystroke.
+gpui = { workspace = true, features = ["profiler", "test-support"] }
 
 [lints]
 workspace = true

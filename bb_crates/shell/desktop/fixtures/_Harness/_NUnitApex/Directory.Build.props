@@ -1,0 +1,6 @@
+<Project>
+  <!-- Real solutions set the framework here, outside the project file. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>

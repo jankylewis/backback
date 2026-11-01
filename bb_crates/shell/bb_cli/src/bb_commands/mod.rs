@@ -3,8 +3,10 @@
 
 mod bb_open;
 mod bench;
-mod mcp;
-mod scan;
+mod dotnet;
+mod probe;
+
+pub(crate) use dotnet::{mcp, scan};
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -53,6 +55,12 @@ pub enum CommandError {
     /// MCP problem.
     #[error(transparent)]
     Mcp(#[from] mcp::McpCommandError),
+    /// `bb probe` problem.
+    #[error(transparent)]
+    Probe(#[from] probe::ProbeError),
+    /// `bb test` problem.
+    #[error(transparent)]
+    Test(#[from] dotnet::TestError),
     /// `bb doctor` found a required tool missing or broken (already printed).
     #[error("required tools not usable: {}", .0.join(", "))]
     Doctor(Vec<&'static str>),
@@ -83,6 +91,8 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Audit { root } => audit(&root),
         Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
         Command::Mcp(command) => mcp::run(command).await.map_err(CommandError::from),
+        Command::Probe(probe) => probe::run(&probe).await,
+        Command::Test(args) => dotnet::test(&args).await,
     }
 }
 
