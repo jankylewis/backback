@@ -1,6 +1,8 @@
 //! File-backed editor state. Char indices are checked by the rope.
 
 mod edit;
+
+pub use edit::{BytePoint, CharEdit, TextChange};
 mod io;
 mod movement;
 
@@ -17,6 +19,9 @@ pub enum DocumentError {
     /// The target file cannot be written; it was left unchanged.
     #[error("file is read-only: {}", .0.display())]
     ReadOnly(PathBuf),
+    /// Writes are locked for this document (no-write mode, metadata).
+    #[error("writes are locked for this document: {}", .0.display())]
+    WriteLocked(PathBuf),
     /// File I/O failed.
     #[error("file I/O: {0}")]
     Io(#[from] std::io::Error),
@@ -42,29 +47,6 @@ struct UndoEdit {
     state_after: u64,
 }
 
-/// A byte offset with its 0-based row and byte column.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct BytePoint {
-    /// Byte offset from the start of the text.
-    pub byte: usize,
-    /// 0-based line.
-    pub row: usize,
-    /// Bytes from the start of the line.
-    pub column: usize,
-}
-
-/// One edit as an incremental parser needs it: where it starts, where the
-/// removed text ended in the old text, and where the inserted text ends.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TextChange {
-    /// First changed byte (same in old and new text).
-    pub start: BytePoint,
-    /// End of the removed text, in the old text.
-    pub old_end: BytePoint,
-    /// End of the inserted text, in the new text.
-    pub new_end: BytePoint,
-}
-
 /// How the file's bytes look, fixed at load (other breaks only ever turn on).
 #[derive(Debug, Clone, Copy)]
 struct TextFormat {
@@ -87,10 +69,11 @@ pub struct Document {
     redo: Vec<UndoEdit>,
     format: TextFormat,
     word_group_open: bool,
-    changes: Vec<TextChange>,
+    changes: edit::ChangeLog,
     state: u64,
     saved_state: u64,
     next_state: u64,
+    write_locked: bool,
 }
 
 impl Document {
@@ -112,10 +95,11 @@ impl Document {
             undo: Vec::new(),
             redo: Vec::new(),
             word_group_open: false,
-            changes: Vec::new(),
+            changes: edit::ChangeLog::default(),
             state: 0,
             saved_state: 0,
             next_state: 1,
+            write_locked: false,
         }
     }
 
@@ -144,6 +128,13 @@ impl Document {
     #[must_use]
     pub fn is_dirty(&self) -> bool {
         self.state != self.saved_state
+    }
+
+    /// An id of the current text: equal ids mean equal text (undo returns
+    /// to an earlier id). O(1).
+    #[must_use]
+    pub fn revision(&self) -> u64 {
+        self.state
     }
 
     /// Current cursor.
@@ -190,9 +181,19 @@ impl Document {
         self.buffer.line_start_byte(index)
     }
 
-    /// Edits since the last call, oldest first. The caller applies them in order.
+    /// Byte offset, LF row and column of a line start; a line past the last
+    /// one gives the end of the text. Same row rule as [`TextChange`].
+    #[must_use]
+    pub fn line_point(&self, line: usize) -> Option<BytePoint> {
+        let at: CharIdx = self
+            .line_start(line)
+            .unwrap_or(CharIdx::new(self.len_chars()));
+        self.byte_point(at).ok()
+    }
+
+    /// Byte edits since the last call, oldest first. The caller applies them in order.
     pub fn take_changes(&mut self) -> Vec<TextChange> {
-        std::mem::take(&mut self.changes)
+        std::mem::take(&mut self.changes.bytes)
     }
 
     /// Move the cursor and clear the selection.

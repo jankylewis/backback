@@ -5,7 +5,7 @@
 //! it runs are replayed onto its result, so the shown tree always matches the
 //! current text's byte offsets.
 
-use bb_text::{Rope, TextChange};
+use bb_text::{BytePoint, Rope, TextChange};
 use tree_sitter::Tree;
 
 use crate::{CSharpSyntax, SyntaxError};
@@ -23,6 +23,7 @@ pub struct ParseJob {
     syntax: CSharpSyntax,
     rope: Rope,
     old: Tree,
+    window: Option<(BytePoint, BytePoint)>,
 }
 
 /// A finished parse, to hand back with [`LiveTree::finish_parse`].
@@ -66,9 +67,19 @@ impl LiveTree {
         self.stale = self.stale || !changes.is_empty();
     }
 
-    /// Take a parse job if edits wait and no parse runs. `rope` is the current text.
+    /// Ask for a parse without an edit (the parse window moved).
+    pub fn mark_stale(&mut self) {
+        self.stale = true;
+    }
+
+    /// Take a parse job if edits wait and no parse runs. `rope` is the current
+    /// text; `window` limits the parse to a byte range (`None`: whole text).
     #[must_use]
-    pub fn start_parse(&mut self, rope: &Rope) -> Option<ParseJob> {
+    pub fn start_parse(
+        &mut self,
+        rope: &Rope,
+        window: Option<(BytePoint, BytePoint)>,
+    ) -> Option<ParseJob> {
         if !self.stale {
             return None;
         }
@@ -78,6 +89,7 @@ impl LiveTree {
             syntax,
             rope: rope.clone(),
             old: self.tree.clone(),
+            window,
         })
     }
 
@@ -101,8 +113,12 @@ impl LiveTree {
     ///
     /// # Errors
     /// [`SyntaxError::NoTree`] when a parse produced nothing.
-    pub fn parse_now(&mut self, rope: &Rope) -> Result<(), SyntaxError> {
-        while let Some(job) = self.start_parse(rope) {
+    pub fn parse_now(
+        &mut self,
+        rope: &Rope,
+        window: Option<(BytePoint, BytePoint)>,
+    ) -> Result<(), SyntaxError> {
+        while let Some(job) = self.start_parse(rope, window) {
             self.finish_parse(job.run())?;
         }
         Ok(())
@@ -113,7 +129,9 @@ impl ParseJob {
     /// Parse the snapshot incrementally. Slow on a big file: run it off the UI thread.
     #[must_use]
     pub fn run(mut self) -> Parsed {
-        let tree: Result<Tree, SyntaxError> = self.syntax.parse_rope(&self.rope, Some(&self.old));
+        let tree: Result<Tree, SyntaxError> =
+            self.syntax
+                .parse_rope_in(&self.rope, Some(&self.old), self.window);
         Parsed {
             syntax: self.syntax,
             tree,
@@ -155,7 +173,7 @@ mod tests {
                 if toggle {
                     match job.take() {
                         Some(running) => live.finish_parse(running.run()).unwrap(),
-                        None => job = live.start_parse(doc.rope()),
+                        None => job = live.start_parse(doc.rope(), None),
                     }
                 }
                 prop_assert_eq!(live.tree().root_node().end_byte(), doc.rope().len_bytes());
@@ -163,7 +181,7 @@ mod tests {
             if let Some(running) = job.take() {
                 live.finish_parse(running.run()).unwrap();
             }
-            live.parse_now(doc.rope()).unwrap();
+            live.parse_now(doc.rope(), None).unwrap();
             prop_assert!(!live.is_stale());
             let fresh: Tree = CSharpSyntax::new().unwrap().parse(&doc.text(), None).unwrap();
             prop_assert_eq!(live.tree().root_node().to_sexp(), fresh.root_node().to_sexp());

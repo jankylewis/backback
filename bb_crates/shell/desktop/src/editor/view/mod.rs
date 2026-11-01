@@ -4,9 +4,13 @@ use gpui::{div, prelude::*, px, uniform_list, Context, FocusHandle, IntoElement,
 
 use super::bb_tabs::Tab;
 mod bb_line;
+mod status;
+mod test_marks;
 use super::Tabs;
+use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
-use bb_line::{line_row, styled_line};
+use bb_line::{line_row, styled_line, LineRow, TestGutter};
+pub(crate) use status::status_bar;
 
 pub(crate) fn tab_bar(
     tabs: &Tabs,
@@ -41,19 +45,6 @@ fn file_name(path: &std::path::Path) -> String {
         || String::from("Untitled"),
         |part: &std::ffi::OsStr| part.to_string_lossy().into_owned(),
     )
-}
-
-/// One line at the foot of the editor for the latest open or save error.
-pub(crate) fn status_bar(status: Option<&str>, theme: Theme) -> impl IntoElement {
-    div().when_some(status, |bar: gpui::Div, text: &str| {
-        bar.h(px(24.0))
-            .px_2()
-            .flex()
-            .items_center()
-            .bg(color(theme.overlay))
-            .text_color(color(theme.text))
-            .child(text.to_owned())
-    })
 }
 
 fn tab_item(
@@ -102,12 +93,9 @@ fn tab_item(
         )
 }
 
-pub(crate) fn editor_body(
-    tabs: &Tabs,
-    focus: &FocusHandle,
-    theme: Theme,
-    cx: &mut Context<ExplorerView>,
-) -> impl IntoElement {
+pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
+    let (tabs, focus, theme): (&Tabs, &FocusHandle, Theme) =
+        (&view.tabs, &view.editor_focus, view.theme);
     let lines: usize = tabs.active().map_or(0, Document::len_lines);
     div()
         .id("editor-area")
@@ -123,16 +111,22 @@ pub(crate) fn editor_body(
                 cx.processor(
                     |view: &mut ExplorerView,
                      range: std::ops::Range<usize>,
-                     _: &mut Window,
+                     window: &mut Window,
                      row_cx: &mut Context<ExplorerView>| {
+                        follow_view(view, &range, window, row_cx);
                         range
                             .map(|index: usize| editor_line(view, index, row_cx))
                             .collect::<Vec<_>>()
                     },
                 ),
             )
+            .track_scroll(&view.editor_scroll)
             .h_full(),
         )
+        .children(crate::intel::view::bb_popups::hover(
+            view.intel.hover.as_ref(),
+            theme,
+        ))
         .when(
             tabs.pending_close(),
             |element: gpui::Stateful<gpui::Div>| {
@@ -141,17 +135,63 @@ pub(crate) fn editor_body(
         )
 }
 
+/// A large file parses only lines near the view: move the window with it.
+fn follow_view(
+    view: &mut ExplorerView,
+    visible: &std::ops::Range<usize>,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let moved: Option<std::path::PathBuf> = view
+        .tabs
+        .active_tab_mut()
+        .and_then(|tab: &mut Tab| tab.show_lines(visible).then(|| tab.path.clone()));
+    if let Some(path) = moved {
+        super::input::schedule_parse(view, path, window, cx);
+    }
+}
+
 fn editor_line(
     view: &ExplorerView,
     index: usize,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
-    let tab: &Tab = match view.tabs.active_tab() {
-        Some(tab) => tab,
-        None => return line_row(index, Vec::new(), false, view.theme, cx),
+    let Some(tab): Option<&Tab> = view.tabs.active_tab() else {
+        let row: LineRow = LineRow {
+            index,
+            current: false,
+            gutter: None,
+            test: None,
+            overlay: None,
+        };
+        return line_row(row, Vec::new(), view.theme, cx);
     };
     let current: bool = tab.document.cursor_line() == index;
-    line_row(index, styled_line(tab, index), current, view.theme, cx)
+    let marks: Vec<Mark> = line_marks(&tab.document, view.intel.diagnostics_of(&tab.path), index);
+    let overlay: Option<gpui::AnyElement> = current
+        .then(|| {
+            let start: usize = tab
+                .document
+                .line_start(index)
+                .map_or(0, bb_text::CharIdx::raw);
+            let column: usize = tab.document.cursor().raw().saturating_sub(start);
+            crate::intel::view::bb_popups::at_cursor(&view.intel, column, view.theme)
+        })
+        .flatten();
+    let row: LineRow = LineRow {
+        index,
+        current,
+        gutter: crate::intel::view::marks::worst(&marks),
+        test: tab
+            .test_methods
+            .iter()
+            .any(|method: &bb_syntax::TestMethod| method.line == index)
+            .then(|| TestGutter {
+                target: test_marks::target(view, tab, index),
+            }),
+        overlay,
+    };
+    line_row(row, styled_line(tab, index, &marks), view.theme, cx)
 }
 
 #[cfg(test)]
@@ -177,7 +217,7 @@ mod tests {
         sources(&root, &mut files);
         let stderr_only: Vec<String> = files
             .iter()
-            .filter(|path: &&std::path::PathBuf| !path.ends_with("launch.rs"))
+            .filter(|path: &&std::path::PathBuf| !path.ends_with("bb_launch.rs"))
             .filter(|path: &&std::path::PathBuf| {
                 std::fs::read_to_string(path)
                     .unwrap()

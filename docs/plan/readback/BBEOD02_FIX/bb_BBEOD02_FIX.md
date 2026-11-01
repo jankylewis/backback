@@ -25,7 +25,7 @@ Failing-first tests (each failed on `fba483d` code, passes now):
 `files_sort_by_number_value_not_by_text`,
 `every_window_error_reaches_the_status_bar_not_only_stderr` (9 sites at HEAD).
 B2 and B3 are performance defects: their failing check is the bench in
-`docs/plan/bench/BBEOD02/FIX.md` (before 244 ms p99 per key, 439 ms frame).
+`docs/plan/bench/BBEOD02/BBEOD02_FIX.md` (before 244 ms p99 per key, 439 ms frame).
 
 ## Families and guards
 
@@ -42,12 +42,15 @@ B2 and B3 are performance defects: their failing check is the bench in
   fast path only when no other break exists; load scan = edit scan proptest.
 - Render cost grows with row count: Explorer now uses `uniform_list` like the
   editor body.
+- Memory grows with the file (whole-file syntax tree, 41 B per byte): files
+  over 4 MiB parse only a window around the view. Tests: bounded node count,
+  window spans = full-parse spans, the window follows a scroll (mutant-checked).
 - Errors only on stderr: one `report` sets the status bar; a source guard test.
 
 ## Open
 
 - Explorer refresh on disk change (FS events) not done: it needs a watcher
   crate and a new thread; recorded for a later BBEOD.
-- RSS 1.0 GB with the 20 MB file open and edited; no before value.
+- RSS 1.0 GB with the 20 MB file: fixed on bbeod-02-mem (166 MB).
 - Menu click on "Quit Backback" not exercised (needs OS input); the action,
   binding and menu entry are tested.

@@ -6,9 +6,11 @@
 
 mod bb_highlight;
 mod live;
+mod test_marks;
 
 pub use bb_highlight::{HighlightKind, HighlightSpan};
 pub use live::{LiveTree, ParseJob, Parsed};
+pub use test_marks::{test_methods, TestMethod};
 pub use tree_sitter::Tree;
 use tree_sitter::{Language, Node, Parser, Query, TreeCursor};
 
@@ -21,6 +23,9 @@ pub enum SyntaxError {
     /// The parse was cancelled or hit the parser's limits.
     #[error("parse did not produce a tree")]
     NoTree,
+    /// The parse window was rejected (its bytes are out of order).
+    #[error("cannot set the parse window: {0}")]
+    Window(#[from] tree_sitter::IncludedRangesError),
     /// The C# highlight query did not compile.
     #[error("cannot load the C# highlight query: {0}")]
     Query(#[from] tree_sitter::QueryError),

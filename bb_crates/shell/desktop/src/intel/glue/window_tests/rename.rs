@@ -1,0 +1,80 @@
+//! F2 rename: preview, apply all or nothing, refusals.
+
+use std::path::PathBuf;
+
+use super::bb_rig::{ask_rename, rename_plan, A};
+use crate::intel::bb_worker::protocol::{Request, Ticket};
+use gpui::{TestAppContext, VisualTestContext};
+
+use super::bb_rig::{rig, Rig};
+use crate::ExplorerView;
+
+#[gpui::test]
+fn f2_previews_then_enter_applies_to_the_open_buffer_and_saves_the_closed_file(
+    cx: &mut TestAppContext,
+) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    let closed: PathBuf = rig.root.join("B.cs");
+    std::fs::write(&closed, "var x = x;\n").unwrap();
+    let ticket: Ticket = ask_rename(&mut rig, vcx);
+    rig.reply(vcx, ticket, rename_plan(&rig.file.clone(), &closed));
+    assert_eq!(
+        std::fs::read_to_string(&closed).unwrap(),
+        "var x = x;\n",
+        "preview changes nothing"
+    );
+    vcx.simulate_keystrokes("enter");
+    assert_eq!(
+        std::fs::read_to_string(&closed).unwrap(),
+        "var Total = Total;\n"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&rig.file).unwrap(),
+        A,
+        "an open buffer stays unsaved"
+    );
+    assert_eq!(rig.text(vcx), "class A { void M() { Total } }\n");
+    vcx.simulate_keystrokes("cmd-z");
+    assert_eq!(rig.text(vcx), A, "one undo step per file");
+    let opened: Vec<Request> = rig.drain();
+    assert!(
+        opened
+            .iter()
+            .any(|r: &Request| matches!(r, Request::Open { path, .. } if *path == closed)),
+        "{opened:?}"
+    );
+}
+
+#[gpui::test]
+fn rename_and_save_are_refused_in_no_write_mode(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, true);
+    let closed: PathBuf = rig.root.join("B.cs");
+    std::fs::write(&closed, "var x = x;\n").unwrap();
+    let ticket: Ticket = ask_rename(&mut rig, vcx);
+    rig.reply(vcx, ticket, rename_plan(&rig.file.clone(), &closed));
+    vcx.simulate_keystrokes("enter");
+    assert_eq!(rig.text(vcx), A);
+    assert_eq!(std::fs::read_to_string(&closed).unwrap(), "var x = x;\n");
+    vcx.simulate_keystrokes("cmd-s");
+    assert_eq!(std::fs::read_to_string(&rig.file).unwrap(), A);
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        assert_eq!(v.status.as_deref(), Some("no-write mode: save refused"));
+    });
+}
+
+#[gpui::test]
+fn a_plan_older_than_its_buffer_is_refused_whole(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    let closed: PathBuf = rig.root.join("B.cs");
+    std::fs::write(&closed, "var x = x;\n").unwrap();
+    let ticket: Ticket = ask_rename(&mut rig, vcx);
+    rig.reply(vcx, ticket, rename_plan(&rig.file.clone(), &closed));
+    vcx.simulate_keystrokes("w enter");
+    assert_eq!(rig.text(vcx), "class A { void M() { wx } }\n");
+    assert_eq!(std::fs::read_to_string(&closed).unwrap(), "var x = x;\n");
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        let shown: &str = v.status.as_deref().unwrap_or_default();
+        assert!(shown.contains("changed since the preview"), "{shown}");
+        assert_eq!(v.tabs.items().len(), 1, "the closed file was not opened");
+    });
+}

@@ -1,34 +1,39 @@
 //! macOS desktop shell for the backback Explorer.
-
+#[path = "app/args.rs"]
+mod args;
 #[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
 mod editor;
 #[path = "bb_explorer/icons.rs"]
 mod icons;
+mod intel;
+#[path = "app/latency.rs"]
 mod latency;
+#[path = "app/bb_launch.rs"]
 mod launch;
 #[path = "bb_explorer/navigation.rs"]
 mod navigation;
-#[path = "bb_explorer/panel.rs"]
+#[path = "bb_explorer/tests_panel/panel.rs"]
 mod panel;
+#[path = "app/script.rs"]
+mod script;
+#[path = "bb_explorer/tests_panel/mod.rs"]
+mod tests_panel;
+#[path = "app/theme.rs"]
+mod theme;
+use theme::color;
 #[path = "bb_explorer/tooltip.rs"]
 mod tooltip;
-
-use std::path::PathBuf;
-
 use bb_explorer::{Entry, Explorer};
-use bb_ui::{
-    bb_theme::{Theme, ThemeKind},
-    Rgb,
-};
+use bb_ui::bb_theme::{Theme, ThemeKind};
 use editor::{Tab, TabError, Tabs};
 use gpui::{
-    div, prelude::*, rgb, AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton,
-    Render, ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
+    div, prelude::*, AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton, Render,
+    ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
 };
-
+use intel::glue::RestartServer;
 use navigation::{MoveDown, MoveLeft, MoveRight, MoveUp, Open};
-
+use std::path::PathBuf;
 struct ExplorerView {
     tree: Explorer,
     selected: usize,
@@ -49,8 +54,14 @@ struct ExplorerView {
     status: Option<String>,
     explorer_scroll: UniformListScrollHandle,
     quit_after_close: bool,
+    /// The folder the Explorer shows; files outside it open read-only.
+    root: PathBuf,
+    intel: intel::model::IntelModel,
+    link: Option<intel::bb_worker::Link>,
+    editor_scroll: UniformListScrollHandle,
+    tests: tests_panel::TestsState,
+    pending_test_jump: Option<(PathBuf, usize)>,
 }
-
 impl ExplorerView {
     fn editor_key_down(
         &mut self,
@@ -60,7 +71,6 @@ impl ExplorerView {
     ) {
         editor::handle_key(self, event, window, cx);
     }
-
     fn move_resize(
         &mut self,
         event: &gpui::MouseMoveEvent,
@@ -181,6 +191,8 @@ impl ExplorerView {
     ) {
         match self.tabs.finish_open(file, loaded) {
             Ok(()) => {
+                intel::glue::opened(self, file);
+                tests_panel::navigation::apply(self, cx);
                 window.focus(&self.editor_focus, cx);
                 latency::drive(self, window, cx);
             }
@@ -192,6 +204,10 @@ impl ExplorerView {
 
 impl Render for ExplorerView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        intel::glue::flush(self);
+        intel::view::note_frame(&mut self.intel);
+        let status: String = self.intel.status.label();
+        let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
         div()
             .size_full()
             .flex()
@@ -201,29 +217,32 @@ impl Render for ExplorerView {
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
-            .child(panel::explorer_panel(self, cx))
+            .on_action(cx.listener(ExplorerView::restart_server))
+            .child(match self.tests.side {
+                tests_panel::Side::Files => panel::explorer_panel(self, cx).into_any_element(),
+                tests_panel::Side::Tests => tests_panel::panel(self, cx).into_any_element(),
+            })
             .child(panel::resize_edge(self.theme, cx))
             .child(
                 div()
                     .flex_1()
+                    .min_w(gpui::px(0.0))
+                    .overflow_hidden()
                     .h_full()
                     .flex()
                     .flex_col()
                     .child(editor::tab_bar(&self.tabs, self.theme, cx))
-                    .child(editor::editor_body(
-                        &self.tabs,
-                        &self.editor_focus,
+                    .child(editor::editor_body(self, cx))
+                    .children(panel)
+                    .child(editor::status_bar(
+                        self.status.as_deref(),
+                        &status,
+                        self.intel.status == intel::model::LoadStatus::Stopped,
                         self.theme,
                         cx,
-                    ))
-                    .child(editor::status_bar(self.status.as_deref(), self.theme)),
+                    )),
             )
     }
-}
-
-fn color(value: Rgb) -> gpui::Rgba {
-    let packed: u32 = (u32::from(value.r) << 16) | (u32::from(value.g) << 8) | u32::from(value.b);
-    rgb(packed)
 }
 
 fn main() {
