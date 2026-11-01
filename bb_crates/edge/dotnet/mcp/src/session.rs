@@ -19,6 +19,20 @@ pub struct Session {
     pub(crate) inbound: mpsc::UnboundedReceiver<Inbound>,
     pub(crate) logs: broadcast::Receiver<String>,
     pub(crate) next_id: u64,
+    /// The server's process group; every member ends when this drops.
+    pub(crate) group: crate::bb_process::GroupId,
+}
+
+impl Drop for Session {
+    /// End any member still alive: after `stop`, after a cancelled start,
+    /// or when the owner drops the session without `stop`.
+    fn drop(&mut self) {
+        let child: &mut Child = &mut self.child;
+        self.group.end(&mut || {
+            // Reap the leader so a zombie does not read as a live member.
+            let _reaped: std::io::Result<Option<std::process::ExitStatus>> = child.try_wait();
+        });
+    }
 }
 
 impl Session {

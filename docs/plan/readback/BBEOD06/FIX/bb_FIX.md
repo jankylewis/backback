@@ -53,7 +53,26 @@ hid that as a timeout. The exact line printed in that run was not observed.
 After the fix: 20/20 consecutive full desktop-binary runs at 2 threads,
 load1 10.4-22.2, run 1 on cold fixture bin/obj. Gate: 153 passed, 0 failed.
 
-## Open (not in this brief)
+## BBEOD06-FIX2 (merged with master `0628b87`)
 
-- B1: a server that ignores stdin EOF can outlive a SIGTERM-ed `bb mcp`.
-- B2: Stop during a hung Start still waits for the 30 s initialize deadline.
+| Bug | Red before the fix | After the fix |
+|---|---|---|
+| B1 drop/stop | TERM-ignoring member outlived `stop` and drop | group gone |
+| B1 CLI | SIGTERM `bb mcp log`: server left, PPID 1 | exit 143/129, group gone |
+| B2 hung Start | Stop took 31.66 s | 45 ms |
+| B2 in-flight call | Stop took 9.73 s | 37 ms |
+
+6. **Child group outlives its owner.** The server led its own process group,
+   but no owner path ended that group: a signal killed `bb` with no cleanup,
+   `kill_on_drop` killed the leader only, quit ran no harness stop. Guard:
+   `bb_process/bb_group.rs` records each live group. A `Session` drop, a fatal
+   signal (`exit_on_signal`) and app quit (`end_all_servers`) all end it
+   the same way: TERM, 200 ms, KILL. Swept: CLI (`tools`, `call`, `log`),
+   desktop signal and quit. Open siblings, not swept (other owners): the
+   testkit runner and the Roslyn child on app quit.
+7. **Stop waits behind serial work.** The actor ran each command to its end,
+   so Stop waited behind the 30 s initialize deadline or a 10 s call. Guard:
+   `Inbox::interruptible` runs Start and calls; Stop or Start cancels them.
+   The dropped half-made `Session` ends its group (family 6).
+
+Real app: SIGTERM with the fixture running gives exit 143, 0 members left.

@@ -213,3 +213,5 @@ fn window_mouse_start_and_keystroke_edit_reach_harness(cx: &mut TestAppContext) 
 
 #[path = "bb_render.rs"]
 mod render;
+#[path = "stop.rs"]
+mod stop;

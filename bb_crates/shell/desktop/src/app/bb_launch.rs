@@ -20,7 +20,16 @@ pub(crate) fn launch() {
             std::process::exit(1);
         }
     };
+    if let Err(error) = bb_mcp::exit_on_signal(true) {
+        eprintln!("bb: cannot watch fatal signals: {error}");
+    }
     gpui_platform::application().run(move |cx: &mut App| {
+        // Quit ends every MCP server group; gpui gives quit hooks 200 ms.
+        cx.on_app_quit(|_: &mut App| {
+            bb_mcp::end_all_servers();
+            std::future::ready(())
+        })
+        .detach();
         bind_keys(cx);
         cx.set_menus(menus());
         let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(1000.0), px(700.0)), cx);

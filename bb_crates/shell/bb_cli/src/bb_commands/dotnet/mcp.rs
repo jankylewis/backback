@@ -36,6 +36,12 @@ pub enum McpCommandError {
 /// # Errors
 /// Discovery, protocol, and process failures.
 pub async fn run(command: McpCommand) -> Result<(), McpCommandError> {
+    // A fatal signal must not leave the server behind (`log` ends on Ctrl-C itself).
+    let interrupt: bool = !matches!(command, McpCommand::Log(_) | McpCommand::List(_));
+    bb_mcp::exit_on_signal(interrupt).map_err(|source: std::io::Error| McpError::Io {
+        operation: "watch fatal signals",
+        source,
+    })?;
     match command {
         McpCommand::List(path) => list(&path),
         McpCommand::Tools(path) => {

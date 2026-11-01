@@ -1,5 +1,11 @@
 //! Child process lifecycle and timestamped stderr logging.
 
+mod bb_group;
+mod build;
+
+pub(crate) use bb_group::GroupId;
+pub use bb_group::{end_all_servers, exit_on_signal};
+
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
@@ -17,10 +23,6 @@ use crate::types::McpError;
 use crate::wire::{self, Input};
 
 const STOP_DEADLINE: Duration = Duration::from_secs(2);
-const BUILD_DEADLINE: Duration = Duration::from_secs(300);
-const BUILD_TAIL_LINES: usize = 20;
-
-static BUILDS: Mutex<()> = Mutex::const_new(());
 
 impl Session {
     /// Build the project, then run its output with `dotnet` and perform the
@@ -29,7 +31,7 @@ impl Session {
     /// # Errors
     /// Build, process, or protocol failures.
     pub async fn start(project: &Path) -> Result<Self, McpError> {
-        let target: PathBuf = build(project).await?;
+        let target: PathBuf = build::build(project).await?;
         Self::launch("dotnet", &[target.into_os_string()]).await
     }
 
@@ -66,25 +68,35 @@ impl Session {
             .stderr
             .take()
             .ok_or_else(|| McpError::Protocol("missing stderr".into()))?;
+        let leader: u32 = child
+            .id()
+            .ok_or_else(|| McpError::Protocol("server exited at spawn".into()))?;
+        let group: GroupId = GroupId::register(leader);
         let logs: broadcast::Receiver<String> = capture_logs(stderr);
         let input: Input = Arc::new(Mutex::new(Some(input)));
-        let mut session: Self = Self {
+        let session: Self = Self {
             child,
             inbound: wire::spawn_reader(output, input.clone()),
             input,
             logs,
             next_id: 1,
+            group,
         };
+        session.handshake().await
+    }
+
+    /// `initialize`, then `notifications/initialized`; stop on any failure.
+    async fn handshake(mut self) -> Result<Self, McpError> {
         let init: Value = json!({"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"backback","version":"0.0.1"}});
-        if let Err(error) = session.request("initialize", init).await {
-            let _stopped: Result<std::process::ExitStatus, McpError> = session.stop().await;
+        if let Err(error) = self.request("initialize", init).await {
+            let _stopped: Result<std::process::ExitStatus, McpError> = self.stop().await;
             return Err(error);
         }
-        if let Err(error) = session.notify("notifications/initialized").await {
-            let _stopped: Result<std::process::ExitStatus, McpError> = session.stop().await;
+        if let Err(error) = self.notify("notifications/initialized").await {
+            let _stopped: Result<std::process::ExitStatus, McpError> = self.stop().await;
             return Err(error);
         }
-        Ok(session)
+        Ok(self)
     }
 
     /// Subscribe to timestamped stderr lines.
@@ -153,64 +165,6 @@ impl Session {
         }
         Ok(())
     }
-}
-
-async fn build(project: &Path) -> Result<PathBuf, McpError> {
-    let _one_build_at_a_time: tokio::sync::MutexGuard<'_, ()> = BUILDS.lock().await;
-    let mut command: Command = Command::new("dotnet");
-    command
-        .args(["build", "-nologo", "-t:Build", "-getProperty:TargetPath"])
-        .arg(project)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .kill_on_drop(true);
-    let child: Child = command
-        .spawn()
-        .map_err(|source: std::io::Error| McpError::Spawn {
-            program: "dotnet".into(),
-            source,
-        })?;
-    let output: std::process::Output = timeout(BUILD_DEADLINE, child.wait_with_output())
-        .await
-        .map_err(|_e: tokio::time::error::Elapsed| McpError::Timeout {
-            operation: "dotnet build",
-            seconds: BUILD_DEADLINE.as_secs(),
-        })?
-        .map_err(|source: std::io::Error| McpError::Io {
-            operation: "dotnet build",
-            source,
-        })?;
-    let stdout: String = String::from_utf8_lossy(&output.stdout).into_owned();
-    let target: Option<PathBuf> = stdout
-        .lines()
-        .map(str::trim)
-        .rfind(|line: &&str| !line.is_empty())
-        .map(PathBuf::from)
-        .filter(|path: &PathBuf| path.is_file());
-    match target {
-        Some(path) if output.status.success() => Ok(path),
-        Some(_) | None => Err(McpError::Build {
-            project: project.display().to_string(),
-            status: output.status.to_string(),
-            output: tail(&stdout, &String::from_utf8_lossy(&output.stderr)),
-        }),
-    }
-}
-
-fn tail(stdout: &str, stderr: &str) -> String {
-    let lines: Vec<&str> = stdout
-        .lines()
-        .chain(stderr.lines())
-        .filter(|line: &&str| !line.trim().is_empty())
-        .collect();
-    let skip: usize = lines.len().saturating_sub(BUILD_TAIL_LINES);
-    lines
-        .iter()
-        .skip(skip)
-        .copied()
-        .collect::<Vec<&str>>()
-        .join("\n")
 }
 
 fn wait_failed(source: std::io::Error) -> McpError {
