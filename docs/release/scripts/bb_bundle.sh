@@ -6,6 +6,7 @@ build_dir="${1:-$repo_dir/.target/bundle}"
 app_dir="$build_dir/backback.app"
 asset_dir="$repo_dir/docs/release/bb_assets/bb_mascot"
 version="$(cd "$repo_dir/bb_crates" && cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; data=json.load(sys.stdin); print(next(p["version"] for p in data["packages"] if p["name"] == "bb"))')"
+commit="$(git -C "$repo_dir" rev-parse --short HEAD)"
 
 mkdir -p "$build_dir"
 cd "$repo_dir/bb_crates"
@@ -27,6 +28,7 @@ cat > "$app_dir/Contents/Info.plist" <<EOF
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>$version</string>
 <key>CFBundleVersion</key><string>$version</string>
+<key>BBCommit</key><string>$commit</string>
 <key>CFBundleIconFile</key><string>backback</string>
 <key>NSRequiresAquaSystemAppearance</key><false/>
 <key>LSMinimumSystemVersion</key><string>13.0</string>

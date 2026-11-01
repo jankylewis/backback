@@ -20,4 +20,4 @@ Actual: HARNESS panel, "Select an MCP server".
 ## Note
 
 The code was already fixed. The running window was an older build; see
-BB-BLD-001 for why that happens and the fix still to make.
+BB-BLD-001 for why that happens and its fix (`install.sh`).

@@ -17,4 +17,4 @@ only, reviewed before merge.
 
 ## Still to do
 
-The user-facing cause, a stale build, is BB-BLD-001 (not fixed yet).
+The user-facing cause, a stale build, is BB-BLD-001 (fixed: `install.sh`).
