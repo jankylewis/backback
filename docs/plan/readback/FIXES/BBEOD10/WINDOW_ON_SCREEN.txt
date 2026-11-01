@@ -1,0 +1,5 @@
+mid window_on_screen=23052
+end window_on_screen=23052
+home window_on_screen=23052
+col0 window_on_screen=23052
+min window_on_screen=none

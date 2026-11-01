@@ -54,6 +54,52 @@ impl Document {
         self.move_to(target, extend)
     }
 
+    /// Home: to the line's first non-blank char; from there, to column 0.
+    ///
+    /// # Errors
+    /// Returns a checked selection error.
+    pub fn home(&mut self, extend: bool) -> Result<(), DocumentError> {
+        let (start, text): (usize, String) = self.cursor_line_text()?;
+        let indent: usize = text
+            .trim_end_matches(['\r', '\n'])
+            .chars()
+            .take_while(|ch: &char| *ch == ' ' || *ch == '\t')
+            .count();
+        let first: usize = start.saturating_add(indent);
+        let target: usize = if self.cursor.raw() == first {
+            start
+        } else {
+            first
+        };
+        self.move_to(CharIdx::new(target), extend)
+    }
+
+    /// End: to the line's last char, before its line break.
+    ///
+    /// # Errors
+    /// Returns a checked selection error.
+    pub fn end(&mut self, extend: bool) -> Result<(), DocumentError> {
+        let (start, text): (usize, String) = self.cursor_line_text()?;
+        let visible: usize = text.trim_end_matches(['\r', '\n']).chars().count();
+        self.move_to(CharIdx::new(start.saturating_add(visible)), extend)
+    }
+
+    /// Cmd+Up / Cmd+Down: to the first or the last char of the document.
+    ///
+    /// # Errors
+    /// Returns a checked selection error.
+    pub fn document_edge(&mut self, end: bool, extend: bool) -> Result<(), DocumentError> {
+        let target: usize = if end { self.len_chars() } else { 0 };
+        self.move_to(CharIdx::new(target), extend)
+    }
+
+    fn cursor_line_text(&self) -> Result<(usize, String), DocumentError> {
+        let line: usize = self.cursor_line();
+        let start: usize = self.line_start(line).ok_or(DocumentError::Selection)?.raw();
+        let text: String = self.line(line).ok_or(DocumentError::Selection)?;
+        Ok((start, text))
+    }
+
     /// Set cursor and optionally extend the old selection.
     ///
     /// # Errors
@@ -86,3 +132,6 @@ impl Document {
         Ok(self.buffer.from_lsp(point)?)
     }
 }
+
+#[cfg(test)]
+mod bb_tests;

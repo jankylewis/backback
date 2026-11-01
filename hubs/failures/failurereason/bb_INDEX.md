@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 9 — FIXED 7, OBSERVED 1, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 10 — FIXED 8, OBSERVED 1, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -13,3 +13,4 @@ One file per failure mechanism. This hub owns the id. Entries: 9 — FIXED 7, OB
 | BB-LSP-002 | A test took the first event after Open as the diagnostics | FIXED | yes | no | none | `APP/LSP/BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` |
 | BB-CIP-002 | A runner label no hosted machine serves keeps the job queued | FIXED | yes | no | none | `SHIP/CIP/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
 | BB-LSP-003 | Problems still counted a deleted error 6 s after the edit | OPEN | no | no | none | `APP/LSP/BB_LSP_003_DIAGNOSTICS_LAG_AFTER_A_DELETE.md` |
+| BB-UIX-002 | Minimize acted on `cx.active_window()`, None while another app is active | FIXED | yes | yes | BB-TG-005 | `APP/UIX/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
