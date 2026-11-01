@@ -1,5 +1,4 @@
 //! macOS desktop shell for the backback Explorer.
-
 #[path = "app/args.rs"]
 mod args;
 #[path = "bb_explorer/bb_row_view.rs"]
@@ -14,18 +13,17 @@ mod latency;
 mod launch;
 #[path = "bb_explorer/navigation.rs"]
 mod navigation;
-#[path = "bb_explorer/panel.rs"]
+#[path = "bb_explorer/tests_panel/panel.rs"]
 mod panel;
 #[path = "app/script.rs"]
 mod script;
+#[path = "bb_explorer/tests_panel/mod.rs"]
+mod tests_panel;
 #[path = "app/theme.rs"]
 mod theme;
 use theme::color;
 #[path = "bb_explorer/tooltip.rs"]
 mod tooltip;
-
-use std::path::PathBuf;
-
 use bb_explorer::{Entry, Explorer};
 use bb_ui::bb_theme::{Theme, ThemeKind};
 use editor::{Tab, TabError, Tabs};
@@ -33,10 +31,9 @@ use gpui::{
     div, prelude::*, AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton, Render,
     ScrollStrategy, UniformListScrollHandle, WeakEntity, Window,
 };
-
 use intel::glue::RestartServer;
 use navigation::{MoveDown, MoveLeft, MoveRight, MoveUp, Open};
-
+use std::path::PathBuf;
 struct ExplorerView {
     tree: Explorer,
     selected: usize,
@@ -62,8 +59,9 @@ struct ExplorerView {
     intel: intel::model::IntelModel,
     link: Option<intel::bb_worker::Link>,
     editor_scroll: UniformListScrollHandle,
+    tests: tests_panel::TestsState,
+    pending_test_jump: Option<(PathBuf, usize)>,
 }
-
 impl ExplorerView {
     fn editor_key_down(
         &mut self,
@@ -73,7 +71,6 @@ impl ExplorerView {
     ) {
         editor::handle_key(self, event, window, cx);
     }
-
     fn move_resize(
         &mut self,
         event: &gpui::MouseMoveEvent,
@@ -195,6 +192,7 @@ impl ExplorerView {
         match self.tabs.finish_open(file, loaded) {
             Ok(()) => {
                 intel::glue::opened(self, file);
+                tests_panel::navigation::apply(self, cx);
                 window.focus(&self.editor_focus, cx);
                 latency::drive(self, window, cx);
             }
@@ -220,7 +218,10 @@ impl Render for ExplorerView {
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
             .on_action(cx.listener(ExplorerView::restart_server))
-            .child(panel::explorer_panel(self, cx))
+            .child(match self.tests.side {
+                tests_panel::Side::Files => panel::explorer_panel(self, cx).into_any_element(),
+                tests_panel::Side::Tests => tests_panel::panel(self, cx).into_any_element(),
+            })
             .child(panel::resize_edge(self.theme, cx))
             .child(
                 div()

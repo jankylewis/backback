@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::time::Instant;
 
-use bb_syntax::{CSharpSyntax, LiveTree, SyntaxError, Tree};
+use bb_syntax::{test_methods, CSharpSyntax, LiveTree, SyntaxError, TestMethod, Tree};
 use bb_text::{Document, DocumentError, TextChange};
 
 use super::window;
@@ -14,6 +14,7 @@ pub(crate) struct Tab {
     /// Highlight queries; parsing uses the parser inside `live`.
     pub(crate) highlighter: CSharpSyntax,
     pub(crate) live: LiveTree,
+    pub(crate) test_methods: Vec<TestMethod>,
     /// Lines the tree covers; `None` for a file parsed whole.
     pub(crate) window_lines: Option<std::ops::Range<usize>>,
     /// No edit, save or rename may change it (decompiled metadata, a file
@@ -63,11 +64,13 @@ impl Tab {
         if read_only {
             document.lock_writes();
         }
+        let test_methods: Vec<TestMethod> = test_methods(&tree, document.rope());
         Ok(Self {
             path,
             document,
             highlighter,
             live: LiveTree::new(syntax, tree),
+            test_methods,
             window_lines,
             read_only,
         })
@@ -78,6 +81,10 @@ impl Tab {
     pub(crate) fn sync_edits(&mut self) {
         let changes: Vec<TextChange> = self.document.take_changes();
         self.live.edit(&changes);
+    }
+
+    pub(crate) fn refresh_test_methods(&mut self) {
+        self.test_methods = test_methods(self.live.tree(), self.document.rope());
     }
 
     /// Make the tab read-only: no edit, and no save from any path.
@@ -92,6 +99,7 @@ impl Tab {
         self.sync_edits();
         self.live
             .parse_now(self.document.rope(), self.parse_window())?;
+        self.refresh_test_methods();
         Ok(())
     }
 }

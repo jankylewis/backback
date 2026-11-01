@@ -24,14 +24,16 @@ pub(super) async fn list(
     let folder: TempDir = TempDir::new()?;
     let safe_assembly: PathBuf = shadow::assembly(&assembly, &folder)?;
     let target: PathBuf = folder.path().join("tests.txt");
-    let done: Finished = Call::new(backend.sdk.host(), folder.path())
+    let mut call: Call = Call::new(backend.sdk.host(), folder.path())
         .args(["vstest".into(), safe_assembly.as_os_str().to_owned()])
         .args([
             "--ListFullyQualifiedTests".to_owned(),
             format!("--ListTestsTargetPath:{}", target.display()),
-        ])
-        .discover(backend.deadlines.list)
-        .await?;
+        ]);
+    if let Some(flag) = &backend.stop {
+        call = call.stoppable(flag.clone());
+    }
+    let done: Finished = call.discover(backend.deadlines.list).await?;
     let text: String =
         std::fs::read_to_string(&target).map_err(|source: std::io::Error| TestkitError::Io {
             path: target.clone(),
@@ -65,12 +67,15 @@ pub(super) async fn execute(
     if let Some(settings) = &backend.settings {
         call = call.args(["--settings".into(), settings.as_os_str().to_owned()]);
     }
-    call.args([
+    let call: Call = call.args([
         "--logger".to_owned(),
         format!("trx;LogFileName={}", trx.display()),
-    ])
-    .finish(backend.deadlines.run)
-    .await
+    ]);
+    let call: Call = match &backend.stop {
+        Some(stop) => call.stoppable(stop.clone()),
+        None => call,
+    };
+    call.finish(backend.deadlines.run).await
 }
 
 /// The `--filter` for a selection, escaped for VSTest and for MSBuild

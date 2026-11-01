@@ -16,6 +16,8 @@ Fleet: `backback` — matemaster `backback_mm`, mates `backback_1` (cca),
   `mm/`, `swqc/`. Readback on those solutions is READ-ONLY.
 - Claim before writing a shared tree: `agentfarm claim <label> <path>`.
 - One local browser runner at a time; at most 2 test workers per seat.
+- Never write Claude/Codex auto-memory; handoff state goes to
+  `docs/plan/PROGRESS.md` or the external ctx hub.
 
 ## Git (Rule 63 grant for this repo only)
 

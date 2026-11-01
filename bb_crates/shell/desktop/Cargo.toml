@@ -13,6 +13,7 @@ bb-syntax.workspace = true
 bb-intel.workspace = true
 bb-lsp.workspace = true
 bb-dotnet.workspace = true
+bb-testkit.workspace = true
 tokio.workspace = true
 thiserror.workspace = true
 bb-ui.workspace = true

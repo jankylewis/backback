@@ -2,14 +2,15 @@
 //! assembly path, `dotnet build`, a TRX folder that removes itself.
 
 mod apex;
-mod bb_proc;
 mod dotnet;
+#[path = "bb_process/mod.rs"]
+mod process;
 use dotnet::shadow;
-mod tree;
 
 pub use apex::{ApexBackend, DebugHost};
-pub use bb_proc::{Call, Finished};
 pub use dotnet::DotnetBackend;
+pub use process::StopFlag;
+pub use process::{Call, Finished};
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -102,17 +103,20 @@ pub(crate) async fn assembly_of(
     project: &ProjectPath,
     configuration: &Configuration,
     deadline: Duration,
+    stop: Option<&StopFlag>,
 ) -> Result<PathBuf, TestkitError> {
     let dir: &Path = project.as_path().parent().unwrap_or_else(|| Path::new("."));
-    let done: Finished = Call::new(sdk.host(), dir)
+    let mut call: Call = Call::new(sdk.host(), dir)
         .args(["msbuild".into(), project.as_path().as_os_str().to_owned()])
         .args([
             "-getProperty:TargetPath".to_owned(),
             format!("-p:Configuration={}", configuration.as_str()),
             "-nologo".to_owned(),
-        ])
-        .succeed(deadline)
-        .await?;
+        ]);
+    if let Some(flag) = stop {
+        call = call.stoppable(flag.clone());
+    }
+    let done: Finished = call.succeed(deadline).await?;
     let path: PathBuf = PathBuf::from(done.stdout.trim());
     if path.is_file() {
         Ok(path)
@@ -128,13 +132,15 @@ pub(crate) async fn build(
     configuration: &Configuration,
     cwd: &Path,
     deadline: Duration,
+    stop: Option<&StopFlag>,
 ) -> Result<(), TestkitError> {
-    Call::new(sdk.host(), cwd)
+    let mut call: Call = Call::new(sdk.host(), cwd)
         .args(["build".into(), project.as_path().as_os_str().to_owned()])
-        .args(["-c", configuration.as_str(), "-nologo", "-v", "q"])
-        .succeed(deadline)
-        .await
-        .map(|_: Finished| ())
+        .args(["-c", configuration.as_str(), "-nologo", "-v", "q"]);
+    if let Some(flag) = stop {
+        call = call.stoppable(flag.clone());
+    }
+    call.succeed(deadline).await.map(|_: Finished| ())
 }
 
 /// The project's file stem, as the Apex list names projects.

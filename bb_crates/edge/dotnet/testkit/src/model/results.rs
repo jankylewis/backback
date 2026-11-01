@@ -97,6 +97,10 @@ pub struct RunReport {
     pub exit_code: Option<i32>,
     /// Wall time of the runner process.
     pub elapsed: Duration,
+    /// Runner output from this run, kept in memory for the UI.
+    pub stdout: String,
+    /// Runner error output from this run, kept in memory for the UI.
+    pub stderr: String,
 }
 
 impl RunReport {

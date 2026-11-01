@@ -33,13 +33,7 @@ pub(crate) fn explorer_panel(
         .on_action(cx.listener(ExplorerView::move_left))
         .on_action(cx.listener(ExplorerView::move_right))
         .on_action(cx.listener(ExplorerView::open))
-        .child(
-            div()
-                .px_3()
-                .py_2()
-                .text_color(color(view.theme.text))
-                .child("EXPLORER"),
-        )
+        .child(explorer_header(view.theme, cx))
         .child(
             uniform_list(
                 "explorer-rows",
@@ -55,6 +49,32 @@ pub(crate) fn explorer_panel(
             )
             .track_scroll(&view.explorer_scroll)
             .flex_1(),
+        )
+}
+
+fn explorer_header(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
+    div()
+        .px_3()
+        .py_2()
+        .text_color(color(theme.text))
+        .flex()
+        .justify_between()
+        .child("EXPLORER")
+        .child(
+            div()
+                .id("open-tests")
+                .debug_selector(|| String::from("open-tests"))
+                .cursor_pointer()
+                .text_color(color(theme.accent))
+                .child("Tests")
+                .on_click(cx.listener(
+                    |view: &mut ExplorerView,
+                     _: &gpui::ClickEvent,
+                     window: &mut Window,
+                     cx: &mut Context<ExplorerView>| {
+                        crate::tests_panel::open(view, window, cx);
+                    },
+                )),
         )
 }
 
