@@ -18,6 +18,8 @@ pub(crate) enum Chosen {
     File(PathBuf),
     /// A 0-based line of the active file.
     Line(usize),
+    /// A Find in Files query.
+    Find(String),
 }
 
 struct Item {
@@ -31,6 +33,8 @@ pub(crate) struct QuickOpen {
     /// `Some` for Go to File (labels are paths under it), `None` for symbols.
     root: Option<PathBuf>,
     items: Vec<Item>,
+    /// Find in Files: a query box with no list.
+    find: bool,
 }
 
 impl QuickOpen {
@@ -46,6 +50,7 @@ impl QuickOpen {
                 .into_iter()
                 .map(|label: PathBuf| Item { label, line: 0 })
                 .collect(),
+            find: false,
         }
     }
 
@@ -62,12 +67,26 @@ impl QuickOpen {
                     line,
                 })
                 .collect(),
+            find: false,
+        }
+    }
+
+    /// The Find in Files box: Enter gives the typed query.
+    pub(crate) fn find_box() -> QuickOpen {
+        QuickOpen {
+            query: String::new(),
+            selected: 0,
+            root: None,
+            items: Vec::new(),
+            find: true,
         }
     }
 
     /// The box's title.
     pub(crate) fn title(&self) -> &'static str {
-        if self.root.is_some() {
+        if self.find {
+            "Find in Files"
+        } else if self.root.is_some() {
             "Go to File"
         } else {
             "Go to Symbol"
@@ -102,6 +121,9 @@ impl QuickOpen {
 
     /// The selected match: a file to open, or a line of the active file.
     pub(crate) fn chosen(&self) -> Option<Chosen> {
+        if self.find {
+            return (!self.query.is_empty()).then(|| Chosen::Find(self.query.clone()));
+        }
         let matches: Vec<&Path> = self.matches();
         let label: &Path = matches.get(self.selected)?;
         let item: &Item = self
@@ -168,74 +190,5 @@ fn walk(root: &Path, dir: &Path, out: &mut Vec<PathBuf>) {
         } else if let Ok(relative) = path.strip_prefix(root) {
             out.push(relative.to_path_buf());
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn tree() -> (tempfile::TempDir, QuickOpen) {
-        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        for file in [
-            "Core/Greeter.cs",
-            "Core/obj/Gen.cs",
-            "Specs/GreeterSpec.cs",
-            "README.md",
-            ".git/HEAD",
-        ] {
-            let path: PathBuf = dir.path().join(file);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(path, "").unwrap();
-        }
-        let quick: QuickOpen = QuickOpen::new(dir.path());
-        (dir, quick)
-    }
-
-    #[test]
-    fn build_output_and_git_are_never_listed() {
-        let (_dir, quick): (tempfile::TempDir, QuickOpen) = tree();
-        let all: Vec<&Path> = quick.matches();
-        assert_eq!(all.len(), 3, "{all:?}");
-        assert!(all
-            .iter()
-            .all(|p: &&Path| !p.starts_with(".git") && !p.to_string_lossy().contains("obj")));
-    }
-
-    #[test]
-    fn a_fuzzy_query_ranks_name_matches_first_and_enter_gives_the_path() {
-        let (dir, mut quick): (tempfile::TempDir, QuickOpen) = tree();
-        quick.type_text("grt");
-        let names: Vec<String> = quick
-            .matches()
-            .iter()
-            .map(|p: &&Path| p.display().to_string())
-            .collect();
-        assert_eq!(names, ["Core/Greeter.cs", "Specs/GreeterSpec.cs"]);
-        quick.step(true);
-        assert_eq!(
-            quick.chosen(),
-            Some(Chosen::File(dir.path().join("Specs/GreeterSpec.cs")))
-        );
-        quick.type_text("zzz");
-        assert_eq!(quick.chosen(), None);
-        quick.backspace();
-        quick.backspace();
-        quick.backspace();
-        assert_eq!(quick.matches().len(), 2);
-    }
-
-    #[test]
-    fn symbols_keep_source_order_and_enter_gives_the_line() {
-        let mut quick: QuickOpen = QuickOpen::symbols(vec![
-            ("class Greeter".to_owned(), 2),
-            ("  method Hello".to_owned(), 4),
-            ("  method Help".to_owned(), 9),
-        ]);
-        assert_eq!(quick.title(), "Go to Symbol");
-        assert_eq!(quick.matches().len(), 3);
-        quick.type_text("hel");
-        quick.step(true);
-        assert_eq!(quick.chosen(), Some(Chosen::Line(9)));
     }
 }

@@ -5,6 +5,7 @@ members = [
   "bb_core/process",
   "bb_core/syntax",
   "bb_core/explorer",
+  "bb_core/search",
   "edge/bb_lsp",
   "edge/framing",
   "edge/dap",
@@ -33,6 +34,7 @@ bb-text = { path = "bb_core/bb_text", version = "0.0.1" }
 bb-process = { path = "bb_core/process", version = "0.0.1" }
 bb-syntax = { path = "bb_core/syntax", version = "0.0.1" }
 bb-explorer = { path = "bb_core/explorer", version = "0.0.1" }
+bb-search = { path = "bb_core/search", version = "0.0.1" }
 bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
 bb-framing = { path = "edge/framing", version = "0.0.1" }
 bb-dap = { path = "edge/dap", version = "0.0.1" }

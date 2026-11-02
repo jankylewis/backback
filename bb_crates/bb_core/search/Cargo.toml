@@ -1,0 +1,18 @@
+[package]
+name = "bb-search"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Find in Files: text or regex search over a folder, git-ignore aware"
+
+[dependencies]
+ignore = "0.4"
+regex = "1"
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

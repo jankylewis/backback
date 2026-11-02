@@ -43,7 +43,10 @@ This grant does not extend to any other repository.
 - Explicit types: every Rust `let` and closure parameter is typed; C# never
   uses `var`. No `unwrap`/`expect`/`panic`/`as` casts/`[i]` outside tests.
 
-## Gate (run from `bb_crates/`, all must pass, quote real counts)
+## Gate (all must pass, quote real counts)
+
+One command: `docs/release/scripts/gate.sh` (sets PATH and netcoredbg). The
+steps, run from `bb_crates/`:
 
 `cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings &&
 cargo test --workspace && cargo deny check && cargo run -p bb -- audit ..`

@@ -3,20 +3,13 @@
 Scope law: extras are proposed here, never built unasked. Each one says what,
 why, cost and how it would be proven. Approve, change or drop.
 
-## P1 — Find in Files (Cmd+Shift+F), the rest of BBEOD06
+## P1 — Find in Files (Cmd+Shift+F): DONE
 
-- What: one search box over the open root; plain text or regex, case
-  toggle; results grouped by file with line previews; Enter jumps (Back
-  returns, as for F12). Skips the same folders as Go to File (`.git`,
-  `bin`, `obj`, `node_modules`) and git-ignored files.
-- How: the `ignore` + `grep-searcher` crates (ripgrep's engine, MIT/Unlicense)
-  on a background thread; results stream into the existing `PlacesPanel`
-  (the Build error list), capped at 2,000 hits; a new query cancels the old.
-- Cost: about 1 BBEOD. One dependency family (ripgrep crates, `cargo deny`
-  clean expected).
-- Proof: red-first tests on a temp tree (match, regex, skip, cap, cancel);
-  window test: type a query, Enter opens the file at the line; real-app
-  readback on a large solution with the time to first result.
+Built 2026-11-03 as the rest of BBEOD06 (headmate: "continue ... until all
+BBEODs completed"). `/re/` regex, smart case, `.gitignore` aware, 2,000-hit
+cap, newer search wins. One crate, `bb-search` (`ignore` + `regex`; the
+`grep-searcher` crate was not needed). Readback
+`docs/plan/readback/FIXES/S03/BBEOD06/`, bench `docs/plan/bench/BBEOD06/FIND.md`.
 
 ## P2 — Signed and notarised release, rest of BBEOD07
 

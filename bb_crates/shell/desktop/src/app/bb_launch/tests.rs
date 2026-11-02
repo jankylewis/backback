@@ -130,6 +130,7 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
             "Open...",
             "Go to File...",
             "Go to Symbol...",
+            "Find in Files...",
             "Back",
             "Forward"
         ]
@@ -141,4 +142,11 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
         Some(false)
     );
     assert!(back.action().partial_eq(&crate::editor::GoBack));
+    let find: &KeyBinding = &open::bindings()[5];
+    let typed_find: gpui::Keystroke = gpui::Keystroke::parse("cmd-shift-f").unwrap();
+    assert_eq!(
+        find.match_keystrokes(std::slice::from_ref(&typed_find)),
+        Some(false)
+    );
+    assert!(find.action().partial_eq(&crate::quick_open::FindInFiles));
 }
