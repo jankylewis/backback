@@ -94,7 +94,11 @@ impl Document {
         }
     }
 
-    fn delete_range(&mut self, start: CharIdx, end: CharIdx) -> Result<(), DocumentError> {
+    pub(crate) fn delete_range(
+        &mut self,
+        start: CharIdx,
+        end: CharIdx,
+    ) -> Result<(), DocumentError> {
         let before: CharIdx = self.cursor;
         let removed: String = self.splice(start, end, "")?;
         let state_before: u64 = self.state;

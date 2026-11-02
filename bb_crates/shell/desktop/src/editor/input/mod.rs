@@ -220,3 +220,6 @@ pub(super) fn schedule_parse(
     )
     .detach();
 }
+
+#[cfg(test)]
+mod tests;

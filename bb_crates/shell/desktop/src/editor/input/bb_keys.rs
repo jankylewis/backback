@@ -62,7 +62,13 @@ pub(super) fn text_key(
     event: &KeyDownEvent,
     shift: bool,
 ) -> Option<Result<(), bb_text::DocumentError>> {
+    let option: bool = event.keystroke.modifiers.alt;
     let result: Result<(), bb_text::DocumentError> = match event.keystroke.key.as_str() {
+        // Option: word moves and deletes, as in every macOS editor (BB-BUG-011).
+        "backspace" if option => document.delete_word_back(),
+        "delete" if option => document.delete_word_forward(),
+        "left" if option => document.word_left(shift),
+        "right" if option => document.word_right(shift),
         "backspace" => document.backspace(),
         "delete" => document.delete(),
         "enter" | "return" => document.enter(),

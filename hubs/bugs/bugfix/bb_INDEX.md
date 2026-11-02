@@ -11,3 +11,4 @@
 | BB-BUG-008 | `locate` also checks ~/.local/share/backback/netcoredbg and Homebrew | FIXED | red-first locate test + installed-app readback | `S02/BB_BUG_008_F5_FROM_THE_DOCK_FINDS_NO_NETCOREDBG.md` |
 | BB-BUG-009 | Adopt the login shell PATH at start (VS Code style); .NET folders as fallback | FIXED | 4 tests + launchd-env readback | `S03/BB_BUG_009_AN_APP_FROM_THE_DOCK_FINDS_NO_DOTNET.md` |
 | BB-BUG-010 | `\r\n` is one break: arrows step over it, Backspace/Delete remove it whole | FIXED | 3 red-first tests + byte readback | `S03/BB_BUG_010_RIGHT_AT_A_LINE_END_SPLITS_A_CRLF.md` |
+| BB-BUG-011 | Option+Left/Right/Backspace/Delete work by word (VS Code / IntelliJ stops) | FIXED | 6 red-first tests + window test | `S03/BB_BUG_011_OPTION_ARROWS_MOVE_ONE_CHAR_NOT_ONE_WORD.md` |
