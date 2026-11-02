@@ -35,23 +35,52 @@ pub(crate) struct QuickOpen {
     items: Vec<Item>,
     /// Find in Files: a query box with no list.
     find: bool,
+    /// Go to File before its background walk has filled the list.
+    loading: bool,
 }
 
 impl QuickOpen {
+    /// Go to File over `root`, listing files on the calling thread (tests).
+    #[cfg(test)]
     pub(crate) fn new(root: &Path) -> QuickOpen {
-        let mut files: Vec<PathBuf> = Vec::new();
-        walk(root, root, &mut files);
-        files.sort();
+        let mut quick: QuickOpen = QuickOpen::listing(root);
+        quick.fill(QuickOpen::list_files(root));
+        quick
+    }
+
+    /// Go to File over `root` with no list yet: `fill` adds it after the
+    /// walk (`list_files`) has run off the UI thread (BB-PRF-002).
+    pub(crate) fn listing(root: &Path) -> QuickOpen {
         QuickOpen {
             query: String::new(),
             selected: 0,
             root: Some(root.to_path_buf()),
-            items: files
-                .into_iter()
-                .map(|label: PathBuf| Item { label, line: 0 })
-                .collect(),
+            items: Vec::new(),
             find: false,
+            loading: true,
         }
+    }
+
+    /// Every file under `root`, relative to it and sorted; may be slow.
+    pub(crate) fn list_files(root: &Path) -> Vec<PathBuf> {
+        let mut files: Vec<PathBuf> = Vec::new();
+        walk(root, root, &mut files);
+        files.sort();
+        files
+    }
+
+    /// The walk's result for the box that waits for `root`'s files.
+    pub(crate) fn fill(&mut self, files: Vec<PathBuf>) {
+        self.items = files
+            .into_iter()
+            .map(|label: PathBuf| Item { label, line: 0 })
+            .collect();
+        self.loading = false;
+    }
+
+    /// True while this box waits for a walk of `root`.
+    pub(crate) fn waits_for(&self, root: &Path) -> bool {
+        self.loading && self.root.as_deref() == Some(root)
     }
 
     /// Go to Symbol over `outline`: (label, 0-based line), in source order.
@@ -68,6 +97,7 @@ impl QuickOpen {
                 })
                 .collect(),
             find: false,
+            loading: false,
         }
     }
 
@@ -79,6 +109,7 @@ impl QuickOpen {
             root: None,
             items: Vec::new(),
             find: true,
+            loading: false,
         }
     }
 
@@ -86,6 +117,8 @@ impl QuickOpen {
     pub(crate) fn title(&self) -> &'static str {
         if self.find {
             "Find in Files"
+        } else if self.loading {
+            "Go to File (listing files...)"
         } else if self.root.is_some() {
             "Go to File"
         } else {
