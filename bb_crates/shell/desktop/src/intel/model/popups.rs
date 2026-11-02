@@ -162,3 +162,17 @@ impl RenamePreview {
         (self.changes.len(), edits)
     }
 }
+
+/// Cmd + hover: the identifier under the mouse. Drawn as a link only after
+/// the C# server answers that it has a definition (`confirmed`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct LinkTarget {
+    /// The document.
+    pub(crate) path: std::path::PathBuf,
+    /// The identifier's first char.
+    pub(crate) start: bb_text::CharIdx,
+    /// One past its last char.
+    pub(crate) end: bb_text::CharIdx,
+    /// The server found a definition.
+    pub(crate) confirmed: bool,
+}

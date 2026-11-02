@@ -11,9 +11,16 @@ pub(crate) struct Run {
     pub(crate) selected: bool,
     /// A diagnostic squiggle under these chars.
     pub(crate) mark: Option<Ink>,
+    /// Cmd + hover: these chars are a confirmed link (BBEOD15).
+    pub(crate) link: bool,
 }
 
-pub(crate) fn styled_line(tab: &Tab, index: usize, marks: &[Mark]) -> Vec<Run> {
+pub(crate) fn styled_line(
+    tab: &Tab,
+    index: usize,
+    marks: &[Mark],
+    link: Option<(bb_text::CharIdx, bb_text::CharIdx)>,
+) -> Vec<Run> {
     let started: Instant = Instant::now();
     let text: String = tab.document.line(index).unwrap_or_default();
     let clean: &str = text.trim_end_matches(['\r', '\n']);
@@ -41,17 +48,23 @@ pub(crate) fn styled_line(tab: &Tab, index: usize, marks: &[Mark]) -> Vec<Run> {
                 from.raw() <= char_start.saturating_add(column)
                     && char_start.saturating_add(column) < to.raw()
             });
-        push_run(&mut runs, ch, (kind, selected, marks::at(marks, column)));
+        let at: usize = char_start.saturating_add(column);
+        let linked: bool = link.is_some_and(|(from, to): (bb_text::CharIdx, bb_text::CharIdx)| {
+            from.raw() <= at && at < to.raw()
+        });
+        let look: Look = (kind, selected, marks::at(marks, column), linked);
+        push_run(&mut runs, ch, look);
     }
     crate::latency::record_highlight(started.elapsed());
     runs
 }
 
-type Look = (HighlightKind, bool, Option<Ink>);
+type Look = (HighlightKind, bool, Option<Ink>, bool);
 
-fn push_run(runs: &mut Vec<Run>, ch: char, (kind, selected, mark): Look) {
+fn push_run(runs: &mut Vec<Run>, ch: char, (kind, selected, mark, link): Look) {
     if let Some(last) = runs.last_mut() {
-        if last.kind == kind && last.selected == selected && last.mark == mark {
+        if last.kind == kind && last.selected == selected && last.mark == mark && last.link == link
+        {
             last.text.push(ch);
             return;
         }
@@ -61,5 +74,6 @@ fn push_run(runs: &mut Vec<Run>, ch: char, (kind, selected, mark): Look) {
         kind,
         selected,
         mark,
+        link,
     });
 }

@@ -21,6 +21,7 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD12 | **Critical:** cursor shifts the text; draw it as an overlay | Done | [#12](https://github.com/jankylewis/backback/pull/12); readback `docs/plan/readback/FIXES/S02/BBEOD12/` |
 | BBEOD13 | Core C# loop: Open Solution (Cmd+O), Build + error list, Go to File, Go to Symbol, Back/Forward | Done | [#18](https://github.com/jankylewis/backback/pull/18) (Open, Go to File), [#20](https://github.com/jankylewis/backback/pull/20) (Build, Go to Symbol, Back/Forward) |
 | BBEOD14 | Zoom the whole app: Cmd+= in, Cmd+- out, Cmd+0 reset | Done | [#19](https://github.com/jankylewis/backback/pull/19) (same change) |
+| BBEOD15 | Cmd + hover underlines a symbol with a definition; Cmd+click goes there | Done | [#29](https://github.com/jankylewis/backback/pull/29); readback `docs/plan/readback/FIXES/S03/BBEOD15/` |
 
 ## Gaps behind a Done or Partial state
 

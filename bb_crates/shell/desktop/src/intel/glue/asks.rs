@@ -58,7 +58,8 @@ pub(crate) fn ask(view: &mut ExplorerView, path: PathBuf, ask: Ask, anchor: Char
         | Ask::Definition(p)
         | Ask::References(p)
         | Ask::Rename(p, _)
-        | Ask::Actions(p, _) => *p,
+        | Ask::Actions(p, _)
+        | Ask::Link(p) => *p,
     };
     let ticket: Ticket = view.intel.in_flight.ask(Question {
         kind: ask.kind(),

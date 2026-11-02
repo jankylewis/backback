@@ -3,6 +3,7 @@ use std::time::Instant;
 
 use crate::ExplorerView;
 mod bb_keys;
+pub(crate) mod link;
 use bb_keys::{command_key, text_key};
 
 /// The char under window position `window_x` on `line` of the active tab.

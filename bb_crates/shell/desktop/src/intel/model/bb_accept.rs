@@ -43,7 +43,7 @@ pub(crate) enum Freshness {
 /// The freshness rule of each kind. Exhaustive: a new kind must pick one.
 pub(crate) fn freshness(kind: AskKind) -> Freshness {
     match kind {
-        AskKind::Hover | AskKind::Rename | AskKind::Actions => Freshness::SameText,
+        AskKind::Hover | AskKind::Rename | AskKind::Actions | AskKind::Link => Freshness::SameText,
         AskKind::Completion => Freshness::SameWord,
         AskKind::Definition | AskKind::References => Freshness::Any,
     }

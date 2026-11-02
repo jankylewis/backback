@@ -122,15 +122,22 @@ fn text_run(run: &Run, theme: Theme, family: &str) -> TextRun {
         HighlightKind::Type => theme.ty,
         HighlightKind::Plain => theme.text,
     };
+    let link_line: Option<gpui::UnderlineStyle> = run.link.then(|| gpui::UnderlineStyle {
+        thickness: px(1.0),
+        color: Some(color(theme.accent).into()),
+        wavy: false,
+    });
     TextRun {
         len: run.text.len(),
         font: gpui::font(family.to_owned()),
-        color: color(ink).into(),
+        color: color(if run.link { theme.accent } else { ink }).into(),
         background_color: run.selected.then(|| color(theme.accent).into()),
-        underline: run.mark.map(|s: Ink| gpui::UnderlineStyle {
-            thickness: px(1.0),
-            color: Some(color(severity_ink(s, theme)).into()),
-            wavy: true,
+        underline: link_line.or_else(|| {
+            run.mark.map(|s: Ink| gpui::UnderlineStyle {
+                thickness: px(1.0),
+                color: Some(color(severity_ink(s, theme)).into()),
+                wavy: true,
+            })
         }),
         strikethrough: None,
     }
@@ -165,6 +172,14 @@ fn mouse_down(
         window,
         cx,
     );
+    if event.modifiers.platform {
+        view.intel.link = None;
+        crate::intel::glue::ask_at_cursor(
+            view,
+            crate::intel::bb_worker::protocol::Ask::Definition,
+            None,
+        );
+    }
 }
 
 fn mouse_move(
@@ -183,5 +198,6 @@ fn mouse_move(
     let at: Option<bb_text::CharIdx> =
         super::super::input::char_at(view, index, x, (window, &fonts));
     let position: (f32, f32) = (x, f32::from(event.position.y));
+    crate::editor::link::link_move(view, at, event.modifiers.platform);
     crate::intel::glue::hover_move(view, at, position, window, cx);
 }

@@ -7,13 +7,14 @@ use super::popups::{CompletionPopup, Pick};
 use super::{fits, freshness, Freshness, IntelModel, LoadStatus, Now, Pending, Question, Sent};
 use crate::intel::bb_worker::protocol::{AskKind, Ticket};
 
-const KINDS: [AskKind; 6] = [
+const KINDS: [AskKind; 7] = [
     AskKind::Completion,
     AskKind::Hover,
     AskKind::Definition,
     AskKind::References,
     AskKind::Rename,
     AskKind::Actions,
+    AskKind::Link,
 ];
 
 fn point(line: u32, character: u32) -> LspPoint {

@@ -22,3 +22,13 @@ the same 141 `ToolOutcome` lines.
 
 Not met: the quiet-machine rule. Before and after ran back to back under
 the same load; spread within each run of 5 is up to 35%.
+
+## Addendum 2026-11-03: search after idle, in the app
+
+Same query in the app after 10 s idle, 5 times per build: master 259 / 77 /
+433 / 679 / 480 ms (load 13.8), later 317 / 215 / 176 / 370 / 291 ms (load
+7.7); with the search at `gpui::Priority::High`: 357 / 669 / 624 / 746 /
+446 ms (load 13.7). No gain shown, so the change was dropped. The spread
+follows CPU load (12 cores: 8 P + 4 E, load 8-14 from other work), not
+memory (76% free).
+
