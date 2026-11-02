@@ -2,7 +2,7 @@
 
 id: BB-TG-002
 for: none
-status: OBSERVED
+status: FIXED
 date: 2026-11-01
 source: `AGENTS.md` gate line (five commands chained by hand)
 
@@ -12,3 +12,6 @@ that shell had no `$HOME/.cargo/bin` on PATH. Nothing was tested.
 
 Workaround: export PATH first; print each step's exit code. Wanted: one `bb
 gate` command that runs every step with `--no-fail-fast` and one summary line.
+
+Fixed 2026-11-02: `docs/release/scripts/gate.sh` runs every step with one
+exit code each and a summary line (BB-TG-008).

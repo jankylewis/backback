@@ -215,7 +215,7 @@ impl Render for ExplorerView {
             .on_action(cx.listener(ExplorerView::quit))
             .on_action(cx.listener(ExplorerView::restart_server))
             .on_action(cx.listener(terminal::on_toggle))
-            .on_action(cx.listener(quick_open::on_go_to_file))
+            .map(|root: gpui::Div| quick_open::actions(root, cx))
             .child(match self.tests.side {
                 tests_panel::Side::Files => panel::explorer_panel(self, cx).into_any_element(),
                 tests_panel::Side::Tests => tests_panel::panel(self, cx).into_any_element(),

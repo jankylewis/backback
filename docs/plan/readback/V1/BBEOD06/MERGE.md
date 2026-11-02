@@ -52,5 +52,5 @@ also stays within the five-entry limit.
 ## Benchmark state
 
 No new quiet-machine benchmark ran in this merge unit. The existing BBEOD06
-fixed-set comparison is noisy; `bench/MCP/bb_BBEOD06_MCP.md` records its
+fixed-set comparison is noisy; `bench/BBEOD06/bb_BBEOD06_MCP.md` records its
 medians and the open quiet re-run. No new performance delta is verified.

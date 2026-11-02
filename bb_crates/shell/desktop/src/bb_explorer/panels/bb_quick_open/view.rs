@@ -1,6 +1,8 @@
 //! The Go to File box: typed query, best matches, Enter opens, Esc closes.
 
-use gpui::{deferred, div, prelude::*, px, AnyElement, Context, KeyDownEvent, Window};
+use gpui::{
+    deferred, div, prelude::*, px, AnyElement, Context, InteractiveElement, KeyDownEvent, Window,
+};
 
 use super::bb_model::Chosen;
 use super::QuickOpen;
@@ -10,7 +12,14 @@ use crate::{color, ExplorerView};
 #[action(namespace = backback)]
 pub(crate) struct GoToFile;
 
-pub(crate) fn on_go_to_file(
+/// The window-wide handlers: Go to File and Find in Files.
+pub(crate) fn actions<E: InteractiveElement>(element: E, cx: &mut Context<ExplorerView>) -> E {
+    element
+        .on_action(cx.listener(on_go_to_file))
+        .on_action(cx.listener(super::find::on_find_in_files))
+}
+
+fn on_go_to_file(
     view: &mut ExplorerView,
     _: &GoToFile,
     window: &mut Window,
@@ -77,6 +86,7 @@ fn key(
         match chosen {
             Some(Chosen::File(path)) => view.open_file(&path, window, cx),
             Some(Chosen::Line(line)) => go_to_line(view, line, window, cx),
+            Some(Chosen::Find(query)) => super::find::run(view, &query, window, cx),
             None => {}
         }
         window.focus(&view.editor_focus, cx);

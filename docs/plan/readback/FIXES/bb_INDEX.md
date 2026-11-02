@@ -13,3 +13,4 @@ One folder per BBEOD after v1, each with its steps, captures and verdict.
 | `S02/BBEOD14` | BBEOD08 + BBEOD14: Menlo 13 everywhere, zoom, Settings, tool window side |
 | `S03/BLD001` | Install from `master` to `/Applications`: build stamp, launch, Dock mascot (BB-BLD-001) |
 | `S02/BBEOD11` | The terminal: real shell, keys, 100k lines in 636 ms |
+| `S03/BBEOD06` | Find in Files on Apex: counts equal `git grep`, 74 ms, newer search wins |

@@ -28,7 +28,7 @@
   `readback/V1/BBEOD06/FIX/bb_FIX.md`.
 - BBEOD06-FIX (`backback_1`): B3-B8 + F1 fixed test-first on `9d7ea08`.
 - BBEOD06-B (`backback_2`): MCP harness panel + engine. Bench:
-  `bench/MCP/BBEOD06_GUI.md`, `bench/MCP/bb_BBEOD06_MCP.md`.
+  `bench/BBEOD06/BBEOD06_GUI.md`, `bench/BBEOD06/bb_BBEOD06_MCP.md`.
 
 ## BBEOD05 merge
 

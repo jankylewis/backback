@@ -38,13 +38,14 @@ where
     answer.await.ok()?.ok()??.into_iter().next()
 }
 
-pub(crate) fn bindings() -> [KeyBinding; 5] {
+pub(crate) fn bindings() -> [KeyBinding; 6] {
     [
         KeyBinding::new("cmd-o", OpenWorkspace, None),
         KeyBinding::new("cmd-shift-o", crate::quick_open::GoToFile, None),
         KeyBinding::new("cmd-[", crate::editor::GoBack, None),
         KeyBinding::new("cmd-]", crate::editor::GoForward, None),
         KeyBinding::new("cmd-f12", crate::quick_open::GoToSymbol, None),
+        KeyBinding::new("cmd-shift-f", crate::quick_open::FindInFiles, None),
     ]
 }
 
@@ -53,6 +54,7 @@ pub(crate) fn file_menu() -> Menu {
         MenuItem::action("Open...", OpenWorkspace),
         MenuItem::action("Go to File...", crate::quick_open::GoToFile),
         MenuItem::action("Go to Symbol...", crate::quick_open::GoToSymbol),
+        MenuItem::action("Find in Files...", crate::quick_open::FindInFiles),
         MenuItem::action("Back", crate::editor::GoBack),
         MenuItem::action("Forward", crate::editor::GoForward),
     ])

@@ -72,8 +72,10 @@ pub(crate) struct IntelModel {
     pub(crate) hover: Option<HoverPopup>,
     /// The code actions list.
     pub(crate) actions: Option<ActionsPopup>,
-    /// The references panel.
+    /// The references panel (also Build and Find in Files results).
     pub(crate) references: Option<PlacesPanel>,
+    /// Stops the running Find in Files search when a new one starts.
+    pub(crate) find_stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     /// The F2 box.
     pub(crate) rename_input: Option<RenameInput>,
     /// The rename plan awaiting Apply.
@@ -107,6 +109,7 @@ impl IntelModel {
             hover: None,
             actions: None,
             references: None,
+            find_stop: None,
             rename_input: None,
             rename_preview: None,
             problems_open: false,

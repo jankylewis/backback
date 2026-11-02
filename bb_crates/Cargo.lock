@@ -455,6 +455,7 @@ dependencies = [
  "bb-intel",
  "bb-lsp",
  "bb-process",
+ "bb-search",
  "bb-syntax",
  "bb-testkit",
  "bb-text",
@@ -594,6 +595,16 @@ name = "bb-process"
 version = "0.0.1"
 dependencies = [
  "tokio",
+]
+
+[[package]]
+name = "bb-search"
+version = "0.0.1"
+dependencies = [
+ "ignore",
+ "regex",
+ "tempfile",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
