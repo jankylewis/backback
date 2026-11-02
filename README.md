@@ -79,8 +79,8 @@ cargo run -p bb -- outline path/to/File.cs
 cargo run -p bb -- audit ..
 ```
 
-`netcoredbg` is optional for editing; `bb debug` and debugger tests need it.
-Set `BACKBACK_NETCOREDBG=/path/to/netcoredbg` or put it on `PATH`.
+`netcoredbg` is needed for F5, `bb debug` and the debugger tests: install it in
+`~/.local/share/backback/netcoredbg/`, on `PATH`, or set `BACKBACK_NETCOREDBG`.
 
 ## macOS app bundle
 

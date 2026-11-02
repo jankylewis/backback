@@ -30,7 +30,7 @@ pub const DAP_ARGS: [&str; 1] = ["--interpreter=vscode"];
 pub enum DapError {
     /// The adapter binary was not found.
     #[error(
-        "{BINARY} not found; set {ENV_OVERRIDE} or install netcoredbg (MIT) and put it on PATH"
+        "{BINARY} not found; install netcoredbg (MIT) in ~/.local/share/backback/netcoredbg, put it on PATH, or set {ENV_OVERRIDE}"
     )]
     NotFound,
     /// A message did not match the DAP envelope.
@@ -138,7 +138,23 @@ impl Message {
 /// # Errors
 /// [`DapError::NotFound`] when it is in neither place.
 pub fn locate() -> Result<PathBuf, DapError> {
-    if let Some(p) = std::env::var_os(ENV_OVERRIDE) {
+    locate_in(
+        std::env::var_os(ENV_OVERRIDE),
+        std::env::var_os("PATH"),
+        std::env::var_os("HOME"),
+    )
+}
+
+/// [`locate`] over given variables (tests pass their own): the override,
+/// then `PATH`, then the places an app opened from the Dock or Finder never
+/// has on its `PATH` (BB-BUG-008): backback's install folder
+/// `~/.local/share/backback/netcoredbg`, then Homebrew's bin folders.
+fn locate_in(
+    over: Option<std::ffi::OsString>,
+    path: Option<std::ffi::OsString>,
+    home: Option<std::ffi::OsString>,
+) -> Result<PathBuf, DapError> {
+    if let Some(p) = over {
         let p: PathBuf = PathBuf::from(p);
         return if p.is_file() {
             Ok(p)
@@ -147,10 +163,15 @@ pub fn locate() -> Result<PathBuf, DapError> {
         };
     }
     let names: [String; 2] = [BINARY.to_owned(), format!("{BINARY}.exe")];
-    std::env::var_os("PATH")
+    let mut dirs: Vec<PathBuf> = path
         .map(|p: std::ffi::OsString| std::env::split_paths(&p).collect::<Vec<PathBuf>>())
-        .unwrap_or_default()
-        .iter()
+        .unwrap_or_default();
+    if let Some(home) = home {
+        dirs.push(PathBuf::from(home).join(".local/share/backback/netcoredbg"));
+    }
+    dirs.push(PathBuf::from("/opt/homebrew/bin"));
+    dirs.push(PathBuf::from("/usr/local/bin"));
+    dirs.iter()
         .flat_map(|d: &PathBuf| names.iter().map(move |n: &String| d.join(n)))
         .find(|p: &PathBuf| p.is_file())
         .ok_or(DapError::NotFound)
@@ -160,6 +181,21 @@ pub fn locate() -> Result<PathBuf, DapError> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// BB-BUG-008: an app opened from the Dock has no `PATH` entry and no
+    /// override; backback's own install folder must still be found.
+    #[test]
+    fn a_dock_launch_finds_netcoredbg_in_backbacks_install_folder() {
+        let home: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let dir: PathBuf = home.path().join(".local/share/backback/netcoredbg");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join(BINARY), "").unwrap();
+        let found: Result<PathBuf, DapError> =
+            locate_in(None, Some("/usr/bin:/bin".into()), Some(home.path().into()));
+        assert_eq!(found.unwrap(), dir.join(BINARY));
+        let none: Result<PathBuf, DapError> = locate_in(None, None, Some("/nowhere".into()));
+        assert!(matches!(none, Err(DapError::NotFound)));
+    }
 
     #[test]
     fn request_roundtrips_through_framing() {

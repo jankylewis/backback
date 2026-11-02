@@ -18,3 +18,4 @@ One folder per BBEOD after v1, each with its steps, captures and verdict.
 | `S04/BBEOD16` | File type icons: 13 types, rendered sheet in the dark theme |
 | `S03/BBEOD17` | Breakpoints follow their code; F5 pauses with stack and variables on the real netcoredbg; F10, F5, Shift+F5 |
 | `S04/BBEOD18` | Stack frames in test results open their own call site; `/_/` and missing files handled |
+| `S04/BB_BUG_008` | F5 in the app opened from the Dock: netcoredbg not found before, pauses after |
