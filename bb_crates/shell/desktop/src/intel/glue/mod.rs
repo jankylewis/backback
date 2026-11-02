@@ -22,7 +22,7 @@ use crate::ExplorerView;
 
 pub(crate) use answers::apply_rename;
 pub(crate) use answers::{goto_point, jump, opened};
-pub(crate) use asks::{hover_move, word_start};
+pub(crate) use asks::{ask, ask_at_cursor, hover_move, word_start};
 pub(crate) use bb_keys::RestartServer;
 
 /// Start the server for the workspace's solution, if it has one, and pump

@@ -13,7 +13,7 @@ use bb_text::{CharIdx, LspPoint};
 use gpui::{Context, ScrollStrategy, Window};
 
 use crate::editor::Tab;
-use crate::intel::bb_worker::protocol::{Answer, Place, Stages};
+use crate::intel::bb_worker::protocol::{Answer, AskKind, Place, Stages};
 use crate::intel::model::popups::{
     ActionsPopup, CompletionPopup, HoverPopup, Pick, PlacesPanel, RenamePreview,
 };
@@ -31,6 +31,9 @@ pub(super) fn apply(
     match answer {
         Answer::Completion(items) => completion(view, pending, items, stages),
         Answer::Hover(info) => hover(view, pending, info),
+        Answer::Definition(places) if pending.kind == AskKind::Link => {
+            crate::editor::link::link_answer(view, pending, &places);
+        }
         Answer::Definition(places) => match places.into_iter().next() {
             Some(place) => jump(view, &place, window, cx),
             None => view.report(&"No definition found"),

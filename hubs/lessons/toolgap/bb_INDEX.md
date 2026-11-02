@@ -10,3 +10,5 @@
 | BB-TG-006 | zsh `BG_NICE` nices an app started with `&` and all its children | OBSERVED | BB-PRC-003 | `open -a ... --args`, or `setopt NO_BG_NICE`; check `ps -o stat,nice` | `S02/BB_TG_006_ZSH_BG_NICE_NICES_A_READBACK_LAUNCH.md` |
 | BB-TG-007 | The agent shell is not Accessibility-trusted; posted clicks are dropped | OBSERVED | BB-BUG-004 | Window tests + `BB_KEYS`; a hand click by the headmate | `S02/BB_TG_007_READBACK_SEAT_CANNOT_POST_INPUT.md` |
 | BB-TG-008 | A hand-typed gate missed `BACKBACK_NETCOREDBG`; 14 debugger tests red | FIXED | none | `docs/release/scripts/gate.sh` sets PATH and the debugger path | `S02/BB_TG_008_A_HAND_TYPED_GATE_MISSED_THE_DEBUGGER_PATH.md` |
+| BB-TG-009 | A readback launch takes the keyboard focus; typed keys land in the app | OBSERVED | none | Writable runs on scratch copies only; real solutions `--no-write` | `S03/BB_TG_009_A_READBACK_LAUNCH_TAKES_THE_KEYBOARD_FOCUS.md` |
+| BB-TG-010 | A locked screen paints no frames; script mouse steps miss | OBSERVED | none | Check `CGSSessionScreenIsLocked`; window tests for mouse; rerun unlocked | `S03/BB_TG_010_A_LOCKED_SCREEN_PAINTS_NO_FRAMES.md` |

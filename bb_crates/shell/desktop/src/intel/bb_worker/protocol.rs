@@ -27,6 +27,8 @@ pub(crate) enum Ask {
     Rename(LspPoint, String),
     /// Code actions for a range.
     Actions(LspPoint, LspPoint),
+    /// Cmd + hover: is the symbol at the point a link (has a definition)?
+    Link(LspPoint),
 }
 
 /// The kind of an [`Ask`], one slot per kind in the model.
@@ -44,6 +46,8 @@ pub(crate) enum AskKind {
     Rename,
     /// See [`Ask::Actions`].
     Actions,
+    /// See [`Ask::Link`].
+    Link,
 }
 
 impl Ask {
@@ -55,6 +59,7 @@ impl Ask {
             Self::References(_) => AskKind::References,
             Self::Rename(..) => AskKind::Rename,
             Self::Actions(..) => AskKind::Actions,
+            Self::Link(_) => AskKind::Link,
         }
     }
 }

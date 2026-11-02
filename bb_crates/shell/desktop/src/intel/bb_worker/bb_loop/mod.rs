@@ -203,7 +203,7 @@ async fn ask_server(session: &Session, at: &DocPath, ask: Ask) -> Result<Answer,
             Answer::Completion(session.completion(at, point, deadline).await?)
         }
         Ask::Hover(point) => Answer::Hover(session.hover(at, point, deadline).await?),
-        Ask::Definition(point) => Answer::Definition(
+        Ask::Definition(point) | Ask::Link(point) => Answer::Definition(
             places(session, session.definition(at, point, deadline).await?).await,
         ),
         Ask::References(point) => Answer::References(

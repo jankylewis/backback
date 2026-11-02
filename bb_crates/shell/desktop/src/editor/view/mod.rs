@@ -105,6 +105,7 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .key_context("Editor")
         .track_focus(focus)
         .on_key_down(cx.listener(ExplorerView::editor_key_down))
+        .map(|area: gpui::Stateful<gpui::Div>| super::link::on_editor(area, view, cx))
         .on_action(cx.listener(super::go_back))
         .on_action(cx.listener(crate::build::on_build))
         .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
@@ -194,7 +195,8 @@ fn editor_line(
         overlay,
         caret,
     };
-    line_row(row, &styled_line(tab, index, &marks), view.theme, cx)
+    let link: Option<(bb_text::CharIdx, bb_text::CharIdx)> = super::link::shown(view, &tab.path);
+    line_row(row, &styled_line(tab, index, &marks, link), view.theme, cx)
 }
 
 /// The cursor's x on its line, measured on the shaped line the row paints.

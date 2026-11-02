@@ -40,7 +40,7 @@ fn put_cursor(rig: &Rig, vcx: &mut VisualTestContext, line: usize, column: usize
 
 fn line_text(rig: &Rig, vcx: &mut VisualTestContext, marks: &[Mark]) -> String {
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
-        super::styled_line(v.tabs.active_tab().unwrap(), 0, marks)
+        super::styled_line(v.tabs.active_tab().unwrap(), 0, marks, None)
             .into_iter()
             .map(|run: super::Run| run.text)
             .collect()
@@ -205,4 +205,34 @@ fn zoom_scales_the_row_the_gutter_the_caret_and_the_text(cx: &mut TestAppContext
         "caret after a {gutter} px gutter"
     );
     assert_eq!(f32::from(caret_26.size.height), zoomed.size() + 3.0);
+}
+
+/// BBEOD15: a confirmed Cmd + hover link marks exactly its chars, and the
+/// line text stays the file line.
+#[gpui::test]
+fn a_link_range_marks_exactly_its_chars(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = open(cx);
+    let word: usize = LINE
+        .find("Captured")
+        .map(|b: usize| LINE[..b].chars().count())
+        .unwrap();
+    let range: (bb_text::CharIdx, bb_text::CharIdx) = (
+        bb_text::CharIdx::new(word),
+        bb_text::CharIdx::new(word + "CapturedOutboundRequest".len()),
+    );
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        let runs: Vec<super::Run> =
+            super::styled_line(v.tabs.active_tab().unwrap(), 0, &[], Some(range));
+        let linked: Vec<&str> = runs
+            .iter()
+            .filter(|run: &&super::Run| run.link)
+            .map(|run: &super::Run| run.text.as_str())
+            .collect();
+        assert_eq!(linked, ["CapturedOutboundRequest"]);
+        let text: String = runs
+            .iter()
+            .map(|run: &super::Run| run.text.as_str())
+            .collect();
+        assert_eq!(text, LINE);
+    });
 }

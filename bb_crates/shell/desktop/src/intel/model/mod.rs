@@ -76,6 +76,8 @@ pub(crate) struct IntelModel {
     pub(crate) references: Option<PlacesPanel>,
     /// Stops the running Find in Files search when a new one starts.
     pub(crate) find_stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    /// Cmd + hover: the symbol under the mouse, a link once confirmed.
+    pub(crate) link: Option<popups::LinkTarget>,
     /// The F2 box.
     pub(crate) rename_input: Option<RenameInput>,
     /// The rename plan awaiting Apply.
@@ -111,6 +113,7 @@ impl IntelModel {
             references: None,
             find_stop: None,
             rename_input: None,
+            link: None,
             rename_preview: None,
             problems_open: false,
             frame: 0,

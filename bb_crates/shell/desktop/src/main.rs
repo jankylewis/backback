@@ -19,7 +19,7 @@ mod navigation;
 mod panel;
 #[path = "bb_explorer/panels/bb_quick_open/mod.rs"]
 mod quick_open;
-#[path = "app/script.rs"]
+#[path = "app/script/mod.rs"]
 mod script;
 #[path = "bb_explorer/panels/settings/mod.rs"]
 mod settings;
