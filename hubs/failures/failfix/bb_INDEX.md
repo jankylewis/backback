@@ -17,3 +17,4 @@
 | BB-LSP-004 | FIXED | `bb open --restore` waits for a restore end line before shutdown | `APP/LSP/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
 | BB-PRF-002 | FIXED | Box opens at once; files list on the background executor | `SYS/PRF/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
 | BB-LSP-005 | FIXED | Assert the server reply to our own request (shutdown), not a side-effect line | `APP/LSP/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
+| BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |

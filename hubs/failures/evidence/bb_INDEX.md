@@ -23,3 +23,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-PRC-002 | FIXED | `docs/plan/readback/FIXES/S02/BBEOD13/PART2_STATE_LOG.txt` |
 | BB-PRF-002 | FIXED | `docs/plan/bench/BBEOD06/GOTO.md` |
 | BB-LSP-005 | FIXED | CI run 41501823925 (red, PR #30) |
+| BB-CIP-003 | FIXED | CI run 41510600740 (red, PR #33) |
