@@ -59,6 +59,7 @@ pub(crate) fn handle_key(
     let shift: bool = event.keystroke.modifiers.shift;
     let timed: bool = event.keystroke.key_char.is_some() && !event.keystroke.modifiers.platform;
     let saved: bool = event.keystroke.modifiers.platform && key == "s";
+    let mark: Option<Mark> = mark(view);
     let edit_start: Instant = Instant::now();
     let result: Option<Result<(), bb_text::DocumentError>> = if event.keystroke.modifiers.platform {
         command_key(view, key, shift)
@@ -81,7 +82,7 @@ pub(crate) fn handle_key(
         Err(error) => view.report(&error),
     }
     let reparse_start: Instant = Instant::now();
-    after_key(view, event, window, cx);
+    after_key(view, (event, mark), window, cx);
     if timed {
         view.reparse_ns = view
             .reparse_ns
@@ -96,10 +97,20 @@ pub(crate) fn handle_key(
 /// in step with what was typed.
 fn after_key(
     view: &mut ExplorerView,
-    event: &KeyDownEvent,
+    (event, before): (&KeyDownEvent, Option<Mark>),
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
+    if let (Some(before), Some(after)) = (before, mark(view)) {
+        if before.0 == after.0 {
+            crate::run::bb_debug::after_edit(
+                view,
+                &after.0,
+                (before.1, after.1),
+                (before.2, after.2),
+            );
+        }
+    }
     if let Some(tab) = view.tabs.active_tab_mut() {
         tab.sync_edits();
         let path: std::path::PathBuf = tab.path.clone();
@@ -108,6 +119,19 @@ fn after_key(
     if !event.keystroke.modifiers.platform {
         crate::intel::glue::bb_keys::after_edit(view, event.keystroke.key_char.as_deref());
     }
+}
+
+/// The active tab's file, line count and cursor line, around an edit.
+type Mark = (std::path::PathBuf, usize, usize);
+
+fn mark(view: &ExplorerView) -> Option<Mark> {
+    view.tabs.active_tab().map(|tab: &super::Tab| {
+        (
+            tab.path.clone(),
+            tab.document.len_lines(),
+            tab.document.cursor_line(),
+        )
+    })
 }
 
 /// Intel popups and commands take the key first; then a refused edit or

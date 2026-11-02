@@ -33,13 +33,13 @@ pub(crate) fn jump(view: &mut ExplorerView, window: &mut Window, cx: &mut Contex
         Ok(path) => path,
         Err(_) => return,
     };
-    view.pending_test_jump = Some((canonical.clone(), line));
+    view.tests.pending_jump = Some((canonical.clone(), line));
     view.open_file(&canonical, window, cx);
     apply(view, cx);
 }
 
 pub(crate) fn apply(view: &mut ExplorerView, cx: &mut Context<ExplorerView>) {
-    let (path, line): (&PathBuf, &usize) = match &view.pending_test_jump {
+    let (path, line): (&PathBuf, &usize) = match &view.tests.pending_jump {
         Some((path, line)) => (path, line),
         None => return,
     };
@@ -55,7 +55,7 @@ pub(crate) fn apply(view: &mut ExplorerView, cx: &mut Context<ExplorerView>) {
         if doc.set_cursor(at).is_ok() {
             view.editor_scroll
                 .scroll_to_item(*line, ScrollStrategy::Center);
-            view.pending_test_jump = None;
+            view.tests.pending_jump = None;
             cx.notify();
         }
     }

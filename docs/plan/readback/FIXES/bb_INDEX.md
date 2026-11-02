@@ -15,3 +15,4 @@ One folder per BBEOD after v1, each with its steps, captures and verdict.
 | `S02/BBEOD11` | The terminal: real shell, keys, 100k lines in 636 ms |
 | `S03/BBEOD06` | Find in Files on Apex: counts equal `git grep`, 74 ms, newer search wins |
 | `S03/BBEOD15` | Cmd + hover link on Greeter: confirmed link, Cmd+click to the definition; string-literal bug found |
+| `S03/BBEOD17` | Breakpoints: F9, they follow their code through Enter, undo and line joins |

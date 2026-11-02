@@ -107,7 +107,8 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .on_key_down(cx.listener(ExplorerView::editor_key_down))
         .map(|area: gpui::Stateful<gpui::Div>| super::link::on_editor(area, view, cx))
         .on_action(cx.listener(super::go_back))
-        .on_action(cx.listener(crate::build::on_build))
+        .on_action(cx.listener(crate::run::build::on_build))
+        .on_action(cx.listener(crate::run::bb_debug::on_toggle))
         .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
         .on_action(cx.listener(super::go_forward))
         .child(
@@ -168,6 +169,7 @@ fn editor_line(
             index,
             current: false,
             gutter: None,
+            breakpoint: false,
             test: None,
             overlay: None,
             caret: None,
@@ -185,6 +187,7 @@ fn editor_line(
         index,
         current,
         gutter: crate::intel::view::marks::worst(&marks),
+        breakpoint: view.debug.breakpoints.has(&tab.path, index),
         test: tab
             .test_methods
             .iter()

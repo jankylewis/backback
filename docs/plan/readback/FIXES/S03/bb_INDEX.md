@@ -4,4 +4,5 @@ One folder per unit; the table in `../bb_INDEX.md` says what each read back.
 
 - `BBEOD06/`
 - `BBEOD15/`
+- `BBEOD17/`
 - `BLD001/`

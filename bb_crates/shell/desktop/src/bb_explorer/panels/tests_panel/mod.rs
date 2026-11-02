@@ -55,6 +55,8 @@ pub(crate) struct TestsState {
     pub(crate) detail: Option<SpecResult>,
     pub(crate) message: Option<String>,
     pub(crate) output: String,
+    /// A test's file and line to go to once its tab has loaded.
+    pub(crate) pending_jump: Option<(PathBuf, usize)>,
     pub(crate) output_open: bool,
     pub(crate) scan: Scan,
 }
@@ -76,6 +78,7 @@ impl TestsState {
             detail: None,
             message: None,
             output: String::new(),
+            pending_jump: None,
             output_open: false,
             scan: Scan::NotStarted,
         }
