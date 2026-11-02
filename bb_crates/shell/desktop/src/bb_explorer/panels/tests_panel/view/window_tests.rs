@@ -105,3 +105,92 @@ fn assert_outcomes(view: &Entity<ExplorerView>, vcx: &mut VisualTestContext, pro
         assert!(outcomes.contains(&Outcome::Failed));
     });
 }
+
+/// The active tab's file and cursor line.
+fn at(view: &Entity<ExplorerView>, vcx: &mut VisualTestContext) -> (PathBuf, usize) {
+    view.read_with(vcx, |state: &ExplorerView, _: &gpui::App| {
+        let tab: &crate::editor::Tab = state.tabs.active_tab().unwrap();
+        (tab.path.clone(), tab.document.cursor_line())
+    })
+}
+
+/// A window whose Tests panel shows a failure with five stack lines: a
+/// frame in `A.cs`, a framework frame, a frame in `B.cs` line 7, a `/_/`
+/// frame for `B.cs` line 2, and a file not on this machine.
+fn failure_window(
+    cx: &mut TestAppContext,
+) -> (
+    tempfile::TempDir,
+    PathBuf,
+    Entity<ExplorerView>,
+    &mut VisualTestContext,
+) {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let root: PathBuf = dir.path().canonicalize().unwrap();
+    std::fs::write(root.join("A.cs"), "class A\n{\n}\n").unwrap();
+    std::fs::write(root.join("B.cs"), "line\n".repeat(10)).unwrap();
+    let tree: Explorer = Explorer::open(&root).unwrap();
+    let start: PathBuf = root.clone();
+    let (view, vcx): (Entity<ExplorerView>, &mut VisualTestContext) =
+        cx.add_window_view(|_: &mut Window, cx: &mut gpui::Context<ExplorerView>| {
+            crate::launch::fresh_view(tree, (start, false), WindowAppearance::Dark, cx)
+        });
+    vcx.run_until_parked();
+    click(vcx, "open-tests");
+    let stack: String = format!(
+        "   at T.S.Fails() in {a}:line 1\n   at System.Runtime.Run()\n   at T.S.Helper() in {b}:line 7\n   at T.S.Mapped() in /_/B.cs:line 2\n   at T.S.Gone() in /nowhere/C.cs:line 3",
+        a = root.join("A.cs").display(),
+        b = root.join("B.cs").display(),
+    );
+    view.update(
+        vcx,
+        |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            state.tests.detail = Some(bb_testkit::SpecResult {
+                fqn: bb_testkit::Fqn::new("T.S.Fails").unwrap(),
+                outcome: Outcome::Failed,
+                duration: std::time::Duration::ZERO,
+                message: Some(String::from("Expected 3 but was 2")),
+                stack: Some(stack),
+            });
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    (dir, root, view, vcx)
+}
+
+/// BBEOD18: every stack frame with a source is a link to its call site;
+/// framework frames are plain; `/_/` (deterministic build) paths map to the
+/// opened root; a file not on this machine is said in the status bar.
+#[gpui::test]
+fn each_stack_frame_opens_its_own_call_site(cx: &mut TestAppContext) {
+    let (_dir, root, view, vcx): (
+        tempfile::TempDir,
+        PathBuf,
+        Entity<ExplorerView>,
+        &mut VisualTestContext,
+    ) = failure_window(cx);
+    assert!(
+        vcx.debug_bounds("stack-link-2").is_none(),
+        "a framework frame is plain text"
+    );
+    click(vcx, "stack-link-3");
+    wait_for(&view, vcx, |state: &ExplorerView| {
+        state
+            .tabs
+            .active_tab()
+            .is_some_and(|t: &crate::editor::Tab| t.path.ends_with("B.cs"))
+    });
+    assert_eq!(at(&view, vcx), (root.join("B.cs"), 6));
+    click(vcx, "stack-link-4");
+    vcx.run_until_parked();
+    assert_eq!(at(&view, vcx), (root.join("B.cs"), 1), "the /_/ path");
+    click(vcx, "stack-link-5");
+    vcx.run_until_parked();
+    let status: Option<String> =
+        view.read_with(vcx, |s: &ExplorerView, _: &gpui::App| s.status.clone());
+    assert_eq!(
+        status.as_deref(),
+        Some("Cannot open /nowhere/C.cs: not on this machine")
+    );
+}
