@@ -97,6 +97,15 @@ impl Document {
         self.move_to(CharIdx::new(target), extend)
     }
 
+    /// Ctrl+A: to column 0 of the line (not the smart Home stop).
+    ///
+    /// # Errors
+    /// Returns a checked selection error.
+    pub fn line_start_move(&mut self, extend: bool) -> Result<(), DocumentError> {
+        let (start, _): (usize, String) = self.cursor_line_text()?;
+        self.move_to(CharIdx::new(start), extend)
+    }
+
     /// End: to the line's last char, before its line break.
     ///
     /// # Errors
