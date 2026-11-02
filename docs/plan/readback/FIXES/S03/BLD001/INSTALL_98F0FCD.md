@@ -40,3 +40,17 @@ Symbol in `PageTools.cs`: `close` -> line 59 `CloseAsync`, `activ` -> line 43
 (proposal P5); Go to File `readme` + Enter opens `README.md`. Both trees'
 `git status` unchanged. A scratch Greeter copy: type, Cmd+S, delete, Cmd+S:
 the file equals the original byte for byte.
+
+## A/B with the faithful Dock environment (`TMPDIR`, `LOGNAME` kept)
+
+| Build | C# server | Cmd+Shift+B | F5 |
+|---|---|---|---|
+| `c5bed26` (before BB-BUG-009) | 1 project failed to load | "dotnet: No such file or directory" | "debug I/O: No such file" |
+| `98f0fcd` (installed) | Ready | Build succeeded | paused (breakpoint) |
+
+Installed, same environment, scratch Greeter copy: completion after
+`name.` 38 items; F12 on `IsNullOrWhiteSpace` opens decompiled `String.cs`;
+Shift+F12 on `name` 3 references; Cmd+. 2 actions. The Problems panel lists
+only files under the opened folder (diagnostics of decompiled sources are
+not shown).
+
