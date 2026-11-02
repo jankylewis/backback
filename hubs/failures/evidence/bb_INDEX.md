@@ -21,3 +21,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-006 | FIXED | `docs/plan/readback/FIXES/S02/BBEOD13/FINDER_LAUNCH.png` |
 | BB-BUG-002 | FIXED | `docs/plan/readback/FIXES/S02/BBEOD14/bb_READBACK.md` |
 | BB-PRC-002 | FIXED | `docs/plan/readback/FIXES/S02/BBEOD13/PART2_STATE_LOG.txt` |
+| BB-PRF-002 | FIXED | `docs/plan/bench/BBEOD06/GOTO.md` |

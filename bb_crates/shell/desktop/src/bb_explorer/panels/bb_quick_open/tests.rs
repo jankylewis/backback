@@ -137,3 +137,29 @@ fn a_bad_regex_reports_and_lists_nothing(cx: &mut gpui::TestAppContext) {
                 .starts_with("Find in Files: bad regex"));
         });
 }
+
+/// BB-PRF-002: Go to File walked the root on the UI thread (204 ms on
+/// 50,000 files). The box opens at once; the list fills off the UI thread.
+#[gpui::test]
+fn go_to_file_opens_at_once_and_lists_files_off_the_ui_thread(cx: &mut gpui::TestAppContext) {
+    use crate::intel::glue::window_tests::bb_rig::{rig, Rig};
+    let (rig, vcx): (Rig, &mut gpui::VisualTestContext) = rig(cx, false);
+    rig.view.update_in(
+        vcx,
+        |v: &mut crate::ExplorerView,
+         w: &mut gpui::Window,
+         cx: &mut gpui::Context<crate::ExplorerView>| {
+            super::view::show(v, w, cx);
+            let quick: &QuickOpen = v.quick_open.as_ref().unwrap();
+            assert_eq!(quick.title(), "Go to File (listing files...)");
+            assert_eq!(quick.matches().len(), 0, "no walk on the UI thread");
+        },
+    );
+    vcx.run_until_parked();
+    rig.view
+        .read_with(vcx, |v: &crate::ExplorerView, _: &gpui::App| {
+            let quick: &QuickOpen = v.quick_open.as_ref().unwrap();
+            assert_eq!(quick.title(), "Go to File");
+            assert_eq!(quick.matches(), [Path::new("A.cs")]);
+        });
+}

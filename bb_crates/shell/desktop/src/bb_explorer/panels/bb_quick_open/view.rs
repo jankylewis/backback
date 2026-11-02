@@ -1,7 +1,10 @@
 //! The Go to File box: typed query, best matches, Enter opens, Esc closes.
 
+use std::path::PathBuf;
+
 use gpui::{
-    deferred, div, prelude::*, px, AnyElement, Context, InteractiveElement, KeyDownEvent, Window,
+    deferred, div, prelude::*, px, AnyElement, AsyncWindowContext, Context, InteractiveElement,
+    KeyDownEvent, WeakEntity, Window,
 };
 
 use super::bb_model::Chosen;
@@ -28,10 +31,34 @@ fn on_go_to_file(
     show(view, window, cx);
 }
 
+/// Opens the box at once; the root's files list on a background thread.
 pub(crate) fn show(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
-    view.quick_open = Some(QuickOpen::new(&view.root));
+    let root: PathBuf = view.root.clone();
+    view.quick_open = Some(QuickOpen::listing(&root));
     window.focus(&view.quick_focus, cx);
     cx.notify();
+    let walk: gpui::Task<Vec<PathBuf>> = cx
+        .background_executor()
+        .spawn(async move { QuickOpen::list_files(&root) });
+    cx.spawn_in(
+        window,
+        async move |view: WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext| {
+            let files: Vec<PathBuf> = walk.await;
+            let _closed: gpui::Result<()> = view.update(
+                cx,
+                |v: &mut ExplorerView, cx: &mut Context<ExplorerView>| {
+                    let root: PathBuf = v.root.clone();
+                    if let Some(quick) = v.quick_open.as_mut() {
+                        if quick.waits_for(&root) {
+                            quick.fill(files);
+                            cx.notify();
+                        }
+                    }
+                },
+            );
+        },
+    )
+    .detach();
 }
 
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
