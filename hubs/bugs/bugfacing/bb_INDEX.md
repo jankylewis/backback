@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 8 — FIXED 7, OPEN 1.
+Bugs a user met in the app. Entries: 9 — FIXED 8, OPEN 1.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -12,3 +12,4 @@ Bugs a user met in the app. Entries: 8 — FIXED 7, OPEN 1.
 | BB-BUG-006 | Opened from the Dock or Finder, the app shows the disk root | FIXED | no Finder-launch rule | yes | `S02/BB_BUG_006_APP_OPENS_THE_DISK_ROOT.md` |
 | BB-BUG-007 | Home and End (and Cmd+Left/Right) do nothing in the editor | FIXED | missing keys | yes | `S02/BB_BUG_007_HOME_AND_END_DO_NOTHING.md` |
 | BB-BUG-008 | F5 in the installed app finds no netcoredbg | FIXED | Dock launch has no PATH or override | yes | `S02/BB_BUG_008_F5_FROM_THE_DOCK_FINDS_NO_NETCOREDBG.md` |
+| BB-BUG-009 | An app opened from the Dock finds no `dotnet` | FIXED | launchd PATH | yes | `S03/BB_BUG_009_AN_APP_FROM_THE_DOCK_FINDS_NO_DOTNET.md` |
