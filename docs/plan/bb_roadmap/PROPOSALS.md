@@ -20,8 +20,12 @@ cap, newer search wins. One crate, `bb-search` (`ignore` + `regex`; the
 - Proof: `spctl -a -vv` accepts the app; a fresh download opens with no
   Gatekeeper warning.
 
-## P3 — Test Explorer hand check (BB-BUG-004)
+## P3 — Four hand checks in the installed app
 
-- What: one click by hand on Tests -> a project -> Run in the installed app.
-- Why: the agent seat cannot post clicks (BB-TG-007); the window test passes.
-  A hand click closes the bug or gives a real repro.
+- What, by hand, in the installed app on a C# solution:
+  1. Tests -> a project -> Run (BB-BUG-004);
+  2. hold Cmd over a method call: it underlines; Cmd+click goes there;
+  3. F9 on a line, F5, then click the second Call Stack row: its call site;
+  4. run a failing test, click a blue stack-trace line: its file and line.
+- Why: the agent seat cannot post clicks (BB-TG-007) and the screen was
+  locked overnight (BB-TG-010); window tests pass for all four.

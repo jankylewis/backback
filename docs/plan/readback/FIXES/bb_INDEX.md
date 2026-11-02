@@ -20,3 +20,4 @@ One folder per BBEOD after v1, each with its steps, captures and verdict.
 | `S04/BBEOD18` | Stack frames in test results open their own call site; `/_/` and missing files handled |
 | `S04/BB_BUG_008` | F5 in the app opened from the Dock: netcoredbg not found before, pauses after |
 | `S04/BB_BUG_009` | Launched with launchd's PATH: project load and Build fixed |
+| `S03/BLD001` | Re-install at `98f0fcd`, Dock environment: server, Build, F5, F10, Shift+F5 (`INSTALL_98F0FCD.md`) |

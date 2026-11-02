@@ -32,8 +32,12 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
   notarised, no v1.0 tag or GitHub release: proposal P2, needs a Developer ID.
 - CI installs pinned Roslyn and netcoredbg (BB-CIP-001). It skips the 9
   tests that need the private Apex CLI (BB-TG-004); the local gate runs them.
-- BB-BUG-004 (Test Explorer clicks): window test passes; the agent seat cannot
-  post real clicks (BB-TG-007). A hand check is proposal P3.
+- Mouse-only paths were proven by window tests, not by hand: the seat cannot
+  post clicks (BB-TG-007) and the screen was locked overnight (BB-TG-010):
+  Test Explorer Run (BB-BUG-004), Cmd+click, a Call Stack row, a stack-trace
+  link. A hand check of all four is proposal P3.
+- The installed app is read back with launchd's environment, as the Dock
+  starts it (BB-TG-012): `docs/plan/readback/FIXES/S03/BLD001/INSTALL_98F0FCD.md`.
 
 ## Next, in order
 
