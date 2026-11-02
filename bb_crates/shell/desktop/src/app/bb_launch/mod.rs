@@ -15,6 +15,8 @@ pub(crate) mod recent;
 pub(crate) use bb_window::on_view as window_actions;
 
 pub(crate) fn launch() {
+    // First, before any thread or child process (BB-BUG-009).
+    bb_process::shell_env::adopt_login_path();
     let wanted: Start = crate::args::parse_args();
     if let Err(error) = Explorer::open(&wanted.root) {
         eprintln!("{error}");
