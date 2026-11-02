@@ -50,3 +50,38 @@ fn document_edges_go_to_the_first_and_last_char() {
     assert_eq!(doc.cursor().raw(), 0);
     assert!(doc.selection().is_some(), "shift keeps a selection");
 }
+
+/// BB-BUG-010: `\r\n` is one line break. Right at a line end skipped only
+/// the `\r`, and the next key split the pair (the installed app wrote
+/// `class A\rx\n`). Left, Right, Backspace and Delete take the pair whole,
+/// and no cursor is ever placed between `\r` and `\n`.
+const CRLF: &str = "class A\r\n{\r\n}\r\n";
+
+#[test]
+fn right_and_left_step_over_a_crlf_pair_as_one_break() {
+    let mut doc: Document = at(CRLF, 7);
+    doc.right(false).unwrap();
+    assert_eq!(doc.cursor().raw(), 9, "the start of the next line");
+    doc.left(false).unwrap();
+    assert_eq!(doc.cursor().raw(), 7, "back before the pair");
+}
+
+#[test]
+fn backspace_and_delete_remove_the_whole_pair() {
+    let mut doc: Document = at(CRLF, 9);
+    doc.backspace().unwrap();
+    assert_eq!(doc.text(), "class A{\r\n}\r\n");
+    let mut doc: Document = at(CRLF, 7);
+    doc.delete().unwrap();
+    assert_eq!(doc.text(), "class A{\r\n}\r\n");
+}
+
+#[test]
+fn a_cursor_is_never_placed_between_cr_and_lf() {
+    let mut doc: Document = at(CRLF, 8);
+    assert_eq!(doc.cursor().raw(), 7, "set_cursor moves before the pair");
+    doc.move_to(CharIdx::new(8), false).unwrap();
+    assert_eq!(doc.cursor().raw(), 7, "move_to too");
+    doc.insert("x").unwrap();
+    assert_eq!(doc.text(), "class Ax\r\n{\r\n}\r\n", "the pair stays whole");
+}

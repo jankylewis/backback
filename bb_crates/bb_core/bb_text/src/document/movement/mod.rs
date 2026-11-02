@@ -13,7 +13,11 @@ impl Document {
     /// # Errors
     /// Returns a checked selection error.
     pub fn left(&mut self, extend: bool) -> Result<(), DocumentError> {
-        self.move_to(CharIdx::new(self.cursor.raw().saturating_sub(1)), extend)
+        let mut target: usize = self.cursor.raw().saturating_sub(1);
+        if self.mid_crlf(target) {
+            target = target.saturating_sub(1);
+        }
+        self.move_to(CharIdx::new(target), extend)
     }
 
     /// Move one char right, optionally extending the selection.
@@ -21,10 +25,29 @@ impl Document {
     /// # Errors
     /// Returns a checked selection error.
     pub fn right(&mut self, extend: bool) -> Result<(), DocumentError> {
-        self.move_to(
-            CharIdx::new(self.cursor.raw().saturating_add(1).min(self.len_chars())),
-            extend,
-        )
+        let mut target: usize = self.cursor.raw().saturating_add(1).min(self.len_chars());
+        if self.mid_crlf(target) {
+            target = target.saturating_add(1).min(self.len_chars());
+        }
+        self.move_to(CharIdx::new(target), extend)
+    }
+
+    /// `at`, or the char before it when `at` would split a `\r\n`.
+    pub(crate) fn off_crlf(&self, at: CharIdx) -> CharIdx {
+        if self.mid_crlf(at.raw()) {
+            CharIdx::new(at.raw().saturating_sub(1))
+        } else {
+            at
+        }
+    }
+
+    /// True when `at` sits between the `\r` and `\n` of one line break
+    /// (BB-BUG-010): no cursor may stand there.
+    pub(crate) fn mid_crlf(&self, at: usize) -> bool {
+        let rope: &ropey::Rope = self.rope();
+        at.checked_sub(1)
+            .is_some_and(|before: usize| rope.get_char(before) == Some('\r'))
+            && rope.get_char(at) == Some('\n')
     }
 
     /// Move one line while keeping the char column when it exists.
@@ -106,6 +129,7 @@ impl Document {
     /// Returns a checked selection error.
     pub fn move_to(&mut self, target: CharIdx, extend: bool) -> Result<(), DocumentError> {
         self.check(target)?;
+        let target: CharIdx = self.off_crlf(target);
         if extend && self.anchor.is_none() {
             self.anchor = Some(self.cursor);
         } else if !extend {
