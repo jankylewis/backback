@@ -48,13 +48,14 @@ async fn server_log_lines_after_the_load_reach_the_log() {
     h.finish().await;
     let text: String = log.text();
     let after: Vec<&str> = text.lines().skip(at_load).collect();
+    // BB-LSP-005: assert what the server writes because of our own request
+    // (its reply to shutdown). Lines tagged `[textDocument/diagnostic]` are
+    // lazy start-up side effects (BuildHost, file-based programs) that a
+    // warm runner never writes.
     assert!(
-        after
-            .iter()
-            .any(|l: &&str| l.contains("[textDocument/diagnostic]")),
-        "no server line of the pull after the load:\n{text}"
+        after.contains(&"[info] Shutting down"),
+        "no server line after the load:\n{text}"
     );
-    assert!(after.contains(&"[info] Shutting down"), "{text}");
 }
 
 #[tokio::test]

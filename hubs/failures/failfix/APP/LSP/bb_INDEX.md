@@ -7,3 +7,4 @@ Index of this folder; the hub-level `bb_INDEX.md` has the full table.
 | `BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` | BB-LSP-001 — fix |
 | `BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` | BB-LSP-002 — fix |
 | `BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` | BB-LSP-004 — fix |
+| `BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` | BB-LSP-005 — fix |

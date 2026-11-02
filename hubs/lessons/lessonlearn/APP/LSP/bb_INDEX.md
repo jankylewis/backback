@@ -5,3 +5,4 @@ Index of this folder; the hub-level `bb_INDEX.md` has the full table.
 | Entry | What |
 |---|---|
 | `BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` | BB-LSP-001 — lesson |
+| `BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` | BB-LSP-005 — lesson |
