@@ -13,7 +13,7 @@ pub(crate) struct TestGutter {
 /// toggles it) and, when the line has a diagnostic, a dot in its ink.
 pub(super) fn gutter_cell(
     index: usize,
-    (gutter, breakpoint): (Option<Ink>, bool),
+    (gutter, breakpoint, stopped): (Option<Ink>, bool, bool),
     test: Option<TestGutter>,
     theme: Theme,
     cx: &mut Context<ExplorerView>,
@@ -25,13 +25,7 @@ pub(super) fn gutter_cell(
         .flex()
         .text_color(color(theme.text_dim))
         .child(number(index, breakpoint, theme, cx))
-        .child(
-            div()
-                .w(px(10.0))
-                .when_some(gutter, |dot: gpui::Div, s: Ink| {
-                    dot.text_color(color(severity_ink(s, theme))).child("●")
-                }),
-        )
+        .child(mark(index, gutter, stopped, theme))
         .when_some(test, |cell: gpui::Div, test: TestGutter| {
             cell.child(
                 div()
@@ -100,4 +94,19 @@ fn number(
                 },
             ),
         )
+}
+
+/// The slot after the number: the paused line's arrow, else a diagnostic
+/// dot in its ink.
+fn mark(index: usize, gutter: Option<Ink>, stopped: bool, theme: Theme) -> gpui::Div {
+    let slot: gpui::Div = div().w(px(10.0));
+    if stopped {
+        return slot
+            .text_color(color(theme.warn))
+            .debug_selector(move || format!("stopped-line-{index}"))
+            .child("➜");
+    }
+    slot.when_some(gutter, |dot: gpui::Div, s: Ink| {
+        dot.text_color(color(severity_ink(s, theme))).child("●")
+    })
 }

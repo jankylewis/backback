@@ -41,6 +41,16 @@ impl Breakpoints {
             .unwrap_or_default()
     }
 
+    /// Every file with breakpoints and its lines, for a new session.
+    pub(crate) fn all(&self) -> Vec<(PathBuf, Vec<usize>)> {
+        self.by_file
+            .iter()
+            .map(|(path, lines): (&PathBuf, &BTreeSet<usize>)| {
+                (path.clone(), lines.iter().copied().collect())
+            })
+            .collect()
+    }
+
     /// An edit at `anchor` added (`delta` > 0) or removed lines. Lines after
     /// the anchor move with their code; a removed line's breakpoint moves to
     /// the anchor.

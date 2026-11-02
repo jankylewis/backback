@@ -12,9 +12,12 @@ use crate::intel::glue::jump;
 use crate::intel::model::popups::RenamePreview;
 use crate::{color, ExplorerView};
 
-/// The panel to show, if any: a rename preview first, then references,
-/// then Problems.
+/// The panel to show, if any: the Debug panel while a session lives, then a
+/// rename preview, references, Problems.
 pub(crate) fn bottom(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
+    if let Some(debug) = crate::run::bb_debug::view::panel(view, cx) {
+        return Some(debug);
+    }
     let theme: Theme = view.theme;
     let (title, rows): (String, Vec<AnyElement>) = if let Some(plan) = &view.intel.rename_preview {
         rename_rows(plan, &view.root, theme)

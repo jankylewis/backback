@@ -200,7 +200,12 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("cmd-q", Quit, None),
         KeyBinding::new("cmd-shift-r", RestartServer, None),
         KeyBinding::new("cmd-shift-b", crate::run::build::BuildSolution, None),
-        KeyBinding::new("f9", crate::run::bb_debug::ToggleBreakpoint, Some("Editor")),
+        KeyBinding::new("f9", crate::run::bb_debug::ToggleBreakpoint, None),
+        KeyBinding::new("f5", crate::run::bb_debug::StartOrContinue, None),
+        KeyBinding::new("shift-f5", crate::run::bb_debug::StopDebugging, None),
+        KeyBinding::new("f10", crate::run::bb_debug::StepOver, None),
+        KeyBinding::new("f11", crate::run::bb_debug::StepInto, None),
+        KeyBinding::new("shift-f11", crate::run::bb_debug::StepOut, None),
         KeyBinding::new("ctrl-`", crate::terminal::ToggleTerminal, None),
     ]);
     cx.bind_keys(bb_window::bindings());

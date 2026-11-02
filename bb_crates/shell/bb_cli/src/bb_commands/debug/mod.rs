@@ -11,7 +11,6 @@ use bb_dap::{
 };
 use bb_exit::launched_exit_line;
 use serde_json::Value;
-use tokio::process::Command;
 
 const DEADLINE: Duration = Duration::from_secs(30);
 
@@ -36,6 +35,17 @@ pub enum DebugError {
     /// Target did not stop at a breakpoint.
     #[error("debug session ended before the breakpoint")]
     NoStop,
+}
+
+impl From<bb_dap::target::TargetError> for DebugError {
+    fn from(error: bb_dap::target::TargetError) -> Self {
+        match error {
+            bb_dap::target::TargetError::Kind => Self::Target,
+            bb_dap::target::TargetError::Io(io) => Self::Io(io),
+            bb_dap::target::TargetError::Build(text) => Self::Build(text),
+            bb_dap::target::TargetError::Timeout => Self::Timeout,
+        }
+    }
 }
 
 /// Debug one target, print the first stop and its locals, then resume.
@@ -105,7 +115,7 @@ async fn start(
     source: &Path,
     line: u32,
 ) -> Result<(DapSession, tokio::sync::mpsc::Receiver<Event>, ExitSource), DebugError> {
-    let program: PathBuf = resolve_target(target).await?;
+    let program: PathBuf = bb_dap::target::resolve(target, DEADLINE).await?;
     let source: PathBuf = source.canonicalize()?;
     let cwd: &Path = program.parent().ok_or(DebugError::Target)?;
     let mut session: DapSession = DapSession::spawn(DEADLINE)?;
@@ -170,50 +180,4 @@ async fn print_stack_and_locals(session: &DapSession, thread_id: i64) -> Result<
         }
     }
     Ok(())
-}
-
-async fn resolve_target(target: &Path) -> Result<PathBuf, DebugError> {
-    match target
-        .extension()
-        .and_then(|ext: &std::ffi::OsStr| ext.to_str())
-    {
-        Some("dll") => Ok(target.canonicalize()?),
-        Some("csproj") => {
-            let project: PathBuf = target.canonicalize()?;
-            let output: std::process::Output = timed_command(
-                Command::new("dotnet")
-                    .arg("build")
-                    .arg(&project)
-                    .arg("-v:q"),
-            )
-            .await?;
-            if !output.status.success() {
-                return Err(DebugError::Build(
-                    String::from_utf8_lossy(&output.stderr).into_owned(),
-                ));
-            }
-            let output: std::process::Output = timed_command(
-                Command::new("dotnet")
-                    .arg("msbuild")
-                    .arg(&project)
-                    .arg("-getProperty:TargetPath"),
-            )
-            .await?;
-            if !output.status.success() {
-                return Err(DebugError::Build(
-                    String::from_utf8_lossy(&output.stderr).into_owned(),
-                ));
-            }
-            let path: PathBuf = PathBuf::from(String::from_utf8_lossy(&output.stdout).trim());
-            Ok(path.canonicalize()?)
-        }
-        _ => Err(DebugError::Target),
-    }
-}
-
-async fn timed_command(command: &mut Command) -> Result<std::process::Output, DebugError> {
-    tokio::time::timeout(DEADLINE, command.kill_on_drop(true).output())
-        .await
-        .map_err(|_: _| DebugError::Timeout)?
-        .map_err(DebugError::Io)
 }
