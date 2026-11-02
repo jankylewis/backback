@@ -29,3 +29,19 @@ cap, newer search wins. One crate, `bb-search` (`ignore` + `regex`; the
   4. run a failing test, click a blue stack-trace line: its file and line.
 - Why: the agent seat cannot post clicks (BB-TG-007) and the screen was
   locked overnight (BB-TG-010); window tests pass for all four.
+
+## P4 — Build a never-built test project before listing its tests
+
+- Today: on a fresh clone, expanding a test project in the Test Explorer
+  says "not built: ...dll (build the project first)" (readback 2026-11-03,
+  `_Harness` copy). VS Code and Rider build before discovery.
+- Offer: when the project has no build output, build it once on expand,
+  then list; never in `--no-write` mode (it writes `bin/` and `obj/`).
+
+## P5 — Search tracked dot-folders
+
+- Today: Find in Files and Go to File skip every hidden folder; MbTx has a
+  match in a tracked `.claudoholic/` file that the search does not list.
+  VS Code and Rider search folders such as `.github` and `.config`.
+- Offer: search tracked dot-folders; still skip `.git`, `.vs`, `.idea`.
+

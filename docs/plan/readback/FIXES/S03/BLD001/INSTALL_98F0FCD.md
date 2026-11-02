@@ -28,3 +28,29 @@ BB-CIP-003 yanked crate (#35).
 
 Mouse-only checks (screen locked, BB-TG-010): see proposal P3 in
 `docs/plan/bb_roadmap/PROPOSALS.md`.
+
+## Real solutions, read-only (`--no-write`), launchd environment
+
+Direct exec of the installed binary with `env -i` (BB-TG-010 addendum).
+Apex: Find in Files `ToolOutcome` 141 results (= `git grep`) in 1,236 files,
+207 ms while the C# server loads 27 projects; UI work p99 6.3 ms. Go to
+Symbol in `PageTools.cs`: `close` -> line 59 `CloseAsync`, `activ` -> line 43
+`Activate`. MbTx: Find `SearchKey` 326 results in 3,588 files, 295 ms;
+`git grep` 327, the one line is in a tracked hidden folder, skipped by design
+(proposal P5); Go to File `readme` + Enter opens `README.md`. Both trees'
+`git status` unchanged. A scratch Greeter copy: type, Cmd+S, delete, Cmd+S:
+the file equals the original byte for byte.
+
+## A/B with the faithful Dock environment (`TMPDIR`, `LOGNAME` kept)
+
+| Build | C# server | Cmd+Shift+B | F5 |
+|---|---|---|---|
+| `c5bed26` (before BB-BUG-009) | 1 project failed to load | "dotnet: No such file or directory" | "debug I/O: No such file" |
+| `98f0fcd` (installed) | Ready | Build succeeded | paused (breakpoint) |
+
+Installed, same environment, scratch Greeter copy: completion after
+`name.` 38 items; F12 on `IsNullOrWhiteSpace` opens decompiled `String.cs`;
+Shift+F12 on `name` 3 references; Cmd+. 2 actions. The Problems panel lists
+only files under the opened folder (diagnostics of decompiled sources are
+not shown).
+

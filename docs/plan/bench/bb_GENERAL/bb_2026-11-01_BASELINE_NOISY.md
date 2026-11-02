@@ -73,3 +73,13 @@ value before and after. About 80 ms of cold-start is `dotnet --version`
   in place of one `stat` per entry.
 - Gate after the revert: fmt OK, clippy `-D warnings` OK, 83 tests passed
   0 failed, deny OK, `bb audit ..` clean.
+
+## Re-run 2026-11-03 04:35 at `98f0fcd` (load 4.94, NOISY)
+
+Same command, 1 warm-up + 7 runs. cold-start 92223 -> 89420 us (-3%);
+outline-50k 7382 -> 7379 (0%); scan-solution 1215 -> 1205 (-1%).
+outline-largest and scan-harness are not comparable: the fixture changed
+(OutcomeSpec 554 B, 6 items; Harness 3 projects). audit-repo 10983 -> 72143
+us: the repo grew from 88 to 606 files (.rs 5,882 -> 35,812 lines); per file
+125 -> 119 us, so linear, no regression. binary-size 6,518,784 -> 8,504,816
+bytes (+30%), the features added since.

@@ -41,7 +41,7 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 
 ## Next, in order
 
-1. Headmate rulings on `PROPOSALS.md` (P2 release, P3 hand check).
+1. Headmate rulings on `PROPOSALS.md` (P2 release, P3 hand checks, P4 build before test discovery, P5 dot-folders in search).
 2. Build what is approved, with red-first tests and a real-app readback.
 3. Until then: readback and perf loops on the installed app; fix what they find.
 
