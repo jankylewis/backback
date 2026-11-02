@@ -450,6 +450,7 @@ name = "backback"
 version = "0.0.1"
 dependencies = [
  "alacritty_terminal",
+ "bb-dap",
  "bb-dotnet",
  "bb-explorer",
  "bb-intel",
@@ -464,6 +465,7 @@ dependencies = [
  "gpui_platform",
  "proptest",
  "roxmltree 0.20.0",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.21",
  "tokio",

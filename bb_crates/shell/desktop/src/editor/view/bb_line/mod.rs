@@ -21,11 +21,29 @@ pub(super) struct LineRow {
     pub(super) gutter: Option<Ink>,
     /// A breakpoint on this line (BBEOD17).
     pub(super) breakpoint: bool,
+    /// The debugger is paused on this line.
+    pub(super) stopped: bool,
     pub(super) test: Option<TestGutter>,
     /// A popup anchored below the cursor.
     pub(super) overlay: Option<gpui::AnyElement>,
     /// On the cursor line: the caret's x from the text's left edge.
     pub(super) caret: Option<f32>,
+}
+
+impl LineRow {
+    /// A row with no tab behind it (nothing loaded yet).
+    pub(super) fn blank(index: usize) -> LineRow {
+        LineRow {
+            index,
+            current: false,
+            gutter: None,
+            breakpoint: false,
+            stopped: false,
+            test: None,
+            overlay: None,
+            caret: None,
+        }
+    }
 }
 
 fn severity_ink(ink: Ink, theme: Theme) -> bb_ui::Rgb {
@@ -47,13 +65,20 @@ pub(super) fn line_row(
         current,
         gutter,
         breakpoint,
+        stopped,
         test,
         overlay,
         caret,
     }: LineRow = row;
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
-    row_frame(index, current, (theme, fonts.line_height()), cx)
-        .child(gutter_cell(index, (gutter, breakpoint), test, theme, cx))
+    row_frame(index, (current, stopped), (theme, fonts.line_height()), cx)
+        .child(gutter_cell(
+            index,
+            (gutter, breakpoint, stopped),
+            test,
+            theme,
+            cx,
+        ))
         .child(line_text(index, runs, (theme, &fonts)))
         .when_some(caret, |el: gpui::Stateful<gpui::Div>, x: f32| {
             el.child(caret_quad(x, theme, &fonts))
@@ -64,7 +89,7 @@ pub(super) fn line_row(
 /// The row box: height, font, line background and the mouse handlers.
 fn row_frame(
     index: usize,
-    current: bool,
+    (current, stopped): (bool, bool),
     (theme, height): (Theme, f32),
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Stateful<gpui::Div> {
@@ -77,6 +102,12 @@ fn row_frame(
         .items_center()
         .text_color(color(theme.text))
         .bg(color(if current { theme.surface } else { theme.bg }))
+        .when(stopped, |row: gpui::Stateful<gpui::Div>| {
+            row.bg(gpui::Rgba {
+                a: 0.28,
+                ..color(theme.warn)
+            })
+        })
         .on_mouse_down(
             gpui::MouseButton::Left,
             cx.listener(

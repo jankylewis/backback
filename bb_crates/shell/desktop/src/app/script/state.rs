@@ -47,7 +47,7 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
         eprintln!("bb_tests_state projects={} discovered={discovered} loading={loading}",
             v.tests.model.projects().len());
         if let Some(tab) = tab {
-            eprintln!("bb_debug_state breakpoints={:?}", v.debug.breakpoints.lines(&tab.path));
+            eprintln!("bb_debug_state breakpoints={:?} {}", v.debug.breakpoints.lines(&tab.path), crate::run::bb_debug::view::notes::describe(v));
         }
     });
 }

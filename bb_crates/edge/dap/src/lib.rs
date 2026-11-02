@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 mod bb_session;
 mod exit;
+pub mod target;
 mod types;
 pub use bb_session::{DapSession, GotoTarget, Step};
 pub use exit::{exit_truth, launch_exit_truth, AdapterExit, Debuggee, ExitSource, ExitTruth};

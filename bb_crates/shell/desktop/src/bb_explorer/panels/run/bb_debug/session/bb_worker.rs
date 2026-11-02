@@ -1,0 +1,246 @@
+//! The debug session runs on its own thread, as the C# server does: it
+//! builds the target, starts netcoredbg, sends the breakpoints and reports
+//! each stop with its call stack and the top frame's variables. The UI holds
+//! only the channel ends, so no handler ever waits on the debugger.
+
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
+
+use bb_dap::{DapSession, Event, SourceBreakpoint, Step};
+use serde_json::Value;
+use tokio::sync::mpsc::{unbounded_channel, Receiver, UnboundedReceiver, UnboundedSender};
+
+/// Each adapter request's deadline.
+const DEADLINE: Duration = Duration::from_secs(30);
+/// Each `dotnet` call of the build.
+const BUILD: Duration = Duration::from_secs(180);
+
+/// UI to session.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Command {
+    /// F5 while stopped.
+    Continue,
+    /// F10, F11, Shift+F11.
+    Step(StepKind),
+    /// Shift+F5: end the program and the session.
+    Stop,
+    /// A call-stack row was picked: its variables.
+    Frame(i64),
+    /// A file's breakpoints changed (0-based lines).
+    Breakpoints(PathBuf, Vec<usize>),
+}
+
+/// A step command.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum StepKind {
+    /// F10.
+    Over,
+    /// F11.
+    Into,
+    /// Shift+F11.
+    Out,
+}
+
+/// One frame of a stop. `path` is `None` for code with no source (the
+/// framework); such frames are listed but cannot be opened.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Frame {
+    pub(crate) id: i64,
+    pub(crate) name: String,
+    pub(crate) path: Option<PathBuf>,
+    /// 0-based.
+    pub(crate) line: usize,
+}
+
+/// One variable: name and value as the adapter shows them.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Var {
+    pub(crate) name: String,
+    pub(crate) value: String,
+}
+
+/// Session to UI.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Note {
+    /// Building the target.
+    Building,
+    /// The program runs.
+    Running,
+    /// Stopped: frames top first, and the top frame's variables.
+    Stopped {
+        reason: String,
+        frames: Vec<Frame>,
+        vars: Vec<Var>,
+    },
+    /// The variables of a picked frame.
+    Variables { frame: i64, vars: Vec<Var> },
+    /// Program or debugger output.
+    Output(String),
+    /// The session ended (program exit or Stop).
+    Ended(String),
+    /// The session could not start or broke.
+    Failed(String),
+}
+
+/// What to debug: a `.csproj` (built first) or a `.dll`, and every file's
+/// breakpoints (0-based lines).
+pub(crate) struct Start {
+    pub(crate) target: PathBuf,
+    pub(crate) breakpoints: Vec<(PathBuf, Vec<usize>)>,
+}
+
+/// Start the session thread.
+pub(crate) fn start(start: Start) -> (UnboundedSender<Command>, UnboundedReceiver<Note>) {
+    let (command_tx, commands): (UnboundedSender<Command>, UnboundedReceiver<Command>) =
+        unbounded_channel();
+    let (notes, note_rx): (UnboundedSender<Note>, UnboundedReceiver<Note>) = unbounded_channel();
+    let spawned: std::io::Result<std::thread::JoinHandle<()>> = std::thread::Builder::new()
+        .name(String::from("bb-debug"))
+        .spawn(move || {
+            match tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+            {
+                Ok(runtime) => runtime.block_on(serve(&start, commands, &notes)),
+                Err(error) => send(&notes, Note::Failed(format!("debug runtime: {error}"))),
+            }
+        });
+    if let Err(error) = spawned {
+        let (failed, failed_rx): (UnboundedSender<Note>, UnboundedReceiver<Note>) =
+            unbounded_channel();
+        send(&failed, Note::Failed(format!("debug thread: {error}")));
+        return (command_tx, failed_rx);
+    }
+    (command_tx, note_rx)
+}
+
+/// Nobody listening means the window closed; nothing to do then.
+pub(super) fn send(notes: &UnboundedSender<Note>, note: Note) {
+    let _closed: Result<(), tokio::sync::mpsc::error::SendError<Note>> = notes.send(note);
+}
+
+async fn serve(start: &Start, commands: UnboundedReceiver<Command>, notes: &UnboundedSender<Note>) {
+    send(notes, Note::Building);
+    match open(start).await {
+        Ok((session, events)) => {
+            send(notes, Note::Running);
+            run(&session, events, commands, notes).await;
+        }
+        Err(reason) => send(notes, Note::Failed(reason)),
+    }
+}
+
+async fn open(start: &Start) -> Result<(DapSession, Receiver<Event>), String> {
+    let program: PathBuf = bb_dap::target::resolve(&start.target, BUILD)
+        .await
+        .map_err(|error: bb_dap::target::TargetError| error.to_string())?;
+    let cwd: &Path = program.parent().ok_or("the program has no folder")?;
+    let mut session: DapSession =
+        DapSession::spawn(DEADLINE).map_err(|error: bb_dap::DapError| text(&error))?;
+    let events: Receiver<Event> = session.take_events().ok_or("no adapter events")?;
+    session
+        .initialize()
+        .await
+        .map_err(|error: bb_dap::DapError| text(&error))?;
+    session
+        .launch(&program, &[], cwd, &BTreeMap::new(), true)
+        .await
+        .map_err(|error: bb_dap::DapError| text(&error))?;
+    for (path, lines) in &start.breakpoints {
+        set_breakpoints(&session, path, lines)
+            .await
+            .map_err(|error: bb_dap::DapError| text(&error))?;
+    }
+    session
+        .configuration_done()
+        .await
+        .map_err(|error: bb_dap::DapError| text(&error))?;
+    Ok((session, events))
+}
+
+fn text(error: &bb_dap::DapError) -> String {
+    error.to_string()
+}
+
+async fn set_breakpoints(
+    session: &DapSession,
+    path: &Path,
+    lines: &[usize],
+) -> Result<Value, bb_dap::DapError> {
+    let points: Vec<SourceBreakpoint> = lines
+        .iter()
+        .map(|line: &usize| SourceBreakpoint {
+            line: u32::try_from(line.saturating_add(1)).unwrap_or(u32::MAX),
+            condition: None,
+        })
+        .collect();
+    session.set_breakpoints(path, &points).await
+}
+
+async fn run(
+    session: &DapSession,
+    mut events: Receiver<Event>,
+    mut commands: UnboundedReceiver<Command>,
+    notes: &UnboundedSender<Note>,
+) {
+    let mut thread: Option<i64> = None;
+    loop {
+        let going: bool = tokio::select! {
+            event = events.recv() => {
+                if let Some(event) = event {
+                    super::stops::on_event(session, event, &mut thread, notes).await
+                } else {
+                    send(notes, Note::Ended(String::from("the debugger closed")));
+                    false
+                }
+            }
+            command = commands.recv() => match command {
+                Some(command) => on_command(session, command, thread, notes).await,
+                None => false,
+            },
+        };
+        if !going {
+            let _gone: Result<(), bb_dap::DapError> = session.disconnect(true).await;
+            return;
+        }
+    }
+}
+
+async fn on_command(
+    session: &DapSession,
+    command: Command,
+    thread: Option<i64>,
+    notes: &UnboundedSender<Note>,
+) -> bool {
+    let resumes: bool = thread.is_some() && matches!(command, Command::Continue | Command::Step(_));
+    let done: Result<(), bb_dap::DapError> = match (command, thread) {
+        (Command::Stop, _) => {
+            send(notes, Note::Ended(String::from("stopped")));
+            return false;
+        }
+        (Command::Breakpoints(path, lines), _) => set_breakpoints(session, &path, &lines)
+            .await
+            .map(|_: Value| ()),
+        (Command::Frame(frame), _) => super::stops::frame_vars(session, frame)
+            .await
+            .map(|vars: Vec<Var>| send(notes, Note::Variables { frame, vars })),
+        (Command::Continue, Some(id)) => session.continue_thread(id).await,
+        (Command::Step(kind), Some(id)) => session.step(step(kind), id).await,
+        (Command::Continue | Command::Step(_), None) => Ok(()),
+    };
+    match (done, resumes) {
+        (Ok(()), true) => send(notes, Note::Running),
+        (Ok(()), false) => {}
+        (Err(error), _) => send(notes, Note::Output(format!("debugger: {error}\n"))),
+    }
+    true
+}
+
+fn step(kind: StepKind) -> Step {
+    match kind {
+        StepKind::Over => Step::Next,
+        StepKind::Into => Step::In,
+        StepKind::Out => Step::Out,
+    }
+}

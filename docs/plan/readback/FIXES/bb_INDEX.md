@@ -16,4 +16,4 @@ One folder per BBEOD after v1, each with its steps, captures and verdict.
 | `S03/BBEOD06` | Find in Files on Apex: counts equal `git grep`, 74 ms, newer search wins |
 | `S03/BBEOD15` | Cmd + hover link on Greeter: confirmed link, Cmd+click to the definition; string-literal bug found |
 | `S04/BBEOD16` | File type icons: 13 types, rendered sheet in the dark theme |
-| `S03/BBEOD17` | Breakpoints: F9, they follow their code through Enter, undo and line joins |
+| `S03/BBEOD17` | Breakpoints follow their code; F5 pauses with stack and variables on the real netcoredbg; F10, F5, Shift+F5 |

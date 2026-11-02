@@ -9,6 +9,8 @@ description = "macOS desktop window and Explorer for backback"
 [dependencies]
 bb-explorer.workspace = true
 bb-search.workspace = true
+bb-dap.workspace = true
+serde_json.workspace = true
 bb-text.workspace = true
 bb-syntax.workspace = true
 bb-intel.workspace = true
