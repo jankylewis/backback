@@ -14,3 +14,4 @@
 | BB-TG-010 | A locked screen paints no frames; script mouse steps miss | OBSERVED | none | Check `CGSSessionScreenIsLocked`; window tests for mouse; rerun unlocked | `S03/BB_TG_010_A_LOCKED_SCREEN_PAINTS_NO_FRAMES.md` |
 | BB-TG-011 | A rebase can push a folder over its five-entry cap | OBSERVED | none | Audit (or `gate.sh`) after every rebase, before the push | `S03/BB_TG_011_A_REBASE_CAN_PUSH_A_FOLDER_OVER_ITS_CAP.md` |
 | BB-TG-012 | `open` from a terminal passes the shell environment; not a Dock launch | OBSERVED | BB-BUG-009 | `env -i` with launchd PATH for user-like launches | `S03/BB_TG_012_OPEN_FROM_A_TERMINAL_IS_NOT_A_DOCK_LAUNCH.md` |
+| BB-TG-013 | `bb_bundle.sh` without `cargo` on PATH ended in a JSON trace | FIXED | none | `bb_bundle.sh` adds `$HOME/.cargo/bin`, else refuses (exit 2) | `S04/BB_TG_013_THE_BUNDLE_SCRIPT_MISSED_CARGO_OFF_PATH.md` |
