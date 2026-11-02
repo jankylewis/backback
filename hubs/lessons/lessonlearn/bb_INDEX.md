@@ -14,3 +14,4 @@
 | BB-PRC-002 | FIXED | Spawn tools on a normal-QoS thread | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
 | BB-LSP-005 | FIXED | Assert only what the server writes because of our request | `APP/LSP/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | FIXED | A yank lives in the index; ask crates.io when CI and local deny disagree | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
+| BB-GAT-001 | FIXED | Assert the library's contract, not a stronger one | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |

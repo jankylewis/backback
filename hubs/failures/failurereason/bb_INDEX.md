@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 18 — FIXED 16, OBSERVED 1, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 19 — FIXED 17, OBSERVED 1, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -22,3 +22,4 @@ One file per failure mechanism. This hub owns the id. Entries: 18 — FIXED 16, 
 | BB-PRC-003 | `SN` Roslyn came from a niced readback launch, not the app | OBSERVED | no | no | BB-TG-006 | `SYS/PRC/BB_PRC_003_TOOLS_SPAWNED_FROM_BACKGROUND_THREADS.md` |
 | BB-LSP-005 | A test asserted a Roslyn log line that only a side effect writes | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | A yanked transitive crate fails `cargo deny` on CI | FIXED | yes | yes | none | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
+| BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
