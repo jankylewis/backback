@@ -26,3 +26,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-CIP-003 | FIXED | CI run 41510600740 (red, PR #33) |
 | BB-GAT-001 | FIXED | CI run 41532817663 (red, PR #39) |
 | BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/S03/BB_BUG_010_*.md` |
+| BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/S03/BB_BUG_011_*.md` |

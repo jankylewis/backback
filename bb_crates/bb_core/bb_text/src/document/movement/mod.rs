@@ -159,3 +159,5 @@ impl Document {
 
 #[cfg(test)]
 mod bb_tests;
+
+mod words;

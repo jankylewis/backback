@@ -13,6 +13,7 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-008 | `Debug failed: netcoredbg not found` | FIXED | Opened from the Dock? `PATH` is minimal; check `~/.local/share/backback/netcoredbg` |
 | BB-BUG-009 | `1 project failed to load` only from the Dock | FIXED | Launched outside a terminal? `ps eww` the PATH |
 | BB-BUG-010 | `a lone \r in a saved CRLF file` | FIXED | Did a cursor stop between `\r` and `\n`? |
+| BB-BUG-011 | `Option+Backspace deletes a single char` | FIXED | Does the key map read `modifiers.alt`? |
 | BB-BUG-006 | `EXPLORER / No solution` | FIXED | Finder launch has no argv; File > Open exists |
 | BB-BLD-001 | `app built before the fix is still running` | FIXED | `ps -o lstart` and binary mtime vs merge time |
 | BB-BLD-002 | `.app opens no window` | FIXED | `CFBundleExecutable` is the GUI binary; run `verify_bundle.sh` |
