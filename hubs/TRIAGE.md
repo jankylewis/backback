@@ -10,6 +10,7 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-004 | `Test Explorer click no response` | OPEN | Reproduce by hand before blaming the input driver |
 | BB-BUG-005 | `text after the cursor shifts right` | FIXED | Cursor is an overlay, never a char in the text runs (BB-UIX-001) |
 | BB-BUG-007 | `end key does not move the cursor` | FIXED | Editor keys: only left/right handled in `input.rs` |
+| BB-BUG-008 | `Debug failed: netcoredbg not found` | FIXED | Opened from the Dock? `PATH` is minimal; check `~/.local/share/backback/netcoredbg` |
 | BB-BUG-006 | `EXPLORER / No solution` | FIXED | Finder launch has no argv; File > Open exists |
 | BB-BLD-001 | `app built before the fix is still running` | FIXED | `ps -o lstart` and binary mtime vs merge time |
 | BB-BLD-002 | `.app opens no window` | FIXED | `CFBundleExecutable` is the GUI binary; run `verify_bundle.sh` |
