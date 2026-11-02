@@ -5,6 +5,13 @@ repo_dir="$(cd "$(dirname "$0")/../../.." && pwd)"
 build_dir="${1:-$repo_dir/.target/bundle}"
 app_dir="$build_dir/backback.app"
 asset_dir="$repo_dir/docs/release/bb_assets/bb_mascot"
+# Like gate.sh: a shell without rustup's folder on PATH still finds cargo
+# (BB-TG-013); without cargo, stop with a clear line, not a JSON trace.
+export PATH="$HOME/.cargo/bin:$PATH"
+if ! command -v cargo >/dev/null; then
+  echo "refused: cargo not found on PATH or in \$HOME/.cargo/bin" >&2
+  exit 2
+fi
 version="$(cd "$repo_dir/bb_crates" && cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; data=json.load(sys.stdin); print(next(p["version"] for p in data["packages"] if p["name"] == "bb"))')"
 commit="$(git -C "$repo_dir" rev-parse --short HEAD)"
 
