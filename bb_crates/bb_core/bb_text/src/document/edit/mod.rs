@@ -66,10 +66,11 @@ impl Document {
         if let Some((start, end)) = self.selection() {
             self.delete_range(start, end)
         } else if self.cursor.raw() > 0 {
-            self.delete_range(
-                CharIdx::new(self.cursor.raw().saturating_sub(1)),
-                self.cursor,
-            )
+            let mut start: usize = self.cursor.raw().saturating_sub(1);
+            if self.mid_crlf(start) {
+                start = start.saturating_sub(1);
+            }
+            self.delete_range(CharIdx::new(start), self.cursor)
         } else {
             Ok(())
         }
@@ -83,10 +84,11 @@ impl Document {
         if let Some((start, end)) = self.selection() {
             self.delete_range(start, end)
         } else if self.cursor.raw() < self.len_chars() {
-            self.delete_range(
-                self.cursor,
-                CharIdx::new(self.cursor.raw().saturating_add(1)),
-            )
+            let mut end: usize = self.cursor.raw().saturating_add(1);
+            if self.mid_crlf(end) {
+                end = end.saturating_add(1).min(self.len_chars());
+            }
+            self.delete_range(self.cursor, CharIdx::new(end))
         } else {
             Ok(())
         }

@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 9 — FIXED 8, OPEN 1.
+Bugs a user met in the app. Entries: 10 — FIXED 9, OPEN 1.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -13,3 +13,4 @@ Bugs a user met in the app. Entries: 9 — FIXED 8, OPEN 1.
 | BB-BUG-007 | Home and End (and Cmd+Left/Right) do nothing in the editor | FIXED | missing keys | yes | `S02/BB_BUG_007_HOME_AND_END_DO_NOTHING.md` |
 | BB-BUG-008 | F5 in the installed app finds no netcoredbg | FIXED | Dock launch has no PATH or override | yes | `S02/BB_BUG_008_F5_FROM_THE_DOCK_FINDS_NO_NETCOREDBG.md` |
 | BB-BUG-009 | An app opened from the Dock finds no `dotnet` | FIXED | launchd PATH | yes | `S03/BB_BUG_009_AN_APP_FROM_THE_DOCK_FINDS_NO_DOTNET.md` |
+| BB-BUG-010 | Right at a line end splits a CRLF line break | FIXED | char-by-char movement over `\r\n` | yes | `S03/BB_BUG_010_RIGHT_AT_A_LINE_END_SPLITS_A_CRLF.md` |

@@ -202,7 +202,7 @@ impl Document {
     /// Returns [`DocumentError::Selection`] if the index is out of bounds.
     pub fn set_cursor(&mut self, at: CharIdx) -> Result<(), DocumentError> {
         self.check(at)?;
-        self.cursor = at;
+        self.cursor = self.off_crlf(at);
         self.anchor = None;
         self.word_group_open = false;
         Ok(())
