@@ -19,6 +19,8 @@ pub(super) struct LineRow {
     pub(super) current: bool,
     /// The worst diagnostic on the line, for the gutter dot.
     pub(super) gutter: Option<Ink>,
+    /// A breakpoint on this line (BBEOD17).
+    pub(super) breakpoint: bool,
     pub(super) test: Option<TestGutter>,
     /// A popup anchored below the cursor.
     pub(super) overlay: Option<gpui::AnyElement>,
@@ -44,13 +46,14 @@ pub(super) fn line_row(
         index,
         current,
         gutter,
+        breakpoint,
         test,
         overlay,
         caret,
     }: LineRow = row;
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
     row_frame(index, current, (theme, fonts.line_height()), cx)
-        .child(gutter_cell(index, gutter, test, theme, cx))
+        .child(gutter_cell(index, (gutter, breakpoint), test, theme, cx))
         .child(line_text(index, runs, (theme, &fonts)))
         .when_some(caret, |el: gpui::Stateful<gpui::Div>, x: f32| {
             el.child(caret_quad(x, theme, &fonts))

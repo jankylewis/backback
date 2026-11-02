@@ -3,8 +3,6 @@
 mod args;
 #[path = "bb_explorer/bb_row_view.rs"]
 mod bb_row_view;
-#[path = "bb_explorer/panels/build/mod.rs"]
-mod build;
 mod editor;
 #[path = "bb_explorer/icons.rs"]
 mod icons;
@@ -19,6 +17,8 @@ mod navigation;
 mod panel;
 #[path = "bb_explorer/panels/bb_quick_open/mod.rs"]
 mod quick_open;
+#[path = "bb_explorer/panels/run/mod.rs"]
+mod run;
 #[path = "app/script/mod.rs"]
 mod script;
 #[path = "bb_explorer/panels/settings/mod.rs"]
@@ -68,7 +68,7 @@ struct ExplorerView {
     link: Option<intel::bb_worker::Link>,
     editor_scroll: UniformListScrollHandle,
     tests: tests_panel::TestsState,
-    pending_test_jump: Option<(PathBuf, usize)>,
+    debug: run::bb_debug::DebugState,
     quick_open: Option<quick_open::QuickOpen>,
     quick_focus: FocusHandle,
     terminal: terminal::Terminal,

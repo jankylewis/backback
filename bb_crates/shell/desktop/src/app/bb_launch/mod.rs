@@ -119,7 +119,7 @@ fn menus() -> Vec<Menu> {
         ),
         Menu::new("Build").items([MenuItem::action(
             "Build Solution",
-            crate::build::BuildSolution,
+            crate::run::build::BuildSolution,
         )]),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
         bb_window::window_menu(),
@@ -171,7 +171,7 @@ pub(crate) fn fresh_view(
         link: None,
         editor_scroll: gpui::UniformListScrollHandle::new(),
         tests: crate::tests_panel::TestsState::new(),
-        pending_test_jump: None,
+        debug: crate::run::bb_debug::DebugState::default(),
         quick_open: None,
         quick_focus: cx.focus_handle(),
         terminal: crate::terminal::Terminal::new(cx.focus_handle()),
@@ -199,7 +199,8 @@ fn bind_keys(cx: &mut App) {
         KeyBinding::new("enter", Open, Some("Explorer")),
         KeyBinding::new("cmd-q", Quit, None),
         KeyBinding::new("cmd-shift-r", RestartServer, None),
-        KeyBinding::new("cmd-shift-b", crate::build::BuildSolution, None),
+        KeyBinding::new("cmd-shift-b", crate::run::build::BuildSolution, None),
+        KeyBinding::new("f9", crate::run::bb_debug::ToggleBreakpoint, Some("Editor")),
         KeyBinding::new("ctrl-`", crate::terminal::ToggleTerminal, None),
     ]);
     cx.bind_keys(bb_window::bindings());
