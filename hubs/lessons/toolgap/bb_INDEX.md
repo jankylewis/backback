@@ -12,3 +12,4 @@
 | BB-TG-008 | A hand-typed gate missed `BACKBACK_NETCOREDBG`; 14 debugger tests red | FIXED | none | `docs/release/scripts/gate.sh` sets PATH and the debugger path | `S02/BB_TG_008_A_HAND_TYPED_GATE_MISSED_THE_DEBUGGER_PATH.md` |
 | BB-TG-009 | A readback launch takes the keyboard focus; typed keys land in the app | OBSERVED | none | Writable runs on scratch copies only; real solutions `--no-write` | `S03/BB_TG_009_A_READBACK_LAUNCH_TAKES_THE_KEYBOARD_FOCUS.md` |
 | BB-TG-010 | A locked screen paints no frames; script mouse steps miss | OBSERVED | none | Check `CGSSessionScreenIsLocked`; window tests for mouse; rerun unlocked | `S03/BB_TG_010_A_LOCKED_SCREEN_PAINTS_NO_FRAMES.md` |
+| BB-TG-011 | A rebase can push a folder over its five-entry cap | OBSERVED | none | Audit (or `gate.sh`) after every rebase, before the push | `S03/BB_TG_011_A_REBASE_CAN_PUSH_A_FOLDER_OVER_ITS_CAP.md` |

@@ -39,7 +39,11 @@ pub(super) fn detail(
         .overflow_y_scroll()
         .border_t_1()
         .border_color(color(theme.border))
-        .child(text)
+        .children(
+            text.lines()
+                .enumerate()
+                .map(|(index, line): (usize, &str)| stack_line(index, line, theme, cx)),
+        )
         .on_click(cx.listener(
             |view: &mut ExplorerView,
              _: &gpui::ClickEvent,
@@ -48,4 +52,38 @@ pub(super) fn detail(
                 super::super::navigation::jump(view, window, cx);
             },
         ))
+}
+
+/// One line of the detail or output (BBEOD18): a stack frame with a source
+/// is a link to its call site; anything else is plain text.
+fn stack_line(
+    index: usize,
+    line: &str,
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> AnyElement {
+    let row: gpui::Stateful<gpui::Div> = div()
+        .id(("stack-line", index))
+        .whitespace_nowrap()
+        .child(line.to_owned());
+    let Some((path, at)): Option<(std::path::PathBuf, usize)> =
+        super::super::navigation::frame_place(line)
+    else {
+        return row.into_any_element();
+    };
+    row.debug_selector(move || format!("stack-link-{index}"))
+        .text_color(color(theme.accent))
+        .cursor_pointer()
+        .hover(|el: gpui::StyleRefinement| el.underline())
+        .on_click(cx.listener(
+            move |view: &mut ExplorerView,
+                  _: &gpui::ClickEvent,
+                  window: &mut Window,
+                  cx: &mut Context<ExplorerView>| {
+                cx.stop_propagation();
+                super::super::navigation::jump_to(view, (&path, at), window, cx);
+                cx.notify();
+            },
+        ))
+        .into_any_element()
 }
