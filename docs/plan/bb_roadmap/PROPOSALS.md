@@ -55,3 +55,25 @@ section below is kept as the record of the dropped offer.
 
 - A launch with no argument from the Dock or Finder shows the recent
   workspaces and Open... instead of reopening the newest one; File > Start Page....
+
+## P7 — Next performance and quality steps (night R&D 2026-11-04)
+
+Measured in `docs/plan/bench/bb_GENERAL/RERUNS/bb_NIGHT_2026-11-04.md`;
+none built. Approve, change or drop each.
+
+- P7a Explorer refresh off the UI thread. Today one `read_dir` per loaded
+  folder every 2 s on the UI thread (BB-BUG-037). Offer: read in the
+  background, merge on the UI thread, or use FSEvents. Proof: a 2 000-folder
+  expanded tree keeps key work under 1 ms p99. Cost: half a day.
+- P7b Shaped-line cache. Every frame shapes the widest visible line (scroll
+  width) and, after a cursor move, the cursor line again (caret). Offer:
+  cache shaped lines by text across frames. Proof: key work on a 9 000-char line before and after.
+- P7c Linear run building. `styled_line` scans every highlight span for
+  each char (chars x spans, bounded by the 10 000-char cap). Offer: a span
+  cursor. Proof: highlight time on a dense 10 000-char line.
+- P7d Readback timing without App Nap. Wall time per scripted key grew
+  80 -> 490 ms while the app idled (BB-TG-018). Offer: the BB_KEYS runner
+  holds a user-initiated activity while it runs. Proof: the 5-round tab
+  loop at a flat time per key.
+- P7e Two key rulings: Cmd+[ / Cmd+] (Back/Forward or VS Code's
+  indent/outdent) and Cmd+Shift+O (Go to File or VS Code's Go to Symbol).
