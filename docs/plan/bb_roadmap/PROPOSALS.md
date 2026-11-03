@@ -36,7 +36,7 @@ section below is kept as the record of the dropped offer.
 - Why: the agent seat cannot post clicks (BB-TG-007) and the screen was
   locked overnight (BB-TG-010); window tests pass for all four.
 
-## P4 — Build a never-built test project before listing its tests: APPROVED (2026-11-03)
+## P4 — Build a never-built test project before listing its tests: DONE (2026-11-03, BBEOD20)
 
 - Today: on a fresh clone, expanding a test project in the Test Explorer
   says "not built: ...dll (build the project first)" (readback 2026-11-03,
