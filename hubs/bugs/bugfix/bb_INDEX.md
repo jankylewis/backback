@@ -27,3 +27,4 @@
 | BB-BUG-025 | A row click opens the method (`bb_testkit::find_source`, off the UI thread) | FIXED | 7 unit + window test + readback | `D2/S07/BB_BUG_025_A_CLICK_ON_A_TEST_DOES_NOT_OPEN_IT.md` |
 | BB-BUG-026 | ▶ turns ■, Run turns ■ Stop while running; toolbar stop only during a run | FIXED | window test + process readback | `D2/S07/BB_BUG_026_A_RUNNING_TEST_CANNOT_BE_STOPPED.md` |
 | BB-BUG-027 | `OwnedTempDir` (drop, quit, sweep by pid); `bb sweep` after each gate | FIXED | unit tests + 3156 swept + leak probe | `D2/S07/BB_BUG_027_BACKBACK_LEAVES_TEMP_FOLDERS_BEHIND.md` |
+| BB-BUG-028 | Cmd+C/X/V: selection, else the whole line; a line pastes above | FIXED | red-first window test + 3 unit tests | `D2/S07/BB_BUG_028_CMD_C_DOES_NOT_COPY.md` |

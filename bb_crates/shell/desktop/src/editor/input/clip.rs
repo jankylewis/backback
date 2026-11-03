@@ -23,7 +23,7 @@ pub(super) fn clipboard_key(
                 return Some(Ok(()));
             }
             let result: Result<(), DocumentError> = if cut {
-                doc.select(start, end).and_then(|()| doc.insert(""))
+                doc.select(start, end).and_then(|(): ()| doc.insert(""))
             } else {
                 Ok(())
             };
