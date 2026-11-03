@@ -162,7 +162,7 @@ impl Document {
 
     /// The lines a selection `[from, to)` touches; a selection ending at a
     /// line's start leaves that line alone.
-    pub(super) fn lines_touched(
+    pub(in crate::document) fn lines_touched(
         &self,
         from: CharIdx,
         to: CharIdx,

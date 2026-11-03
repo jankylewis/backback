@@ -149,3 +149,35 @@ fn solution_children(
     sort_entries(&mut children);
     children
 }
+
+/// Re-read every loaded folder under `entry` and merge (BB-BUG-037): an
+/// entry still on disk keeps its open state and children, a new one comes
+/// in closed, a gone one goes. A folder that cannot be read keeps what it
+/// showed. Returns whether anything changed.
+pub(super) fn refresh_entry(source: &Source, entry: &mut Entry) -> Result<bool, ExplorerError> {
+    let Some(old): Option<Vec<Entry>> = entry.children.take() else {
+        return Ok(false);
+    };
+    let Ok(fresh): Result<Vec<Entry>, ExplorerError> = read_children_from(source, entry) else {
+        entry.children = Some(old);
+        return Ok(false);
+    };
+    let mut changed: bool = fresh.len() != old.len();
+    let mut kept: std::collections::HashMap<PathBuf, Entry> = old
+        .into_iter()
+        .map(|child: Entry| (child.path.clone(), child))
+        .collect();
+    let mut merged: Vec<Entry> = Vec::with_capacity(fresh.len());
+    for new in fresh {
+        if let Some(mut same) = kept.remove(&new.path) {
+            changed |= refresh_entry(source, &mut same)?;
+            merged.push(same);
+        } else {
+            changed = true;
+            merged.push(new);
+        }
+    }
+    changed |= !kept.is_empty();
+    entry.children = Some(merged);
+    Ok(changed)
+}

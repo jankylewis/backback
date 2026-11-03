@@ -2,7 +2,7 @@
 
 id: BB-UIX-010
 family: UIX
-status: OPEN
+status: FIXED
 source: branch `bb-bug-020-line-commands`
 
 ## The fix that holds
@@ -19,7 +19,8 @@ Arms for Cmd+[ and Cmd+] in the editor: the app binds them to Back and
 Forward, which run first. The window test passed anyway (its rig has no
 app bindings); the readback on the real app showed nothing changed.
 
-## Still to do
+## Done since
 
-Move and copy lines (Alt+Up/Down, Shift+Alt+Up/Down) and a ruling on
-Cmd+[ / Cmd+]: BB-BUG-021.
+Move and copy lines (Alt+Up/Down, Shift+Alt+Up/Down): `move_lines` and
+`copy_lines` in the text model, arms in `text_key` (BB-BUG-021). Cmd+[ /
+Cmd+] still wait for the headmate's ruling; Back/Forward kept.

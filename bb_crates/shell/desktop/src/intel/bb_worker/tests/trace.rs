@@ -31,7 +31,7 @@ async fn gui_solution_open_and_document_sync_leave_no_trace() {
     let before: BTreeMap<PathBuf, (u64, SystemTime)> = snapshot(&root);
     let solution: PathBuf = root.join("Harness.slnx");
     let (link, mut events): (Link, UnboundedReceiver<Event>) = start(&solution);
-    wait_ready(&mut events).await;
+    let _ready: (Vec<(usize, usize)>, Vec<std::path::PathBuf>) = wait_ready(&mut events).await;
     let path: PathBuf = root.join("_NUnitApex/GreeterSpec.cs");
     let text: String = std::fs::read_to_string(&path).unwrap();
     assert!(link.send(Request::Open { path, text }));

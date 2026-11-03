@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 35 — FIXED 31, OBSERVED 2, OPEN 2.
+One file per failure mechanism. This hub owns the id. Entries: 39 — FIXED 36, OBSERVED 2, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -33,9 +33,13 @@ One file per failure mechanism. This hub owns the id. Entries: 35 — FIXED 31, 
 | BB-UIX-008 | The Cmd map lacked Select All and the comment toggle | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_008_THE_CMD_MAP_LACKED_SELECT_ALL_AND_THE_COMMENT_TOGGLE.md` |
 | BB-UIX-009 | The rename box did not select the old name, so a typed name was glued onto it | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |
 | BB-LSP-007 | An edit pulled diagnostics again only for its own file, so other open files kept lists of the old text | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_007_AN_EDIT_PULLED_AGAIN_ONLY_ITS_OWN_FILE.md` |
-| BB-UIX-010 | The key map lacked VS Code's line commands | OPEN | yes | yes | none | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
+| BB-UIX-010 | The key map lacked VS Code's line commands | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
 | BB-UIX-011 | Editor rows were only as wide as their text, so a click past the text hit nothing | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |
 | BB-UIX-012 | A ▾ written into a label promised a fold the row could not do | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | The only stop sat in the toolbar, far from the ▶ that started the run | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
 | BB-PRC-004 | Temp folders named by pid were never removed: a static or a quit never drops | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-UIX-014 | A folder with only `__pycache__` reads as a tree that hides files | OBSERVED | no | yes | none | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |
+| BB-PRF-003 | Roslyn ran the server GC: 2.4 GB where the workstation GC keeps 0.66 GB | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
+| BB-PRF-004 | Every frame shaped and styled the whole line: seconds a key past 100 000 chars | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-UIX-015 | Save never compared the file with what it had read, so an outside change was lost | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
+| BB-UIX-016 | The Explorer read each folder once, so outside changes never showed | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |

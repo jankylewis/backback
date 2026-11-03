@@ -23,7 +23,7 @@ pub(crate) fn styled_line(
 ) -> Vec<Run> {
     let started: Instant = Instant::now();
     let text: String = tab.document.line(index).unwrap_or_default();
-    let clean: &str = text.trim_end_matches(['\r', '\n']);
+    let (clean, cut): (&str, bool) = super::caret::rendered(text.trim_end_matches(['\r', '\n']));
     let byte_start: usize = tab.document.line_start_byte(index).unwrap_or(0);
     let spans: Vec<HighlightSpan> = tab.highlighter.highlight_spans(
         tab.live.tree(),
@@ -54,6 +54,9 @@ pub(crate) fn styled_line(
         });
         let look: Look = (kind, selected, marks::at(marks, column), linked);
         push_run(&mut runs, ch, look);
+    }
+    if cut {
+        push_run(&mut runs, '…', (HighlightKind::Comment, false, None, false));
     }
     crate::latency::record_highlight(started.elapsed());
     runs

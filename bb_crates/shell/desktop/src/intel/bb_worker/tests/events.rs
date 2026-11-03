@@ -2,6 +2,7 @@
 //! Open, an answer by ticket, and the whole load until Ready.
 
 use std::path::Path;
+use std::path::PathBuf;
 use std::time::Duration;
 
 use tokio::sync::mpsc::UnboundedReceiver;
@@ -64,7 +65,11 @@ pub(super) fn ask(link: &Link, path: &Path, ticket: u64, ask: Ask) -> Ticket {
     ticket
 }
 
-pub(super) async fn wait_ready(events: &mut UnboundedReceiver<Event>) -> Vec<(usize, usize)> {
+/// The progress seen up to `Ready`, then the projects `Ready` says failed:
+/// a count short of the total names its cause (BB-TG-017).
+pub(super) async fn wait_ready(
+    events: &mut UnboundedReceiver<Event>,
+) -> (Vec<(usize, usize)>, Vec<PathBuf>) {
     let mut progress: Vec<(usize, usize)> = Vec::new();
     let started: std::time::Instant = std::time::Instant::now();
     loop {
@@ -73,7 +78,7 @@ pub(super) async fn wait_ready(events: &mut UnboundedReceiver<Event>) -> Vec<(us
         let pending: String = format!("still waiting for Ready after {LOAD:?}; {progress:?}");
         match event.expect(&pending).expect("the server thread is alive") {
             Event::Progress { loaded, total } => progress.push((loaded, total)),
-            Event::Ready { .. } => return progress,
+            Event::Ready { failed, .. } => return (progress, failed),
             Event::Stopped => panic!("server stopped before ready"),
             other @ (Event::Failed(_)
             | Event::Diagnostics { .. }

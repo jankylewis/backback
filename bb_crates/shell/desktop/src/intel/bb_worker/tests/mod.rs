@@ -71,9 +71,13 @@ async fn loaded(name: &str) -> Live {
     let solution: PathBuf = find_solution(&root).unwrap();
     assert_eq!(solution, root.join("Harness.slnx"));
     let (link, mut events): (Link, UnboundedReceiver<Event>) = start(&solution);
-    let progress: Vec<(usize, usize)> = wait_ready(&mut events).await;
+    let (progress, failed): (Vec<(usize, usize)>, Vec<PathBuf>) = wait_ready(&mut events).await;
     assert_eq!(progress.first(), Some(&(0, 3)), "{progress:?}");
-    assert_eq!(progress.last(), Some(&(3, 3)), "{progress:?}");
+    assert_eq!(
+        progress.last(),
+        Some(&(3, 3)),
+        "{progress:?}; failed: {failed:?}"
+    );
     assert!(progress
         .windows(2)
         .all(|w: &[(usize, usize)]| w[0].0 <= w[1].0));

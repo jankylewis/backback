@@ -107,6 +107,11 @@ pub(super) fn text_key(
         "backspace" if option => document.delete_word_back(),
         "delete" if option => document.delete_word_forward(),
         "left" if option => document.word_left(shift),
+        // Alt+Up/Down move lines, Shift+Alt+Up/Down copy them (BB-BUG-021).
+        "up" if option && shift => document.copy_lines(true),
+        "down" if option && shift => document.copy_lines(false),
+        "up" if option => document.move_lines(true),
+        "down" if option => document.move_lines(false),
         "right" if option => document.word_right(shift),
         "backspace" => document.backspace(),
         "delete" => document.delete(),

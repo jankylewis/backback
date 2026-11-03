@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::bb_entry::{collect_visible, find, find_mut, Entry, EntryKind};
-use crate::children::{expand_entry, read_children_from};
+use crate::children::{expand_entry, read_children_from, refresh_entry};
 use crate::ignore_rules;
 use bb_dotnet::{Solution, SolutionError, SolutionPath};
 
@@ -194,6 +194,15 @@ impl Explorer {
             .visible()
             .iter()
             .position(|(_, entry): &(usize, &Entry)| entry.path == path))
+    }
+
+    /// Take what changed on disk into every loaded folder (BB-BUG-037);
+    /// open folders stay open. Returns whether the tree changed.
+    ///
+    /// # Errors
+    /// Never for an unreadable folder (it keeps its rows); kept for growth.
+    pub fn refresh(&mut self) -> Result<bool, ExplorerError> {
+        refresh_entry(&self.source, &mut self.root)
     }
 
     /// Expand every reachable folder, returning the count below the root.

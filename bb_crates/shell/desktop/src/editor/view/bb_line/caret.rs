@@ -7,6 +7,19 @@ use gpui::{px, ShapedLine, SharedString, TextRun, Window};
 /// The caret quad: thin, so it never covers a glyph.
 pub(crate) const CARET_W: f32 = 2.0;
 
+/// Chars of a line that are drawn and measured: VS Code's
+/// `editor.stopRenderingLineAfter` default. Past it a line ends in `…`; the
+/// document keeps every char (BB-PRF-004: a 229 000-char line took 31 s a key).
+pub(crate) const RENDER_CAP: usize = 10_000;
+
+/// `text` up to [`RENDER_CAP`] chars, and whether it was cut.
+pub(crate) fn rendered(text: &str) -> (&str, bool) {
+    match text.char_indices().nth(RENDER_CAP) {
+        Some((byte, _)) => (text.get(..byte).unwrap_or(text), true),
+        None => (text, false),
+    }
+}
+
 /// A line's text laid out exactly as the row paints it.
 pub(crate) struct Columns {
     line: ShapedLine,
@@ -16,6 +29,7 @@ pub(crate) struct Columns {
 impl Columns {
     /// Shape `text` (one line, no line break) in the editor font.
     pub(crate) fn shape(window: &Window, text: &str, fonts: &bb_ui::Typography) -> Columns {
+        let (text, _cut): (&str, bool) = rendered(text);
         let run: TextRun = TextRun {
             len: text.len(),
             font: gpui::font(fonts.family.clone()),

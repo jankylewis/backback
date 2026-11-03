@@ -59,7 +59,7 @@ impl Document {
         true
     }
 
-    /// Delete the selected chars or one char before the cursor.
+    /// Delete the selected chars or one grapheme before the cursor.
     ///
     /// # Errors
     /// Returns a checked text error on an invalid range.
@@ -67,17 +67,14 @@ impl Document {
         if let Some((start, end)) = self.selection() {
             self.delete_range(start, end)
         } else if self.cursor.raw() > 0 {
-            let mut start: usize = self.cursor.raw().saturating_sub(1);
-            if self.mid_crlf(start) {
-                start = start.saturating_sub(1);
-            }
+            let start: usize = crate::graphemes::before(self.rope(), self.cursor.raw());
             self.delete_range(CharIdx::new(start), self.cursor)
         } else {
             Ok(())
         }
     }
 
-    /// Delete the selected chars or one char after the cursor.
+    /// Delete the selected chars or one grapheme after the cursor.
     ///
     /// # Errors
     /// Returns a checked text error on an invalid range.
@@ -85,10 +82,7 @@ impl Document {
         if let Some((start, end)) = self.selection() {
             self.delete_range(start, end)
         } else if self.cursor.raw() < self.len_chars() {
-            let mut end: usize = self.cursor.raw().saturating_add(1);
-            if self.mid_crlf(end) {
-                end = end.saturating_add(1).min(self.len_chars());
-            }
+            let end: usize = crate::graphemes::after(self.rope(), self.cursor.raw());
             self.delete_range(self.cursor, CharIdx::new(end))
         } else {
             Ok(())

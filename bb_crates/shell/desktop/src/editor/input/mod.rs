@@ -165,7 +165,9 @@ fn refused(view: &ExplorerView, event: &KeyDownEvent) -> Option<String> {
     let edits: bool = if platform {
         matches!(key, "s" | "z" | "x" | "v")
     } else {
-        matches!(key, "backspace" | "delete" | "enter" | "return") || stroke.key_char.is_some()
+        matches!(key, "backspace" | "delete" | "enter" | "return")
+            || stroke.key_char.is_some()
+            || (stroke.modifiers.alt && matches!(key, "up" | "down"))
     };
     let read_only: bool = view
         .tabs

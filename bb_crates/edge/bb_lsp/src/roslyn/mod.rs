@@ -57,10 +57,7 @@ pub enum Restore {
 /// The `workspace/configuration` answers bb gives Roslyn.
 #[must_use]
 pub fn settings(restore: Restore) -> Settings {
-    let allowed: bool = match restore {
-        Restore::Off => false,
-        Restore::On => true,
-    };
+    let allowed: bool = restore == Restore::On;
     let mut map: Settings = Settings::new();
     map.insert(
         AUTOMATIC_RESTORE.to_owned(),
@@ -180,6 +177,11 @@ pub fn start(
                 cmd.env_remove(property);
             }
         }
+    }
+    // Roslyn's runtimeconfig asks for the server GC, a heap per core: 2.4 GB where the
+    // workstation GC levels off at 0.67 GB, same answer times (BB-PRF-003). A user value wins.
+    if std::env::var_os("DOTNET_gcServer").is_none() {
+        cmd.env("DOTNET_gcServer", "0");
     }
     cmd.arg("--stdio")
         .arg("--logLevel")

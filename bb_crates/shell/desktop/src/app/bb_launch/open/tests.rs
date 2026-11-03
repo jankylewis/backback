@@ -81,3 +81,19 @@ fn down_and_enter_open_the_second_entry_and_close_the_page(cx: &mut TestAppConte
         "the second entry opened in its own window"
     );
 }
+
+/// BB-BUG-036: Cmd+P is Go to File, as in VS Code.
+#[test]
+fn cmd_p_opens_go_to_file() {
+    let found: bool = super::bindings().iter().any(|binding: &gpui::KeyBinding| {
+        binding.keystrokes().len() == 1
+            && binding
+                .keystrokes()
+                .first()
+                .is_some_and(|key: &gpui::KeybindingKeystroke| {
+                    key.inner().key == "p" && key.inner().modifiers == gpui::Modifiers::command()
+                })
+            && binding.action().name() == gpui::Action::name(&crate::quick_open::GoToFile)
+    });
+    assert!(found, "cmd-p is bound to GoToFile");
+}

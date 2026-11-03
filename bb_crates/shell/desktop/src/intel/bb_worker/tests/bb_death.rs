@@ -27,7 +27,7 @@ async fn a_dead_server_stops_within_one_second_and_restart_answers_again() {
     assert!(before.elapsed() < Duration::from_secs(1));
     let solution: PathBuf = live.root.join("Harness.slnx");
     let (link, mut events): (Link, UnboundedReceiver<Event>) = start(&solution);
-    wait_ready(&mut events).await;
+    let _ready: (Vec<(usize, usize)>, Vec<std::path::PathBuf>) = wait_ready(&mut events).await;
     let text: String = std::fs::read_to_string(&live.spec).unwrap();
     assert!(link.send(Request::Open {
         path: live.spec.clone(),

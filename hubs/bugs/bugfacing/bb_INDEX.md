@@ -1,13 +1,13 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 31 — FIXED 28, OBSERVED 1, OPEN 2.
+Bugs a user met in the app. Entries: 37 — FIXED 35, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
 | BB-BUG-001 | Cmd+M does not minimize the window | FIXED | missing binding | yes | `D1/S01/BB_BUG_001_CMD_M_DOES_NOT_MINIMIZE.md` |
 | BB-BUG-002 | Explorer and side panels not in Menlo; sizes mixed | FIXED | literal fonts per view | yes | `D1/S01/BB_BUG_002_NOT_ONE_FONT_EVERYWHERE.md` |
 | BB-BUG-003 | MCP HARNESS panel still shown after its removal | FIXED | BB-BLD-001 | yes | `D1/S01/BB_BUG_003_MCP_PANEL_STILL_SHOWN.md` |
-| BB-BUG-004 | Test Explorer did not respond to clicks | OPEN | not proven | no | `D1/S01/BB_BUG_004_TEST_EXPLORER_CLICKS_NO_RESPONSE.md` |
+| BB-BUG-004 | Test Explorer did not respond to clicks | OBSERVED | not reproduced: hand clicks run tests (BB-BUG-026's report); the first report's input never arrived (BB-TG-007) | no | `D1/S01/BB_BUG_004_TEST_EXPLORER_CLICKS_NO_RESPONSE.md` |
 | BB-BUG-005 | Text shifts one column when the cursor moves | FIXED | BB-UIX-001 | yes | `D1/S02/BB_BUG_005_TEXT_SHIFTS_WHEN_THE_CURSOR_MOVES.md` |
 | BB-BUG-006 | Opened from the Dock or Finder, the app shows the disk root | FIXED | no Finder-launch rule | yes | `D1/S02/BB_BUG_006_APP_OPENS_THE_DISK_ROOT.md` |
 | BB-BUG-007 | Home and End (and Cmd+Left/Right) do nothing in the editor | FIXED | missing keys | yes | `D1/S02/BB_BUG_007_HOME_AND_END_DO_NOTHING.md` |
@@ -24,7 +24,7 @@ Bugs a user met in the app. Entries: 31 — FIXED 28, OBSERVED 1, OPEN 2.
 | BB-BUG-018 | The rename box appends to the old name | FIXED | the prefilled name was not selected (BB-UIX-009) | yes | `D2/S05/BB_BUG_018_THE_RENAME_BOX_APPENDS_TO_THE_OLD_NAME.md` |
 | BB-BUG-019 | Problems keep stale diagnostics after a rename | FIXED | an edit pulled again only its own file (BB-LSP-007) | yes | `D2/S05/BB_BUG_019_PROBLEMS_KEEP_STALE_DIAGNOSTICS_AFTER_A_RENAME.md` |
 | BB-BUG-020 | Cmd+Shift+K and Cmd+Enter do nothing | FIXED | the key map lacked the line commands (BB-UIX-010) | yes | `D2/S05/BB_BUG_020_CMD_SHIFT_K_AND_CMD_ENTER_DO_NOTHING.md` |
-| BB-BUG-021 | The move, copy and select-line keys do nothing | OPEN | the key map lacked the line commands (BB-UIX-010) | no | `D2/S06/BB_BUG_021_MOVE_COPY_AND_SELECT_LINE_KEYS_DO_NOTHING.md` |
+| BB-BUG-021 | The move, copy and select-line keys do nothing | FIXED | the key map lacked the line commands (BB-UIX-010) | yes | `D2/S06/BB_BUG_021_MOVE_COPY_AND_SELECT_LINE_KEYS_DO_NOTHING.md` |
 | BB-BUG-022 | A click right of a line's end does nothing | FIXED | editor rows were only as wide as their text (BB-UIX-011) | yes | `D2/S06/BB_BUG_022_A_CLICK_RIGHT_OF_A_LINES_END_DOES_NOTHING.md` |
 | BB-BUG-023 | The sidebar header does not show which side is chosen | FIXED | design: a title and a link | yes | `D2/S06/BB_BUG_023_THE_SIDEBAR_HEADER_DOES_NOT_SHOW_WHICH_SIDE_IS_CHOSEN.md` |
 | BB-BUG-024 | Test groups do not collapse | FIXED | a fold marker with no fold (BB-UIX-012) | yes | `D2/S06/BB_BUG_024_TEST_GROUPS_DO_NOT_COLLAPSE.md` |
@@ -35,3 +35,9 @@ Bugs a user met in the app. Entries: 31 — FIXED 28, OBSERVED 1, OPEN 2.
 | BB-BUG-029 | The Explorer does not follow the active file | FIXED | design: not built | yes | `D3/S08/BB_BUG_029_THE_EXPLORER_DOES_NOT_FOLLOW_THE_ACTIVE_FILE.md` |
 | BB-BUG-030 | A binary file opens with a raw decoder error | FIXED | the decoder's text | yes | `D3/S08/BB_BUG_030_A_BINARY_FILE_OPENS_WITH_A_RAW_DECODER_ERROR.md` |
 | BB-BUG-031 | The Explorer seems to hide files | OBSERVED | not a bug: the folders hold only caches (BB-UIX-014) | no | `D3/S08/BB_BUG_031_THE_EXPLORER_SEEMS_TO_HIDE_FILES.md` |
+| BB-BUG-032 | A very long line freezes the editor | FIXED | every frame shaped and styled the whole line (BB-PRF-004) | yes | `D3/S08/BB_BUG_032_A_VERY_LONG_LINE_FREEZES_THE_EDITOR.md` |
+| BB-BUG-033 | The cursor stops inside a combined character | FIXED | moves stepped one code point, not one grapheme | yes | `D3/S09/BB_BUG_033_THE_CURSOR_STOPS_INSIDE_A_COMBINED_CHARACTER.md` |
+| BB-BUG-034 | A save overwrites another tool's change | FIXED | save never compared the file with what it had read (BB-UIX-015) | yes | `D3/S09/BB_BUG_034_A_SAVE_OVERWRITES_ANOTHER_TOOLS_CHANGE.md` |
+| BB-BUG-035 | A clean tab keeps stale text after an outside change | FIXED | nothing compared the file with what was read (BB-UIX-015) | yes | `D3/S09/BB_BUG_035_A_CLEAN_TAB_KEEPS_STALE_TEXT_AFTER_AN_OUTSIDE_CHANGE.md` |
+| BB-BUG-036 | Cmd+P does not open Go to File | FIXED | the key map lacked VS Code's keys (BB-UIX-010) | yes | `D3/S09/BB_BUG_036_CMD_P_DOES_NOT_OPEN_GO_TO_FILE.md` |
+| BB-BUG-037 | The Explorer misses files made or removed outside | FIXED | each folder was read once (BB-UIX-016) | yes | `D3/S10/BB_BUG_037_THE_EXPLORER_MISSES_FILES_MADE_OR_REMOVED_OUTSIDE.md` |

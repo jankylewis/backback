@@ -114,6 +114,18 @@ impl QuickOpen {
     }
 
     /// The box's title.
+    /// One readback line: title, query, listed items, matches, loading.
+    pub(crate) fn describe(&self) -> String {
+        format!(
+            "bb_quick_state title={:?} query={:?} items={} matches={} loading={}",
+            self.title(),
+            self.query,
+            self.items.len(),
+            self.matches().len(),
+            self.loading
+        )
+    }
+
     pub(crate) fn title(&self) -> &'static str {
         if self.find {
             "Find in Files"

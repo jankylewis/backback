@@ -16,6 +16,8 @@ impl Document {
     /// # Errors
     /// Returns a file or UTF-8 error.
     pub fn open(path: &Path) -> Result<Self, DocumentError> {
+        // Stamped before the read: a write in between trips the guard.
+        let seen: Option<Stamp> = stamp(path);
         let bytes: Vec<u8> = fs::read(path)?;
         let bom: bool = bytes.starts_with(&BOM);
         let text: String = String::from_utf8(if bom {
@@ -25,6 +27,7 @@ impl Document {
         })?;
         let mut doc: Self = Self::from_text(&text, Some(path.to_path_buf()));
         doc.format.bom = bom;
+        doc.disk.seen = seen;
         Ok(doc)
     }
 
@@ -57,6 +60,12 @@ impl Document {
             return Err(DocumentError::WriteLocked(path.to_path_buf()));
         }
         let target: PathBuf = resolve(path)?;
+        let now: Option<Stamp> = stamp(&target);
+        let newer: bool = now.is_some() && self.disk.seen.is_some() && now != self.disk.seen;
+        if newer && !self.disk.armed {
+            self.disk.armed = true;
+            return Err(DocumentError::ChangedOnDisk(target));
+        }
         match fs::metadata(&target) {
             Ok(metadata) => self.save_existing(&target, &metadata)?,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
@@ -65,6 +74,10 @@ impl Document {
             Err(error) => return Err(error.into()),
         }
         self.saved_state = self.state;
+        self.disk = DiskGuard {
+            seen: stamp(&target),
+            armed: false,
+        };
         Ok(())
     }
 
@@ -149,3 +162,11 @@ fn read_only(target: &Path, error: std::io::Error) -> DocumentError {
         DocumentError::Io(error)
     }
 }
+
+#[path = "bb_disk.rs"]
+mod disk;
+pub(super) use disk::DiskGuard;
+use disk::{stamp, Stamp};
+
+#[cfg(test)]
+mod tests;

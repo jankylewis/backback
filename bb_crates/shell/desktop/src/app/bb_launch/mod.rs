@@ -95,6 +95,7 @@ fn build_window(
         cx,
         |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
             crate::intel::glue::connect(state, window, cx);
+            crate::editor::watch_disk(window, cx);
             match &wanted.file {
                 Some(file) => state.open_file(file, window, cx),
                 // No file to wait for: the readback steps start now (BB-TG-016).

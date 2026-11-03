@@ -30,3 +30,10 @@
 | BB-BUG-028 | Cmd+C/X/V: selection, else the whole line; a line pastes above | FIXED | red-first window test + 3 unit tests | `D2/S07/BB_BUG_028_CMD_C_DOES_NOT_COPY.md` |
 | BB-BUG-029 | `Explorer::reveal`; the side panel follows each newly active file | FIXED | 2 unit + red-first window test + readback | `D3/S08/BB_BUG_029_THE_EXPLORER_DOES_NOT_FOLLOW_THE_ACTIVE_FILE.md` |
 | BB-BUG-030 | `binary or non-UTF-8 file: not shown as text` | FIXED | readback | `D3/S08/BB_BUG_030_A_BINARY_FILE_OPENS_WITH_A_RAW_DECODER_ERROR.md` |
+| BB-BUG-021 | `move_lines` / `copy_lines` on Alt / Shift+Alt arrows; one undo step; breaks kept | FIXED | 5 unit + window test | `D2/S06/BB_BUG_021_MOVE_COPY_AND_SELECT_LINE_KEYS_DO_NOTHING.md` |
+| BB-BUG-032 | Lines drawn and measured up to 10 000 chars (`RENDER_CAP`) | FIXED | unit test + readback 42 s -> 2 s | `D3/S08/BB_BUG_032_A_VERY_LONG_LINE_FREEZES_THE_EDITOR.md` |
+| BB-BUG-033 | Left/Right/Backspace/Delete step one grapheme (`graphemes.rs`) | FIXED | unit test + readback col 22 -> 21 | `D3/S09/BB_BUG_033_THE_CURSOR_STOPS_INSIDE_A_COMBINED_CHARACTER.md` |
+| BB-BUG-034 | `DiskGuard`: a save over a newer file is refused once, then overwrites | FIXED | unit test + readback | `D3/S09/BB_BUG_034_A_SAVE_OVERWRITES_ANOTHER_TOOLS_CHANGE.md` |
+| BB-BUG-035 | Clean tabs take the disk's text (2 s check, one undo step) | FIXED | unit test + readback | `D3/S09/BB_BUG_035_A_CLEAN_TAB_KEEPS_STALE_TEXT_AFTER_AN_OUTSIDE_CHANGE.md` |
+| BB-BUG-036 | Cmd+P bound to Go to File; Cmd+Shift+O awaits a ruling | FIXED | unit test + readback | `D3/S09/BB_BUG_036_CMD_P_DOES_NOT_OPEN_GO_TO_FILE.md` |
+| BB-BUG-037 | The 2 s disk check re-reads loaded folders, merged by path | FIXED | unit test + readback | `D3/S10/BB_BUG_037_THE_EXPLORER_MISSES_FILES_MADE_OR_REMOVED_OUTSIDE.md` |
