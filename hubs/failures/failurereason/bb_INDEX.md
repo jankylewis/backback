@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 35 — FIXED 32, OBSERVED 2, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 36 — FIXED 33, OBSERVED 2, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -39,3 +39,4 @@ One file per failure mechanism. This hub owns the id. Entries: 35 — FIXED 32, 
 | BB-UIX-013 | The only stop sat in the toolbar, far from the ▶ that started the run | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
 | BB-PRC-004 | Temp folders named by pid were never removed: a static or a quit never drops | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-UIX-014 | A folder with only `__pycache__` reads as a tree that hides files | OBSERVED | no | yes | none | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |
+| BB-PRF-003 | Roslyn ran the server GC: 2.4 GB where the workstation GC keeps 0.66 GB | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |

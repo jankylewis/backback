@@ -72,3 +72,4 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-031 | `the Explorer hides my files` | OBSERVED | `ls -A` the folder: is the file on disk? |
 | BB-UIX-014 | `only __pycache__ in a package` | OBSERVED | The sources are gone from the checkout, not hidden |
 | BB-TG-016 | `a readback hangs at 0 % CPU` | FIXED | Did the launch open a file? Binary and folder launches start the steps since BB-TG-016 |
+| BB-PRF-003 | `roslyn-language-server RSS grows past 2 GB` | FIXED | Is `DOTNET_gcServer` set in the app's environment (a user value wins)? |
