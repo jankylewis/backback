@@ -22,6 +22,7 @@ built (a build writes `bin/` and `obj/`) and the row says
 | The built fixture still lists, runs a class and opens a failure as before | `test_panel_lists_runs_a_class_and_opens_a_failure` |
 | Real app (branch build, `env -i` with launchd's PATH), scratch solution with no `bin/` or `obj/` anywhere: open the Tests panel, expand Calc.Tests | `state` after 50 s: `bb_tests_state projects=1 discovered=2 loading=0`; `Calc.Tests/bin/Debug/net10.0/Calc.Tests.dll` exists afterwards (built by the app); 62 s from launch to quit |
 | Same, before this change (master binary): the row stayed `not built: ...dll (build the project first)` | the message the P4 proposal quotes |
+| Installed app at `0b6406d`, a second never-built copy, launchd's PATH: Tests, expand | `projects=1 discovered=2 loading=0` after 50 s; the dll built by the app; 63 s launch to quit |
 
 ## Not covered
 
