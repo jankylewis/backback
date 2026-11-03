@@ -18,23 +18,6 @@ pub(super) fn command_key(
             view.tabs.close_active();
             Ok(())
         }
-        "z" if shift => view
-            .tabs
-            .active_mut()
-            .map_or(Ok(()), bb_text::Document::redo),
-        "z" => view
-            .tabs
-            .active_mut()
-            .map_or(Ok(()), bb_text::Document::undo),
-        // Cmd+Backspace / Cmd+Delete: to the line's start or end (BB-BUG-014).
-        "backspace" => view
-            .tabs
-            .active_mut()
-            .map_or(Ok(()), bb_text::Document::delete_to_line_start),
-        "delete" => view
-            .tabs
-            .active_mut()
-            .map_or(Ok(()), bb_text::Document::delete_to_line_end),
         "left" | "right" | "up" | "down" => view
             .tabs
             .active_mut()
@@ -47,9 +30,36 @@ pub(super) fn command_key(
             }
             Ok(())
         }
-        _ => return None,
+        _ => {
+            let command: DocumentCommand = document_command(key)?;
+            view.tabs
+                .active_mut()
+                .map_or(Ok(()), |doc: &mut bb_text::Document| command(doc, shift))
+        }
     };
     Some(result)
+}
+
+/// A Cmd key that acts on the document; `shift` as held.
+type DocumentCommand = fn(&mut bb_text::Document, bool) -> Result<(), bb_text::DocumentError>;
+
+/// Undo and redo, Select All (BB-BUG-016), the line comment (BB-BUG-017),
+/// and the deletes to a line's edges (BB-BUG-014).
+fn document_command(key: &str) -> Option<DocumentCommand> {
+    Some(match key {
+        "z" => |doc: &mut bb_text::Document, shift: bool| {
+            if shift {
+                doc.redo()
+            } else {
+                doc.undo()
+            }
+        },
+        "a" => |doc: &mut bb_text::Document, _: bool| doc.select_all(),
+        "/" => |doc: &mut bb_text::Document, _: bool| doc.toggle_line_comment(),
+        "backspace" => |doc: &mut bb_text::Document, _: bool| doc.delete_to_line_start(),
+        "delete" => |doc: &mut bb_text::Document, _: bool| doc.delete_to_line_end(),
+        _ => return None,
+    })
 }
 
 /// Cmd+Left/Right: line start (smart) and end; Cmd+Up/Down: document edges.

@@ -117,3 +117,27 @@ fn cmd_backspace_and_cmd_delete_reach_the_line_edges(cx: &mut TestAppContext) {
     vcx.simulate_keystrokes("cmd-delete");
     assert_eq!(text(&rig, vcx), "\n", "to the line end");
 }
+
+/// BB-BUG-016 and BB-BUG-017: Cmd+A selects all; Cmd+/ toggles a line
+/// comment; neither did anything.
+#[gpui::test]
+fn cmd_a_selects_all_and_cmd_slash_toggles_a_line_comment(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "class C\n{\n    int a;\n}\n");
+    put(&rig, vcx, 14, 14);
+    vcx.simulate_keystrokes("cmd-/");
+    assert_eq!(
+        text(&rig, vcx),
+        "class C\n{\n    // int a;\n}\n",
+        "commented"
+    );
+    vcx.simulate_keystrokes("cmd-/");
+    assert_eq!(text(&rig, vcx), "class C\n{\n    int a;\n}\n", "and back");
+    vcx.simulate_keystrokes("cmd-a");
+    vcx.simulate_keystrokes("x");
+    assert_eq!(
+        text(&rig, vcx),
+        "x",
+        "select all, then the typed char replaces it"
+    );
+}

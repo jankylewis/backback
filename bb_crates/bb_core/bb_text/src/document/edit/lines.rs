@@ -8,6 +8,8 @@ use crate::CharIdx;
 
 /// One indent level: four spaces, the C# default of VS Code and Rider.
 const INDENT: &str = "    ";
+/// A line comment, as VS Code and Rider write it.
+const COMMENT: &str = "// ";
 
 impl Document {
     /// Cmd+Backspace: the selection, else the line from its start to the
@@ -95,6 +97,54 @@ impl Document {
                     text: String::new(),
                 });
             }
+        }
+        self.reindent(&edits, (from, to))
+    }
+
+    /// Cmd+A: the whole text.
+    ///
+    /// # Errors
+    /// Returns a checked text error.
+    pub fn select_all(&mut self) -> Result<(), DocumentError> {
+        self.select(CharIdx::new(0), CharIdx::new(self.len_chars()))
+    }
+
+    /// Cmd+/: comment the lines the selection touches (or the cursor line)
+    /// with `// ` after their indent, blank lines left alone; when every
+    /// such line is commented already, uncomment them instead. One undo
+    /// step; the selection stays.
+    ///
+    /// # Errors
+    /// Returns a checked text error.
+    pub fn toggle_line_comment(&mut self) -> Result<(), DocumentError> {
+        let (from, to): (CharIdx, CharIdx) = self.selection().unwrap_or((self.cursor, self.cursor));
+        let mut lines: Vec<(CharIdx, String)> = Vec::new();
+        for line in self.lines_touched(from, to)? {
+            let start: CharIdx = self.line_start(line).ok_or(DocumentError::Selection)?;
+            lines.push((start, self.line(line).unwrap_or_default()));
+        }
+        let commented: bool = lines
+            .iter()
+            .filter(|(_, text): &&(CharIdx, String)| !text.trim().is_empty())
+            .all(|(_, text): &(CharIdx, String)| text.trim_start().starts_with("//"));
+        let mut edits: Vec<CharEdit> = Vec::new();
+        for (start, text) in &lines {
+            if text.trim().is_empty() {
+                continue;
+            }
+            let indent: usize = text
+                .chars()
+                .take_while(|ch: &char| *ch == ' ' || *ch == '\t')
+                .count();
+            let at: CharIdx = CharIdx::new(start.raw().saturating_add(indent));
+            let (to, text): (CharIdx, String) = if commented {
+                let rest: &str = text.trim_start_matches([' ', '\t']);
+                let taken: usize = if rest.starts_with(COMMENT) { 3 } else { 2 };
+                (CharIdx::new(at.raw().saturating_add(taken)), String::new())
+            } else {
+                (at, COMMENT.to_owned())
+            };
+            edits.push(CharEdit { from: at, to, text });
         }
         self.reindent(&edits, (from, to))
     }
