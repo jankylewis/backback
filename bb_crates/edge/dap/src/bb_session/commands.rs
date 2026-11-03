@@ -6,7 +6,7 @@ use std::path::Path;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
-use crate::{Capabilities, DapError, SourceBreakpoint};
+use crate::{Capabilities, DapError, SourceBreakpoint, Step};
 
 use super::lifecycle::{state::Action, Target};
 use super::DapSession;
@@ -217,26 +217,5 @@ impl DapSession {
             )
             .await?;
         Ok(())
-    }
-}
-
-/// Supported stepping operations.
-#[derive(Debug, Clone, Copy)]
-pub enum Step {
-    /// Step over.
-    Next,
-    /// Step into.
-    In,
-    /// Step out.
-    Out,
-}
-
-impl Step {
-    fn name(self) -> &'static str {
-        match self {
-            Self::Next => "next",
-            Self::In => "stepIn",
-            Self::Out => "stepOut",
-        }
     }
 }

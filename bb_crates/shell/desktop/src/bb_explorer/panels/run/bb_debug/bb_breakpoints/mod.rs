@@ -2,8 +2,12 @@
 //! on the line number. They stay on their code when lines are added or
 //! removed above them, as in VS Code and Rider.
 
+mod bb_exceptions;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+
+pub(crate) use bb_exceptions::{ExceptionBreaks, ExceptionKind};
 
 /// Every breakpoint, by file.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

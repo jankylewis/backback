@@ -25,6 +25,7 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD16 | File type icons: JSON, XML, MSBuild, YAML, Razor, SQL, shell, JS/TS, web, images, config, Docker, text | Done | [#30](https://github.com/jankylewis/backback/pull/30); readback `docs/plan/readback/FIXES/S04/BBEOD16/` |
 | BBEOD17 | Debugger in the app: breakpoints, F5, Call Stack, Variables, stepping | Done | Breakpoints [#31](https://github.com/jankylewis/backback/pull/31), session [#33](https://github.com/jankylewis/backback/pull/33); readback `docs/plan/readback/FIXES/S03/BBEOD17/` |
 | BBEOD18 | Clickable stack traces in test results: each frame opens its call site | Done | [#34](https://github.com/jankylewis/backback/pull/34); readback `docs/plan/readback/FIXES/S04/BBEOD18/` |
+| BBEOD19 | Exception breakpoints: Debug menu and panel ticks for All / User-Unhandled; a stop names the exception | Done | [#46](https://github.com/jankylewis/backback/pull/46); readback `docs/plan/readback/V2/BBEOD19/` |
 
 ## Gaps behind a Done or Partial state
 

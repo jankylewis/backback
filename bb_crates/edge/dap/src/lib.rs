@@ -11,9 +11,12 @@ mod bb_session;
 mod exit;
 pub mod target;
 mod types;
-pub use bb_session::{DapSession, GotoTarget, Step};
+pub use bb_session::{DapSession, ExceptionInfo, GotoTarget};
 pub use exit::{exit_truth, launch_exit_truth, AdapterExit, Debuggee, ExitSource, ExitTruth};
-pub use types::{Capabilities, Event, Scope, SourceBreakpoint, StackFrame, Thread, Variable};
+pub use types::{
+    Capabilities, Event, ExceptionFilter, Scope, SourceBreakpoint, StackFrame, Step, Thread,
+    Variable,
+};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

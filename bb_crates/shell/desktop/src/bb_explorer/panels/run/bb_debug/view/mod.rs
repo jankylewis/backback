@@ -3,5 +3,8 @@
 
 mod bb_panel;
 pub(crate) mod notes;
+#[cfg(test)]
+mod tests;
+mod ticks;
 
 pub(crate) use bb_panel::panel;

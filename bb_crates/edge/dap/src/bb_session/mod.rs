@@ -4,7 +4,8 @@ mod bb_reader;
 mod commands;
 mod inspect;
 mod lifecycle;
-pub use commands::{GotoTarget, Step};
+pub use commands::GotoTarget;
+pub use inspect::ExceptionInfo;
 
 use bb_process::OwnedGroup;
 use std::collections::HashMap;

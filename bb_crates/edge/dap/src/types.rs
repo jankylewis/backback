@@ -16,6 +16,13 @@ pub struct Capabilities {
     /// kernel process status, not a default `0`.
     #[serde(default, rename = "netcoredbgLaunchExitCodeIsProcessStatus")]
     pub launch_exit_code_is_process_status: bool,
+    /// The exception filters `setExceptionBreakpoints` accepts; netcoredbg
+    /// offers `all` and `user-unhandled`.
+    #[serde(default)]
+    pub exception_breakpoint_filters: Vec<ExceptionFilter>,
+    /// Whether `exceptionInfo` names the exception a stop was for.
+    #[serde(default)]
+    pub supports_exception_info_request: bool,
 }
 
 impl Capabilities {
@@ -26,6 +33,36 @@ impl Capabilities {
             ExitSource::ProcessStatus
         } else {
             ExitSource::AdapterWord
+        }
+    }
+}
+
+/// One exception filter an adapter advertises.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ExceptionFilter {
+    /// The id sent in `setExceptionBreakpoints`.
+    pub filter: String,
+    /// Display label.
+    pub label: String,
+}
+
+/// Supported stepping operations.
+#[derive(Debug, Clone, Copy)]
+pub enum Step {
+    /// Step over.
+    Next,
+    /// Step into.
+    In,
+    /// Step out.
+    Out,
+}
+
+impl Step {
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::Next => "next",
+            Self::In => "stepIn",
+            Self::Out => "stepOut",
         }
     }
 }
@@ -184,5 +221,26 @@ mod tests {
         assert_eq!(plain.exit_signal(), None);
         let other: Event = Event::from_parts("terminated".to_owned(), None);
         assert_eq!(other.exit_signal(), None);
+    }
+
+    #[test]
+    fn capabilities_list_the_adapter_exception_filters() {
+        let stock: Capabilities = caps(
+            r#"{"exceptionBreakpointFilters":[{"filter":"user-unhandled","label":"user-unhandled"},
+                {"filter":"all","label":"all"}],"supportsExceptionInfoRequest":true}"#,
+        );
+        let ids: Vec<&str> = stock
+            .exception_breakpoint_filters
+            .iter()
+            .map(|filter: &ExceptionFilter| filter.filter.as_str())
+            .collect();
+        assert_eq!(ids, ["user-unhandled", "all"]);
+        assert!(stock.supports_exception_info_request);
+        let bare: Capabilities = caps("{}");
+        assert_eq!(
+            bare.exception_breakpoint_filters,
+            Vec::<ExceptionFilter>::new()
+        );
+        assert!(!bare.supports_exception_info_request);
     }
 }

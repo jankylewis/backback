@@ -7,7 +7,8 @@ use bb_dap::{DapSession, Event, Scope, StackFrame, Variable};
 use serde_json::Value;
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::bb_worker::{send, Frame, Note, Var};
+use super::bb_worker::send;
+use super::{Frame, Note, Var};
 
 /// One adapter event; `false` when the session is over.
 pub(super) async fn on_event(
@@ -86,10 +87,20 @@ async fn stopped(
         Some(top) => frame_vars(session, top.id).await.unwrap_or_default(),
         None => Vec::new(),
     };
+    let exception: Option<String> = if reason == "exception" {
+        session
+            .exception_info(id)
+            .await
+            .ok()
+            .map(|info: bb_dap::ExceptionInfo| info.headline())
+    } else {
+        None
+    };
     send(
         notes,
         Note::Stopped {
             reason,
+            exception,
             frames,
             vars,
         },
