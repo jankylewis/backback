@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 23 — FIXED 21, OPEN 2.
+Bugs a user met in the app. Entries: 26 — FIXED 24, OPEN 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -27,3 +27,6 @@ Bugs a user met in the app. Entries: 23 — FIXED 21, OPEN 2.
 | BB-BUG-021 | The move, copy and select-line keys do nothing | OPEN | the key map lacked the line commands (BB-UIX-010) | no | `D2/S06/BB_BUG_021_MOVE_COPY_AND_SELECT_LINE_KEYS_DO_NOTHING.md` |
 | BB-BUG-022 | A click right of a line's end does nothing | FIXED | editor rows were only as wide as their text (BB-UIX-011) | yes | `D2/S06/BB_BUG_022_A_CLICK_RIGHT_OF_A_LINES_END_DOES_NOTHING.md` |
 | BB-BUG-023 | The sidebar header does not show which side is chosen | FIXED | design: a title and a link | yes | `D2/S06/BB_BUG_023_THE_SIDEBAR_HEADER_DOES_NOT_SHOW_WHICH_SIDE_IS_CHOSEN.md` |
+| BB-BUG-024 | Test groups do not collapse | FIXED | a fold marker with no fold (BB-UIX-012) | yes | `D2/S06/BB_BUG_024_TEST_GROUPS_DO_NOT_COLLAPSE.md` |
+| BB-BUG-025 | A click on a test does not open it | FIXED | design: not built | yes | `D2/S07/BB_BUG_025_A_CLICK_ON_A_TEST_DOES_NOT_OPEN_IT.md` |
+| BB-BUG-026 | A running test cannot be stopped | FIXED | the stop was far from the run (BB-UIX-013) | yes | `D2/S07/BB_BUG_026_A_RUNNING_TEST_CANNOT_BE_STOPPED.md` |

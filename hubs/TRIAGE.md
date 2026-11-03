@@ -59,3 +59,8 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-022 | `a click past the text does nothing` | FIXED | Does the editor row span the pane (`w_full` in `row_frame`)? |
 | BB-BUG-023 | `which sidebar side is chosen?` | FIXED | Do both headers draw `side_tabs`? |
 | BB-UIX-011 | `the current line's band ends at the text` | FIXED | Does the element that takes the click span its pane? |
+| BB-BUG-024 | `a test group does not fold` | FIXED | Is the head a `group_row` with a `Group` key? |
+| BB-BUG-025 | `a click on a test does not open it` | FIXED | Does `find_source` find the class under the project folder? |
+| BB-BUG-026 | `no way to stop a test` | FIXED | Does the running row show ■, and does the process group die? |
+| BB-UIX-012 | `a ▾ that does nothing` | FIXED | Is the marker a literal in a label? |
+| BB-UIX-013 | `cannot find how to stop` | FIXED | Is the stop on the row that started the run? |

@@ -43,16 +43,22 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             eprintln!("bb_diag_state version={:?} squiggles={at:?}",
                 v.intel.shown_version(&tab.path).map(bb_intel::DocVersion::raw));
         }
-        let discovered: usize = v.tests.model.projects().values()
-            .map(|project: &crate::tests_panel::model::ProjectTests| project.specs.len()).sum();
-        let loading: usize = v.tests.model.projects().values()
-            .filter(|project: &&crate::tests_panel::model::ProjectTests| project.loading).count();
-        eprintln!("bb_tests_state projects={} discovered={discovered} loading={loading}",
-            v.tests.model.projects().len());
+        tests_line(v);
         if let Some(tab) = tab {
             eprintln!("bb_debug_state breakpoints={:?} {}", v.debug.breakpoints.lines(&tab.path), crate::run::bb_debug::view::notes::describe(v));
         }
     });
+}
+
+/// The Tests panel's line: what is listed and what runs.
+fn tests_line(v: &ExplorerView) {
+    let discovered: usize = v.tests.model.projects().values()
+        .map(|project: &crate::tests_panel::model::ProjectTests| project.specs.len()).sum();
+    let loading: usize = v.tests.model.projects().values()
+        .filter(|project: &&crate::tests_panel::model::ProjectTests| project.loading).count();
+    let running: usize = v.tests.running_specs.values().map(std::collections::BTreeSet::len).sum();
+    eprintln!("bb_tests_state projects={} discovered={discovered} loading={loading} busy={} running={running} message={:?}",
+        v.tests.model.projects().len(), v.tests.busy.is_some(), v.tests.message);
 }
 
 /// The lines for the open panels: the places panel (BBEOD24) and the start
