@@ -21,3 +21,5 @@
 | BB-BUG-018 | The old name opens selected; the first key replaces it | FIXED | red-first window test + sweep 3 readback | `D2/S05/BB_BUG_018_THE_RENAME_BOX_APPENDS_TO_THE_OLD_NAME.md` |
 | BB-BUG-019 | Every change re-pulls every open file; the refresh request is declared and followed | FIXED | red-first server-thread test + readback | `D2/S05/BB_BUG_019_PROBLEMS_KEEP_STALE_DIAGNOSTICS_AFTER_A_RENAME.md` |
 | BB-BUG-020 | `delete_lines`, `insert_line_below`/`above` in the text model; Cmd+Shift+K and Cmd+(Shift+)Enter arms | FIXED | red-first unit + window tests + sweep 4 readback | `D2/S05/BB_BUG_020_CMD_SHIFT_K_AND_CMD_ENTER_DO_NOTHING.md` |
+| BB-BUG-022 | Editor rows span the pane (`w_full`); a click past the text lands on the line's end | FIXED | red-first window test + `clickpast` readback | `D2/S06/BB_BUG_022_A_CLICK_RIGHT_OF_A_LINES_END_DOES_NOTHING.md` |
+| BB-BUG-023 | One `EXPLORER  TESTS` strip; the chosen tab in the `chosen` pink | FIXED | window + unit test | `D2/S06/BB_BUG_023_THE_SIDEBAR_HEADER_DOES_NOT_SHOW_WHICH_SIDE_IS_CHOSEN.md` |

@@ -101,8 +101,11 @@ fn row_frame(
     (theme, height): (Theme, f32),
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Stateful<gpui::Div> {
+    // The whole pane width: a click right of the text still lands on the
+    // row (BB-BUG-022), and the current line's band spans the pane.
     div()
         .relative()
+        .w_full()
         .id(index)
         .debug_selector(|| format!("editor-line-{index}"))
         .h(px(height))

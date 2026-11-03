@@ -179,3 +179,25 @@ fn cmd_l_selects_the_line_and_a_key_replaces_it(cx: &mut TestAppContext) {
         "the whole line, break included"
     );
 }
+
+/// BB-BUG-022: a click right of a line's last char, inside the editor, puts
+/// the cursor at the line's end; on an empty line, at its start (VS Code).
+#[gpui::test]
+fn a_click_past_the_line_end_puts_the_cursor_at_the_end(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "class C\n{\n    int a;\n\n}\n");
+    let area: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("editor-area").unwrap();
+    let past: gpui::Pixels = area.right() - gpui::px(12.0);
+    for (selector, expected) in [("editor-line-2", 20_usize), ("editor-line-3", 21)] {
+        let row: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds(selector).unwrap();
+        vcx.simulate_click(
+            gpui::point(past, row.center().y),
+            gpui::Modifiers::default(),
+        );
+        assert_eq!(
+            cursor(&rig, vcx),
+            expected,
+            "a click past the end of {selector}"
+        );
+    }
+}

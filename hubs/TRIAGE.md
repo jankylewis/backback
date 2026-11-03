@@ -56,3 +56,6 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-020 | `Cmd+Shift+K does nothing` | FIXED | Does `document_command` have arms for `k` and `enter`? |
 | BB-BUG-021 | `Alt+Down does nothing` | OPEN | Move and copy are not in the text model (Cmd+L is: `select_line`); Cmd+[ / Cmd+] are Back/Forward |
 | BB-UIX-010 | `a line-command key does nothing` | OPEN | Is the key bound in the app (`KeyBinding::new`) before the editor sees it? |
+| BB-BUG-022 | `a click past the text does nothing` | FIXED | Does the editor row span the pane (`w_full` in `row_frame`)? |
+| BB-BUG-023 | `which sidebar side is chosen?` | FIXED | Do both headers draw `side_tabs`? |
+| BB-UIX-011 | `the current line's band ends at the text` | FIXED | Does the element that takes the click span its pane? |

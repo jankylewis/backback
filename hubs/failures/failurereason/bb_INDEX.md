@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 30 — FIXED 27, OBSERVED 1, OPEN 2.
+One file per failure mechanism. This hub owns the id. Entries: 31 — FIXED 28, OBSERVED 1, OPEN 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -34,3 +34,4 @@ One file per failure mechanism. This hub owns the id. Entries: 30 — FIXED 27, 
 | BB-UIX-009 | The rename box did not select the old name, so a typed name was glued onto it | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |
 | BB-LSP-007 | An edit pulled diagnostics again only for its own file, so other open files kept lists of the old text | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_007_AN_EDIT_PULLED_AGAIN_ONLY_ITS_OWN_FILE.md` |
 | BB-UIX-010 | The key map lacked VS Code's line commands | OPEN | yes | yes | none | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
+| BB-UIX-011 | Editor rows were only as wide as their text, so a click past the text hit nothing | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |

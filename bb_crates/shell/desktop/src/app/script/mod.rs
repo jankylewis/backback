@@ -1,7 +1,8 @@
 //! Script steps for live readback, mixed into `BB_KEYS` with the keys:
 //! `wait:ready`, `wait:answer`, `sleep:<ms>`, `goto:<line>:<col>` (1-based),
 //! `hover:<line>:<col>` (a real mouse move), `click:<line>:<col>` (a real
-//! click; `cmdhover`/`cmdclick` hold Cmd), `mark:<name>` (prints a line a capture script waits for, then
+//! click; `cmdhover`/`cmdclick` hold Cmd; `clickpast:<line>` clicks right of
+//! the line's end), `mark:<name>` (prints a line a capture script waits for, then
 //! pauses), `state` (prints what the window shows). Keys and mouse go
 //! through the window's own dispatch.
 
@@ -31,6 +32,7 @@ pub(crate) async fn run(
         ["click", line, col] => bb_pointer::click(view, cx, (number(line), number(col)), false),
         ["cmdhover", line, col] => bb_pointer::hover(view, cx, (number(line), number(col)), true),
         ["cmdclick", line, col] => bb_pointer::click(view, cx, (number(line), number(col)), true),
+        ["clickpast", line] => bb_pointer::click_past(view, cx, number(line)),
         ["mark", name] => {
             eprintln!("bb_mark {name}");
             pause(cx, 1_500).await;
