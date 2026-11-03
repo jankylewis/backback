@@ -44,6 +44,7 @@ on the raw `CLR/...: Exception thrown: ...` text first.
 | Mutation: with `setExceptionBreakpoints` never sent, that live test fails (the program ends with no stop) | run on the branch before the gate |
 | Real app (branch build, `env -i` with launchd's PATH, `BACKBACK_STATE_DIR` holding a saved All tick for the scratch solution): F5 builds, launches and pauses on the throw | `state`: `session=paused exception=Some("System.InvalidOperationException: total was 25") frames=["Calc.MathOps.Fail():39", "Calc.MathOps.Report():28", "Calc.Program.Main():10"] vars=["$exception={System.InvalidOperationException}", "total=25"]`; status `Paused on System.InvalidOperationException: total was 25 in Calc.MathOps.Fail()`; the editor on line 39 |
 | Same run, F5 again: the caught exception lets the program finish | `Debugging ended: the program ended`, `session=none`, no netcoredbg process left |
+| Installed app at `0b6406d` (`install.sh`, launchd's PATH), the app's own state folder holding the All tick for the scratch workspace: F5, then F5 | `Paused on System.InvalidOperationException: total was 25 in Calc.MathOps.Fail()`, frames `Fail():39`, `Report():28`, `Main():10`, `total=25`; then `Debugging ended: the program ended`, no netcoredbg left; 45 s launch to quit |
 
 ## Not covered
 
