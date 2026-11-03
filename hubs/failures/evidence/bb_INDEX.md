@@ -29,3 +29,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/S03/BB_BUG_011_*.md` |
 | BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/S03/BB_BUG_012_*.md` |
 | BB-DAP-001 | FIXED | The raw `exceptionInfo` reply in `docs/plan/readback/V2/BBEOD19/bb_READBACK.md` |
+| BB-LSP-006 | FIXED | Gate log 2026-11-03 (`bb_gate.cHCf6V358z`, local temp): `restored : false after 120.0s` with `Restore complete` in the run log; mechanism quoted in the reason page |

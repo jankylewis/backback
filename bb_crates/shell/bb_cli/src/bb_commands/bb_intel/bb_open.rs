@@ -45,6 +45,24 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
         &mut log,
     )
     .await?;
+    report_load(&load, &listing, started, &log_path);
+    finish_restore(
+        restore,
+        &scratch,
+        (&mut incoming, &mut log),
+        load.restore_ended,
+    )
+    .await?;
+    let stopped: Result<(), bb_lsp::LspError> = client.shutdown().await;
+    roslyn::drain_log(&mut incoming, DRAIN_TIMEOUT, &mut log).await?;
+    // Best effort: a scratch folder left behind is only temp space.
+    let _removed: std::io::Result<()> = std::fs::remove_dir_all(&scratch);
+    stopped.map_err(roslyn::RoslynError::Client)?;
+    Ok(())
+}
+
+/// The load's outcome lines: time, failed projects, total, log path.
+fn report_load(load: &roslyn::Loaded, listing: &Solution, started: Instant, log_path: &Path) {
     let total: usize = roslyn::LoadState::new(&listing.projects).total();
     println!(
         "loaded    : {:?} until all {total} projects loaded",
@@ -55,25 +73,22 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
     }
     println!("total     : {:?}", started.elapsed());
     println!("log       : {}", log_path.display());
-    finish_restore(restore, &scratch, &mut incoming, &mut log).await?;
-    let stopped: Result<(), bb_lsp::LspError> = client.shutdown().await;
-    roslyn::drain_log(&mut incoming, DRAIN_TIMEOUT, &mut log).await?;
-    // Best effort: a scratch folder left behind is only temp space.
-    let _removed: std::io::Result<()> = std::fs::remove_dir_all(&scratch);
-    stopped.map_err(roslyn::RoslynError::Client)?;
-    Ok(())
 }
 
 /// Restore off: name the scratch folder. Restore on: wait until Roslyn's
-/// restore has ended, so the run log holds it (BB-LSP-004).
+/// restore has ended, so the run log holds it (BB-LSP-004); a restore that
+/// ended during the load is in the log already (BB-LSP-006).
 async fn finish_restore(
     restore: roslyn::Restore,
     scratch: &Path,
-    incoming: &mut mpsc::Receiver<Incoming>,
-    log: &mut std::fs::File,
+    (incoming, log): (&mut mpsc::Receiver<Incoming>, &mut std::fs::File),
+    ended_during_load: bool,
 ) -> Result<(), CommandError> {
     match restore {
         roslyn::Restore::Off => println!("obj       : {} (removed at exit)", scratch.display()),
+        roslyn::Restore::On if ended_during_load => {
+            println!("restored  : true (ended during the load)");
+        }
         roslyn::Restore::On => {
             let started: Instant = Instant::now();
             let ended: bool = roslyn::wait_for_restore(incoming, RESTORE_TIMEOUT, log).await?;
