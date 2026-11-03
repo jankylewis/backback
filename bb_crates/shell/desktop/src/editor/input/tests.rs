@@ -8,6 +8,25 @@ use crate::ExplorerView;
 
 const TEXT: &str = "\tvar s = 1;\n";
 
+fn text(rig: &Rig, vcx: &mut VisualTestContext) -> String {
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.tabs.active().unwrap().text()
+    })
+}
+
+fn put(rig: &Rig, vcx: &mut VisualTestContext, anchor: usize, cursor: usize) {
+    rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            let doc: &mut bb_text::Document = v.tabs.active_mut().unwrap();
+            doc.select(bb_text::CharIdx::new(anchor), bb_text::CharIdx::new(cursor))
+                .unwrap();
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+}
+
 fn cursor(rig: &Rig, vcx: &mut VisualTestContext) -> usize {
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
         v.tabs.active().unwrap().cursor().raw()
@@ -66,4 +85,35 @@ fn ctrl_emacs_keys_move_and_delete(cx: &mut TestAppContext) {
         v.tabs.active().unwrap().text()
     });
     assert_eq!(text, "b\ncd\n", "Ctrl+D took `a`, Ctrl+H the tab");
+}
+
+/// BB-BUG-015: Tab typed a tab over the selection; now it indents the
+/// selected lines and Shift+Tab outdents them, the text kept.
+#[gpui::test]
+fn tab_with_a_selection_indents_and_shift_tab_outdents(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "class C\n{\n    int a;\n}\n");
+    put(&rig, vcx, 10, 13);
+    vcx.simulate_keystrokes("tab");
+    assert_eq!(
+        text(&rig, vcx),
+        "class C\n{\n        int a;\n}\n",
+        "indented, nothing lost"
+    );
+    vcx.simulate_keystrokes("shift-tab");
+    assert_eq!(text(&rig, vcx), "class C\n{\n    int a;\n}\n", "outdented");
+    vcx.simulate_keystrokes("shift-tab");
+    assert_eq!(text(&rig, vcx), "class C\n{\nint a;\n}\n", "and again");
+}
+
+/// BB-BUG-014: Cmd+Backspace did nothing; Cmd+Delete is its mirror.
+#[gpui::test]
+fn cmd_backspace_and_cmd_delete_reach_the_line_edges(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "    int alpha = beta;\n");
+    put(&rig, vcx, 16, 16);
+    vcx.simulate_keystrokes("cmd-backspace");
+    assert_eq!(text(&rig, vcx), "beta;\n", "to the line start");
+    vcx.simulate_keystrokes("cmd-delete");
+    assert_eq!(text(&rig, vcx), "\n", "to the line end");
 }

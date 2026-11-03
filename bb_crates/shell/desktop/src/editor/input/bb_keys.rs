@@ -26,6 +26,15 @@ pub(super) fn command_key(
             .tabs
             .active_mut()
             .map_or(Ok(()), bb_text::Document::undo),
+        // Cmd+Backspace / Cmd+Delete: to the line's start or end (BB-BUG-014).
+        "backspace" => view
+            .tabs
+            .active_mut()
+            .map_or(Ok(()), bb_text::Document::delete_to_line_start),
+        "delete" => view
+            .tabs
+            .active_mut()
+            .map_or(Ok(()), bb_text::Document::delete_to_line_end),
         "left" | "right" | "up" | "down" => view
             .tabs
             .active_mut()
@@ -81,6 +90,10 @@ pub(super) fn text_key(
         "end" => document.end(shift),
         "up" => document.vertical(false, shift),
         "down" => document.vertical(true, shift),
+        // Tab indents, Shift+Tab outdents; a selection is never typed over
+        // (BB-BUG-015).
+        "tab" if shift => document.outdent(),
+        "tab" => document.indent(),
         _ => document.insert(event.keystroke.key_char.as_deref()?),
     };
     Some(result)

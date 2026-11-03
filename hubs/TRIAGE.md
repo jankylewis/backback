@@ -42,5 +42,6 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-UIX-005 | `Option+Right moves one character` | FIXED | Does the key map read `modifiers.alt` and `modifiers.control` before the key name? |
 | BB-BUG-013 | `cannot horizontally scroll` | FIXED | Does the tab keep a `scroll_x` and does `state` print it after End on a wide line? |
 | BB-UIX-006 | `the line ends under the pane's edge` | FIXED | Is the row's text in a clipped viewport shifted by `scroll_x`? |
-| BB-BUG-014 | `Cmd+Backspace does nothing` | OPEN | Does the key map handle `backspace` with `modifiers.platform`? |
-| BB-BUG-015 | `Tab with a selection replaces it` | OPEN | Does Tab with a selection indent the lines instead of inserting? Shift+Tab? |
+| BB-BUG-014 | `Cmd+Backspace does nothing` | FIXED | Does `command_key` map `backspace` and `delete` to the line-edge deletes? |
+| BB-BUG-015 | `Tab with a selection replaces it` | FIXED | Does `text_key` give `tab` its own arm before the insert default? |
+| BB-UIX-007 | `a selected line vanishes on Tab` | FIXED | Is every editing key listed with what it does to a selection? |

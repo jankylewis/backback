@@ -2,11 +2,12 @@
 
 id: BB-BUG-015
 family: UIX
-status: OPEN
+status: FIXED
 date: 2026-11-03
 signature: Tab with a selection replaces it
 source: step-8 sweep (cases E1, E2) on the installed app at `0b6406d`, `docs/plan/readback/V2/SWEEP01/bb_READBACK.md`
-links: fix=no lesson=no evidence=yes toolgap=none
+cause: BB-UIX-007
+links: fix=yes lesson=yes evidence=yes toolgap=none
 
 ## Steps
 

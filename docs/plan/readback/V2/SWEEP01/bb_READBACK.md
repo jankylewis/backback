@@ -20,6 +20,15 @@ fixture, keys through the window's own dispatch, the saved bytes judged.
 Not covered: a test *run* from the Dock (the Tests panel's Run needs a click,
 BB-TG-007; listing from the Dock environment is BBEOD20's readback).
 
+## After BB-BUG-014 and BB-BUG-015 (branch build, the same eight cases)
+
+| Case | Saved | Verdict |
+|---|---|---|
+| C2 Cmd+Backspace | `beta + gamma;` | PASS: deleted to the line start |
+| E1 Tab with a selection | `        int alpha = beta + gamma;` (line 4 untouched: the selection ended at its start) | PASS: indented, nothing lost |
+| E2 Shift+Tab with a selection | `int alpha = beta + gamma;` | PASS: outdented |
+| A, B, C1, D, F | as above | PASS: unchanged by the new key arms |
+
 ## BB-BUG-013: horizontal scroll, branch build, the headmate's own file
 
 `PipelineConfigContractTests.cs` (MbTx, 79 KB), read-only (`--no-write`),
