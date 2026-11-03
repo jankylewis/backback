@@ -17,12 +17,13 @@ Put the cursor on a line, press one of these keys, Cmd+S.
 |---|---|---|
 | Alt+Up / Alt+Down | the line swaps with the one above / below | nothing |
 | Shift+Alt+Up / Shift+Alt+Down | a copy of the line above / below | nothing |
-| Cmd+L | the whole line selected, with its break | nothing; the next key types at the cursor |
+| Cmd+L | the whole line selected, with its break | nothing; the next key types at the cursor. Fixed: `select_line` (#60) |
 | Cmd+] / Cmd+[ | the line moves in / out one level | Forward / Back: the app binds them first (Xcode style, `open.rs`) |
 
 ## Not done yet
 
-Moving and copying lines must keep CRLF, a last line without a final
+Cmd+L is fixed (`select_line`, sweep 4 K5 PASS on the branch). Moving and
+copying lines must keep CRLF, a last line without a final
 newline, and a selection over several lines; each needs its own test.
 Cmd+[ / Cmd+] need a ruling: Back/Forward (now) or indent/outdent
 (VS Code); line indent is on Tab and Shift+Tab with a selection.

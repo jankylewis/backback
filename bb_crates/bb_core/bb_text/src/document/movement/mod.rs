@@ -132,6 +132,33 @@ impl Document {
         Ok((start, text))
     }
 
+    /// Cmd+L: select the cursor line with its line break; pressed again,
+    /// the next line too (VS Code). A selection grows to whole lines
+    /// (BB-BUG-021).
+    ///
+    /// # Errors
+    /// Returns a checked text error.
+    pub fn select_line(&mut self) -> Result<(), DocumentError> {
+        let (from, to): (CharIdx, CharIdx) = self.selection().unwrap_or((self.cursor, self.cursor));
+        let first: usize = self
+            .buffer
+            .line_of_char(from)
+            .ok_or(DocumentError::Selection)?;
+        let last: usize = self
+            .buffer
+            .line_of_char(to)
+            .ok_or(DocumentError::Selection)?;
+        let start: CharIdx = self.line_start(first).ok_or(DocumentError::Selection)?;
+        // Past the last line, `line_start` is the text's end; say so plainly.
+        let next: usize = last.saturating_add(1);
+        let end: CharIdx = if next < self.len_lines() {
+            self.line_start(next).ok_or(DocumentError::Selection)?
+        } else {
+            CharIdx::new(self.len_chars())
+        };
+        self.select(start, end)
+    }
+
     /// Set cursor and optionally extend the old selection.
     ///
     /// # Errors
