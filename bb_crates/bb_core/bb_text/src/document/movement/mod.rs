@@ -8,27 +8,22 @@ impl Document {
         self.buffer.line_of_char(self.cursor).unwrap_or(0)
     }
 
-    /// Move one char left, optionally extending the selection.
+    /// Move one grapheme left, optionally extending the selection.
     ///
     /// # Errors
     /// Returns a checked selection error.
     pub fn left(&mut self, extend: bool) -> Result<(), DocumentError> {
-        let mut target: usize = self.cursor.raw().saturating_sub(1);
-        if self.mid_crlf(target) {
-            target = target.saturating_sub(1);
-        }
+        // One grapheme: never inside `é`, an emoji or a `\r\n` (BB-BUG-033).
+        let target: usize = crate::graphemes::before(self.rope(), self.cursor.raw());
         self.move_to(CharIdx::new(target), extend)
     }
 
-    /// Move one char right, optionally extending the selection.
+    /// Move one grapheme right, optionally extending the selection.
     ///
     /// # Errors
     /// Returns a checked selection error.
     pub fn right(&mut self, extend: bool) -> Result<(), DocumentError> {
-        let mut target: usize = self.cursor.raw().saturating_add(1).min(self.len_chars());
-        if self.mid_crlf(target) {
-            target = target.saturating_add(1).min(self.len_chars());
-        }
+        let target: usize = crate::graphemes::after(self.rope(), self.cursor.raw());
         self.move_to(CharIdx::new(target), extend)
     }
 

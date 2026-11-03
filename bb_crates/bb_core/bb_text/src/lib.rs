@@ -6,6 +6,7 @@
 
 mod bb_buffer;
 mod document;
+mod graphemes;
 mod position;
 
 pub use bb_buffer::{Buffer, TextError};

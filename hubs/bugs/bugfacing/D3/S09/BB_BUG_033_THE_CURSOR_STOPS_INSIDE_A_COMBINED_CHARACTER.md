@@ -2,11 +2,11 @@
 
 id: BB-BUG-033
 family: UIX
-status: OPEN
+status: FIXED
 date: 2026-11-04
 signature: Left from a line's end lands between `e` and its combining accent
 source: night robustness sweep 2026-11-04 (`robust_sweep.py`, branch build), case "emoji + combining"
-links: fix=no lesson=no evidence=yes toolgap=none
+links: fix=yes lesson=no evidence=yes toolgap=none
 
 ## Steps
 
@@ -18,8 +18,7 @@ takes the whole `é`.
 Actual: the cursor moves by code point: six Lefts from the end of
 `"a👍b é 中文";` stop at column 22, between `e` and the accent.
 
-## Not proven
+## Status
 
-Which keys besides Left/Right split a grapheme (Backspace, Delete, word
-moves, a click); each needs its own test. `unicode-segmentation` is in
-`Cargo.lock` already (a transitive dependency).
+FIXED: Left, Right, Backspace and Delete step one grapheme. Word moves and
+a click already stop at word or glyph edges; not re-checked by hand.

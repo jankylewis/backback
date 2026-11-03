@@ -9,6 +9,7 @@ description = "backback text core: rope-backed buffer with typed positions"
 [dependencies]
 ropey.workspace = true
 thiserror.workspace = true
+unicode-segmentation = "1.13"
 tempfile = "3"
 
 [dev-dependencies]
