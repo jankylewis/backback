@@ -11,7 +11,7 @@ Each case on a fresh `Words.cs` in a folder with no solution (no Roslyn),
 | K2 move the line up | `goto:4:5 alt-up` | UNCHANGED | UNCHANGED (BB-BUG-021) |
 | K3 copy the line down | `goto:3:5 shift-alt-down` | UNCHANGED | UNCHANGED (BB-BUG-021) |
 | K4 delete the line | `goto:3:5 cmd-shift-k` | UNCHANGED | PASS |
-| K5 select the line | `goto:3:5 cmd-l x` | `x` typed at the cursor | `x` typed at the cursor (BB-BUG-021) |
+| K5 select the line | `goto:3:5 cmd-l x` | `x` typed at the cursor | `x` typed at the cursor; PASS on branch `bb-bug-021-cmd-l` (#60) |
 | K6 open a line below | `goto:3:5 cmd-enter q` | `q` typed into the line | PASS |
 | K7 open a line above | `goto:3:5 cmd-shift-enter q` | `q` typed into the line | PASS |
 | K8 indent the line | `goto:3:5 cmd-]` | UNCHANGED (Forward) | UNCHANGED: Cmd+] is Forward (BB-BUG-021) |

@@ -28,6 +28,6 @@ key in the middle of the line.
 Run `sweep04_run.py`'s cases (Words.cs, no solution) on the build; any
 UNCHANGED verdict is a key this map drops.
 
-Status OPEN: Cmd+Shift+K and Cmd+(Shift+)Enter are in (BB-BUG-020);
-moving, copying and selecting lines are not, and Cmd+[ / Cmd+] are
-Back/Forward here (BB-BUG-021).
+Status OPEN: Cmd+Shift+K, Cmd+(Shift+)Enter (BB-BUG-020) and Cmd+L are
+in; moving and copying lines are not, and Cmd+[ / Cmd+] are Back/Forward
+here (BB-BUG-021).

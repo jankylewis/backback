@@ -85,3 +85,18 @@ fn a_cursor_is_never_placed_between_cr_and_lf() {
     doc.insert("x").unwrap();
     assert_eq!(doc.text(), "class Ax\r\n{\r\n}\r\n", "the pair stays whole");
 }
+
+#[test]
+fn cmd_l_selects_the_line_with_its_break_and_then_the_next_one() {
+    let mut doc: Document = at("a\n  bc\nd", 4);
+    doc.select_line().unwrap();
+    let line: Option<(CharIdx, CharIdx)> = Some((CharIdx::new(2), CharIdx::new(7)));
+    assert_eq!(doc.selection(), line, "the line and its break");
+    doc.select_line().unwrap();
+    let both: Option<(CharIdx, CharIdx)> = Some((CharIdx::new(2), CharIdx::new(8)));
+    assert_eq!(
+        doc.selection(),
+        both,
+        "and the last line, which has no break"
+    );
+}

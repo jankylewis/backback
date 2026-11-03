@@ -166,3 +166,16 @@ fn the_line_command_keys_reach_the_line_commands(cx: &mut TestAppContext) {
         "Cmd+Shift+K twice"
     );
 }
+
+#[gpui::test]
+fn cmd_l_selects_the_line_and_a_key_replaces_it(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "class C\n{\n    int a;\n}\n");
+    put(&rig, vcx, 14, 14);
+    vcx.simulate_keystrokes("cmd-l x");
+    assert_eq!(
+        text(&rig, vcx),
+        "class C\n{\nx}\n",
+        "the whole line, break included"
+    );
+}

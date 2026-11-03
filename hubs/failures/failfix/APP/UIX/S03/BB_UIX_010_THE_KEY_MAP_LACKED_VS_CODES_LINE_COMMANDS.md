@@ -9,7 +9,8 @@ source: branch `bb-bug-020-line-commands`
 
 One text-model command per line command, one undo step each, mapped in
 `document_command`: `delete_lines`, `insert_line_below`,
-`insert_line_above`. Tab's selection path became `indent_lines`. A new line takes the file's own
+`insert_line_above`, `select_line` (Cmd+L). Tab's selection path became
+`indent_lines`. A new line takes the file's own
 line break (`enter`'s rule).
 
 ## The wrong fix
@@ -20,5 +21,5 @@ app bindings); the readback on the real app showed nothing changed.
 
 ## Still to do
 
-Move and copy lines (Alt+Up/Down, Shift+Alt+Up/Down), select the line
-(Cmd+L), and a ruling on Cmd+[ / Cmd+]: BB-BUG-021.
+Move and copy lines (Alt+Up/Down, Shift+Alt+Up/Down) and a ruling on
+Cmd+[ / Cmd+]: BB-BUG-021.
