@@ -40,3 +40,7 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-ENV-001 | `PATH=/usr/bin:/bin:/usr/sbin:/sbin` in `ps eww` of the app | FIXED | Started by launchd? The login shell's PATH must be adopted and installed tools found in their own folders |
 | BB-UIX-004 | `a lone \r in a saved CRLF file` | FIXED | Did a move or edit treat `\r` and `\n` as two stops? |
 | BB-UIX-005 | `Option+Right moves one character` | FIXED | Does the key map read `modifiers.alt` and `modifiers.control` before the key name? |
+| BB-BUG-013 | `cannot horizontally scroll` | FIXED | Does the tab keep a `scroll_x` and does `state` print it after End on a wide line? |
+| BB-UIX-006 | `the line ends under the pane's edge` | FIXED | Is the row's text in a clipped viewport shifted by `scroll_x`? |
+| BB-BUG-014 | `Cmd+Backspace does nothing` | OPEN | Does the key map handle `backspace` with `modifiers.platform`? |
+| BB-BUG-015 | `Tab with a selection replaces it` | OPEN | Does Tab with a selection indent the lines instead of inserting? Shift+Tab? |

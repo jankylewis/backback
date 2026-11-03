@@ -28,6 +28,8 @@ pub(super) struct LineRow {
     pub(super) overlay: Option<gpui::AnyElement>,
     /// On the cursor line: the caret's x from the text's left edge.
     pub(super) caret: Option<f32>,
+    /// Pixels the text has moved left (BB-BUG-013).
+    pub(super) scroll_x: f32,
 }
 
 impl LineRow {
@@ -42,6 +44,7 @@ impl LineRow {
             test: None,
             overlay: None,
             caret: None,
+            scroll_x: 0.0,
         }
     }
 }
@@ -69,6 +72,7 @@ pub(super) fn line_row(
         test,
         overlay,
         caret,
+        scroll_x,
     }: LineRow = row;
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
     row_frame(index, (current, stopped), (theme, fonts.line_height()), cx)
@@ -79,10 +83,14 @@ pub(super) fn line_row(
             theme,
             cx,
         ))
-        .child(line_text(index, runs, (theme, &fonts)))
-        .when_some(caret, |el: gpui::Stateful<gpui::Div>, x: f32| {
-            el.child(caret_quad(x, theme, &fonts))
-        })
+        .child(super::hscroll::text_viewport(
+            scroll_x,
+            line_text(index, runs, (theme, &fonts)),
+        ))
+        .when_some(
+            caret.map(|x: f32| x - scroll_x).filter(|x: &f32| *x >= 0.0),
+            |el: gpui::Stateful<gpui::Div>, x: f32| el.child(caret_quad(x, theme, &fonts)),
+        )
         .children(overlay)
 }
 

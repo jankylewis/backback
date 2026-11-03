@@ -8,3 +8,4 @@ holds the steps, captures and verdict of a read back on the real app.
 | `BBEOD19/` | Exception breakpoints: a saved All tick pauses F5 on a caught throw, named in the panel and the status bar |
 | `BBEOD20/` | Build before list: a never-built test project builds once on expand, then lists; `--no-write` refuses and says so |
 | `BBEOD21/` | Dot-folders in search: Find in Files on MbTx equals `git grep`; Go to File lists `.github` files, never `.git`, `.idea` or ignored ones |
+| `SWEEP01/` | Editor key sweep on the installed app (two bugs found) and the horizontal-scroll readback on the headmate's file |

@@ -1,7 +1,7 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 24 — FIXED 22, OBSERVED 1, OPEN 1.
-One file per failure mechanism. This hub owns the id. Entries: 24 — FIXED 22, OBSERVED 1, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 25 — FIXED 23, OBSERVED 1, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 25 — FIXED 23, OBSERVED 1, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -29,3 +29,4 @@ One file per failure mechanism. This hub owns the id. Entries: 24 — FIXED 22, 
 | BB-ENV-001 | An app launched by launchd has no shell PATH, so dotnet and netcoredbg are not found | FIXED | yes | yes | BB-TG-012 | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
 | BB-UIX-004 | A CRLF line break counted as two cursor stops | FIXED | yes | yes | none | `APP/UIX/S01/BB_UIX_004_A_CRLF_LINE_BREAK_COUNTED_AS_TWO_CURSOR_STOPS.md` |
 | BB-UIX-005 | The key map ignored Option and Ctrl | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_005_THE_KEY_MAP_IGNORED_OPTION_AND_CTRL.md` |
+| BB-UIX-006 | Editor rows had no horizontal offset, so the list clipped every wide line | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_006_ROWS_HAD_NO_HORIZONTAL_OFFSET.md` |

@@ -15,12 +15,16 @@ pub(crate) fn char_at(
     (window, fonts): (&Window, &bb_ui::Typography),
 ) -> Option<bb_text::CharIdx> {
     let left: f32 = view.editor_left(fonts) + fonts.gutter_width();
+    let scroll_x: f32 = view
+        .tabs
+        .active_tab()
+        .map_or(0.0, |tab: &crate::editor::Tab| tab.scroll_x);
     let document: &bb_text::Document = view.tabs.active()?;
     let start: usize = document.line_start(line)?.raw();
     let content: String = document.line(line).unwrap_or_default();
     let visible: &str = content.trim_end_matches(['\r', '\n']);
     let column: usize =
-        crate::editor::Columns::shape(window, visible, fonts).column_at(window_x - left);
+        crate::editor::Columns::shape(window, visible, fonts).column_at(window_x - left + scroll_x);
     Some(bb_text::CharIdx::new(start.saturating_add(column)))
 }
 
