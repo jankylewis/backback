@@ -4,8 +4,6 @@
 
 use std::path::{Path, PathBuf};
 
-/// Folders never listed: VCS, build output, dependencies.
-const SKIP: [&str; 5] = [".git", "bin", "obj", "node_modules", ".target"];
 /// Enough for any solution; a huge folder stops listing here.
 const MAX_FILES: usize = 50_000;
 /// Rows shown at once.
@@ -63,8 +61,10 @@ impl QuickOpen {
 
     /// Every file under `root`, relative to it and sorted; may be slow.
     pub(crate) fn list_files(root: &Path) -> Vec<PathBuf> {
-        let mut files: Vec<PathBuf> = Vec::new();
-        walk(root, root, &mut files);
+        let mut files: Vec<PathBuf> = bb_search::files(root)
+            .take(MAX_FILES)
+            .filter_map(|path: PathBuf| path.strip_prefix(root).ok().map(Path::to_path_buf))
+            .collect();
         files.sort();
         files
     }
@@ -203,25 +203,4 @@ fn subsequence(text: &str, query: &str) -> bool {
     query
         .chars()
         .all(|wanted: char| chars.any(|ch: char| ch == wanted))
-}
-
-fn walk(root: &Path, dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(items): Result<std::fs::ReadDir, std::io::Error> = std::fs::read_dir(dir) else {
-        return;
-    };
-    for item in items.flatten() {
-        if out.len() >= MAX_FILES {
-            return;
-        }
-        let path: PathBuf = item.path();
-        let name: String = item.file_name().to_string_lossy().into_owned();
-        if SKIP.contains(&name.as_str()) || name.starts_with('.') && path.is_dir() {
-            continue;
-        }
-        if path.is_dir() {
-            walk(root, &path, out);
-        } else if let Ok(relative) = path.strip_prefix(root) {
-            out.push(relative.to_path_buf());
-        }
-    }
 }
