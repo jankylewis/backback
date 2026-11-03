@@ -95,8 +95,10 @@ fn build_window(
         cx,
         |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
             crate::intel::glue::connect(state, window, cx);
-            if let Some(file) = &wanted.file {
-                state.open_file(file, window, cx);
+            match &wanted.file {
+                Some(file) => state.open_file(file, window, cx),
+                // No file to wait for: the readback steps start now (BB-TG-016).
+                None => crate::latency::drive(state, window, cx),
             }
         },
     );

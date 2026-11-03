@@ -4,7 +4,7 @@ id: BB-TG-007
 for: BB-BUG-004
 status: OBSERVED
 date: 2026-11-02
-source: `hubs/bugs/bugfacing/S01/BB_BUG_004_TEST_EXPLORER_CLICKS_NO_RESPONSE.md`
+source: `hubs/bugs/bugfacing/D1/S01/BB_BUG_004_TEST_EXPLORER_CLICKS_NO_RESPONSE.md`
 
 From the agent's shell `AXIsProcessTrusted()` is `false`. A `CGEvent` mouse
 click posted to the HID tap is dropped: the cursor location before and after

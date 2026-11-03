@@ -85,8 +85,9 @@ pub(crate) fn quit_when_asked(cx: &mut gpui::App) {
     }
 }
 
-/// Send the tab opens and the edits to the server as the paint after a key
-/// would (`render` flushes). A readback with the display asleep gets no
+/// Send the tab opens and the edits to the server, and let the Explorer
+/// follow the active file (BB-BUG-029), as the paint after a key would
+/// (`render` does both). A readback with the display asleep gets no
 /// paint, so the server never saw what the keys did and `state` read a tab
 /// it never opened (BB-TG-015). Outside the measured work; a no-op when a
 /// paint already flushed.
@@ -95,6 +96,9 @@ fn flush_as_a_paint(view: &gpui::WeakEntity<ExplorerView>, cx: &mut gpui::AsyncW
         cx,
         |v: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
             crate::intel::glue::flush(v);
+            if v.tests.side == crate::tests_panel::Side::Files {
+                crate::navigation::follow_active(v);
+            }
         },
     );
 }

@@ -5,7 +5,7 @@
 //! the line's end), `mark:<name>` (prints a line a capture script waits for, then
 //! pauses), `state` (prints what the window shows), `testopen:<name>` /
 //! `testrun:<name>` (the first spec whose name holds `name`: a row click /
-//! its ▶), `teststop` (the ■). Keys and mouse go
+//! its ▶), `teststop` (the ■), `open:<path>` (a file under the root). Keys and mouse go
 //! through the window's own dispatch.
 
 use std::time::{Duration, Instant};
@@ -46,6 +46,7 @@ pub(crate) async fn run(
         ["testopen", name] => test_steps::open(view, cx, name),
         ["testrun", name] => test_steps::run(view, cx, name),
         ["teststop"] => test_steps::stop(view, cx),
+        ["open", relative] => open(view, cx, relative),
         _ => return false,
     }
     true
@@ -70,6 +71,17 @@ fn tests(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, expand: b
 
 fn ready(view: &ExplorerView) -> bool {
     view.intel.status == LoadStatus::Ready
+}
+
+/// `open:<path>`: open a file under the window's root, as a click does.
+fn open(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, relative: &str) {
+    let _gone: gpui::Result<()> = view.update_in(
+        cx,
+        |v: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>| {
+            let file: std::path::PathBuf = v.root.join(relative);
+            v.open_file(&file, window, cx);
+        },
+    );
 }
 
 fn number(text: &str) -> usize {

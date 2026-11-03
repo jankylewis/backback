@@ -25,9 +25,9 @@ Capture next time: the build time of the binary that was read back.
 | BB-LSP-005 | FIXED | CI run 41501823925 (red, PR #30) |
 | BB-CIP-003 | FIXED | CI run 41510600740 (red, PR #33) |
 | BB-GAT-001 | FIXED | CI run 41532817663 (red, PR #39) |
-| BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/S03/BB_BUG_010_*.md` |
-| BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/S03/BB_BUG_011_*.md` |
-| BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/S03/BB_BUG_012_*.md` |
+| BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/D1/S03/BB_BUG_010_*.md` |
+| BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_011_*.md` |
+| BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_012_*.md` |
 | BB-DAP-001 | FIXED | The raw `exceptionInfo` reply in `docs/plan/readback/V2/BBEOD19/bb_READBACK.md` |
 | BB-LSP-006 | FIXED | Gate log 2026-11-03 (`bb_gate.cHCf6V358z`, local temp): `restored : false after 120.0s` with `Restore complete` in the run log; mechanism quoted in the reason page |
 | BB-BUG-008 | FIXED | `docs/plan/readback/FIXES/S04/BB_BUG_008/bb_READBACK.md` |

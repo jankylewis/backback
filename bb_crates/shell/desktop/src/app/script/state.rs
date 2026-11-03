@@ -44,10 +44,20 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
                 v.intel.shown_version(&tab.path).map(bb_intel::DocVersion::raw));
         }
         tests_line(v);
+        tree_line(v);
         if let Some(tab) = tab {
             eprintln!("bb_debug_state breakpoints={:?} {}", v.debug.breakpoints.lines(&tab.path), crate::run::bb_debug::view::notes::describe(v));
         }
     });
+}
+
+/// The Explorer's line: its selected row and how many rows show (BB-BUG-029).
+fn tree_line(v: &ExplorerView) {
+    let rows: Vec<(usize, &bb_explorer::Entry)> = v.tree.visible();
+    let selected: Option<String> = rows
+        .get(v.selected)
+        .map(|(_, entry): &(usize, &bb_explorer::Entry)| entry.path().display().to_string());
+    eprintln!("bb_tree_state selected={selected:?} rows={}", rows.len());
 }
 
 /// The Tests panel's line: what is listed and what runs.
