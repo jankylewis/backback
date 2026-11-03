@@ -22,3 +22,6 @@ them. Run alone 8 times (4 with the workstation GC, 4 with
 ## Status
 
 FIXED (the evidence gap). If it recurs, the message names the project.
+
+Paid off at 03:40: the message named `_XunitPlaywright.csproj`, which led
+to the cause, BB-PRC-005 (two workers shared one temp folder).

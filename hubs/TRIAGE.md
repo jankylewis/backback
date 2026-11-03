@@ -84,3 +84,5 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-TG-018 | `a readback gets slower each round` | OBSERVED | Is `ui_work` still small? Then the runner's timers are throttled (likely App Nap), not the app |
 | BB-BUG-037 | `a new file is not in the Explorer` | FIXED | Wait 2 s (the disk check); is the folder loaded? |
 | BB-UIX-016 | `tree rows differ from ls -A` | FIXED | Does `Explorer::refresh` run (editor `refresh_tree`)? |
+| BB-BUG-038 | `(2, 3) != (3, 3); failed: [...]` | FIXED | Is each worker's folder `backback-intel-<pid>-<n>`? |
+| BB-PRC-005 | `a project load fails only with two workers` | FIXED | Do two owners in one process share a folder name? |

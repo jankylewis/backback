@@ -10,9 +10,9 @@
 | BB-CIP-001 | FIXED | CI installs pinned dotnet, Roslyn server and netcoredbg; `--no-fail-fast` | `SHIP/CIP/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
 | BB-CIP-002 | FIXED | `runs-on: macos-latest` | `SHIP/CIP/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
 | BB-UIX-002 | FIXED | Minimize/Zoom handled on the root view with its own Window | `APP/UIX/S01/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
-| BB-PRC-001 | FIXED | Own every child's process group; every exit ends the registry | `SYS/PRC/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
+| BB-PRC-001 | FIXED | Own every child's process group; every exit ends the registry | `SYS/PRC/S01/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
 | BB-UIX-003 | FIXED | Gutter width scales with the size | `APP/UIX/S01/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |
-| BB-PRC-002 | FIXED | Spawn on the UI thread, wait in the background | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
+| BB-PRC-002 | FIXED | Spawn on the UI thread, wait in the background | `SYS/PRC/S01/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
 | BB-BLD-001 | FIXED | `install.sh` from clean `master` to `/Applications`; `BBCommit` stamp | `SHIP/BLD/BB_BLD_001_INSTALL_FROM_MASTER.md` |
 | BB-LSP-004 | FIXED | `bb open --restore` waits for a restore end line before shutdown | `APP/LSP/S01/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
 | BB-PRF-002 | FIXED | Box opens at once; files list on the background executor | `SYS/PRF/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
@@ -33,8 +33,9 @@
 | BB-UIX-011 | FIXED | `w_full` on the editor row | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |
 | BB-UIX-012 | FIXED | Heads are rows with a `Group` key, marker from state | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | FIXED | The starting control turns into its stop while running | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
-| BB-PRC-004 | FIXED | One owner per folder; sweep what a dead owner left | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
+| BB-PRC-004 | FIXED | One owner per folder; sweep what a dead owner left | `SYS/PRC/S01/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-PRF-003 | FIXED | `DOTNET_gcServer=0` for the Roslyn child unless the user set it | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
 | BB-PRF-004 | FIXED | `RENDER_CAP` where a line is shaped and styled | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
 | BB-UIX-015 | FIXED | Stamp at read and write; refuse once on a mismatch | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | FIXED | Re-read loaded folders on the disk check, merged by path | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
+| BB-PRC-005 | FIXED | A folder per worker (`create_with` + counter) | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |

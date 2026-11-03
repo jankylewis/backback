@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 39 — FIXED 36, OBSERVED 2, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 40 — FIXED 37, OBSERVED 2, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -15,11 +15,11 @@ One file per failure mechanism. This hub owns the id. Entries: 39 — FIXED 36, 
 | BB-CIP-002 | A runner label no hosted machine serves keeps the job queued | FIXED | yes | no | none | `SHIP/CIP/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
 | BB-LSP-003 | Problems still counted a deleted error 6 s after the edit | OPEN | no | no | none | `APP/LSP/S01/BB_LSP_003_DIAGNOSTICS_LAG_AFTER_A_DELETE.md` |
 | BB-UIX-002 | Minimize acted on `cx.active_window()`, None while another app is active | FIXED | yes | yes | BB-TG-005 | `APP/UIX/S01/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
-| BB-PRC-001 | A child process group outlives its owner | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
+| BB-PRC-001 | A child process group outlives its owner | FIXED | yes | yes | none | `SYS/PRC/S01/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
 | BB-LSP-004 | `open --restore` can exit before Roslyn logs the restore | FIXED | yes | no | none | `APP/LSP/S01/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
 | BB-UIX-003 | The gutter kept 50 px when zoomed, so line numbers ran into the code | FIXED | yes | no | none | `APP/UIX/S01/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |
-| BB-PRC-002 | `dotnet build` spawned from a background thread never finished | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
-| BB-PRC-003 | `SN` Roslyn came from a niced readback launch, not the app | OBSERVED | no | no | BB-TG-006 | `SYS/PRC/BB_PRC_003_TOOLS_SPAWNED_FROM_BACKGROUND_THREADS.md` |
+| BB-PRC-002 | `dotnet build` spawned from a background thread never finished | FIXED | yes | yes | none | `SYS/PRC/S01/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
+| BB-PRC-003 | `SN` Roslyn came from a niced readback launch, not the app | OBSERVED | no | no | BB-TG-006 | `SYS/PRC/S01/BB_PRC_003_TOOLS_SPAWNED_FROM_BACKGROUND_THREADS.md` |
 | BB-LSP-005 | A test asserted a Roslyn log line that only a side effect writes | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | A yanked transitive crate fails `cargo deny` on CI | FIXED | yes | yes | none | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
@@ -37,9 +37,10 @@ One file per failure mechanism. This hub owns the id. Entries: 39 — FIXED 36, 
 | BB-UIX-011 | Editor rows were only as wide as their text, so a click past the text hit nothing | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |
 | BB-UIX-012 | A ▾ written into a label promised a fold the row could not do | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | The only stop sat in the toolbar, far from the ▶ that started the run | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
-| BB-PRC-004 | Temp folders named by pid were never removed: a static or a quit never drops | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
+| BB-PRC-004 | Temp folders named by pid were never removed: a static or a quit never drops | FIXED | yes | yes | none | `SYS/PRC/S01/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-UIX-014 | A folder with only `__pycache__` reads as a tree that hides files | OBSERVED | no | yes | none | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |
 | BB-PRF-003 | Roslyn ran the server GC: 2.4 GB where the workstation GC keeps 0.66 GB | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
 | BB-PRF-004 | Every frame shaped and styled the whole line: seconds a key past 100 000 chars | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
 | BB-UIX-015 | Save never compared the file with what it had read, so an outside change was lost | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | The Explorer read each folder once, so outside changes never showed | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
+| BB-PRC-005 | Two intel workers in one process shared and removed one owned temp folder | FIXED | yes | yes | BB-TG-017 | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
