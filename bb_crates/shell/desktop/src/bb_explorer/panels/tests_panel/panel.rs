@@ -56,26 +56,74 @@ fn explorer_header(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoEle
     div()
         .px_3()
         .py_2()
-        .text_color(color(theme.text))
+        .child(side_tabs(crate::tests_panel::Side::Files, theme, cx))
+}
+
+/// EXPLORER and TESTS side by side, as the headmate asked (2026-11-03): the
+/// chosen one in pink, the other one a link to its panel.
+pub(crate) fn side_tabs(
+    side: crate::tests_panel::Side,
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> impl IntoElement {
+    use crate::tests_panel::Side;
+    div()
         .flex()
-        .justify_between()
-        .child("EXPLORER")
-        .child(
-            div()
-                .id("open-tests")
-                .debug_selector(|| String::from("open-tests"))
-                .cursor_pointer()
-                .text_color(color(theme.accent))
-                .child("Tests")
-                .on_click(cx.listener(
-                    |view: &mut ExplorerView,
-                     _: &gpui::ClickEvent,
-                     window: &mut Window,
-                     cx: &mut Context<ExplorerView>| {
-                        crate::tests_panel::open(view, window, cx);
-                    },
-                )),
-        )
+        .gap_4()
+        .child(tab(
+            ("open-files", "EXPLORER"),
+            side == Side::Files,
+            theme,
+            cx,
+            |view: &mut ExplorerView, _: &mut Window, cx: &mut Context<ExplorerView>| {
+                view.tests.side = Side::Files;
+                cx.notify();
+            },
+        ))
+        .child(tab(
+            ("open-tests", "TESTS"),
+            side == Side::Tests,
+            theme,
+            cx,
+            crate::tests_panel::open,
+        ))
+}
+
+/// One tab: a click on the other tab switches the panel; on the chosen one
+/// it does nothing.
+fn tab(
+    (id, label): (&'static str, &'static str),
+    chosen: bool,
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+    switch: impl Fn(&mut ExplorerView, &mut Window, &mut Context<ExplorerView>) + 'static,
+) -> gpui::Stateful<gpui::Div> {
+    div()
+        .id(id)
+        .debug_selector(move || String::from(id))
+        .cursor_pointer()
+        .text_color(color(tab_color(chosen, theme)))
+        .child(label)
+        .on_click(cx.listener(
+            move |view: &mut ExplorerView,
+                  _: &gpui::ClickEvent,
+                  window: &mut Window,
+                  cx: &mut Context<ExplorerView>| {
+                cx.stop_propagation();
+                if !chosen {
+                    switch(view, window, cx);
+                }
+            },
+        ))
+}
+
+/// Pink for the chosen tab, the text colour for the other one.
+fn tab_color(chosen: bool, theme: Theme) -> bb_ui::bb_theme::Rgb {
+    if chosen {
+        theme.chosen
+    } else {
+        theme.text
+    }
 }
 
 /// Elements for the visible rows in `range` only.
@@ -153,5 +201,45 @@ impl ExplorerView {
         _: &mut Context<Self>,
     ) {
         self.resizing = true;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use gpui::{Bounds, Modifiers, Pixels, TestAppContext, VisualTestContext};
+
+    use super::tab_color;
+    use crate::intel::glue::window_tests::bb_rig::{rig_with, Rig};
+    use crate::tests_panel::Side;
+    use crate::ExplorerView;
+
+    #[test]
+    fn the_chosen_tab_is_pink_and_the_other_one_takes_the_text_colour() {
+        let theme: bb_ui::bb_theme::Theme = bb_ui::bb_theme::LIGHT;
+        assert_eq!(tab_color(true, theme), theme.chosen);
+        assert_eq!(tab_color(false, theme), theme.text);
+    }
+
+    fn side(rig: &Rig, vcx: &mut VisualTestContext) -> Side {
+        rig.view
+            .read_with(vcx, |v: &ExplorerView, _: &gpui::App| v.tests.side)
+    }
+
+    #[gpui::test]
+    fn explorer_and_tests_sit_side_by_side_and_switch_the_panel(cx: &mut TestAppContext) {
+        let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, true, "class A {}\n");
+        let files: Bounds<Pixels> = vcx.debug_bounds("open-files").unwrap();
+        let tests: Bounds<Pixels> = vcx.debug_bounds("open-tests").unwrap();
+        assert!(
+            tests.left() > files.right() && tests.left() - files.right() < gpui::px(40.0),
+            "TESTS right next to EXPLORER: {files:?} {tests:?}"
+        );
+        vcx.simulate_click(tests.center(), Modifiers::default());
+        assert_eq!(side(&rig, vcx), Side::Tests);
+        let files: Bounds<Pixels> = vcx
+            .debug_bounds("open-files")
+            .expect("the tabs on the Tests side too");
+        vcx.simulate_click(files.center(), Modifiers::default());
+        assert_eq!(side(&rig, vcx), Side::Files);
     }
 }

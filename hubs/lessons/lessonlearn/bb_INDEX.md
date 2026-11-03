@@ -26,3 +26,4 @@
 | BB-UIX-009 | FIXED | A rig presses no helper key a user would not; a needed helper key is the bug | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |
 | BB-LSP-007 | FIXED | Ask again for a list whenever what it is computed from changes | `APP/LSP/BB_LSP_007_AN_EDIT_PULLED_AGAIN_ONLY_ITS_OWN_FILE.md` |
 | BB-UIX-010 | OPEN | Sweep the reference keymap page by page; one page swept says nothing about the next | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
+| BB-UIX-011 | FIXED | An element that takes clicks spans the area a user can click | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |

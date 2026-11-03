@@ -48,28 +48,56 @@ pub(super) fn click(
         else {
             return;
         };
-        let (button, modifiers): (gpui::MouseButton, gpui::Modifiers) =
-            (gpui::MouseButton::Left, keys(cmd));
-        window.dispatch_event(
-            PlatformInput::MouseDown(gpui::MouseDownEvent {
-                button,
-                position,
-                modifiers,
-                click_count: 1,
-                first_mouse: false,
-            }),
-            cx,
-        );
-        window.dispatch_event(
-            PlatformInput::MouseUp(gpui::MouseUpEvent {
-                button,
-                position,
-                modifiers,
-                click_count: 1,
-            }),
-            cx,
-        );
+        press(window, cx, position, keys(cmd));
     });
+}
+
+/// A real left click on `line` near the window's right edge: past the line's
+/// last char, where a person clicks to reach the end of a line (BB-BUG-022).
+pub(super) fn click_past(
+    view: &WeakEntity<ExplorerView>,
+    cx: &mut AsyncWindowContext,
+    line: usize,
+) {
+    let _gone: gpui::Result<()> = cx.update(|window: &mut Window, cx: &mut gpui::App| {
+        let Some(at): Option<gpui::Point<gpui::Pixels>> =
+            pointer(view, window, cx, (line, 0), false)
+        else {
+            return;
+        };
+        let position: gpui::Point<gpui::Pixels> =
+            gpui::point(window.viewport_size().width - gpui::px(40.0), at.y);
+        press(window, cx, position, keys(false));
+    });
+}
+
+/// A left button down then up at `position`.
+fn press(
+    window: &mut Window,
+    cx: &mut gpui::App,
+    position: gpui::Point<gpui::Pixels>,
+    modifiers: gpui::Modifiers,
+) {
+    let button: gpui::MouseButton = gpui::MouseButton::Left;
+    window.dispatch_event(
+        PlatformInput::MouseDown(gpui::MouseDownEvent {
+            button,
+            position,
+            modifiers,
+            click_count: 1,
+            first_mouse: false,
+        }),
+        cx,
+    );
+    window.dispatch_event(
+        PlatformInput::MouseUp(gpui::MouseUpEvent {
+            button,
+            position,
+            modifiers,
+            click_count: 1,
+        }),
+        cx,
+    );
 }
 
 /// Where char `col` of `line` is drawn: its middle, or the boundary before it.

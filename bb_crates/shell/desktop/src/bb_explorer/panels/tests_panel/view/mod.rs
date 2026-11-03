@@ -111,19 +111,7 @@ fn header(view: &ExplorerView, theme: Theme, cx: &mut Context<ExplorerView>) -> 
         .py_2()
         .flex()
         .justify_between()
-        .child("TESTS")
-        .child(button(
-            "Files",
-            theme,
-            cx,
-            |view: &mut ExplorerView,
-             _: &gpui::ClickEvent,
-             _: &mut Window,
-             cx: &mut Context<ExplorerView>| {
-                view.tests.side = super::Side::Files;
-                cx.notify();
-            },
-        ))
+        .child(crate::panel::side_tabs(super::Side::Tests, theme, cx))
         .child(if view.tests.busy.is_some() {
             "Running…"
         } else {
