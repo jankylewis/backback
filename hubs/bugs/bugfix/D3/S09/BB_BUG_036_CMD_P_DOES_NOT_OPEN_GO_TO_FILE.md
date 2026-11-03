@@ -16,3 +16,7 @@ Unit test `cmd_p_opens_go_to_file`. Readback on the branch build on
 MbTx: Cmd+P opened Go to File with 5451 files listed (not loading) at
 the first state 100 ms after the key; typing `pipe` filtered it, 246 us
 p50 a key.
+
+The first gate caught a slip: `cmd-p` inserted at index 1 broke
+`cmd_o_and_the_file_menu_open_a_workspace`, which reads bindings by
+position; `cmd-p` now comes last.
