@@ -3,7 +3,9 @@
 //! `hover:<line>:<col>` (a real mouse move), `click:<line>:<col>` (a real
 //! click; `cmdhover`/`cmdclick` hold Cmd; `clickpast:<line>` clicks right of
 //! the line's end), `mark:<name>` (prints a line a capture script waits for, then
-//! pauses), `state` (prints what the window shows). Keys and mouse go
+//! pauses), `state` (prints what the window shows), `testopen:<name>` /
+//! `testrun:<name>` (the first spec whose name holds `name`: a row click /
+//! its ▶), `teststop` (the ■). Keys and mouse go
 //! through the window's own dispatch.
 
 use std::time::{Duration, Instant};
@@ -12,6 +14,7 @@ use gpui::{AsyncWindowContext, Context, WeakEntity, Window};
 
 mod bb_pointer;
 mod state;
+mod test_steps;
 
 use crate::intel::model::LoadStatus;
 use crate::ExplorerView;
@@ -40,6 +43,9 @@ pub(crate) async fn run(
         ["state"] => state::state(view, cx),
         ["tests"] => tests(view, cx, false),
         ["tests", "expand"] => tests(view, cx, true),
+        ["testopen", name] => test_steps::open(view, cx, name),
+        ["testrun", name] => test_steps::run(view, cx, name),
+        ["teststop"] => test_steps::stop(view, cx),
         _ => return false,
     }
     true

@@ -19,8 +19,8 @@ mod parse;
 pub use backend::{ApexBackend, DebugHost, DotnetBackend, StopFlag, Workspace};
 pub use bb_engine::{run, run_with_stop, Deadlines, Selection, TestBackend};
 pub use model::{
-    Category, Configuration, Fqn, FqnError, FqnParts, Leaf, Outcome, RunReport, SpecList,
-    SpecResult, Verdict,
+    find_source, Category, Configuration, Fqn, FqnError, FqnParts, Leaf, Outcome, RunReport,
+    SpecList, SpecResult, Verdict,
 };
 pub use parse::{
     parse_apex_list, parse_duration, parse_fqn_lines, parse_host_pid, parse_mtp_list, parse_trx,

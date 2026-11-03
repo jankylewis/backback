@@ -6,7 +6,8 @@ use crate::{color, ExplorerView};
 #[path = "bb_controls.rs"]
 mod controls;
 mod rows;
-use rows::{project_row, spec_rows};
+pub(crate) use rows::open_spec;
+use rows::{any_running, project_row, spec_rows};
 mod detail;
 use controls::filter_key;
 use detail::{detail, label};
@@ -49,11 +50,13 @@ fn project_rows(
         rows.push(label("Discovering projects…", theme));
     }
     for (path, project) in view.tests.model.projects() {
+        let running: bool =
+            view.tests.busy.as_deref() == Some(path.as_path()) || any_running(view, path, "");
         rows.push(project_row(
             path.clone(),
             project,
             view.tests.model.counts(path),
-            theme,
+            (theme, running),
             cx,
         ));
         if project.expanded {
@@ -135,17 +138,24 @@ fn toolbar(view: &ExplorerView, theme: Theme, cx: &mut Context<ExplorerView>) ->
                 super::run_failed(view, window, cx);
             },
         ))
-        .child(button(
-            "Stop",
-            theme,
-            cx,
-            |view: &mut ExplorerView,
-             _: &gpui::ClickEvent,
-             _: &mut Window,
-             cx: &mut Context<ExplorerView>| {
-                super::stop(view, cx);
-            },
-        ))
+        .when(view.tests.busy.is_some(), |bar: gpui::Div| {
+            bar.child(
+                div()
+                    .debug_selector(|| String::from("tests-stop"))
+                    .text_color(color(theme.error))
+                    .child(button(
+                        "■ Stop",
+                        theme,
+                        cx,
+                        |view: &mut ExplorerView,
+                         _: &gpui::ClickEvent,
+                         _: &mut Window,
+                         cx: &mut Context<ExplorerView>| {
+                            super::stop(view, cx);
+                        },
+                    )),
+            )
+        })
         .child(toolbar_extra(view, theme, cx))
 }
 

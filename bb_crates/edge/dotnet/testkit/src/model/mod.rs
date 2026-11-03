@@ -2,9 +2,11 @@
 
 mod bb_fqn;
 mod results;
+mod source;
 
 pub use bb_fqn::{Fqn, FqnError, FqnParts};
 pub use results::{Leaf, Outcome, RunReport, SpecList, SpecResult, Verdict};
+pub use source::find_source;
 
 /// A build configuration (`Debug`, `Release`, ...).
 #[derive(Debug, Clone, PartialEq, Eq)]

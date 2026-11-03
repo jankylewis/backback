@@ -18,12 +18,22 @@ pub(crate) use actions::open;
 pub(crate) use actions::toggle_project;
 pub(crate) use actions::{run_category, run_class, run_failed, run_project, run_spec, stop};
 pub(crate) use model::TestModel;
-pub(crate) use view::panel;
+pub(crate) use view::{open_spec, panel};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Side {
     Files,
     Tests,
+}
+
+/// A row under a project that folds its children away (BB-BUG-024).
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum Group {
+    Namespace(String),
+    /// `namespace.class`.
+    Class(String),
+    /// A parameterised method's name without arguments.
+    Method(String),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -59,6 +69,8 @@ pub(crate) struct TestsState {
     pub(crate) pending_jump: Option<(PathBuf, usize)>,
     pub(crate) output_open: bool,
     pub(crate) scan: Scan,
+    /// Folded groups, per project.
+    pub(crate) collapsed: BTreeSet<(PathBuf, Group)>,
 }
 
 impl TestsState {
@@ -81,6 +93,7 @@ impl TestsState {
             pending_jump: None,
             output_open: false,
             scan: Scan::NotStarted,
+            collapsed: BTreeSet::new(),
         }
     }
 }
@@ -112,6 +125,19 @@ impl TestsState {
         self.message = None;
         self.output.clear();
         stop
+    }
+
+    /// Fold `group` if open, open it if folded.
+    pub(crate) fn toggle(&mut self, path: &Path, group: Group) {
+        let key: (PathBuf, Group) = (path.to_path_buf(), group);
+        if !self.collapsed.remove(&key) {
+            self.collapsed.insert(key);
+        }
+    }
+
+    pub(crate) fn is_collapsed(&self, path: &Path, group: &Group) -> bool {
+        self.collapsed
+            .contains(&(path.to_path_buf(), group.clone()))
     }
 
     pub(crate) fn chosen_settings(&self) -> Option<PathBuf> {

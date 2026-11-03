@@ -23,3 +23,6 @@
 | BB-BUG-020 | `delete_lines`, `insert_line_below`/`above` in the text model; Cmd+Shift+K and Cmd+(Shift+)Enter arms | FIXED | red-first unit + window tests + sweep 4 readback | `D2/S05/BB_BUG_020_CMD_SHIFT_K_AND_CMD_ENTER_DO_NOTHING.md` |
 | BB-BUG-022 | Editor rows span the pane (`w_full`); a click past the text lands on the line's end | FIXED | red-first window test + `clickpast` readback | `D2/S06/BB_BUG_022_A_CLICK_RIGHT_OF_A_LINES_END_DOES_NOTHING.md` |
 | BB-BUG-023 | One `EXPLORER  TESTS` strip; the chosen tab in the `chosen` pink | FIXED | window + unit test | `D2/S06/BB_BUG_023_THE_SIDEBAR_HEADER_DOES_NOT_SHOW_WHICH_SIDE_IS_CHOSEN.md` |
+| BB-BUG-024 | Namespace, class and method heads fold per project (`Group`, `TestsState::toggle`) | FIXED | window test | `D2/S06/BB_BUG_024_TEST_GROUPS_DO_NOT_COLLAPSE.md` |
+| BB-BUG-025 | A row click opens the method (`bb_testkit::find_source`, off the UI thread) | FIXED | 7 unit + window test + readback | `D2/S07/BB_BUG_025_A_CLICK_ON_A_TEST_DOES_NOT_OPEN_IT.md` |
+| BB-BUG-026 | ▶ turns ■, Run turns ■ Stop while running; toolbar stop only during a run | FIXED | window test + process readback | `D2/S07/BB_BUG_026_A_RUNNING_TEST_CANNOT_BE_STOPPED.md` |
