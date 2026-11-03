@@ -6,7 +6,8 @@ status: FIXED
 date: 2026-11-03
 signature: 1 project failed to load / debug I/O: No such file or directory
 source: readback of `/Applications/backback.app` at `55fac1d`, launched with launchd's environment (`env -i`, PATH `/usr/bin:/bin:/usr/sbin:/sbin`)
-links: fix=yes lesson=no evidence=yes toolgap=BB-TG-012
+cause: BB-ENV-001
+links: fix=yes lesson=yes evidence=yes toolgap=BB-TG-012
 
 ## Steps
 

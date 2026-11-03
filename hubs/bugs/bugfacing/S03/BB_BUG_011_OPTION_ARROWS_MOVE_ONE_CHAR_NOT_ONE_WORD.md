@@ -6,7 +6,8 @@ status: FIXED
 date: 2026-11-03
 signature: Option+Backspace deletes a single char
 source: BB-BUG-010 family sweep in `/Applications/backback.app` at `24aa57c`
-links: fix=yes lesson=no evidence=yes toolgap=none
+cause: BB-UIX-005
+links: fix=yes lesson=yes evidence=yes toolgap=none
 
 ## Steps
 
