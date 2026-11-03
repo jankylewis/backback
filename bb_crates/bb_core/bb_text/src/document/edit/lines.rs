@@ -1,6 +1,6 @@
-//! Line-wise edits (BB-BUG-014, BB-BUG-015): delete to a line's start or
-//! end, and indent or outdent the lines a selection touches, as VS Code and
-//! Rider do. The indent unit is four spaces, the C# default.
+//! Line-wise edits (BB-BUG-014, BB-BUG-015, BB-BUG-020): delete to a line's
+//! start or end, and indent or outdent the lines a selection touches, as
+//! VS Code and Rider do. Whole-line deletes and inserts are in `edit`. The indent unit is four spaces, the C# default.
 
 use super::bb_splice::CharEdit;
 use super::{Document, DocumentError};
@@ -47,7 +47,7 @@ impl Document {
     }
 
     /// The char after a line's last visible char, before its line break.
-    fn line_end(&self, index: usize) -> Result<CharIdx, DocumentError> {
+    pub(super) fn line_end(&self, index: usize) -> Result<CharIdx, DocumentError> {
         let start: CharIdx = self.line_start(index).ok_or(DocumentError::Selection)?;
         let text: String = self.line(index).ok_or(DocumentError::Selection)?;
         let visible: usize = text.trim_end_matches(['\r', '\n']).chars().count();
@@ -60,13 +60,24 @@ impl Document {
     /// # Errors
     /// Returns a checked text error.
     pub fn indent(&mut self) -> Result<(), DocumentError> {
-        let Some((from, to)): Option<(CharIdx, CharIdx)> = self.selection() else {
+        if self.selection().is_none() {
             let start: CharIdx = self
                 .line_start(self.cursor_line())
                 .ok_or(DocumentError::Selection)?;
             let column: usize = self.cursor.raw().saturating_sub(start.raw());
             return self.insert(&" ".repeat(INDENT.len() - column % INDENT.len()));
-        };
+        }
+        self.indent_lines()
+    }
+
+    /// Every line the selection touches (or the cursor line) moves in one
+    /// level at its start; the cursor and the selection stay on their text.
+    /// Tab with a selection; Cmd+] is Back/Forward's key here (BB-BUG-021).
+    ///
+    /// # Errors
+    /// Returns a checked text error.
+    pub fn indent_lines(&mut self) -> Result<(), DocumentError> {
+        let (from, to): (CharIdx, CharIdx) = self.selection().unwrap_or((self.cursor, self.cursor));
         let mut edits: Vec<CharEdit> = Vec::new();
         for line in self.lines_touched(from, to)? {
             let at: CharIdx = self.line_start(line).ok_or(DocumentError::Selection)?;
@@ -151,7 +162,11 @@ impl Document {
 
     /// The lines a selection `[from, to)` touches; a selection ending at a
     /// line's start leaves that line alone.
-    fn lines_touched(&self, from: CharIdx, to: CharIdx) -> Result<Vec<usize>, DocumentError> {
+    pub(super) fn lines_touched(
+        &self,
+        from: CharIdx,
+        to: CharIdx,
+    ) -> Result<Vec<usize>, DocumentError> {
         let first: usize = self
             .buffer
             .line_of_char(from)

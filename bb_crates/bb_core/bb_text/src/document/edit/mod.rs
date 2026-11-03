@@ -178,6 +178,71 @@ impl Document {
     }
 }
 
+/// Whole-line edits: delete lines, open a line below or above.
+impl Document {
+    /// Cmd+Shift+K: the touched lines and one line break go (BB-BUG-020).
+    ///
+    /// # Errors
+    /// Returns a checked text error.
+    pub fn delete_lines(&mut self) -> Result<(), DocumentError> {
+        let (from, to): (CharIdx, CharIdx) = self.selection().unwrap_or((self.cursor, self.cursor));
+        let lines: Vec<usize> = self.lines_touched(from, to)?;
+        let (Some(&first), Some(&last)): (Option<&usize>, Option<&usize>) =
+            (lines.first(), lines.last())
+        else {
+            return Ok(());
+        };
+        let start: CharIdx = self.line_start(first).ok_or(DocumentError::Selection)?;
+        let end: CharIdx = CharIdx::new(self.len_chars());
+        let next: usize = last.saturating_add(1);
+        // Past the last line, `line_start` is the text's end, not `None`.
+        let below: Option<CharIdx> = (next < self.len_lines())
+            .then(|| self.line_start(next))
+            .flatten();
+        let (cut_from, cut_to): (CharIdx, CharIdx) = match below {
+            Some(below) => (start, below),
+            None if first > 0 => (self.line_end(first.saturating_sub(1))?, end),
+            None => (start, end),
+        };
+        self.anchor = None;
+        self.delete_range(cut_from, cut_to)
+    }
+
+    /// Cmd+Enter: a new line below, with the line's indent (BB-BUG-020).
+    ///
+    /// # Errors
+    /// Returns a checked text error on an invalid range.
+    pub fn insert_line_below(&mut self) -> Result<(), DocumentError> {
+        let end: CharIdx = self.line_end(self.cursor_line())?;
+        self.anchor = None;
+        self.cursor = end;
+        self.enter()
+    }
+
+    /// Cmd+Shift+Enter: a new line above, with the line's indent (BB-BUG-020).
+    ///
+    /// # Errors
+    /// Returns a checked text error on an invalid range.
+    pub fn insert_line_above(&mut self) -> Result<(), DocumentError> {
+        let start: CharIdx = self
+            .line_start(self.cursor_line())
+            .ok_or(DocumentError::Selection)?;
+        let indent: String = self
+            .line(self.cursor_line())
+            .unwrap_or_default()
+            .chars()
+            .take_while(|c: &char| *c == ' ' || *c == '\t')
+            .collect();
+        let ending: &str = if self.format.crlf { "\r\n" } else { "\n" };
+        self.anchor = None;
+        self.cursor = start;
+        self.insert(&format!("{indent}{ending}"))?;
+        self.set_cursor(CharIdx::new(
+            start.raw().saturating_add(indent.chars().count()),
+        ))
+    }
+}
+
 #[cfg(test)]
 mod lines_tests;
 #[cfg(test)]

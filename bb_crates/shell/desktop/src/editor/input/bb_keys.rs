@@ -44,7 +44,9 @@ pub(super) fn command_key(
 type DocumentCommand = fn(&mut bb_text::Document, bool) -> Result<(), bb_text::DocumentError>;
 
 /// Undo and redo, Select All (BB-BUG-016), the line comment (BB-BUG-017),
-/// and the deletes to a line's edges (BB-BUG-014).
+/// the deletes to a line's edges (BB-BUG-014), and the line commands of
+/// sweep 4 (BB-BUG-020): Cmd+Shift+K, Cmd+(Shift+)Enter. Cmd+[ and Cmd+]
+/// stay Back and Forward (app bindings, `open.rs`).
 fn document_command(key: &str) -> Option<DocumentCommand> {
     Some(match key {
         "z" => |doc: &mut bb_text::Document, shift: bool| {
@@ -58,6 +60,20 @@ fn document_command(key: &str) -> Option<DocumentCommand> {
         "/" => |doc: &mut bb_text::Document, _: bool| doc.toggle_line_comment(),
         "backspace" => |doc: &mut bb_text::Document, _: bool| doc.delete_to_line_start(),
         "delete" => |doc: &mut bb_text::Document, _: bool| doc.delete_to_line_end(),
+        "k" => |doc: &mut bb_text::Document, shift: bool| {
+            if shift {
+                doc.delete_lines()
+            } else {
+                Ok(())
+            }
+        },
+        "enter" => |doc: &mut bb_text::Document, shift: bool| {
+            if shift {
+                doc.insert_line_above()
+            } else {
+                doc.insert_line_below()
+            }
+        },
         _ => return None,
     })
 }

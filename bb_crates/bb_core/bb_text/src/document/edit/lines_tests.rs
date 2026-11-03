@@ -120,3 +120,60 @@ fn cmd_slash_comments_the_touched_lines_after_their_indent_and_back() {
     assert_eq!(one.text(), "    // x;\n", "no selection: the cursor line");
     assert_eq!(one.cursor().raw(), 8, "the cursor keeps its char");
 }
+
+#[test]
+fn indent_lines_moves_the_cursor_line_in_at_its_start_and_outdent_back() {
+    let mut d: Document = doc("a\n    int x;\nb\n", 10);
+    d.indent_lines().unwrap();
+    assert_eq!(
+        d.text(),
+        "a\n        int x;\nb\n",
+        "in one level at the line start"
+    );
+    assert_eq!(d.cursor().raw(), 14, "the cursor stays on its text");
+    d.outdent().unwrap();
+    assert_eq!(d.text(), "a\n    int x;\nb\n", "and out again");
+    d.undo().unwrap();
+    assert_eq!(d.text(), "a\n        int x;\nb\n", "one undo step each");
+}
+
+#[test]
+fn cmd_shift_k_deletes_the_touched_lines_with_their_break() {
+    let mut d: Document = doc("a\nb\nc\n", 2);
+    d.delete_lines().unwrap();
+    assert_eq!(d.text(), "a\nc\n");
+    assert_eq!(d.cursor().raw(), 2);
+    let mut last: Document = doc("a\nb", 2);
+    last.delete_lines().unwrap();
+    assert_eq!(last.text(), "a", "the last line takes the break before it");
+    let mut crlf: Document = doc("a\r\nb\r\nc\r\n", 3);
+    crlf.delete_lines().unwrap();
+    assert_eq!(crlf.text(), "a\r\nc\r\n", "CRLF goes as one break");
+    let mut sel: Document = doc("a\nb\nc\nd\n", 0);
+    sel.select(CharIdx::new(2), CharIdx::new(5)).unwrap();
+    sel.delete_lines().unwrap();
+    assert_eq!(sel.text(), "a\nd\n", "every touched line goes");
+    sel.undo().unwrap();
+    assert_eq!(sel.text(), "a\nb\nc\nd\n", "one undo step");
+}
+
+#[test]
+fn cmd_enter_and_cmd_shift_enter_open_a_line_below_and_above_with_its_indent() {
+    let mut below: Document = doc("{\n    int x;\n}\n", 6);
+    below.insert_line_below().unwrap();
+    assert_eq!(below.text(), "{\n    int x;\n    \n}\n");
+    assert_eq!(
+        below.cursor().raw(),
+        17,
+        "on the new line, after its indent"
+    );
+    below.undo().unwrap();
+    assert_eq!(below.text(), "{\n    int x;\n}\n", "one undo step");
+    let mut above: Document = doc("{\n    int x;\n}\n", 6);
+    above.insert_line_above().unwrap();
+    assert_eq!(above.text(), "{\n    \n    int x;\n}\n");
+    assert_eq!(above.cursor().raw(), 6, "on the new line, after its indent");
+    let mut crlf: Document = doc("a\r\nb\r\n", 0);
+    crlf.insert_line_below().unwrap();
+    assert_eq!(crlf.text(), "a\r\n\r\nb\r\n", "the file's own line break");
+}
