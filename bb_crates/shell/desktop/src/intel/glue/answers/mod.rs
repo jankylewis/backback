@@ -31,13 +31,7 @@ pub(super) fn apply(
     match answer {
         Answer::Completion(items) => completion(view, pending, items, stages),
         Answer::Hover(info) => hover(view, pending, info),
-        Answer::Definition(places) if pending.kind == AskKind::Link => {
-            crate::editor::link::link_answer(view, pending, &places);
-        }
-        Answer::Definition(places) => match places.into_iter().next() {
-            Some(place) => jump(view, &place, window, cx),
-            None => view.report(&"No definition found"),
-        },
+        Answer::Definition(places) => goto_answer(view, pending, places, (window, cx)),
         Answer::References(places) => {
             view.intel.references = Some(PlacesPanel {
                 title: format!("{} references", places.len()),
@@ -66,6 +60,45 @@ pub(super) fn apply(
             });
         }
         Answer::Failed(reason) => view.report(&format!("C# server: {reason}")),
+    }
+}
+
+/// A go-to answer: Cmd + hover marks a link; several implementations open
+/// the places panel (BBEOD22); otherwise jump to the first place.
+fn goto_answer(
+    view: &mut ExplorerView,
+    pending: &Pending,
+    places: Vec<Place>,
+    (window, cx): (&mut Window, &mut Context<ExplorerView>),
+) {
+    if pending.kind == AskKind::Link {
+        crate::editor::link::link_answer(view, pending, &places);
+    } else if pending.kind == AskKind::Implementation && places.len() > 1 {
+        view.intel.references = Some(PlacesPanel {
+            title: format!("{} implementations", places.len()),
+            places,
+            pick: Pick::default(),
+        });
+    } else {
+        match places.into_iter().next() {
+            Some(place) => jump(view, &place, window, cx),
+            None => view.report(&not_found(pending.kind)),
+        }
+    }
+}
+
+/// The status line when a go-to question finds nothing.
+fn not_found(kind: AskKind) -> &'static str {
+    match kind {
+        AskKind::Implementation => "No implementation found",
+        AskKind::TypeDefinition => "No type definition found",
+        AskKind::Definition
+        | AskKind::Link
+        | AskKind::Completion
+        | AskKind::Hover
+        | AskKind::References
+        | AskKind::Rename
+        | AskKind::Actions => "No definition found",
     }
 }
 

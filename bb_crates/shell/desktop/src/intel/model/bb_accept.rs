@@ -45,7 +45,10 @@ pub(crate) fn freshness(kind: AskKind) -> Freshness {
     match kind {
         AskKind::Hover | AskKind::Rename | AskKind::Actions | AskKind::Link => Freshness::SameText,
         AskKind::Completion => Freshness::SameWord,
-        AskKind::Definition | AskKind::References => Freshness::Any,
+        AskKind::Definition
+        | AskKind::Implementation
+        | AskKind::TypeDefinition
+        | AskKind::References => Freshness::Any,
     }
 }
 

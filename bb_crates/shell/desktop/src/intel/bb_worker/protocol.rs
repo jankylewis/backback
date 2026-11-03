@@ -23,6 +23,10 @@ pub(crate) enum Ask {
     Definition(LspPoint),
     /// Every use of the symbol at the point.
     References(LspPoint),
+    /// Where the symbol at the point is implemented (BBEOD22).
+    Implementation(LspPoint),
+    /// Where the type of the symbol at the point is defined (BBEOD22).
+    TypeDefinition(LspPoint),
     /// The edits that rename the symbol at the point.
     Rename(LspPoint, String),
     /// Code actions for a range.
@@ -42,6 +46,10 @@ pub(crate) enum AskKind {
     Definition,
     /// See [`Ask::References`].
     References,
+    /// See [`Ask::Implementation`].
+    Implementation,
+    /// See [`Ask::TypeDefinition`].
+    TypeDefinition,
     /// See [`Ask::Rename`].
     Rename,
     /// See [`Ask::Actions`].
@@ -57,6 +65,8 @@ impl Ask {
             Self::Hover(_) => AskKind::Hover,
             Self::Definition(_) => AskKind::Definition,
             Self::References(_) => AskKind::References,
+            Self::Implementation(_) => AskKind::Implementation,
+            Self::TypeDefinition(_) => AskKind::TypeDefinition,
             Self::Rename(..) => AskKind::Rename,
             Self::Actions(..) => AskKind::Actions,
             Self::Link(_) => AskKind::Link,
@@ -101,7 +111,8 @@ pub(crate) enum Answer {
     Completion(Vec<CompletionEntry>),
     /// Hover text, if any.
     Hover(Option<HoverInfo>),
-    /// Definitions.
+    /// Definitions; also the answer to [`Ask::Implementation`] and
+    /// [`Ask::TypeDefinition`].
     Definition(Vec<Place>),
     /// References.
     References(Vec<Place>),

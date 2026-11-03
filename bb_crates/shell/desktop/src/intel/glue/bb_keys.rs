@@ -54,6 +54,16 @@ fn command(view: &mut ExplorerView, stroke: &Keystroke) -> bool {
             asks::ask_at_cursor(view, ask, None);
             true
         }
+        // Go to Implementation and Go to Type Definition (BBEOD22); a plain
+        // Ctrl+B stays the editor's "left".
+        "b" if m.platform && m.alt => {
+            asks::ask_at_cursor(view, Ask::Implementation, None);
+            true
+        }
+        "b" if m.platform && m.control => {
+            asks::ask_at_cursor(view, Ask::TypeDefinition, None);
+            true
+        }
         "f2" => {
             asks::rename_start(view);
             true

@@ -2,6 +2,7 @@
 
 One folder per unit (the `FIXES/` shelves S01 to S04 are full). Each folder
 holds the steps, captures and verdict of a read back on the real app.
+This folder is full (five entries); later units are in `../V3/`.
 
 | Unit | What was read back |
 |---|---|
