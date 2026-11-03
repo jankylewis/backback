@@ -50,3 +50,30 @@ fn a_file_outside_the_tree_reveals_nothing() {
     let mut tree: Explorer = Explorer::open(dir.path()).unwrap();
     assert_eq!(tree.reveal(Path::new("/nowhere/a.cs")).unwrap(), None);
 }
+
+/// BB-BUG-037: files made and removed outside show after a refresh; an
+/// open folder stays open.
+#[test]
+fn refresh_takes_outside_changes_and_keeps_open_folders_open() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let root: PathBuf = dir.path().canonicalize().unwrap();
+    fs::create_dir_all(root.join("sub")).unwrap();
+    fs::write(root.join("sub/b.txt"), "").unwrap();
+    fs::write(root.join("a.py"), "").unwrap();
+    let mut tree: Explorer = Explorer::open(&root).unwrap();
+    tree.reveal(&root.join("sub/b.txt")).unwrap();
+    assert!(!tree.refresh().unwrap(), "nothing changed");
+    fs::write(root.join("sub/new.py"), "").unwrap();
+    fs::remove_file(root.join("a.py")).unwrap();
+    assert!(tree.refresh().unwrap());
+    let rows: Vec<String> = names(&tree);
+    assert!(rows.contains(&"2:new.py".to_owned()), "{rows:?}");
+    assert!(
+        !rows.iter().any(|row: &String| row.ends_with(":a.py")),
+        "{rows:?}"
+    );
+    assert!(
+        rows.contains(&"2:b.txt".to_owned()),
+        "sub stayed open: {rows:?}"
+    );
+}

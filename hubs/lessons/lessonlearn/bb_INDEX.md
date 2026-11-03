@@ -34,3 +34,4 @@
 | BB-PRF-003 | FIXED | Count every child's memory; a child's runtime defaults are ours to choose | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
 | BB-PRF-004 | FIXED | Bench real file shapes; bound per-frame cost by what fits on screen | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
 | BB-UIX-015 | FIXED | A write checks the file is still the one read; data loss is never silent | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
+| BB-UIX-016 | FIXED | Anything shown from disk is checked against the disk again | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |

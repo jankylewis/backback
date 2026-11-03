@@ -82,3 +82,5 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-035 | `the tab shows old text after git checkout` | FIXED | Does the tab hold unsaved edits? Those are never reloaded |
 | BB-BUG-036 | `Cmd+P does nothing` | FIXED | Is `cmd-p` in `open::bindings`? Cmd+Shift+O vs Go to Symbol awaits a ruling |
 | BB-TG-018 | `a readback gets slower each round` | OBSERVED | Is `ui_work` still small? Then the runner's timers are throttled (likely App Nap), not the app |
+| BB-BUG-037 | `a new file is not in the Explorer` | FIXED | Wait 2 s (the disk check); is the folder loaded? |
+| BB-UIX-016 | `tree rows differ from ls -A` | FIXED | Does `Explorer::refresh` run (editor `refresh_tree`)? |

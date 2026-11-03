@@ -37,3 +37,4 @@
 | BB-PRF-003 | FIXED | `DOTNET_gcServer=0` for the Roslyn child unless the user set it | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
 | BB-PRF-004 | FIXED | `RENDER_CAP` where a line is shaped and styled | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
 | BB-UIX-015 | FIXED | Stamp at read and write; refuse once on a mismatch | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
+| BB-UIX-016 | FIXED | Re-read loaded folders on the disk check, merged by path | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |

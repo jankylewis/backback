@@ -36,3 +36,4 @@
 | BB-BUG-034 | `DiskGuard`: a save over a newer file is refused once, then overwrites | FIXED | unit test + readback | `D3/S09/BB_BUG_034_A_SAVE_OVERWRITES_ANOTHER_TOOLS_CHANGE.md` |
 | BB-BUG-035 | Clean tabs take the disk's text (2 s check, one undo step) | FIXED | unit test + readback | `D3/S09/BB_BUG_035_A_CLEAN_TAB_KEEPS_STALE_TEXT_AFTER_AN_OUTSIDE_CHANGE.md` |
 | BB-BUG-036 | Cmd+P bound to Go to File; Cmd+Shift+O awaits a ruling | FIXED | unit test + readback | `D3/S09/BB_BUG_036_CMD_P_DOES_NOT_OPEN_GO_TO_FILE.md` |
+| BB-BUG-037 | The 2 s disk check re-reads loaded folders, merged by path | FIXED | unit test + readback | `D3/S10/BB_BUG_037_THE_EXPLORER_MISSES_FILES_MADE_OR_REMOVED_OUTSIDE.md` |
