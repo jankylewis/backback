@@ -1,6 +1,7 @@
 use crate::CharIdx;
 
 mod bb_splice;
+mod lines;
 
 pub(super) use bb_splice::ChangeLog;
 pub use bb_splice::{BytePoint, CharEdit, TextChange};
@@ -177,5 +178,7 @@ impl Document {
     }
 }
 
+#[cfg(test)]
+mod lines_tests;
 #[cfg(test)]
 mod tests;

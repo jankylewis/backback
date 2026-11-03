@@ -25,3 +25,4 @@
 | BB-UIX-004 | FIXED | `\r\n` is one line break in every move and edit | `APP/UIX/S01/BB_UIX_004_A_CRLF_LINE_BREAK_COUNTED_AS_TWO_CURSOR_STOPS.md` |
 | BB-UIX-005 | FIXED | The key map reads Option and Ctrl first: word moves and deletes, the Emacs line keys | `APP/UIX/S02/BB_UIX_005_THE_KEY_MAP_IGNORED_OPTION_AND_CTRL.md` |
 | BB-UIX-006 | FIXED | A per-tab `scroll_x`: clipped text viewport, caret/clicks offset, wheel scroll, caret kept in sight | `APP/UIX/S02/BB_UIX_006_ROWS_HAD_NO_HORIZONTAL_OFFSET.md` |
+| BB-UIX-007 | FIXED | Line-wise commands in the text model; Tab, Shift+Tab, Cmd+Backspace, Cmd+Delete get their own arms | `APP/UIX/S02/BB_UIX_007_TAB_AND_THE_CMD_DELETES_HAD_NO_LINE_COMMANDS.md` |

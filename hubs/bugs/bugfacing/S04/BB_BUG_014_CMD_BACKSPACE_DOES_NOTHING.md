@@ -2,11 +2,12 @@
 
 id: BB-BUG-014
 family: UIX
-status: OPEN
+status: FIXED
 date: 2026-11-03
 signature: Cmd+Backspace does nothing
 source: step-8 sweep (case C2) on the installed app at `0b6406d`, `docs/plan/readback/V2/SWEEP01/bb_READBACK.md`
-links: fix=no lesson=no evidence=yes toolgap=none
+cause: BB-UIX-007
+links: fix=yes lesson=yes evidence=yes toolgap=none
 
 ## Steps
 

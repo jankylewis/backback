@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 15 — FIXED 12, OPEN 3.
+Bugs a user met in the app. Entries: 15 — FIXED 14, OPEN 1.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -17,5 +17,5 @@ Bugs a user met in the app. Entries: 15 — FIXED 12, OPEN 3.
 | BB-BUG-011 | Option+arrows move one char, not one word | FIXED | Option was ignored by the editor key map | yes | `S03/BB_BUG_011_OPTION_ARROWS_MOVE_ONE_CHAR_NOT_ONE_WORD.md` |
 | BB-BUG-012 | The macOS Ctrl text keys do nothing | FIXED | the key map had no Ctrl arms | yes | `S03/BB_BUG_012_THE_MACOS_CTRL_TEXT_KEYS_DO_NOTHING.md` |
 | BB-BUG-013 | Long lines are clipped at the pane's edge; no horizontal scroll | FIXED | rows had no horizontal offset; the list clipped them | yes | `S04/BB_BUG_013_LONG_LINES_ARE_CLIPPED_WITH_NO_HORIZONTAL_SCROLL.md` |
-| BB-BUG-014 | Cmd+Backspace does nothing | OPEN | the key map has no Cmd+Backspace arm | no | `S04/BB_BUG_014_CMD_BACKSPACE_DOES_NOTHING.md` |
-| BB-BUG-015 | Tab with a selection replaces it; Shift+Tab inserts a tab | OPEN | Tab inserts a char over the selection; no indent command | no | `S04/BB_BUG_015_TAB_WITH_A_SELECTION_REPLACES_IT.md` |
+| BB-BUG-014 | Cmd+Backspace does nothing | FIXED | the key map had no Cmd+Backspace arm (BB-UIX-007) | yes | `S04/BB_BUG_014_CMD_BACKSPACE_DOES_NOTHING.md` |
+| BB-BUG-015 | Tab with a selection replaces it; Shift+Tab inserts a tab | FIXED | Tab typed its char over the selection; no indent command (BB-UIX-007) | yes | `S04/BB_BUG_015_TAB_WITH_A_SELECTION_REPLACES_IT.md` |

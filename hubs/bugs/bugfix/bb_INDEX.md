@@ -14,3 +14,5 @@
 | BB-BUG-011 | Option+Left/Right/Backspace/Delete work by word (VS Code / IntelliJ stops) | FIXED | 6 red-first tests + window test | `S03/BB_BUG_011_OPTION_ARROWS_MOVE_ONE_CHAR_NOT_ONE_WORD.md` |
 | BB-BUG-012 | Ctrl+A/E/B/F/P/N/H/D work as in Cocoa and VS Code on macOS | FIXED | red-first window test | `S03/BB_BUG_012_THE_MACOS_CTRL_TEXT_KEYS_DO_NOTHING.md` |
 | BB-BUG-013 | A per-tab `scroll_x`: clipped text viewport per row, caret and clicks offset, wheel scrolls, the caret kept in sight on moves | FIXED | red-first window test + readback on the headmate's file | `S04/BB_BUG_013_LONG_LINES_ARE_CLIPPED_WITH_NO_HORIZONTAL_SCROLL.md` |
+| BB-BUG-014 | `delete_to_line_start` / `delete_to_line_end` on Cmd+Backspace / Cmd+Delete | FIXED | red-first unit + window tests | `S04/BB_BUG_014_CMD_BACKSPACE_DOES_NOTHING.md` |
+| BB-BUG-015 | Tab indents and Shift+Tab outdents the selected lines, the selection kept, one undo step | FIXED | red-first unit + window tests | `S04/BB_BUG_015_TAB_WITH_A_SELECTION_REPLACES_IT.md` |
