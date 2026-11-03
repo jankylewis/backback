@@ -123,6 +123,17 @@ pub async fn drain_log<W: std::io::Write>(
 /// Lines Roslyn writes when a restore it started has ended, either way.
 const RESTORE_ENDS: [&str; 3] = ["Restore complete", "restore was canceled", "restore failed"];
 
+/// The line Roslyn logs when a batch of projects has (re)loaded. A restore
+/// or a project file change outside the editor ends in one; Roslyn's view
+/// of the code changed without an edit (BB-BUG-019).
+const RELOAD_MARK: &str = "Completed (re)load of ";
+
+/// Whether `text` is a project (re)load line.
+#[must_use]
+pub fn is_project_reload(text: &str) -> bool {
+    text.contains(RELOAD_MARK)
+}
+
 /// Whether one server line says a restore has ended, either way.
 fn is_restore_end(text: &str) -> bool {
     RESTORE_ENDS.iter().any(|end: &&str| text.contains(end))

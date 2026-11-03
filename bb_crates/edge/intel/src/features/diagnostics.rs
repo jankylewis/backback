@@ -7,6 +7,8 @@
 
 use std::time::Duration;
 
+use bb_lsp::roslyn;
+use bb_lsp::Incoming;
 use lsp_types::{
     DocumentDiagnosticParams, DocumentDiagnosticReport, DocumentDiagnosticReportResult,
     TextDocumentIdentifier,
@@ -167,5 +169,54 @@ mod tests {
         assert!(matches!(older, Err(IntelError::NoReport(_))), "{older:?}");
         let none: Result<Entry, IntelError> = entry_of(unchanged(), None, two, &path);
         assert!(matches!(none, Err(IntelError::NoReport(_))), "{none:?}");
+    }
+}
+
+/// Whether a server message means every pulled list may be stale: the
+/// `workspace/diagnostic/refresh` request, or a project (re)load line in the
+/// log (BB-BUG-019: a restore outside the editor reloads the projects, and
+/// the lists pulled before it stayed on screen).
+pub(crate) fn refresh_requested(message: &Incoming, text: &str) -> bool {
+    let method: &str = match message {
+        Incoming::ServerRequest { method, .. } | Incoming::Notification { method, .. } => method,
+    };
+    method == roslyn::DIAGNOSTIC_REFRESH || roslyn::is_project_reload(text)
+}
+
+#[cfg(test)]
+mod refresh_tests {
+    use super::refresh_requested;
+    use bb_lsp::Incoming;
+
+    fn request(method: &str) -> Incoming {
+        Incoming::ServerRequest {
+            method: method.to_owned(),
+            params: None,
+        }
+    }
+
+    fn log(text: &str) -> (Incoming, String) {
+        let message: Incoming = Incoming::Notification {
+            method: String::from("window/logMessage"),
+            params: Some(serde_json::json!({"type": 3, "message": text})),
+        };
+        (message, text.to_owned())
+    }
+
+    #[test]
+    fn the_refresh_request_and_a_reload_line_ask_for_a_refresh_and_the_rest_do_not() {
+        assert!(refresh_requested(
+            &request("workspace/diagnostic/refresh"),
+            ""
+        ));
+        assert!(!refresh_requested(
+            &request("window/workDoneProgress/create"),
+            ""
+        ));
+        let (reload, text): (Incoming, String) =
+            log("[LanguageServerProjectSystem] Completed (re)load of 1 project(s) in 00:00:00.65");
+        assert!(refresh_requested(&reload, &text));
+        let (other, text): (Incoming, String) = log("Restore complete");
+        assert!(!refresh_requested(&other, &text));
     }
 }

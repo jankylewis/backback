@@ -49,5 +49,7 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-017 | `Cmd+/ does nothing` | FIXED | Does `command_key` have a `"/"` arm to `toggle_line_comment`? |
 | BB-UIX-008 | `a standard Cmd key does nothing` | FIXED | Has the Cmd table been swept against VS Code's default keymap? |
 | BB-BUG-018 | `HalfHalve` | FIXED | Does `RenameInput` open `fresh` and does the first key clear it? |
-| BB-BUG-019 | `problems=11 after a rename, 0 on a fresh load` | OPEN | Which pull delivered them; does a later edit replace them? |
+| BB-BUG-019 | `problems=11 after a rename` | FIXED | After a change, does the server thread mark every open document, not only the edited one? |
+| BB-LSP-007 | `errors stay in another open file after an edit` | FIXED | Does the pull after a change or a refresh cover every open document? |
+| BB-TG-015 | `bb_diag_state version=None` | OBSERVED | Did the readback ask a question (or get a paint) before reading `problems`? |
 | BB-UIX-009 | `a typed name glued onto the old one` | FIXED | Is the prefilled name selected when the box opens? |

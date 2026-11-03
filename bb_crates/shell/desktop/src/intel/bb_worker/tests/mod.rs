@@ -4,6 +4,7 @@
 #[path = "bb_death.rs"]
 mod death;
 mod events;
+mod other_files;
 mod trace;
 
 use std::path::{Path, PathBuf};

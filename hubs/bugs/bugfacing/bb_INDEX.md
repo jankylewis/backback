@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 19 — FIXED 17, OPEN 2.
+Bugs a user met in the app. Entries: 19 — FIXED 18, OPEN 1.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -22,4 +22,4 @@ Bugs a user met in the app. Entries: 19 — FIXED 17, OPEN 2.
 | BB-BUG-016 | Cmd+A does not select all | FIXED | no Cmd+A arm in the key map (BB-UIX-008) | yes | `D2/S04/BB_BUG_016_CMD_A_DOES_NOT_SELECT_ALL.md` |
 | BB-BUG-017 | Cmd+/ does not toggle a line comment | FIXED | no comment command, no Cmd+/ arm (BB-UIX-008) | yes | `D2/S05/BB_BUG_017_CMD_SLASH_DOES_NOT_TOGGLE_A_LINE_COMMENT.md` |
 | BB-BUG-018 | The rename box appends to the old name | FIXED | the prefilled name was not selected (BB-UIX-009) | yes | `D2/S05/BB_BUG_018_THE_RENAME_BOX_APPENDS_TO_THE_OLD_NAME.md` |
-| BB-BUG-019 | Problems keep stale diagnostics after a rename | OPEN | not yet found: the closed file's old-text diagnostics are never replaced | no | `D2/S05/BB_BUG_019_PROBLEMS_KEEP_STALE_DIAGNOSTICS_AFTER_A_RENAME.md` |
+| BB-BUG-019 | Problems keep stale diagnostics after a rename | FIXED | an edit pulled again only its own file (BB-LSP-007) | yes | `D2/S05/BB_BUG_019_PROBLEMS_KEEP_STALE_DIAGNOSTICS_AFTER_A_RENAME.md` |

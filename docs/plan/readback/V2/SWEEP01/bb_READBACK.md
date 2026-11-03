@@ -87,8 +87,10 @@ waited for, `state` judged; `Square` is declared on line 15, `Half` on 21.
 | H3 Find in Files, regex | `cmd-shift-f /Square/ enter` | PASS: results listed |
 | H4 Go to Symbol `Half` | `cmd-f12 Half enter` | PASS: line 21 |
 | H5 Cmd+. on a line | `goto:9:9 cmd-.` | PASS: actions listed |
-| H6 F2 rename `Half` to `Halve` | `f2 Halve enter enter cmd-s` | **BB-BUG-018**: both files read `HalfHalve` (the box appended); the rename itself reached the closed file. **BB-BUG-019**: `problems=11` after the save and still 8 s later; a fresh load shows `0` and `dotnet build` is clean |
+| H6 F2 rename `Half` to `Halve` | `f2 Halve enter enter cmd-s` | **BB-BUG-018**: both files read `HalfHalve` (the box appended); the rename itself reached the closed file. **BB-BUG-019**: `problems=11` after the save and still 8 s later; `dotnet build` is clean. (Corrected: the fresh-load `0` read a tab the server never opened, BB-TG-015.) |
 
 Two script errors on the way, not bugs: the rename box is two-step (Enter
 previews, Enter applies), and line numbers of the exception copy were used.
+
+The BB-BUG-019 fix, read back before and after: `BUG_019_READBACK.md`.
 

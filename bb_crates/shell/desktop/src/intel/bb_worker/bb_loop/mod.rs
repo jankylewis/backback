@@ -3,11 +3,13 @@
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use bb_intel::{Config, DiagnosticsReport, DocPath, IntelError, Session, Span};
 use bb_lsp::roslyn::LoadState;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::Notify;
 
 mod bb_helpers;
 mod load;
@@ -16,8 +18,8 @@ use super::protocol::{Answer, Ask, Event, Request, Stages, Ticket};
 use bb_helpers::{doc, places, send};
 use load::load;
 
-/// How long the request queue must stay quiet before changed documents get
-/// their diagnostics pulled again.
+/// How long the request queue must stay quiet before the marked documents
+/// get their diagnostics pulled again.
 const PULL_AFTER: Duration = Duration::from_millis(250);
 
 /// Run the server thread until the UI drops its sender.
@@ -51,13 +53,14 @@ async fn serve(
     };
     let mut changed: BTreeSet<PathBuf> = BTreeSet::new();
     let mut closed: tokio::sync::watch::Receiver<bool> = session.closed_signal();
+    let refresh: Arc<Notify> = session.refresh_signal();
     loop {
         if *closed.borrow() {
             send(events, Event::Stopped);
             return;
         }
         let request: Option<Request> = tokio::select! {
-            request = next(&mut requests, &mut session, &mut changed, events) => request,
+            request = next(&mut requests, &mut session, &mut changed, &refresh, events) => request,
             changed = closed.changed() => {
                 if changed.is_ok() { send(events, Event::Stopped); }
                 return;
@@ -72,17 +75,22 @@ async fn serve(
     let _stopped: Result<(), IntelError> = session.shutdown().await;
 }
 
-/// The next request; while the queue is quiet, pull the diagnostics of
-/// documents that changed.
+/// The next request; while the queue is quiet, pull the diagnostics of the
+/// documents marked. A refresh signal (BB-BUG-019) marks every open one.
 async fn next(
     requests: &mut UnboundedReceiver<Request>,
     session: &mut Session,
     changed: &mut BTreeSet<PathBuf>,
+    refresh: &Notify,
     events: &UnboundedSender<Event>,
 ) -> Option<Request> {
     loop {
         if changed.is_empty() {
-            return requests.recv().await;
+            tokio::select! {
+                request = requests.recv() => return request,
+                () = refresh.notified() => mark_open(session, changed),
+            }
+            continue;
         }
         if let Ok(request) = tokio::time::timeout(PULL_AFTER, requests.recv()).await {
             return request;
@@ -122,9 +130,9 @@ async fn handle(
                 Err(error) => Err(error),
             };
             match result {
-                Ok(_) => {
-                    changed.insert(path);
-                }
+                // Any edit can change the diagnostics of every open file: a
+                // rename in one breaks or fixes the callers in another (BB-BUG-019).
+                Ok(_) => mark_open(session, changed),
                 Err(error) => send(events, Event::SyncFailed(error.to_string())),
             }
         }
@@ -141,6 +149,11 @@ async fn handle(
             sent,
         } => answer(session, ticket, (path, ask), sent, events).await,
     }
+}
+
+/// Mark every open document for a pull.
+fn mark_open(session: &Session, changed: &mut BTreeSet<PathBuf>) {
+    changed.extend(session.open_paths());
 }
 
 async fn close(session: &mut Session, path: &Path) -> Result<(), IntelError> {

@@ -24,3 +24,4 @@
 | BB-UIX-007 | FIXED | A key with a selection is its own case; the default insert arm is for printable chars only | `APP/UIX/S02/BB_UIX_007_TAB_AND_THE_CMD_DELETES_HAD_NO_LINE_COMMANDS.md` |
 | BB-UIX-008 | FIXED | The reference editor's key table is the checklist; a missing arm is a bug found by the sweep | `APP/UIX/S02/BB_UIX_008_THE_CMD_MAP_LACKED_SELECT_ALL_AND_THE_COMMENT_TOGGLE.md` |
 | BB-UIX-009 | FIXED | A rig presses no helper key a user would not; a needed helper key is the bug | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |
+| BB-LSP-007 | FIXED | Ask again for a list whenever what it is computed from changes | `APP/LSP/BB_LSP_007_AN_EDIT_PULLED_AGAIN_ONLY_ITS_OWN_FILE.md` |

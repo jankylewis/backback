@@ -2,7 +2,7 @@
 //! only for an open document so positions match the mirror the server holds.
 
 mod bb_nav;
-mod diagnostics;
+pub(crate) mod diagnostics;
 mod edits;
 
 use std::time::Duration;
