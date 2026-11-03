@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 37 — FIXED 35, OBSERVED 2.
+Bugs a user met in the app. Entries: 38 — FIXED 36, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -41,3 +41,4 @@ Bugs a user met in the app. Entries: 37 — FIXED 35, OBSERVED 2.
 | BB-BUG-035 | A clean tab keeps stale text after an outside change | FIXED | nothing compared the file with what was read (BB-UIX-015) | yes | `D3/S09/BB_BUG_035_A_CLEAN_TAB_KEEPS_STALE_TEXT_AFTER_AN_OUTSIDE_CHANGE.md` |
 | BB-BUG-036 | Cmd+P does not open Go to File | FIXED | the key map lacked VS Code's keys (BB-UIX-010) | yes | `D3/S09/BB_BUG_036_CMD_P_DOES_NOT_OPEN_GO_TO_FILE.md` |
 | BB-BUG-037 | The Explorer misses files made or removed outside | FIXED | each folder was read once (BB-UIX-016) | yes | `D3/S10/BB_BUG_037_THE_EXPLORER_MISSES_FILES_MADE_OR_REMOVED_OUTSIDE.md` |
+| BB-BUG-038 | A second window wipes the first's Roslyn folder | FIXED | two workers shared one owned temp folder (BB-PRC-005) | yes | `D3/S10/BB_BUG_038_A_SECOND_WINDOW_WIPES_THE_FIRSTS_ROSLYN_FOLDER.md` |

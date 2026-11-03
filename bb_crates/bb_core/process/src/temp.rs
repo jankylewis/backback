@@ -33,7 +33,9 @@ const PROBE_DEADLINE: Duration = Duration::from_millis(500);
 pub struct OwnedTempDir(PathBuf);
 
 impl OwnedTempDir {
-    /// Sweep `prefix`'s dead folders, then make `<prefix>-<pid>` afresh.
+    /// Sweep `prefix`'s dead folders, then make `<prefix>-<pid>` afresh. One
+    /// per process: a second create of the same prefix removes the first's
+    /// folder, so anything that can run twice uses [`Self::create_with`].
     ///
     /// # Errors
     /// The folder cannot be made.

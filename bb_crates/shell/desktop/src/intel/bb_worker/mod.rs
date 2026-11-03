@@ -75,8 +75,8 @@ fn prepare(solution: &Path) -> Result<(bb_process::OwnedTempDir, Config, LoadSta
     let listing: Solution = SolutionPath::new(solution.to_path_buf())
         .and_then(|path: SolutionPath| Solution::load(&path))
         .map_err(|error: bb_dotnet::SolutionError| error.to_string())?;
-    let folder: bb_process::OwnedTempDir = bb_process::OwnedTempDir::create("backback-intel")
-        .map_err(|error: std::io::Error| format!("temp folder: {error}"))?;
+    let folder: bb_process::OwnedTempDir =
+        intel_folder().map_err(|error: std::io::Error| format!("temp folder: {error}"))?;
     let base: &Path = folder.path();
     let (log_dir, scratch): (PathBuf, PathBuf) = (base.join("log"), base.join("scratch"));
     for dir in [&log_dir, &scratch] {
@@ -92,6 +92,15 @@ fn prepare(solution: &Path) -> Result<(bb_process::OwnedTempDir, Config, LoadSta
         load_timeout: Duration::from_secs(300),
     };
     Ok((folder, config, LoadState::new(&listing.projects)))
+}
+
+/// This worker's own folder, `backback-intel-<pid>-<n>`: one per worker, so
+/// a second window (or a parallel test) never removes another's scratch
+/// build and log (BB-BUG-038).
+fn intel_folder() -> std::io::Result<bb_process::OwnedTempDir> {
+    static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let n: u64 = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    bb_process::OwnedTempDir::create_with("backback-intel", &n.to_string())
 }
 
 /// The solution to load for a workspace root: the argument itself when it
@@ -121,4 +130,22 @@ fn is_solution(path: &Path) -> bool {
         && path
             .extension()
             .is_some_and(|ext: &std::ffi::OsStr| ext == "slnx" || ext == "sln")
+}
+
+#[cfg(test)]
+mod folder_tests {
+    /// BB-BUG-038: two workers in one process get two folders; dropping
+    /// one leaves the other whole.
+    #[test]
+    fn each_worker_owns_its_own_folder() {
+        let first: bb_process::OwnedTempDir = super::intel_folder().unwrap();
+        let second: bb_process::OwnedTempDir = super::intel_folder().unwrap();
+        assert_ne!(first.path(), second.path());
+        std::fs::write(first.path().join("backback-roslyn.log"), "x").unwrap();
+        drop(second);
+        assert!(
+            first.path().join("backback-roslyn.log").is_file(),
+            "the first worker's log stays"
+        );
+    }
 }
