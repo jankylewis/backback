@@ -40,3 +40,6 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-014 | FIXED | Sweep C2 bytes before, the rerun after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
 | BB-BUG-015 | FIXED | Sweep E1 and E2 bytes before, the rerun after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
 | BB-UIX-007 | FIXED | The BB-BUG-014 and BB-BUG-015 sweeps above |
+| BB-BUG-016 | FIXED | Sweep 2 G1 bytes before, the rerun after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
+| BB-BUG-017 | FIXED | Sweep 2 G8 bytes before, the rerun after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
+| BB-UIX-008 | FIXED | The BB-BUG-016 and BB-BUG-017 sweeps above |

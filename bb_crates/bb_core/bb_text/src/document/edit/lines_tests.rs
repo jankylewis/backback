@@ -84,3 +84,39 @@ fn tab_without_a_selection_types_spaces_to_the_next_stop() {
     at_stop.indent().unwrap();
     assert_eq!(at_stop.text(), "abcd    \n", "a full stop at a stop");
 }
+
+#[test]
+fn select_all_takes_the_whole_text() {
+    let mut d: Document = doc("ab\ncd\n", 1);
+    d.select_all().unwrap();
+    assert_eq!(d.selection(), Some((CharIdx::new(0), CharIdx::new(6))));
+    d.insert("x").unwrap();
+    assert_eq!(d.text(), "x");
+}
+
+#[test]
+fn cmd_slash_comments_the_touched_lines_after_their_indent_and_back() {
+    let text: &str = "class C\n{\n    int a;\n\n    int b;\n}\n";
+    let mut d: Document = doc(text, 0);
+    d.select(CharIdx::new(10), CharIdx::new(26)).unwrap();
+    d.toggle_line_comment().unwrap();
+    assert_eq!(
+        d.text(),
+        "class C\n{\n    // int a;\n\n    // int b;\n}\n",
+        "after the indent; blank lines stay bare"
+    );
+    assert_eq!(d.selection(), Some((CharIdx::new(10), CharIdx::new(29))));
+    d.toggle_line_comment().unwrap();
+    assert_eq!(d.text(), text, "all commented: uncomment");
+    assert_eq!(d.selection(), Some((CharIdx::new(10), CharIdx::new(26))));
+    d.undo().unwrap();
+    assert_eq!(
+        d.text(),
+        "class C\n{\n    // int a;\n\n    // int b;\n}\n",
+        "one undo step each"
+    );
+    let mut one: Document = doc("    x;\n", 5);
+    one.toggle_line_comment().unwrap();
+    assert_eq!(one.text(), "    // x;\n", "no selection: the cursor line");
+    assert_eq!(one.cursor().raw(), 8, "the cursor keeps its char");
+}

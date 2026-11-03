@@ -45,3 +45,6 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-014 | `Cmd+Backspace does nothing` | FIXED | Does `command_key` map `backspace` and `delete` to the line-edge deletes? |
 | BB-BUG-015 | `Tab with a selection replaces it` | FIXED | Does `text_key` give `tab` its own arm before the insert default? |
 | BB-UIX-007 | `a selected line vanishes on Tab` | FIXED | Is every editing key listed with what it does to a selection? |
+| BB-BUG-016 | `Cmd+A does nothing` | FIXED | Does `command_key` have an `"a"` arm to `select_all`? |
+| BB-BUG-017 | `Cmd+/ does nothing` | FIXED | Does `command_key` have a `"/"` arm to `toggle_line_comment`? |
+| BB-UIX-008 | `a standard Cmd key does nothing` | FIXED | Has the Cmd table been swept against VS Code's default keymap? |
