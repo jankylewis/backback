@@ -4,6 +4,7 @@ use gpui::{div, prelude::*, px, uniform_list, Context, FocusHandle, IntoElement,
 
 use super::bb_tabs::Tab;
 mod bb_line;
+mod hscroll;
 mod status;
 mod test_marks;
 use super::Tabs;
@@ -100,6 +101,7 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
     let lines: usize = tabs.active().map_or(0, Document::len_lines);
     div()
         .id("editor-area")
+        .debug_selector(|| "editor-area".to_owned())
         .flex_1()
         .bg(color(theme.bg))
         .key_context("Editor")
@@ -110,6 +112,7 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .on_action(cx.listener(crate::run::build::on_build))
         .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
         .on_action(cx.listener(super::go_forward))
+        .on_scroll(cx.listener(hscroll::on_wheel))
         .child(
             uniform_list(
                 "editor-lines",
@@ -120,6 +123,7 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
                      window: &mut Window,
                      row_cx: &mut Context<ExplorerView>| {
                         follow_view(view, &range, window, row_cx);
+                        hscroll::before_rows(view, &range, window, row_cx);
                         range
                             .map(|index: usize| editor_line(view, index, window, row_cx))
                             .collect::<Vec<_>>()
@@ -171,7 +175,11 @@ fn editor_line(
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
     let caret: Option<f32> = current.then(|| caret_x(tab, index, window, &fonts));
     let overlay: Option<gpui::AnyElement> = caret.and_then(|x: f32| {
-        crate::intel::view::bb_popups::at_cursor(&view.intel, fonts.gutter_width() + x, view.theme)
+        crate::intel::view::bb_popups::at_cursor(
+            &view.intel,
+            fonts.gutter_width() + x - tab.scroll_x,
+            view.theme,
+        )
     });
     let row: LineRow = LineRow {
         index,
@@ -188,13 +196,14 @@ fn editor_line(
             }),
         overlay,
         caret,
+        scroll_x: tab.scroll_x,
     };
     let link: Option<(bb_text::CharIdx, bb_text::CharIdx)> = super::link::shown(view, &tab.path);
     line_row(row, &styled_line(tab, index, &marks, link), view.theme, cx)
 }
 
 /// The cursor's x on its line, measured on the shaped line the row paints.
-fn caret_x(tab: &Tab, index: usize, window: &Window, fonts: &bb_ui::Typography) -> f32 {
+pub(super) fn caret_x(tab: &Tab, index: usize, window: &Window, fonts: &bb_ui::Typography) -> f32 {
     let start: usize = tab
         .document
         .line_start(index)

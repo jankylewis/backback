@@ -20,6 +20,12 @@ pub(crate) struct Tab {
     /// No edit, save or rename may change it (decompiled metadata, a file
     /// the user cannot write).
     pub(crate) read_only: bool,
+    /// Pixels the text has moved left (BB-BUG-013); the gutter stays.
+    pub(crate) scroll_x: f32,
+    /// The cursor the view last kept in sight; a move scrolls to the new one.
+    pub(crate) sighted: Option<bb_text::CharIdx>,
+    /// The widest line in sight, in pixels, plus some slack: the scroll's end.
+    pub(crate) widest_px: f32,
 }
 
 /// A tab opened or closed; the code intelligence link reads these.
@@ -73,6 +79,9 @@ impl Tab {
             test_methods,
             window_lines,
             read_only,
+            scroll_x: 0.0,
+            sighted: None,
+            widest_px: 0.0,
         })
     }
 

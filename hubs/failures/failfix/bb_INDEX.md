@@ -24,3 +24,4 @@
 | BB-ENV-001 | FIXED | Adopt the login shell's PATH when there is no TERM; find installed tools in their own folders | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
 | BB-UIX-004 | FIXED | `\r\n` is one line break in every move and edit | `APP/UIX/S01/BB_UIX_004_A_CRLF_LINE_BREAK_COUNTED_AS_TWO_CURSOR_STOPS.md` |
 | BB-UIX-005 | FIXED | The key map reads Option and Ctrl first: word moves and deletes, the Emacs line keys | `APP/UIX/S02/BB_UIX_005_THE_KEY_MAP_IGNORED_OPTION_AND_CTRL.md` |
+| BB-UIX-006 | FIXED | A per-tab `scroll_x`: clipped text viewport, caret/clicks offset, wheel scroll, caret kept in sight | `APP/UIX/S02/BB_UIX_006_ROWS_HAD_NO_HORIZONTAL_OFFSET.md` |

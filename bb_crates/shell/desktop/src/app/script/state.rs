@@ -20,11 +20,12 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             t.document.cursor().raw().saturating_sub(start).saturating_add(1)
         });
         eprintln!(
-            "bb_state status={:?} tab={:?} line={} col={col} read_only={} completion={:?} hover={hover:?} refs={:?} rename={:?} actions={:?} problems={} message={:?} link={:?}",
+            "bb_state status={:?} tab={:?} line={} col={col} read_only={} scroll_x={} completion={:?} hover={hover:?} refs={:?} rename={:?} actions={:?} problems={} message={:?} link={:?}",
             v.intel.status_label(),
             tab.map(|t: &crate::editor::Tab| t.path.display().to_string()),
             tab.map_or(0, |t: &crate::editor::Tab| t.document.cursor_line().saturating_add(1)),
             tab.is_some_and(|t: &crate::editor::Tab| t.read_only),
+            tab.map_or(0.0, |t: &crate::editor::Tab| t.scroll_x),
             v.intel.completion.as_ref().map(|c: &crate::intel::model::popups::CompletionPopup| c.visible().len()),
             v.intel.references.as_ref().map(|r: &crate::intel::model::popups::PlacesPanel| r.places.len()),
             v.intel.rename_preview.as_ref().map(crate::intel::model::popups::RenamePreview::counts),

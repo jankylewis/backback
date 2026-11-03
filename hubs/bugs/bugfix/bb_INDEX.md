@@ -13,3 +13,4 @@
 | BB-BUG-010 | `\r\n` is one break: arrows step over it, Backspace/Delete remove it whole | FIXED | 3 red-first tests + byte readback | `S03/BB_BUG_010_RIGHT_AT_A_LINE_END_SPLITS_A_CRLF.md` |
 | BB-BUG-011 | Option+Left/Right/Backspace/Delete work by word (VS Code / IntelliJ stops) | FIXED | 6 red-first tests + window test | `S03/BB_BUG_011_OPTION_ARROWS_MOVE_ONE_CHAR_NOT_ONE_WORD.md` |
 | BB-BUG-012 | Ctrl+A/E/B/F/P/N/H/D work as in Cocoa and VS Code on macOS | FIXED | red-first window test | `S03/BB_BUG_012_THE_MACOS_CTRL_TEXT_KEYS_DO_NOTHING.md` |
+| BB-BUG-013 | A per-tab `scroll_x`: clipped text viewport per row, caret and clicks offset, wheel scrolls, the caret kept in sight on moves | FIXED | red-first window test + readback on the headmate's file | `S04/BB_BUG_013_LONG_LINES_ARE_CLIPPED_WITH_NO_HORIZONTAL_SCROLL.md` |

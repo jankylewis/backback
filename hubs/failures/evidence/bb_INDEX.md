@@ -35,3 +35,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-ENV-001 | FIXED | The BB-BUG-008 and BB-BUG-009 readbacks above |
 | BB-UIX-004 | FIXED | The BB-BUG-010 byte dumps above |
 | BB-UIX-005 | FIXED | The BB-BUG-011 and BB-BUG-012 sweeps above |
+| BB-BUG-013 | FIXED | `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` (the headmate's screenshot described; `state` with `scroll_x` on the real file) |
+| BB-UIX-006 | FIXED | The BB-BUG-013 readback above |
+| BB-BUG-014 | OPEN | Sweep C2 bytes in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
+| BB-BUG-015 | OPEN | Sweep E1 and E2 bytes in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
