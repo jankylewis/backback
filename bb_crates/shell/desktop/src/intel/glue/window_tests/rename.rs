@@ -7,7 +7,7 @@ use bb_intel::{Diagnostic, DocVersion, Severity, Span};
 use bb_text::LspPoint;
 
 use super::bb_rig::{ask_rename, rename_plan, A};
-use crate::intel::bb_worker::protocol::{Event, Request, Ticket};
+use crate::intel::bb_worker::protocol::{Ask, Event, Request, Ticket};
 use gpui::{TestAppContext, VisualTestContext};
 
 use super::bb_rig::{rig, Rig};
@@ -144,4 +144,25 @@ fn a_squiggle_moves_with_the_edit_and_no_old_list_flashes(cx: &mut TestAppContex
     send(&rig, typed, 22);
     vcx.run_until_parked();
     assert_eq!(shown_at(&rig, vcx), [22]);
+}
+
+/// BB-BUG-018: the box opens with the old name selected, as in VS Code and
+/// Rider: typing replaces it; Backspace clears it.
+#[gpui::test]
+fn the_box_opens_with_the_old_name_selected_so_typing_replaces_it(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    rig.cursor_after(vcx, "M() { ");
+    vcx.simulate_keystrokes("f2 N e w enter");
+    let (_, ask): (Ticket, Ask) = rig.last_ask();
+    assert_eq!(
+        ask,
+        Ask::Rename(
+            LspPoint {
+                line: 0,
+                character: 21
+            },
+            String::from("New")
+        ),
+        "typed over the selected old name"
+    );
 }

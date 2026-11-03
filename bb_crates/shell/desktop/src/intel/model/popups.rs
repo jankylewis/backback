@@ -135,6 +135,9 @@ pub(crate) struct RenameInput {
     pub(crate) at: LspPoint,
     /// The name typed so far.
     pub(crate) text: String,
+    /// The prefilled name is selected, as in VS Code and Rider: the first
+    /// key replaces it (BB-BUG-018).
+    pub(crate) fresh: bool,
 }
 
 /// A rename plan shown before anything changes.

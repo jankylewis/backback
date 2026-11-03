@@ -145,10 +145,19 @@ fn rename_box(view: &mut ExplorerView, stroke: &Keystroke) {
         "escape" => view.intel.rename_input = None,
         "enter" => asks::rename_submit(view),
         "backspace" => {
-            input.text.pop();
+            if input.fresh {
+                input.text.clear();
+                input.fresh = false;
+            } else {
+                input.text.pop();
+            }
         }
         _ if !stroke.modifiers.platform && !stroke.modifiers.control => {
             if let Some(typed) = stroke.key_char.as_deref() {
+                if input.fresh {
+                    input.text.clear();
+                    input.fresh = false;
+                }
                 input.text.push_str(typed);
             }
         }

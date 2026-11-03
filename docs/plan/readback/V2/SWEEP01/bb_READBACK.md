@@ -75,4 +75,20 @@ Fresh copies of `Words.cs`, the saved bytes judged.
 | G7 undo after a replace | `cmd-a x cmd-z cmd-s` | PASS (Cmd+A being a no-op, the undo only removed `x`) |
 | G8 Cmd+/ | `goto:3:5 cmd-/ cmd-s` | **BB-BUG-017**: no line comment toggle; the file is unchanged |
 | G9 Cmd+Shift+Down, type | `goto:3:5 cmd-shift-down x cmd-s` | PASS: `    x` ends the file |
+## Sweep 3 (installed at `c145669`): code intelligence keys
+
+Fresh copies of the hand-check solution (writable: the rename saves), Roslyn
+waited for, `state` judged; `Square` is declared on line 15, `Half` on 21.
+
+| Case | Keys | Verdict |
+|---|---|---|
+| H1 F12 on `Square(3)` | `goto:7:29 f12` | PASS: the tab lands on line 15 |
+| H2 Shift+F12 on `Square` | `goto:15:23 shift-f12` | PASS: `refs=Some(3)` |
+| H3 Find in Files, regex | `cmd-shift-f /Square/ enter` | PASS: results listed |
+| H4 Go to Symbol `Half` | `cmd-f12 Half enter` | PASS: line 21 |
+| H5 Cmd+. on a line | `goto:9:9 cmd-.` | PASS: actions listed |
+| H6 F2 rename `Half` to `Halve` | `f2 Halve enter enter cmd-s` | **BB-BUG-018**: both files read `HalfHalve` (the box appended); the rename itself reached the closed file. **BB-BUG-019**: `problems=11` after the save and still 8 s later; a fresh load shows `0` and `dotnet build` is clean |
+
+Two script errors on the way, not bugs: the rename box is two-step (Enter
+previews, Enter applies), and line numbers of the exception copy were used.
 

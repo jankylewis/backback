@@ -141,6 +141,7 @@ pub(crate) fn rename_start(view: &mut ExplorerView) {
         path,
         at,
         text: name,
+        fresh: true,
     });
 }
 
