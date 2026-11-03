@@ -6,7 +6,8 @@ status: FIXED
 date: 2026-11-03
 signature: a lone \r in a saved CRLF file
 source: CI run 41532817663 led to the edit model; readback in `/Applications/backback.app` at `98f0fcd`
-links: fix=yes lesson=no evidence=yes toolgap=none
+cause: BB-UIX-004
+links: fix=yes lesson=yes evidence=yes toolgap=none
 
 ## Steps
 

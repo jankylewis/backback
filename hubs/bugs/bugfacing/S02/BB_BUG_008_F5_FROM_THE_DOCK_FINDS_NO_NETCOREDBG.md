@@ -6,7 +6,8 @@ status: FIXED
 date: 2026-11-03
 signature: Debug failed: netcoredbg not found
 source: readback of `/Applications/backback.app` at `55fac1d`, opened with `open`
-links: fix=yes lesson=no evidence=yes toolgap=none
+cause: BB-ENV-001
+links: fix=yes lesson=yes evidence=yes toolgap=none
 
 ## Steps
 

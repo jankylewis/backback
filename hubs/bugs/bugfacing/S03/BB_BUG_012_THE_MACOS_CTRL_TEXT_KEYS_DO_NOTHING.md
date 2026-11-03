@@ -6,7 +6,8 @@ status: FIXED
 date: 2026-11-03
 signature: Ctrl+A / Ctrl+E leave the cursor where it was
 source: BB-BUG-011 modifier sweep in `/Applications/backback.app` at `24aa57c`
-links: fix=yes lesson=no evidence=yes toolgap=none
+cause: BB-UIX-005
+links: fix=yes lesson=yes evidence=yes toolgap=none
 
 ## Steps
 

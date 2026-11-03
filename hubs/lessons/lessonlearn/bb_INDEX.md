@@ -17,3 +17,6 @@
 | BB-GAT-001 | FIXED | Assert the library's contract, not a stronger one | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-DAP-001 | FIXED | Print the adapter's real reply before shaping text a user reads | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | FIXED | Two waits on one stream share one reader state | `APP/LSP/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
+| BB-ENV-001 | FIXED | Read back a macOS app the way the Dock starts it: env -i, launchd's PATH, no TERM | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
+| BB-UIX-004 | FIXED | The unit of movement is what the user sees as one thing; test on CRLF too | `APP/UIX/BB_UIX_004_A_CRLF_LINE_BREAK_COUNTED_AS_TWO_CURSOR_STOPS.md` |
+| BB-UIX-005 | FIXED | Read a key with its modifiers; sweep the whole modifier table | `APP/UIX/BB_UIX_005_THE_KEY_MAP_IGNORED_OPTION_AND_CTRL.md` |
