@@ -17,6 +17,10 @@ Each case on a fresh `Words.cs` in a folder with no solution (no Roslyn),
 | K8 indent the line | `goto:3:5 cmd-]` | UNCHANGED (Forward) | UNCHANGED: Cmd+] is Forward (BB-BUG-021) |
 | K9 outdent the line | `goto:3:5 cmd-[` | UNCHANGED (Back) | UNCHANGED: Cmd+[ is Back (BB-BUG-021) |
 
+Installed at `070d2a1` (#59 and #60 merged): K4, K5, K6, K7 PASS; K1 to
+K3 UNCHANGED (BB-BUG-021); K8, K9 are Back and Forward. Sweeps 2 and 3
+and BBEOD22 T1 to T3 all PASS on the same install.
+
 Bugs: BB-BUG-020 (K4, K6, K7: fixed in this branch) and BB-BUG-021 (K1
 to K3, K5, and K8, K9, whose keys are Back and Forward here: open), one
 cause: BB-UIX-010.
