@@ -47,6 +47,7 @@ pub(crate) fn drive(
                 if !crate::script::run(&key, &view, cx).await {
                     work.extend(send_key(&key, cx).await);
                 }
+                flush_as_a_paint(&view, cx);
             }
             report_keys(&mut work);
             if std::env::var("BB_KEYS_QUIT").is_ok_and(|value: String| value == "1") {
@@ -56,6 +57,20 @@ pub(crate) fn drive(
         },
     )
     .detach();
+}
+
+/// Send the tab opens and the edits to the server as the paint after a key
+/// would (`render` flushes). A readback with the display asleep gets no
+/// paint, so the server never saw what the keys did and `state` read a tab
+/// it never opened (BB-TG-015). Outside the measured work; a no-op when a
+/// paint already flushed.
+fn flush_as_a_paint(view: &gpui::WeakEntity<ExplorerView>, cx: &mut gpui::AsyncWindowContext) {
+    let _gone: gpui::Result<()> = view.update(
+        cx,
+        |v: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
+            crate::intel::glue::flush(v);
+        },
+    );
 }
 
 /// Put the cursor at the start of the middle line (the bench types there).
