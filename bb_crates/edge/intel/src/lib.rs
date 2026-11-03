@@ -12,6 +12,7 @@ mod model;
 mod sync;
 
 pub use bb_session::{Config, Session};
+pub use features::calls::{CallItem, IncomingCall};
 pub use model::bb_doc::{DocVersion, Edit};
 pub use model::results::{
     ActionItem, CompletionEntry, Diagnostic, DiagnosticsReport, FileChange, HoverInfo, Severity,

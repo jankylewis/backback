@@ -64,6 +64,12 @@ fn command(view: &mut ExplorerView, stroke: &Keystroke) -> bool {
             asks::ask_at_cursor(view, Ask::TypeDefinition, None);
             true
         }
+        // Show Call Hierarchy (BBEOD24): VS Code's Shift+Alt+H. No app key
+        // binding takes it; Cmd+Alt+H stays Hide Others.
+        "h" if m.alt && m.shift && !m.platform && !m.control => {
+            asks::ask_at_cursor(view, Ask::Callers, None);
+            true
+        }
         "f2" => {
             asks::rename_start(view);
             true

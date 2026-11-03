@@ -1,6 +1,7 @@
 //! What each accepted answer does to the window.
 
 mod bb_rename;
+mod calls;
 
 pub(crate) use bb_rename::apply_rename;
 
@@ -32,6 +33,11 @@ pub(super) fn apply(
         Answer::Completion(items) => completion(view, pending, items, stages),
         Answer::Hover(info) => hover(view, pending, info),
         Answer::Definition(places) => goto_answer(view, pending, places, (window, cx)),
+        Answer::Callers {
+            name,
+            callers,
+            places,
+        } => calls::show(view, &name, callers, places),
         Answer::References(places) => {
             view.intel.references = Some(PlacesPanel {
                 title: format!("{} references", places.len()),
@@ -92,6 +98,7 @@ fn not_found(kind: AskKind) -> &'static str {
     match kind {
         AskKind::Implementation => "No implementation found",
         AskKind::TypeDefinition => "No type definition found",
+        AskKind::Callers => "No callers found",
         AskKind::Definition
         | AskKind::Link
         | AskKind::Completion

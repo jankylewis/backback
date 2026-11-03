@@ -15,7 +15,7 @@ mod bb_helpers;
 mod load;
 
 use super::protocol::{Answer, Ask, Event, Request, Stages, Ticket};
-use bb_helpers::{doc, places, send};
+use bb_helpers::{callers, doc, places, send};
 use load::load;
 
 /// How long the request queue must stay quiet before the marked documents
@@ -228,6 +228,7 @@ async fn ask_server(session: &Session, at: &DocPath, ask: Ask) -> Result<Answer,
         Ask::References(point) => Answer::References(
             places(session, session.references(at, point, deadline).await?).await,
         ),
+        Ask::Callers(point) => callers(session, at, point, deadline).await?,
         Ask::Rename(point, name) => {
             Answer::Rename(session.rename(at, point, &name, deadline).await?)
         }

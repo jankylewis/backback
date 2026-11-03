@@ -48,7 +48,8 @@ pub(crate) fn freshness(kind: AskKind) -> Freshness {
         AskKind::Definition
         | AskKind::Implementation
         | AskKind::TypeDefinition
-        | AskKind::References => Freshness::Any,
+        | AskKind::References
+        | AskKind::Callers => Freshness::Any,
     }
 }
 

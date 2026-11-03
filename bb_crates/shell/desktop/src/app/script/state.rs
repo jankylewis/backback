@@ -34,6 +34,7 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             v.status,
             v.intel.link.as_ref().map(|l: &crate::intel::model::popups::LinkTarget| (l.start.raw(), l.end.raw(), l.confirmed)),
         );
+        places(v.intel.references.as_ref());
         if let Some(tab) = tab {
             let at: Vec<String> = v.intel.diagnostics_of(&tab.path).iter()
                 .map(|d: &bb_intel::Diagnostic| format!("{}:{}", d.span.start.line.saturating_add(1), d.span.start.character.saturating_add(1)))
@@ -51,4 +52,31 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             eprintln!("bb_debug_state breakpoints={:?} {}", v.debug.breakpoints.lines(&tab.path), crate::run::bb_debug::view::notes::describe(v));
         }
     });
+}
+
+/// The places panel, when open, as shown: its title and each row's file and
+/// 1-based line (BBEOD24: the callers of a symbol).
+fn places(panel: Option<&crate::intel::model::popups::PlacesPanel>) {
+    let Some(panel): Option<&crate::intel::model::popups::PlacesPanel> = panel else {
+        return;
+    };
+    let rows: Vec<String> = panel
+        .places
+        .iter()
+        .map(|place: &crate::intel::bb_worker::protocol::Place| {
+            let file: String = match &place.location.uri {
+                bb_intel::DocUri::File(path) => path
+                    .as_path()
+                    .file_name()
+                    .map(|name: &std::ffi::OsStr| name.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+                bb_intel::DocUri::Virtual(uri) => uri.clone(),
+            };
+            format!(
+                "{file}:{}",
+                place.location.span.start.line.saturating_add(1)
+            )
+        })
+        .collect();
+    eprintln!("bb_places_state title={:?} places={rows:?}", panel.title);
 }
