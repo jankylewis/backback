@@ -11,7 +11,13 @@ cap, newer search wins. One crate, `bb-search` (`ignore` + `regex`; the
 `grep-searcher` crate was not needed). Readback
 `docs/plan/readback/FIXES/S03/BBEOD06/`, bench `docs/plan/bench/BBEOD06/FIND.md`.
 
-## P2 — Signed and notarised release, rest of BBEOD07
+## P2 — Signed and notarised release: DROPPED (2026-11-03)
+
+Headmate ruling: no paid Apple Developer ID. backback ships as source on the
+public GitHub repo; users build and install with `install.sh` (README). The
+section below is kept as the record of the dropped offer.
+
+### Dropped offer
 
 - What: `sign_release.sh` run with a Developer ID; notarise; `v1.0.0` tag;
   GitHub release with the `.app` zip; later a Homebrew cask.
@@ -30,7 +36,7 @@ cap, newer search wins. One crate, `bb-search` (`ignore` + `regex`; the
 - Why: the agent seat cannot post clicks (BB-TG-007) and the screen was
   locked overnight (BB-TG-010); window tests pass for all four.
 
-## P4 — Build a never-built test project before listing its tests
+## P4 — Build a never-built test project before listing its tests: APPROVED (2026-11-03)
 
 - Today: on a fresh clone, expanding a test project in the Test Explorer
   says "not built: ...dll (build the project first)" (readback 2026-11-03,
@@ -38,7 +44,7 @@ cap, newer search wins. One crate, `bb-search` (`ignore` + `regex`; the
 - Offer: when the project has no build output, build it once on expand,
   then list; never in `--no-write` mode (it writes `bin/` and `obj/`).
 
-## P5 — Search tracked dot-folders
+## P5 — Search tracked dot-folders: APPROVED (2026-11-03)
 
 - Today: Find in Files and Go to File skip every hidden folder; MbTx has a
   match in a tracked `.claudoholic/` file that the search does not list.
