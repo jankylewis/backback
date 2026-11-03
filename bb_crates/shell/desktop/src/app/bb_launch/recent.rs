@@ -53,6 +53,15 @@ pub(crate) fn state_dir() -> Option<PathBuf> {
     Some(home.join("Library/Application Support/backback"))
 }
 
+/// The state folder of the recent list; unit tests never read or write the
+/// real one (the settings seam).
+fn store() -> Option<PathBuf> {
+    if cfg!(test) {
+        return None;
+    }
+    state_dir()
+}
+
 fn read(dir: &Path) -> Vec<PathBuf> {
     match std::fs::read_to_string(dir.join(FILE)) {
         Ok(text) => decode(&text).unwrap_or_else(|error: RecentError| {
@@ -63,16 +72,15 @@ fn read(dir: &Path) -> Vec<PathBuf> {
     }
 }
 
-/// The newest recent workspace that still exists.
-pub(crate) fn last() -> Option<PathBuf> {
-    read(&state_dir()?)
-        .into_iter()
-        .find(|path: &PathBuf| path.exists())
+/// Every recent workspace, newest first, as saved (the start page leaves out
+/// the ones gone from disk).
+pub(crate) fn list() -> Vec<PathBuf> {
+    store().map_or_else(Vec::new, |dir: PathBuf| read(&dir))
 }
 
 /// Put `path` first in the recent list; a write error is reported, not fatal.
 pub(crate) fn remember(path: &Path) {
-    let Some(dir): Option<PathBuf> = state_dir() else {
+    let Some(dir): Option<PathBuf> = store() else {
         return;
     };
     let paths: Vec<PathBuf> = add(read(&dir), path.to_path_buf());

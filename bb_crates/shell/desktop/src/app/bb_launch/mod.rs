@@ -1,4 +1,4 @@
-use crate::args::Start;
+use crate::args::{Launch, Start};
 use crate::editor::{Quit, Tabs};
 use crate::theme::{install_appearance_observer, resolved_theme, FollowAppearance, ToggleTheme};
 use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open, RestartServer};
@@ -13,14 +13,17 @@ mod bb_window;
 mod open;
 pub(crate) mod recent;
 pub(crate) use bb_window::on_view as window_actions;
+pub(crate) use open::start_state;
 
 pub(crate) fn launch() {
     // First, before any thread or child process (BB-BUG-009).
     bb_process::shell_env::adopt_login_path();
-    let wanted: Start = crate::args::parse_args();
-    if let Err(error) = Explorer::open(&wanted.root) {
-        eprintln!("{error}");
-        std::process::exit(1);
+    let wanted: Launch = crate::args::parse_args();
+    if let Launch::Workspace(start) = &wanted {
+        if let Err(error) = Explorer::open(&start.root) {
+            eprintln!("{error}");
+            std::process::exit(1);
+        }
     }
     if let Err(error) = bb_process::exit_on_signal(true) {
         eprintln!("bb: cannot watch fatal signals: {error}");
@@ -35,32 +38,32 @@ pub(crate) fn launch() {
         .detach();
         bind_keys(cx);
         bb_window::register(cx);
-        open::register(cx);
+        open::register(cx, wanted.no_write());
         crate::settings::install(cx);
         crate::settings::register_zoom(cx);
         cx.set_menus(menus());
-        let (ask, no_write): (bool, bool) = (wanted.ask, wanted.no_write);
-        open_workspace(&wanted, cx);
-        if ask {
-            open::ask(cx, no_write);
+        match &wanted {
+            Launch::Workspace(start) => {
+                open_workspace(start, cx);
+            }
+            Launch::StartPage { no_write } => open::show_start_page(*no_write, cx),
         }
         cx.activate(true);
     });
 }
 
-/// Open `wanted` in a new window and remember it as the newest workspace.
-pub(crate) fn open_workspace(wanted: &Start, cx: &mut App) {
+/// Open `wanted` in a new window and remember it as the newest workspace;
+/// false when it cannot open.
+pub(crate) fn open_workspace(wanted: &Start, cx: &mut App) -> bool {
     let start: Instant = Instant::now();
     let tree: Explorer = match Explorer::open(&wanted.root) {
         Ok(tree) => tree,
         Err(error) => {
             eprintln!("{error}");
-            return;
+            return false;
         }
     };
-    if !wanted.ask {
-        recent::remember(&wanted.root);
-    }
+    recent::remember(&wanted.root);
     let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(1000.0), px(700.0)), cx);
     let result: gpui::Result<gpui::WindowHandle<ExplorerView>> = cx.open_window(
         WindowOptions {
@@ -69,9 +72,10 @@ pub(crate) fn open_workspace(wanted: &Start, cx: &mut App) {
         },
         |window: &mut Window, cx: &mut App| build_window(tree, wanted, start, window, cx),
     );
-    if let Err(error) = result {
+    if let Err(error) = &result {
         eprintln!("{error}");
     }
+    result.is_ok()
 }
 
 fn build_window(

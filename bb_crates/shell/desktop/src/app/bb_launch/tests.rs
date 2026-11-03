@@ -128,6 +128,7 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
         names(&file),
         [
             "Open...",
+            "Start Page...",
             "Go to File...",
             "Go to Symbol...",
             "Find in Files...",

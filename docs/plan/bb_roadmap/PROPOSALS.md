@@ -51,3 +51,7 @@ section below is kept as the record of the dropped offer.
   VS Code and Rider search folders such as `.github` and `.config`.
 - Offer: search tracked dot-folders; still skip `.git`, `.vs`, `.idea`.
 
+## P6 — Start page: DONE (2026-11-03, BBEOD23)
+
+- A launch with no argument from the Dock or Finder shows the recent
+  workspaces and Open... instead of reopening the newest one; File > Start Page....

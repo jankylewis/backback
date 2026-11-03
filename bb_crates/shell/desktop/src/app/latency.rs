@@ -18,7 +18,9 @@ pub(crate) fn record_parse(took: Duration) {
 
 /// Keys to send through the window's own input path once a file opens:
 /// `BB_KEYBENCH=<n>` types `n` chars mid-file and prints per-key work;
-/// `BB_KEYS="x cmd-s"` sends those keys. `BB_KEYS_QUIT=1` quits after.
+/// `BB_KEYS="x cmd-s"` sends those keys. `BB_KEYS_QUIT=1` quits after. A
+/// start page runs the steps itself until one opens a workspace, then hands
+/// the rest to that window (BBEOD23).
 pub(crate) fn drive(
     view: &mut ExplorerView,
     window: &mut Window,
@@ -29,16 +31,35 @@ pub(crate) fn drive(
         .and_then(|count: String| count.parse::<usize>().ok());
     let keys: Vec<String> = match bench {
         Some(count) => vec![String::from("x"); count],
-        None => std::env::var("BB_KEYS")
-            .map(|list: String| list.split_whitespace().map(str::to_owned).collect())
-            .unwrap_or_default(),
+        None => script_keys(),
     };
-    if keys.is_empty() || DRIVEN.swap(true, Ordering::SeqCst) {
+    if keys.is_empty() || !claim() {
         return;
     }
     if let (Some(_), Some(doc)) = (bench, view.tabs.active_mut()) {
         park_mid_file(doc);
     }
+    run_keys(keys, window, cx);
+}
+
+/// The `BB_KEYS` steps; empty when unset.
+pub(crate) fn script_keys() -> Vec<String> {
+    std::env::var("BB_KEYS")
+        .map(|list: String| list.split_whitespace().map(str::to_owned).collect())
+        .unwrap_or_default()
+}
+
+/// Take the one script run of the process; false when a window has it.
+pub(crate) fn claim() -> bool {
+    !DRIVEN.swap(true, Ordering::SeqCst)
+}
+
+/// Run `keys` in this window: script steps, else keys through its input path.
+pub(crate) fn run_keys(
+    keys: Vec<String>,
+    window: &mut Window,
+    cx: &mut gpui::Context<ExplorerView>,
+) {
     cx.spawn_in(
         window,
         async move |view: gpui::WeakEntity<ExplorerView>, cx: &mut gpui::AsyncWindowContext| {
@@ -50,13 +71,18 @@ pub(crate) fn drive(
                 flush_as_a_paint(&view, cx);
             }
             report_keys(&mut work);
-            if std::env::var("BB_KEYS_QUIT").is_ok_and(|value: String| value == "1") {
-                cx.update(|_: &mut Window, cx: &mut gpui::App| cx.quit())
-                    .ok();
-            }
+            cx.update(|_: &mut Window, cx: &mut gpui::App| quit_when_asked(cx))
+                .ok();
         },
     )
     .detach();
+}
+
+/// `BB_KEYS_QUIT=1`: quit once the steps are done.
+pub(crate) fn quit_when_asked(cx: &mut gpui::App) {
+    if std::env::var("BB_KEYS_QUIT").is_ok_and(|value: String| value == "1") {
+        cx.quit();
+    }
 }
 
 /// Send the tab opens and the edits to the server as the paint after a key
