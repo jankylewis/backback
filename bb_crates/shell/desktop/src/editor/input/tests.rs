@@ -201,3 +201,31 @@ fn a_click_past_the_line_end_puts_the_cursor_at_the_end(cx: &mut TestAppContext)
         );
     }
 }
+
+/// BB-BUG-028: Cmd+C copies the selection to the clipboard, Cmd+V pastes
+/// it; Cmd+X with no selection cuts the whole line.
+#[gpui::test]
+fn cmd_c_copies_the_selection_and_cmd_v_pastes_it(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "\"4173-94\",\nnext\n");
+    put(&rig, vcx, 1, 8);
+    vcx.simulate_keystrokes("cmd-c");
+    let copied: Option<String> = vcx
+        .read_from_clipboard()
+        .and_then(|item: gpui::ClipboardItem| item.text());
+    assert_eq!(copied.as_deref(), Some("4173-94"));
+    put(&rig, vcx, 15, 15);
+    vcx.simulate_keystrokes("cmd-v");
+    assert_eq!(text(&rig, vcx), "\"4173-94\",\nnext4173-94\n");
+    put(&rig, vcx, 0, 0);
+    vcx.simulate_keystrokes("cmd-x");
+    assert_eq!(
+        text(&rig, vcx),
+        "next4173-94\n",
+        "no selection: the line is cut"
+    );
+    let cut: Option<String> = vcx
+        .read_from_clipboard()
+        .and_then(|item: gpui::ClipboardItem| item.text());
+    assert_eq!(cut.as_deref(), Some("\"4173-94\",\n"));
+}

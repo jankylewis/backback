@@ -22,6 +22,9 @@ pub(crate) struct Tabs {
     no_write: bool,
     /// Back / Forward across jumps.
     pub(crate) history: History,
+    /// The last whole-line copy or cut (BB-BUG-028): pasted with no
+    /// selection, it goes in above the cursor's line.
+    pub(crate) line_clip: Option<String>,
 }
 
 impl Tabs {

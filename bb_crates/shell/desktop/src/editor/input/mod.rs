@@ -5,6 +5,7 @@ use crate::ExplorerView;
 mod bb_keys;
 pub(crate) mod link;
 use bb_keys::{command_key, text_key};
+mod clip;
 
 /// The char under window position `window_x` on `line` of the active tab.
 /// Measured on the same shaped line the row paints (BB-UIX-001).
@@ -66,7 +67,7 @@ pub(crate) fn handle_key(
     let mark: Option<Mark> = mark(view);
     let edit_start: Instant = Instant::now();
     let result: Option<Result<(), bb_text::DocumentError>> = if event.keystroke.modifiers.platform {
-        command_key(view, key, shift)
+        clip::clipboard_key(view, key, cx).or_else(|| command_key(view, key, shift))
     } else {
         view.tabs
             .active_mut()
@@ -162,7 +163,7 @@ fn refused(view: &ExplorerView, event: &KeyDownEvent) -> Option<String> {
         return Some(String::from("no-write mode: save refused"));
     }
     let edits: bool = if platform {
-        key == "s" || key == "z"
+        matches!(key, "s" | "z" | "x" | "v")
     } else {
         matches!(key, "backspace" | "delete" | "enter" | "return") || stroke.key_char.is_some()
     };
