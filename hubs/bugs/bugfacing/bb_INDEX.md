@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 27 — FIXED 25, OPEN 2.
+Bugs a user met in the app. Entries: 28 — FIXED 26, OPEN 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -31,3 +31,4 @@ Bugs a user met in the app. Entries: 27 — FIXED 25, OPEN 2.
 | BB-BUG-025 | A click on a test does not open it | FIXED | design: not built | yes | `D2/S07/BB_BUG_025_A_CLICK_ON_A_TEST_DOES_NOT_OPEN_IT.md` |
 | BB-BUG-026 | A running test cannot be stopped | FIXED | the stop was far from the run (BB-UIX-013) | yes | `D2/S07/BB_BUG_026_A_RUNNING_TEST_CANNOT_BE_STOPPED.md` |
 | BB-BUG-027 | backback leaves temp folders behind | FIXED | temp folders outlive their process (BB-PRC-004) | yes | `D2/S07/BB_BUG_027_BACKBACK_LEAVES_TEMP_FOLDERS_BEHIND.md` |
+| BB-BUG-028 | Cmd+C does not copy | FIXED | design: not built | yes | `D2/S07/BB_BUG_028_CMD_C_DOES_NOT_COPY.md` |

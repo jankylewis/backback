@@ -66,3 +66,4 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-UIX-013 | `cannot find how to stop` | FIXED | Is the stop on the row that started the run? |
 | BB-BUG-027 | `$TMPDIR keeps growing` | FIXED | Run `bb sweep`; which prefix is left with a live pid? |
 | BB-PRC-004 | `a <prefix>-<pid> folder of a dead pid` | FIXED | Is the folder made through `OwnedTempDir` or swept by its family? |
+| BB-BUG-028 | `Cmd+C does not copy` | FIXED | Does `clip::clipboard_key` see the key before `command_key`? |
