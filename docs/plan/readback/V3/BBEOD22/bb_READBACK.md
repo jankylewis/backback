@@ -20,6 +20,13 @@ Several implementations open the places panel ("2 implementations"). The
 harness has no interface, so that path is proven by the window test
 `cmd_alt_b_jumps_to_one_implementation_and_lists_several`, not here.
 
+## Installed at `e87dac2` (#57 merged)
+
+T1 PASS (Greeter.cs line 3, col 21), T2 PASS (line 5, col 19), T3 PASS
+(line 14, col 24): the same as the branch build. Regression on the same
+install: BB-BUG-019 R1 (`problems=0`, both files `Halve`) and sweep 3
+H1-H6 all PASS.
+
 ## Verdict
 
 PASS. Both commands land on the right line and column through the real
