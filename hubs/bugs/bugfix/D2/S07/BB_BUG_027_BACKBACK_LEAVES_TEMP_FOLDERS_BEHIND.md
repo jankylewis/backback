@@ -23,4 +23,5 @@ whose pid is live (the headmate's open app, and pids reused since).
 `leak_probe.py` (5 test runs on the branch build): RSS 98-109 MB, 65 open
 files, 7-8 threads, 2 children, all flat; after quit the app's
 `backback-intel-<pid>` was removed and of 40 descendants only
-`VBCSCompiler` (dotnet's shared compiler server) lived on.
+`VBCSCompiler` (dotnet's shared compiler server) lived on. It is dotnet's
+own idle-timed daemon: by 23:00 it had exited by itself, so not a leak.
