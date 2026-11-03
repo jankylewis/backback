@@ -54,3 +54,25 @@ Before the fix the same keys left `scroll_x` absent: the caret went under
 the pane's edge (the headmate's screenshot). A trackpad swipe is proven by
 the window test's simulated scroll event; by hand on the installed app it
 is the headmate's check after the install.
+
+## Installed at `c145669` (both fixes merged): the eight cases again
+
+All eight PASS on the installed app, launchd's PATH; C2, E1 and E2 were the
+red ones at `0b6406d`.
+
+## Sweep 2 (installed at `c145669`): selections, Enter, joins, select all
+
+Fresh copies of `Words.cs`, the saved bytes judged.
+
+| Case | Keys | Verdict |
+|---|---|---|
+| G1 select all, type | `cmd-a x cmd-s` | **BB-BUG-016**: Cmd+A does nothing; `x` went in at the cursor |
+| G2 Shift+Right x3, type | `goto:3:5 shift-right shift-right shift-right y cmd-s` | PASS: `    y alpha = beta + gamma;` |
+| G3 Shift+End, type | `goto:3:5 shift-end z cmd-s` | PASS |
+| G4 Shift+Down, type | `goto:3:1 shift-down w cmd-s` | PASS: the line replaced by `w` |
+| G5 Enter keeps the indent | `goto:3:30 enter q cmd-s` | PASS: `    q` on the new line |
+| G6 Backspace at a line start | `goto:4:1 backspace cmd-s` | PASS: joins the line above |
+| G7 undo after a replace | `cmd-a x cmd-z cmd-s` | PASS (Cmd+A being a no-op, the undo only removed `x`) |
+| G8 Cmd+/ | `goto:3:5 cmd-/ cmd-s` | **BB-BUG-017**: no line comment toggle; the file is unchanged |
+| G9 Cmd+Shift+Down, type | `goto:3:5 cmd-shift-down x cmd-s` | PASS: `    x` ends the file |
+
