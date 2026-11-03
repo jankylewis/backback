@@ -1,7 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 28 — FIXED 26, OBSERVED 1, OPEN 1.
-One file per failure mechanism. This hub owns the id. Entries: 28 — FIXED 26, OBSERVED 1, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 29 — FIXED 27, OBSERVED 1, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -33,3 +32,4 @@ One file per failure mechanism. This hub owns the id. Entries: 28 — FIXED 26, 
 | BB-UIX-007 | Tab and the Cmd deletes had no line-wise commands: Tab typed over the selection, Cmd+Backspace did nothing | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_007_TAB_AND_THE_CMD_DELETES_HAD_NO_LINE_COMMANDS.md` |
 | BB-UIX-008 | The Cmd map lacked Select All and the comment toggle | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_008_THE_CMD_MAP_LACKED_SELECT_ALL_AND_THE_COMMENT_TOGGLE.md` |
 | BB-UIX-009 | The rename box did not select the old name, so a typed name was glued onto it | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |
+| BB-LSP-007 | An edit pulled diagnostics again only for its own file, so other open files kept lists of the old text | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_007_AN_EDIT_PULLED_AGAIN_ONLY_ITS_OWN_FILE.md` |

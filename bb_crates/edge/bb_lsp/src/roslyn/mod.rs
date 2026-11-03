@@ -10,10 +10,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use bb_dotnet::ProjectPath;
-use lsp_types::{
-    ClientCapabilities, InitializeParams, InitializeResult, InitializedParams,
-    WorkspaceClientCapabilities,
-};
+use lsp_types::{InitializeResult, InitializedParams};
 use serde_json::json;
 use tokio::process::Command;
 use url::Url;
@@ -23,7 +20,9 @@ use crate::bb_client::{LspClient, LspError, Settings};
 mod bb_load;
 mod load_state;
 
-pub use bb_load::{drain_log, log_incoming, wait_for_load, wait_for_restore, Loaded};
+pub use bb_load::{
+    drain_log, is_project_reload, log_incoming, wait_for_load, wait_for_restore, Loaded,
+};
 pub use load_state::LoadState;
 
 /// Binary name of the official server (installed with `dotnet tool install -g roslyn-language-server --prerelease`).
@@ -32,6 +31,9 @@ pub const BINARY: &str = "roslyn-language-server";
 pub const ENV_OVERRIDE: &str = "BACKBACK_ROSLYN_LS";
 /// Notification the server sends once the solution is loaded.
 pub const PROJECT_INIT_COMPLETE: &str = "workspace/projectInitializationComplete";
+/// The server-to-client request that asks for every pulled diagnostics list
+/// again: its view of the code changed without an edit (BB-BUG-019).
+pub const DIAGNOSTIC_REFRESH: &str = "workspace/diagnostic/refresh";
 
 /// The setting that lets Roslyn run `dotnet restore` on the opened solution.
 pub const AUTOMATIC_RESTORE: &str = "projects.dotnet_enable_automatic_restore";
@@ -198,22 +200,29 @@ fn create_dir(dir: &Path) -> Result<(), RoslynError> {
 /// A bad root path, or the `initialize` request fails.
 pub async fn initialize(client: &LspClient, root: &Path) -> Result<InitializeResult, RoslynError> {
     let root_uri: Url = file_url(root)?;
-    #[allow(deprecated)] // root_uri is deprecated in LSP but Roslyn still reads it
-    let params: InitializeParams = InitializeParams {
-        process_id: Some(std::process::id()),
-        root_uri: Some(root_uri),
-        capabilities: ClientCapabilities {
-            workspace: Some(WorkspaceClientCapabilities {
-                configuration: Some(true),
-                ..WorkspaceClientCapabilities::default()
-            }),
-            ..ClientCapabilities::default()
-        },
-        ..InitializeParams::default()
-    };
-    let result: InitializeResult = client.request("initialize", params).await?;
+    let result: InitializeResult = client
+        .request("initialize", initialize_params(&root_uri))
+        .await?;
     client.notify("initialized", InitializedParams {}).await?;
     Ok(result)
+}
+
+/// The `initialize` parameters: the root (`rootUri`, deprecated in LSP but
+/// what Roslyn reads), `workspace/configuration` answers, and support for
+/// [`DIAGNOSTIC_REFRESH`] (BB-BUG-019). Written as JSON because LSP 3.17
+/// names that capability `workspace.diagnostics` and lsp-types 0.95
+/// serializes it as `workspace.diagnostic`, a key the protocol does not have.
+fn initialize_params(root_uri: &Url) -> serde_json::Value {
+    json!({
+        "processId": std::process::id(),
+        "rootUri": root_uri,
+        "capabilities": {
+            "workspace": {
+                "configuration": true,
+                "diagnostics": { "refreshSupport": true }
+            }
+        }
+    })
 }
 
 /// Tell the server which solution to load.

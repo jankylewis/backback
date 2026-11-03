@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 
 use bb_dotnet::{ProjectPath, Solution, SolutionPath};
@@ -12,6 +13,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tokio::sync::mpsc;
 use tokio::sync::watch;
+use tokio::sync::Notify;
 
 use crate::model::bb_doc::{DocVersion, OpenDoc};
 use crate::model::store::{Entry, Recorded, Store};
@@ -44,6 +46,7 @@ pub struct Session {
     scratch: PathBuf,
     load: roslyn::Loaded,
     pump: tokio::task::JoinHandle<()>,
+    refresh: Arc<Notify>,
 }
 
 /// How long the server's last log lines may take after `shutdown`.
@@ -88,7 +91,9 @@ impl Session {
         )
         .await?;
         let store: Store = Store::default();
-        let pump: tokio::task::JoinHandle<()> = tokio::spawn(pump(incoming, store.clone(), log));
+        let refresh: Arc<Notify> = Arc::new(Notify::new());
+        let pump: tokio::task::JoinHandle<()> =
+            tokio::spawn(pump(incoming, store.clone(), Arc::clone(&refresh), log));
         Ok(Self {
             client,
             docs: HashMap::new(),
@@ -97,6 +102,7 @@ impl Session {
             scratch: config.scratch.clone(),
             load,
             pump,
+            refresh,
         })
     }
 
@@ -117,6 +123,23 @@ impl Session {
     #[must_use]
     pub fn closed_signal(&self) -> watch::Receiver<bool> {
         self.client.closed_signal()
+    }
+
+    /// Fires when every pulled diagnostics list may be stale (BB-BUG-019):
+    /// the server asked for a refresh, or it (re)loaded projects. A permit is
+    /// kept while nobody waits, so a refresh is never lost.
+    #[must_use]
+    pub fn refresh_signal(&self) -> Arc<Notify> {
+        Arc::clone(&self.refresh)
+    }
+
+    /// Every open document.
+    #[must_use]
+    pub fn open_paths(&self) -> Vec<PathBuf> {
+        self.docs
+            .keys()
+            .map(|doc: &DocPath| doc.as_path().to_path_buf())
+            .collect()
     }
 
     /// Stop the server child for an instrument test.
@@ -176,13 +199,22 @@ impl Session {
 }
 
 /// Keep reading server messages so the reader never blocks on a full
-/// channel; write each one to the run log, and keep each pushed
-/// `publishDiagnostics` per document unless a newer version is stored.
-async fn pump<W: std::io::Write>(mut incoming: mpsc::Receiver<Incoming>, store: Store, mut log: W) {
+/// channel; write each one to the run log, signal `refresh` when the lists
+/// may be stale, and keep each pushed `publishDiagnostics` per document
+/// unless a newer version is stored.
+async fn pump<W: std::io::Write>(
+    mut incoming: mpsc::Receiver<Incoming>,
+    store: Store,
+    refresh: Arc<Notify>,
+    mut log: W,
+) {
     while let Some(message) = incoming.recv().await {
         // A log that stops accepting lines must not stop the drain: the
         // reader would block and every later request would time out.
-        let _logged: Result<&str, roslyn::RoslynError> = roslyn::log_incoming(&message, &mut log);
+        let text: &str = roslyn::log_incoming(&message, &mut log).unwrap_or_default();
+        if crate::features::diagnostics::refresh_requested(&message, text) {
+            refresh.notify_one();
+        }
         let Incoming::Notification { method, params }: Incoming = message else {
             continue;
         };

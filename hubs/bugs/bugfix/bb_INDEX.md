@@ -19,3 +19,4 @@
 | BB-BUG-016 | `select_all` on Cmd+A | FIXED | red-first unit + window test | `D2/S04/BB_BUG_016_CMD_A_DOES_NOT_SELECT_ALL.md` |
 | BB-BUG-017 | `toggle_line_comment` on Cmd+/: `// ` after the indent, blank lines skipped, one undo step | FIXED | red-first unit + window test | `D2/S05/BB_BUG_017_CMD_SLASH_DOES_NOT_TOGGLE_A_LINE_COMMENT.md` |
 | BB-BUG-018 | The old name opens selected; the first key replaces it | FIXED | red-first window test + sweep 3 readback | `D2/S05/BB_BUG_018_THE_RENAME_BOX_APPENDS_TO_THE_OLD_NAME.md` |
+| BB-BUG-019 | Every change re-pulls every open file; the refresh request is declared and followed | FIXED | red-first server-thread test + readback | `D2/S05/BB_BUG_019_PROBLEMS_KEEP_STALE_DIAGNOSTICS_AFTER_A_RENAME.md` |

@@ -90,3 +90,30 @@ fn settings_turn_automatic_restore_off_by_default_and_on_on_request() {
         Some(&json!(true))
     );
 }
+
+#[test]
+fn initialize_declares_diagnostic_refresh_support_under_the_protocol_name() {
+    let root: Url = Url::parse("file:///s/").unwrap();
+    let params: serde_json::Value = initialize_params(&root);
+    assert_eq!(
+        params.pointer("/capabilities/workspace/diagnostics/refreshSupport"),
+        Some(&json!(true))
+    );
+    assert_eq!(params.pointer("/capabilities/workspace/diagnostic"), None);
+    assert_eq!(
+        params.pointer("/capabilities/workspace/configuration"),
+        Some(&json!(true))
+    );
+    assert_eq!(params.pointer("/rootUri"), Some(&json!("file:///s/")));
+}
+
+#[test]
+fn a_reload_batch_line_is_a_project_reload_and_a_load_line_is_not() {
+    assert!(is_project_reload(
+        "[LanguageServerProjectSystem] Completed (re)load of 2 project(s) in 00:00:01.8378890"
+    ));
+    assert!(!is_project_reload(
+        "[LanguageServerProjectSystem] Successfully completed load of /s/Calc/Calc.csproj"
+    ));
+    assert!(!is_project_reload("Restore complete"));
+}
