@@ -44,6 +44,18 @@ Four runs on the installed app that asked no question (writable and
 restored copy): `bb_diag_state version=None` in 4 of 4. The tab never
 reached the server, so `problems=0` measured nothing (BB-TG-015).
 
+## Installed at `123c493` (the fix merged, #56)
+
+| Check | Result |
+|---|---|
+| R1 rename, restored copy | `problems=0`, no squiggle in either file; both read `Halve` |
+| R2 restore outside the app (`-p:NuGetAudit=false`) | 10 -> 0, no key in between |
+| BB-LSP-003 probe: `zzz` before `System.Console`, then deleted | 0 -> 1 (`9:9`) -> 0 at +1 s, still 0 at +10 s (one run) |
+| Sweep 2 (G1-G9) and sweep 3 (H1-H6) | all PASS |
+
+BB-LSP-003 stays OPEN: it failed one run in three under load ~8-10; one
+clean run on a quiet machine does not close it.
+
 ## Verdict
 
 PASS on the branch build: an edit in one file and a restore outside the

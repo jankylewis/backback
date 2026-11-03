@@ -219,6 +219,12 @@ async fn ask_server(session: &Session, at: &DocPath, ask: Ask) -> Result<Answer,
         Ask::Definition(point) | Ask::Link(point) => Answer::Definition(
             places(session, session.definition(at, point, deadline).await?).await,
         ),
+        Ask::Implementation(point) => Answer::Definition(
+            places(session, session.implementation(at, point, deadline).await?).await,
+        ),
+        Ask::TypeDefinition(point) => Answer::Definition(
+            places(session, session.type_definition(at, point, deadline).await?).await,
+        ),
         Ask::References(point) => Answer::References(
             places(session, session.references(at, point, deadline).await?).await,
         ),

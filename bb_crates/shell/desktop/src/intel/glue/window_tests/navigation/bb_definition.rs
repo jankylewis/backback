@@ -1,4 +1,4 @@
-//! F12, Shift+F12, Cmd+., Problems and the status bar.
+//! F12, Shift+F12, Cmd+., Problems and the status bar in the window.
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -6,7 +6,7 @@ use std::time::Duration;
 use bb_intel::{ActionItem, Diagnostic, Severity, Span};
 use bb_text::LspPoint;
 
-use super::bb_rig::{place, rig, rig_with, Rig};
+use super::super::bb_rig::{place, rig, rig_with, Rig};
 use crate::intel::bb_worker::protocol::{Answer, Ask, Event, Ticket};
 use crate::ExplorerView;
 use gpui::{TestAppContext, VisualTestContext};
@@ -61,7 +61,8 @@ fn shift_f12_lists_references_and_escape_closes_the_panel(cx: &mut TestAppContex
 
 #[gpui::test]
 fn the_status_bar_follows_progress_until_ready(cx: &mut TestAppContext) {
-    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, false, super::bb_rig::A);
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, false, super::super::bb_rig::A);
     rig.events
         .send(Event::Progress {
             loaded: 1,

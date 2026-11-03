@@ -57,6 +57,8 @@ pub(crate) fn ask(view: &mut ExplorerView, path: PathBuf, ask: Ask, anchor: Char
         | Ask::Hover(p)
         | Ask::Definition(p)
         | Ask::References(p)
+        | Ask::Implementation(p)
+        | Ask::TypeDefinition(p)
         | Ask::Rename(p, _)
         | Ask::Actions(p, _)
         | Ask::Link(p) => *p,
