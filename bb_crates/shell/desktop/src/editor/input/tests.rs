@@ -141,3 +141,28 @@ fn cmd_a_selects_all_and_cmd_slash_toggles_a_line_comment(cx: &mut TestAppContex
         "select all, then the typed char replaces it"
     );
 }
+
+#[gpui::test]
+fn the_line_command_keys_reach_the_line_commands(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "class C\n{\n    int a;\n}\n");
+    put(&rig, vcx, 14, 14);
+    vcx.simulate_keystrokes("cmd-enter q");
+    assert_eq!(
+        text(&rig, vcx),
+        "class C\n{\n    int a;\n    q\n}\n",
+        "Cmd+Enter"
+    );
+    vcx.simulate_keystrokes("cmd-shift-enter w");
+    assert_eq!(
+        text(&rig, vcx),
+        "class C\n{\n    int a;\n    w\n    q\n}\n",
+        "Cmd+Shift+Enter"
+    );
+    vcx.simulate_keystrokes("cmd-shift-k cmd-shift-k");
+    assert_eq!(
+        text(&rig, vcx),
+        "class C\n{\n    int a;\n}\n",
+        "Cmd+Shift+K twice"
+    );
+}
