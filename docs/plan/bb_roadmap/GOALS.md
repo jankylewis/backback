@@ -29,6 +29,7 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD20 | Test Explorer builds a never-built test project once on expand, then lists it (P4); `--no-write` refuses and says so | Done | [#49](https://github.com/jankylewis/backback/pull/49); readback `docs/plan/readback/V2/BBEOD20/` |
 | BBEOD21 | Find in Files and Go to File search tracked dot-folders (P5); `.git`, `.vs`, `.idea` and `.gitignore` still rule | Done | [#50](https://github.com/jankylewis/backback/pull/50); readback `docs/plan/readback/V2/BBEOD21/` |
 | BBEOD22 | Go to Implementation (Cmd+Alt+B: one place jumps, several open the places panel) and Go to Type Definition (Cmd+Ctrl+B); plain Ctrl+B still moves left | Done | [#57](https://github.com/jankylewis/backback/pull/57); readback `docs/plan/readback/V3/BBEOD22/` |
+| BBEOD24 | Show Call Hierarchy (Shift+Alt+H): the callers of the symbol at the cursor, every call site in the places panel (one caller still lists), none says so | Done | [#62](https://github.com/jankylewis/backback/pull/62); readback `docs/plan/readback/V3/BBEOD22/BBEOD24_CALL_HIERARCHY.md` |
 
 ## Gaps behind a Done or Partial state
 

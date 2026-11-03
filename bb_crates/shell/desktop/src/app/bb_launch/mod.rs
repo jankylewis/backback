@@ -193,7 +193,9 @@ fn install_close_guard(window: &Window, view: &gpui::Entity<ExplorerView>, cx: &
     });
 }
 
-fn bind_keys(cx: &mut App) {
+/// The app's key bindings; window tests install them to prove a key still
+/// reaches the editor (BB-UIX-010).
+pub(crate) fn bind_keys(cx: &mut App) {
     cx.bind_keys([
         KeyBinding::new("up", MoveUp, Some("Explorer")),
         KeyBinding::new("down", MoveDown, Some("Explorer")),

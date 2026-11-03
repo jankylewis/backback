@@ -2,6 +2,7 @@
 //! only for an open document so positions match the mirror the server holds.
 
 mod bb_nav;
+pub(crate) mod calls;
 pub(crate) mod diagnostics;
 mod edits;
 

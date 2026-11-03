@@ -27,6 +27,8 @@ pub(crate) enum Ask {
     Implementation(LspPoint),
     /// Where the type of the symbol at the point is defined (BBEOD22).
     TypeDefinition(LspPoint),
+    /// Who calls the symbol at the point (BBEOD24).
+    Callers(LspPoint),
     /// The edits that rename the symbol at the point.
     Rename(LspPoint, String),
     /// Code actions for a range.
@@ -50,6 +52,8 @@ pub(crate) enum AskKind {
     Implementation,
     /// See [`Ask::TypeDefinition`].
     TypeDefinition,
+    /// See [`Ask::Callers`].
+    Callers,
     /// See [`Ask::Rename`].
     Rename,
     /// See [`Ask::Actions`].
@@ -67,6 +71,7 @@ impl Ask {
             Self::References(_) => AskKind::References,
             Self::Implementation(_) => AskKind::Implementation,
             Self::TypeDefinition(_) => AskKind::TypeDefinition,
+            Self::Callers(_) => AskKind::Callers,
             Self::Rename(..) => AskKind::Rename,
             Self::Actions(..) => AskKind::Actions,
             Self::Link(_) => AskKind::Link,
@@ -116,6 +121,13 @@ pub(crate) enum Answer {
     Definition(Vec<Place>),
     /// References.
     References(Vec<Place>),
+    /// The callers of the symbol `name`: how many symbols call it, and
+    /// every call site.
+    Callers {
+        name: String,
+        callers: usize,
+        places: Vec<Place>,
+    },
     /// The rename plan, never applied by the server thread.
     Rename(Vec<FileChange>),
     /// Code actions.

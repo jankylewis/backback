@@ -5,6 +5,6 @@ each with the steps, captures and verdict of a read back on the real app.
 
 | Unit | What was read back |
 |---|---|
-| `BBEOD22/` | Go to Type Definition (Cmd+Ctrl+B) and Go to Implementation (Cmd+Alt+B) land on the harness's `Greeter`; plain Ctrl+B still moves left |
+| `BBEOD22/` | Go to Type Definition (Cmd+Ctrl+B) and Go to Implementation (Cmd+Alt+B) land on the harness's `Greeter`; plain Ctrl+B still moves left. BBEOD24 (Shift+Alt+H, the callers of `Hello`) in `BBEOD24_CALL_HIERARCHY.md` |
 | `TG015/` | BB-TG-015: the readback runner flushes after each step, so a run that asks no question reads the server's own list (`version=Some(1)`, was `None`) |
 | `SWEEP04/` | VS Code's line commands on the installed app and the branch: BB-BUG-020 fixed (Cmd+Shift+K, Cmd+Enter), Cmd+L fixed; BB-BUG-021 open (move, copy; Cmd+[ / Cmd+] are Back/Forward) |
