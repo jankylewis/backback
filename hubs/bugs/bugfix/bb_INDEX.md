@@ -30,3 +30,4 @@
 | BB-BUG-028 | Cmd+C/X/V: selection, else the whole line; a line pastes above | FIXED | red-first window test + 3 unit tests | `D2/S07/BB_BUG_028_CMD_C_DOES_NOT_COPY.md` |
 | BB-BUG-029 | `Explorer::reveal`; the side panel follows each newly active file | FIXED | 2 unit + red-first window test + readback | `D3/S08/BB_BUG_029_THE_EXPLORER_DOES_NOT_FOLLOW_THE_ACTIVE_FILE.md` |
 | BB-BUG-030 | `binary or non-UTF-8 file: not shown as text` | FIXED | readback | `D3/S08/BB_BUG_030_A_BINARY_FILE_OPENS_WITH_A_RAW_DECODER_ERROR.md` |
+| BB-BUG-021 | `move_lines` / `copy_lines` on Alt / Shift+Alt arrows; one undo step; breaks kept | FIXED | 5 unit + window test | `D2/S06/BB_BUG_021_MOVE_COPY_AND_SELECT_LINE_KEYS_DO_NOTHING.md` |

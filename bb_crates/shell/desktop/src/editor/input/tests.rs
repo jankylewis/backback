@@ -229,3 +229,18 @@ fn cmd_c_copies_the_selection_and_cmd_v_pastes_it(cx: &mut TestAppContext) {
         .and_then(|item: gpui::ClipboardItem| item.text());
     assert_eq!(cut.as_deref(), Some("\"4173-94\",\n"));
 }
+
+/// BB-BUG-021: Alt+Down / Alt+Up move the line, Shift+Alt+Down copies it,
+/// through the editor's own key handling.
+#[gpui::test]
+fn alt_arrows_move_and_shift_alt_arrows_copy_the_line(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, true, "a\nb\nc\n");
+    put(&rig, vcx, 2, 2);
+    vcx.simulate_keystrokes("alt-down");
+    assert_eq!(text(&rig, vcx), "a\nc\nb\n");
+    vcx.simulate_keystrokes("alt-up alt-up");
+    assert_eq!(text(&rig, vcx), "b\na\nc\n");
+    vcx.simulate_keystrokes("shift-alt-down");
+    assert_eq!(text(&rig, vcx), "b\nb\na\nc\n");
+    assert_eq!(cursor(&rig, vcx), 2, "on the copy below");
+}

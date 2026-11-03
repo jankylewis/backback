@@ -29,7 +29,7 @@
 | BB-UIX-008 | FIXED | `select_all` and `toggle_line_comment` in the text model, arms in `command_key` | `APP/UIX/S02/BB_UIX_008_THE_CMD_MAP_LACKED_SELECT_ALL_AND_THE_COMMENT_TOGGLE.md` |
 | BB-UIX-009 | FIXED | `RenameInput::fresh`: the old name opens selected; the first key replaces it | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |
 | BB-LSP-007 | FIXED | Every change and every refresh marks every open document; refresh support declared | `APP/LSP/S02/BB_LSP_007_AN_EDIT_PULLED_AGAIN_ONLY_ITS_OWN_FILE.md` |
-| BB-UIX-010 | OPEN | Line commands in the text model, arms in `document_command`; move, copy and select still to do | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
+| BB-UIX-010 | FIXED | Line commands in the text model, arms in `document_command` and `text_key`; move and copy since BB-BUG-021 | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
 | BB-UIX-011 | FIXED | `w_full` on the editor row | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |
 | BB-UIX-012 | FIXED | Heads are rows with a `Group` key, marker from state | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | FIXED | The starting control turns into its stop while running | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |

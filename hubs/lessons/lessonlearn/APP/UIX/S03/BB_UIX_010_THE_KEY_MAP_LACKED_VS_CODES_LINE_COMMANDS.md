@@ -2,7 +2,7 @@
 
 id: BB-UIX-010
 family: UIX
-status: OPEN
+status: FIXED
 source: branch `bb-bug-020-line-commands`
 
 ## Who believed what

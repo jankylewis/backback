@@ -25,7 +25,7 @@
 | BB-UIX-008 | FIXED | The reference editor's key table is the checklist; a missing arm is a bug found by the sweep | `APP/UIX/S02/BB_UIX_008_THE_CMD_MAP_LACKED_SELECT_ALL_AND_THE_COMMENT_TOGGLE.md` |
 | BB-UIX-009 | FIXED | A rig presses no helper key a user would not; a needed helper key is the bug | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |
 | BB-LSP-007 | FIXED | Ask again for a list whenever what it is computed from changes | `APP/LSP/BB_LSP_007_AN_EDIT_PULLED_AGAIN_ONLY_ITS_OWN_FILE.md` |
-| BB-UIX-010 | OPEN | Sweep the reference keymap page by page; one page swept says nothing about the next | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
+| BB-UIX-010 | FIXED | Sweep the reference keymap page by page; one page swept says nothing about the next | `APP/UIX/S03/BB_UIX_010_THE_KEY_MAP_LACKED_VS_CODES_LINE_COMMANDS.md` |
 | BB-UIX-011 | FIXED | An element that takes clicks spans the area a user can click | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |
 | BB-UIX-012 | FIXED | A marker that promises an action comes from state and has a handler | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | FIXED | The way to stop an action appears where it was started, only while running | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |

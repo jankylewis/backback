@@ -2,7 +2,7 @@
 
 id: BB-UIX-010
 family: UIX
-status: OPEN
+status: FIXED
 date: 2026-11-03
 signature: a line-command key does nothing
 source: `bb_crates/shell/desktop/src/editor/input/bb_keys.rs` (`document_command`), `bb_crates/bb_core/bb_text/src/document/edit/`

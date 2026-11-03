@@ -54,8 +54,8 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-TG-015 | `bb_diag_state version=None` | FIXED | Is the binary older than the runner flush (`flush_as_a_paint`)? Then ask a question before reading `problems` |
 | BB-UIX-009 | `a typed name glued onto the old one` | FIXED | Is the prefilled name selected when the box opens? |
 | BB-BUG-020 | `Cmd+Shift+K does nothing` | FIXED | Does `document_command` have arms for `k` and `enter`? |
-| BB-BUG-021 | `Alt+Down does nothing` | OPEN | Move and copy are not in the text model (Cmd+L is: `select_line`); Cmd+[ / Cmd+] are Back/Forward |
-| BB-UIX-010 | `a line-command key does nothing` | OPEN | Is the key bound in the app (`KeyBinding::new`) before the editor sees it? |
+| BB-BUG-021 | `Alt+Down does nothing` | FIXED | Is `move_lines` reached (`text_key`, Alt arm before the plain arrows)? Cmd+[ / Cmd+] are Back/Forward |
+| BB-UIX-010 | `a line-command key does nothing` | FIXED | Is the key bound in the app (`KeyBinding::new`) before the editor sees it? |
 | BB-BUG-022 | `a click past the text does nothing` | FIXED | Does the editor row span the pane (`w_full` in `row_frame`)? |
 | BB-BUG-023 | `which sidebar side is chosen?` | FIXED | Do both headers draw `side_tabs`? |
 | BB-UIX-011 | `the current line's band ends at the text` | FIXED | Does the element that takes the click span its pane? |
