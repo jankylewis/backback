@@ -3,10 +3,10 @@
 | Id | Status | Fix | Path |
 |---|---|---|---|
 | BB-BLD-002 | FIXED | GUI binary is the bundle executable; served app verified | `SHIP/BLD/BB_BLD_002_BUNDLE_OPENED_NO_WINDOW.md` |
-| BB-LSP-001 | FIXED | Count projects by distinct path; wait on readiness | `APP/LSP/BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` |
+| BB-LSP-001 | FIXED | Count projects by distinct path; wait on readiness | `APP/LSP/S01/BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` |
 | BB-PRF-001 | FIXED | Files over 4 MiB parse ±1,000 lines around the view | `SYS/PRF/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
 | BB-UIX-001 | FIXED | One shaped line per row: caret quad, clicks, popups and hover share `Columns` | `APP/UIX/BB_UIX_001_CURSOR_DRAWN_AS_A_TEXT_CHARACTER.md` |
-| BB-LSP-002 | FIXED | `first_diagnostics` skips late Progress, names any other event | `APP/LSP/BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` |
+| BB-LSP-002 | FIXED | `first_diagnostics` skips late Progress, names any other event | `APP/LSP/S01/BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` |
 | BB-CIP-001 | FIXED | CI installs pinned dotnet, Roslyn server and netcoredbg; `--no-fail-fast` | `SHIP/CIP/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
 | BB-CIP-002 | FIXED | `runs-on: macos-latest` | `SHIP/CIP/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
 | BB-UIX-002 | FIXED | Minimize/Zoom handled on the root view with its own Window | `APP/UIX/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
@@ -14,9 +14,10 @@
 | BB-UIX-003 | FIXED | Gutter width scales with the size | `APP/UIX/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |
 | BB-PRC-002 | FIXED | Spawn on the UI thread, wait in the background | `SYS/PRC/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
 | BB-BLD-001 | FIXED | `install.sh` from clean `master` to `/Applications`; `BBCommit` stamp | `SHIP/BLD/BB_BLD_001_INSTALL_FROM_MASTER.md` |
-| BB-LSP-004 | FIXED | `bb open --restore` waits for a restore end line before shutdown | `APP/LSP/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
+| BB-LSP-004 | FIXED | `bb open --restore` waits for a restore end line before shutdown | `APP/LSP/S01/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
 | BB-PRF-002 | FIXED | Box opens at once; files list on the background executor | `SYS/PRF/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
-| BB-LSP-005 | FIXED | Assert the server reply to our own request (shutdown), not a side-effect line | `APP/LSP/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
+| BB-LSP-005 | FIXED | Assert the server reply to our own request (shutdown), not a side-effect line | `APP/LSP/S02/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-DAP-001 | FIXED | Headline from `details.fullTypeName` and `details.message`; else the id without its category | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
+| BB-LSP-006 | FIXED | `Loaded::restore_ended`; `bb open --restore` waits only when no end line came during the load | `APP/LSP/S02/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |

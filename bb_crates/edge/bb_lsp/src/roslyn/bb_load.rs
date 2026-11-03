@@ -16,6 +16,9 @@ pub struct Loaded {
     pub took: Duration,
     /// Projects that failed to load and never loaded after.
     pub failed: Vec<ProjectPath>,
+    /// A restore end line came during the load (BB-LSP-006): there is
+    /// nothing left to wait for after it.
+    pub restore_ended: bool,
 }
 
 /// Drain incoming messages until the solution is loaded: the server has sent
@@ -41,6 +44,7 @@ pub async fn wait_for_load<W: std::io::Write>(
 ) -> Result<Loaded, RoslynError> {
     let started: Instant = Instant::now();
     let mut signalled: bool = false;
+    let mut restore_ended: bool = false;
     let mut state: LoadState = LoadState::new(projects);
     while !(signalled && state.settled()) {
         let Some(remaining): Option<Duration> = deadline.checked_sub(started.elapsed()) else {
@@ -59,6 +63,7 @@ pub async fn wait_for_load<W: std::io::Write>(
                 let text: &str = log_incoming(&message, log)?;
                 // Whether it changed the state matters only to a progress view.
                 let _changed: bool = state.observe(text);
+                restore_ended |= is_restore_end(text);
             }
             None => return Err(RoslynError::Client(LspError::Closed)),
         }
@@ -66,6 +71,7 @@ pub async fn wait_for_load<W: std::io::Write>(
     Ok(Loaded {
         took: started.elapsed(),
         failed: state.failed(),
+        restore_ended,
     })
 }
 
@@ -117,10 +123,17 @@ pub async fn drain_log<W: std::io::Write>(
 /// Lines Roslyn writes when a restore it started has ended, either way.
 const RESTORE_ENDS: [&str; 3] = ["Restore complete", "restore was canceled", "restore failed"];
 
-/// With restore on, Roslyn starts `dotnet restore` after the load, so a run
-/// that stops at the load can exit first (BB-LSP-004). Log every message
-/// until a restore end line; `true` when one came, `false` when `deadline`
-/// passed or the server closed first.
+/// Whether one server line says a restore has ended, either way.
+fn is_restore_end(text: &str) -> bool {
+    RESTORE_ENDS.iter().any(|end: &&str| text.contains(end))
+}
+
+/// With restore on, Roslyn starts `dotnet restore` once the projects it has
+/// need it, so a run that stops at the load can exit first (BB-LSP-004).
+/// Log every message until a restore end line; `true` when one came,
+/// `false` when `deadline` passed or the server closed first. Call it only
+/// when [`Loaded::restore_ended`] is false: an end line that came during the
+/// load is already past (BB-LSP-006).
 ///
 /// # Errors
 /// [`RoslynError::Log`] when `log` cannot be written.
@@ -134,7 +147,7 @@ pub async fn wait_for_restore<W: std::io::Write>(
         match tokio::time::timeout(remaining, incoming.recv()).await {
             Ok(Some(message)) => {
                 let text: &str = log_incoming(&message, log)?;
-                if RESTORE_ENDS.iter().any(|end: &&str| text.contains(end)) {
+                if is_restore_end(text) {
                     return Ok(true);
                 }
             }
