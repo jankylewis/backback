@@ -28,8 +28,8 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 
 ## Gaps behind a Done or Partial state
 
-- BBEOD07: install from `master` works (BB-BLD-001 FIXED). Not signed or
-  notarised, no v1.0 tag or GitHub release: proposal P2, needs a Developer ID.
+- BBEOD07: install from `master` works (BB-BLD-001 FIXED). Distributed as
+  source; signing and notarising dropped (P2 ruling 2026-11-03, no paid ID).
 - CI installs pinned Roslyn and netcoredbg (BB-CIP-001). It skips the 9
   tests that need the private Apex CLI (BB-TG-004); the local gate runs them.
 - Mouse-only paths were proven by window tests, not by hand: the seat cannot
@@ -41,9 +41,10 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 
 ## Next, in order
 
-1. Headmate rulings on `PROPOSALS.md` (P2 release, P3 hand checks, P4 build before test discovery, P5 dot-folders in search).
-2. Build what is approved, with red-first tests and a real-app readback.
-3. Until then: readback and perf loops on the installed app; fix what they find.
+1. Hubs: cause, fix and lesson pages for BB-BUG-008..012.
+2. Build approved P4 (build before test discovery) and P5 (tracked dot-folders).
+3. P3 hand checks with the headmate; fix what they find.
+4. Readback and perf loops on the installed app; fix what they find.
 
 ## BBEOD08 and BBEOD09 in short
 

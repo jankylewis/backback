@@ -84,12 +84,12 @@ cargo run -p bb -- audit ..
 
 ## macOS app bundle
 
-`bash docs/release/scripts/bb_bundle.sh` builds `.target/bundle/backback.app`
-(Cargo version, ad-hoc signature). `install.sh` (same folder) builds it from a clean `master`
-and installs `/Applications/backback.app`. The `bb` CLI ships at
-`backback.app/Contents/Resources/bb`; macOS 13+.
-For public distribution, the maintainer must use a Developer ID and Apple
-notarization via [`sign_release.sh`](docs/release/scripts/sign_release.sh).
+Install from source (macOS 13+, Rust, .NET SDK): clone, then on `master` run
+`bash docs/release/scripts/install.sh`. It builds `.target/bundle/backback.app`
+(ad-hoc signature, via `bb_bundle.sh`) and installs `/Applications/backback.app`;
+the `bb` CLI ships at `backback.app/Contents/Resources/bb`. A local build opens
+with no Gatekeeper prompt. No signed download is published: backback is
+distributed as source, so no paid Apple Developer ID is needed.
 See [security](docs/release/community/SECURITY.md), [conduct](docs/release/community/CODE_OF_CONDUCT.md), and
 [contributing](docs/release/community/bb_CONTRIBUTING.md).
 
