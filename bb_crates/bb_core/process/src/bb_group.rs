@@ -139,10 +139,11 @@ pub fn end_all() {
     }
 }
 
-/// End live groups before the app exits.
+/// End live groups, then remove owned temp folders, before the app exits.
 pub fn shutdown() {
     SHUTTING_DOWN.store(true, Ordering::SeqCst);
     end_all();
+    crate::temp::remove_owned();
 }
 
 /// On SIGTERM or SIGHUP (and SIGINT when `interrupt`), end every live child

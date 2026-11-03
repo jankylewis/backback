@@ -89,6 +89,10 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
         Command::Open { solution, restore } => bb_intel::bb_open::run(&solution, restore).await,
         Command::Outline { file } => outline(&file),
         Command::Audit { root } => audit(&root),
+        Command::Sweep => {
+            println!("sweep     : removed {} folders", bb_process::sweep_all());
+            Ok(())
+        }
         Command::Bench { solution, runs } => bench::run(solution.as_deref(), runs),
         Command::Debug {
             target,

@@ -19,6 +19,7 @@ pub const USAGE: &str = "usage:
                             never writes into it unless --restore is given
   bb outline <file.cs>      print the tree-sitter outline of one file
   bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
+  bb sweep                  remove backback's temp folders whose process is gone
   bb bench [solution] [--runs N]
                             time the fixed set: 1 warm-up + N runs (default 5)
   bb debug <proj|dll> --break File.cs:LINE
@@ -34,7 +35,7 @@ pub const USAGE: &str = "usage:
                             run specs and print each outcome and time from the TRX";
 
 /// Commands that take at most a path and one flag; any other word is unknown.
-const SIMPLE: [&str; 5] = ["doctor", "scan", "open", "outline", "audit"];
+const SIMPLE: [&str; 6] = ["doctor", "scan", "open", "outline", "audit", "sweep"];
 
 /// Default measured runs per bench item.
 pub const DEFAULT_RUNS: usize = 5;
@@ -63,6 +64,8 @@ pub enum Command {
         /// File path.
         file: PathBuf,
     },
+    /// Remove backback's temp folders whose process is gone (BB-PRC-004).
+    Sweep,
     /// Audit conventions under a folder.
     Audit {
         /// Folder to audit (default: current folder).
@@ -158,6 +161,9 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     }
     match word.as_str() {
         "doctor" => path.map_or(Ok(Command::Doctor), |p: PathBuf| {
+            Err(CliError::Extra(p.display().to_string()))
+        }),
+        "sweep" => path.map_or(Ok(Command::Sweep), |p: PathBuf| {
             Err(CliError::Extra(p.display().to_string()))
         }),
         "scan" => path

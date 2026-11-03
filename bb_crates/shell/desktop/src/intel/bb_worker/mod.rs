@@ -58,7 +58,8 @@ pub(crate) fn start(solution: &Path) -> (Link, UnboundedReceiver<Event>) {
 
 fn serve(solution: &Path, requests: UnboundedReceiver<Request>, events: &UnboundedSender<Event>) {
     match prepare(solution) {
-        Ok((config, projects)) => bb_loop::run(&config, projects, requests, events),
+        // `_folder` lives as long as the loop: its drop removes the logs.
+        Ok((_folder, config, projects)) => bb_loop::run(&config, projects, requests, events),
         Err(reason) => {
             // Nobody listening means the window closed during the load.
             let _sent: Result<(), tokio::sync::mpsc::error::SendError<Event>> =
@@ -68,11 +69,15 @@ fn serve(solution: &Path, requests: UnboundedReceiver<Request>, events: &Unbound
 }
 
 /// Track the solution's projects and make the log and scratch folders.
-fn prepare(solution: &Path) -> Result<(Config, LoadState), String> {
+/// The folder is owned (BB-PRC-004): removed when the loop ends or the app
+/// quits, and swept on the next start after a crash.
+fn prepare(solution: &Path) -> Result<(bb_process::OwnedTempDir, Config, LoadState), String> {
     let listing: Solution = SolutionPath::new(solution.to_path_buf())
         .and_then(|path: SolutionPath| Solution::load(&path))
         .map_err(|error: bb_dotnet::SolutionError| error.to_string())?;
-    let base: PathBuf = std::env::temp_dir().join(format!("backback-intel-{}", std::process::id()));
+    let folder: bb_process::OwnedTempDir = bb_process::OwnedTempDir::create("backback-intel")
+        .map_err(|error: std::io::Error| format!("temp folder: {error}"))?;
+    let base: &Path = folder.path();
     let (log_dir, scratch): (PathBuf, PathBuf) = (base.join("log"), base.join("scratch"));
     for dir in [&log_dir, &scratch] {
         std::fs::create_dir_all(dir)
@@ -86,7 +91,7 @@ fn prepare(solution: &Path) -> Result<(Config, LoadState), String> {
         request_timeout: Duration::from_secs(20),
         load_timeout: Duration::from_secs(300),
     };
-    Ok((config, LoadState::new(&listing.projects)))
+    Ok((folder, config, LoadState::new(&listing.projects)))
 }
 
 /// The solution to load for a workspace root: the argument itself when it

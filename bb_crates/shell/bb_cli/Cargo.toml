@@ -11,6 +11,7 @@ name = "bb"
 path = "src/main.rs"
 
 [dependencies]
+bb-process.workspace = true
 bb-audit.workspace = true
 bb-dap.workspace = true
 bb-dotnet.workspace = true

@@ -64,3 +64,5 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-026 | `no way to stop a test` | FIXED | Does the running row show ■, and does the process group die? |
 | BB-UIX-012 | `a ▾ that does nothing` | FIXED | Is the marker a literal in a label? |
 | BB-UIX-013 | `cannot find how to stop` | FIXED | Is the stop on the row that started the run? |
+| BB-BUG-027 | `$TMPDIR keeps growing` | FIXED | Run `bb sweep`; which prefix is left with a live pid? |
+| BB-PRC-004 | `a <prefix>-<pid> folder of a dead pid` | FIXED | Is the folder made through `OwnedTempDir` or swept by its family? |

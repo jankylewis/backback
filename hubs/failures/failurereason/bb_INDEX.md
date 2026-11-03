@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 33 — FIXED 30, OBSERVED 1, OPEN 2.
+One file per failure mechanism. This hub owns the id. Entries: 34 — FIXED 31, OBSERVED 1, OPEN 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -37,3 +37,4 @@ One file per failure mechanism. This hub owns the id. Entries: 33 — FIXED 30, 
 | BB-UIX-011 | Editor rows were only as wide as their text, so a click past the text hit nothing | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_011_EDITOR_ROWS_WERE_ONLY_AS_WIDE_AS_THEIR_TEXT.md` |
 | BB-UIX-012 | A ▾ written into a label promised a fold the row could not do | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | The only stop sat in the toolbar, far from the ▶ that started the run | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
+| BB-PRC-004 | Temp folders named by pid were never removed: a static or a quit never drops | FIXED | yes | yes | none | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |

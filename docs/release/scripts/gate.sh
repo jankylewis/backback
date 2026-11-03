@@ -32,12 +32,22 @@ step() {
 step fmt cargo fmt --check
 step clippy cargo clippy --all-targets --all-features -- -D warnings
 step test cargo test --workspace --all-features --no-fail-fast -- --test-threads=2
+# The tests' processes have exited: remove the temp folders they left
+# (BB-PRC-004). Live folders, another gate's too, are kept.
+step sweep cargo run -q -p bb -- sweep
 step deny cargo deny check
 step audit cargo run -q -p bb -- audit ..
 
 grep -E '^test result' "$log" |
   awk '{p += $4; f += $6} END {print "tests: suites=" NR " passed=" p " failed=" f}'
 grep -E '^test .* FAILED$' "$log" | head -20
-echo "log: $log"
-[ "$failed" -eq 0 ] && echo "gate: green" || echo "gate: RED"
+grep -E '^sweep ' "$log"
+if [ "$failed" -eq 0 ]; then
+  # A green gate's log holds nothing to read again: no file is left behind.
+  rm -f "$log"
+  echo "gate: green"
+else
+  echo "log: $log"
+  echo "gate: RED"
+fi
 exit "$failed"
