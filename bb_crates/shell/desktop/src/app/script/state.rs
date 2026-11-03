@@ -52,11 +52,26 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
 
 /// The Tests panel's line: what is listed and what runs.
 fn tests_line(v: &ExplorerView) {
-    let discovered: usize = v.tests.model.projects().values()
-        .map(|project: &crate::tests_panel::model::ProjectTests| project.specs.len()).sum();
-    let loading: usize = v.tests.model.projects().values()
-        .filter(|project: &&crate::tests_panel::model::ProjectTests| project.loading).count();
-    let running: usize = v.tests.running_specs.values().map(std::collections::BTreeSet::len).sum();
+    let discovered: usize = v
+        .tests
+        .model
+        .projects()
+        .values()
+        .map(|project: &crate::tests_panel::model::ProjectTests| project.specs.len())
+        .sum();
+    let loading: usize = v
+        .tests
+        .model
+        .projects()
+        .values()
+        .filter(|project: &&crate::tests_panel::model::ProjectTests| project.loading)
+        .count();
+    let running: usize = v
+        .tests
+        .running_specs
+        .values()
+        .map(std::collections::BTreeSet::len)
+        .sum();
     eprintln!("bb_tests_state projects={} discovered={discovered} loading={loading} busy={} running={running} message={:?}",
         v.tests.model.projects().len(), v.tests.busy.is_some(), v.tests.message);
 }
