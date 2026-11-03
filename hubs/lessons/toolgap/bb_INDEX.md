@@ -15,3 +15,4 @@
 | BB-TG-011 | A rebase can push a folder over its five-entry cap | OBSERVED | none | Audit (or `gate.sh`) after every rebase, before the push | `S03/BB_TG_011_A_REBASE_CAN_PUSH_A_FOLDER_OVER_ITS_CAP.md` |
 | BB-TG-012 | `open` from a terminal passes the shell environment; not a Dock launch | OBSERVED | BB-BUG-009 | `env -i` with launchd PATH for user-like launches | `S03/BB_TG_012_OPEN_FROM_A_TERMINAL_IS_NOT_A_DOCK_LAUNCH.md` |
 | BB-TG-013 | `bb_bundle.sh` without `cargo` on PATH ended in a JSON trace | FIXED | none | `bb_bundle.sh` adds `$HOME/.cargo/bin`, else refuses (exit 2) | `S04/BB_TG_013_THE_BUNDLE_SCRIPT_MISSED_CARGO_OFF_PATH.md` |
+| BB-TG-014 | A test binary from a shared `CARGO_TARGET_DIR` kept a removed worktree's `CARGO_MANIFEST_DIR` | OBSERVED | none | `touch` the worktree's `*.rs` before a gate in a shared target dir, or one target dir per worktree | `S04/BB_TG_014_A_SHARED_TARGET_DIR_KEEPS_ANOTHER_WORKTREES_MANIFEST_PATH.md` |

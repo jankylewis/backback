@@ -70,9 +70,13 @@ fn smart_case_and_regex_queries() {
 }
 
 #[test]
-fn build_output_hidden_git_ignored_and_binary_files_are_skipped() {
+fn build_vcs_ide_ignored_and_binary_files_are_skipped_but_dot_folders_are_searched() {
     let dir: tempfile::TempDir = tree(&[
         ("Core/A.cs", "needle\n"),
+        (".github/workflows/ci.yml", "needle\n"),
+        (".config/dotnet-tools.json", "needle\n"),
+        (".idea/workspace.xml", "needle\n"),
+        (".DS_Store", "needle\n"),
         ("Core/obj/Gen.cs", "needle\n"),
         ("Core/bin/Debug/x.cs", "needle\n"),
         ("node_modules/m.js", "needle\n"),
@@ -85,7 +89,12 @@ fn build_output_hidden_git_ignored_and_binary_files_are_skipped() {
     ]);
     assert_eq!(
         names(&run(dir.path(), "needle"), dir.path()),
-        ["Core/A.cs:0"]
+        [
+            ".config/dotnet-tools.json:0",
+            ".github/workflows/ci.yml:0",
+            "Core/A.cs:0"
+        ],
+        "tracked dot-folders are searched; .git, .vs, .idea, .DS_Store are not"
     );
 }
 

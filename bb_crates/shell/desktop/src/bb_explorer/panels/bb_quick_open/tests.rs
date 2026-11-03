@@ -10,23 +10,34 @@ fn tree() -> (tempfile::TempDir, QuickOpen) {
         "Specs/GreeterSpec.cs",
         "README.md",
         ".git/HEAD",
+        ".github/workflows/ci.yml",
+        ".idea/workspace.xml",
+        "Generated/Out.cs",
     ] {
         let path: PathBuf = dir.path().join(file);
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(path, "").unwrap();
     }
+    std::fs::write(dir.path().join(".gitignore"), "Generated/\n").unwrap();
     let quick: QuickOpen = QuickOpen::new(dir.path());
     (dir, quick)
 }
 
 #[test]
-fn build_output_and_git_are_never_listed() {
+fn build_vcs_ide_and_ignored_files_are_never_listed_but_dot_folders_are() {
     let (_dir, quick): (tempfile::TempDir, QuickOpen) = tree();
     let all: Vec<&Path> = quick.matches();
-    assert_eq!(all.len(), 3, "{all:?}");
-    assert!(all
-        .iter()
-        .all(|p: &&Path| !p.starts_with(".git") && !p.to_string_lossy().contains("obj")));
+    assert_eq!(all.len(), 5, "{all:?}");
+    assert!(
+        all.contains(&Path::new(".github/workflows/ci.yml")),
+        "a tracked dot-folder is listed, as VS Code does (BBEOD21): {all:?}"
+    );
+    assert!(all.iter().all(|p: &&Path| {
+        !p.starts_with(".git")
+            && !p.starts_with(".idea")
+            && !p.starts_with("Generated")
+            && !p.to_string_lossy().contains("obj")
+    }));
 }
 
 #[test]

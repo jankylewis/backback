@@ -27,6 +27,7 @@ Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C#
 | BBEOD18 | Clickable stack traces in test results: each frame opens its call site | Done | [#34](https://github.com/jankylewis/backback/pull/34); readback `docs/plan/readback/FIXES/S04/BBEOD18/` |
 | BBEOD19 | Exception breakpoints: Debug menu and panel ticks for All / User-Unhandled; a stop names the exception | Done | [#46](https://github.com/jankylewis/backback/pull/46); readback `docs/plan/readback/V2/BBEOD19/` |
 | BBEOD20 | Test Explorer builds a never-built test project once on expand, then lists it (P4); `--no-write` refuses and says so | Done | [#49](https://github.com/jankylewis/backback/pull/49); readback `docs/plan/readback/V2/BBEOD20/` |
+| BBEOD21 | Find in Files and Go to File search tracked dot-folders (P5); `.git`, `.vs`, `.idea` and `.gitignore` still rule | Done | [#50](https://github.com/jankylewis/backback/pull/50); readback `docs/plan/readback/V2/BBEOD21/` |
 
 ## Gaps behind a Done or Partial state
 

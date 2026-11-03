@@ -44,7 +44,7 @@ section below is kept as the record of the dropped offer.
 - Offer: when the project has no build output, build it once on expand,
   then list; never in `--no-write` mode (it writes `bin/` and `obj/`).
 
-## P5 — Search tracked dot-folders: APPROVED (2026-11-03)
+## P5 — Search tracked dot-folders: DONE (2026-11-03, BBEOD21)
 
 - Today: Find in Files and Go to File skip every hidden folder; MbTx has a
   match in a tracked `.claudoholic/` file that the search does not list.

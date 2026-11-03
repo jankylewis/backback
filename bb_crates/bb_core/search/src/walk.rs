@@ -33,8 +33,20 @@ pub struct Found {
     pub stopped: bool,
 }
 
-/// Folders never searched, as in Go to File.
-const SKIP: [&str; 4] = ["bin", "obj", "node_modules", ".target"];
+/// Folders never searched: build output, package caches, the VCS and IDE
+/// caches. Other dot-folders (`.github`, `.config`) are searched, as VS Code
+/// does (BBEOD21); `.gitignore` still rules.
+const SKIP: [&str; 7] = [
+    "bin",
+    "obj",
+    "node_modules",
+    ".target",
+    ".git",
+    ".vs",
+    ".idea",
+];
+/// Files never searched or listed.
+const SKIP_FILES: [&str; 1] = [".DS_Store"];
 /// Larger files are skipped: generated or data, not source.
 const MAX_BYTES: u64 = 2 * 1024 * 1024;
 /// A preview keeps at most this many chars.
@@ -71,9 +83,11 @@ pub fn search(root: &Path, query: &Query, cap: usize, stop: &AtomicBool) -> Foun
     found
 }
 
-fn files(root: &Path) -> impl Iterator<Item = PathBuf> {
+/// Every file under `root` a search or Go to File may show, in name order:
+/// not in [`SKIP`] folders, not git-ignored, not a [`SKIP_FILES`] name.
+pub fn files(root: &Path) -> impl Iterator<Item = PathBuf> {
     WalkBuilder::new(root)
-        .hidden(true)
+        .hidden(false)
         .git_ignore(true)
         .git_exclude(true)
         .require_git(false)
@@ -93,6 +107,9 @@ fn files(root: &Path) -> impl Iterator<Item = PathBuf> {
             entry
                 .file_type()
                 .is_some_and(|t: std::fs::FileType| t.is_file())
+                && !SKIP_FILES
+                    .iter()
+                    .any(|name: &&str| entry.file_name() == std::ffi::OsStr::new(name))
         })
         .map(DirEntry::into_path)
 }
