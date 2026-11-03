@@ -42,6 +42,14 @@ launchd's PATH; `state` now prints `scroll_x`.
 | `goto:193:92` (the method name's end) | `scroll_x=151.0` |
 | `goto:193:1` | `scroll_x=0` |
 
+Installed at `7ab28aa` (the merged fix), same file, launchd's PATH: the
+`state` after End printed `scroll_x=0` and the one after Home `193.2`, one
+step late even with 3 s pauses. The Mac had been idle 30 min and the
+display was asleep: the caret-in-sight scroll runs in the paint path, and
+no frame was painted between a key and its `state` (BB-TG-010's family).
+The branch build, read back on the awake display, matched its window
+tests; the installed build is the same code.
+
 Before the fix the same keys left `scroll_x` absent: the caret went under
 the pane's edge (the headmate's screenshot). A trackpad swipe is proven by
 the window test's simulated scroll event; by hand on the installed app it
