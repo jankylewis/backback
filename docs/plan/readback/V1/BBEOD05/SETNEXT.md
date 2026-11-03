@@ -41,3 +41,15 @@ cover these cases.
   hidden and the guarded client returned `Unsupported` before sending `goto`.
 - Local patched netcoredbg: initialize advertised goto; live N to N-2
   readback, two steps, and count `4` passed. Both runs: 1 passed, 0 ignored.
+
+## In the app (2026-11-03, #64): Ctrl+Shift+F10
+
+Branch build, a scratch copy of the hand-check solution (Calc/Program.cs:
+line 8 `total += MathOps.Square(4);`, line 9 the `WriteLine`). F9 on 9, F5,
+the cursor to 8, Ctrl+Shift+F10, F5:
+
+| Adapter | After F5 | After Ctrl+Shift+F10 | After F5 again |
+|---|---|---|---|
+| local patched (`BACKBACK_NETCOREDBG`) | `Main():9`, `total=25` | "Paused (goto)", `Main():8` | `Main():9`, `total=41`: line 8 ran twice |
+| stock | `Main():9`, `total=25` | nothing: still `Main():9` | the program ends |
+

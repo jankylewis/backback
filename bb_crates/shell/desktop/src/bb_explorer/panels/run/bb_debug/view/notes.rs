@@ -38,6 +38,8 @@ pub(crate) fn apply(
         } => stopped(view, (reason, exception), (frames, vars), window, cx),
         Note::Variables { frame, vars } => variables(live, frame, vars),
         Note::Output(text) => keep_output(&mut live.output, &text),
+        Note::CanSetNext(can) => live.can_set_next = can,
+        Note::Refused(why) => view.status = Some(why),
         Note::Ended(why) => {
             view.debug.live = None;
             view.status = Some(format!("Debugging ended: {why}"));

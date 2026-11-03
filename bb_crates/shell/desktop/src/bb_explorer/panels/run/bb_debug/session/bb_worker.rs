@@ -53,6 +53,7 @@ async fn serve(start: &Start, commands: UnboundedReceiver<Command>, notes: &Unbo
     send(notes, Note::Building);
     match open(start).await {
         Ok((session, events)) => {
+            send(notes, Note::CanSetNext(session.can_set_next_statement()));
             send(notes, Note::Running);
             run(&session, events, commands, notes).await;
         }
@@ -161,7 +162,14 @@ async fn on_command(
             .map(|vars: Vec<Var>| send(notes, Note::Variables { frame, vars })),
         (Command::Continue, Some(id)) => session.continue_thread(id).await,
         (Command::Step(kind), Some(id)) => session.step(step(kind), id).await,
-        (Command::Continue | Command::Step(_), None) => Ok(()),
+        (Command::SetNext(path, line), Some(id)) => {
+            let line: u32 = u32::try_from(line.saturating_add(1)).unwrap_or(u32::MAX);
+            if let Err(error) = session.set_next(id, &path, line).await {
+                send(notes, Note::Refused(format!("Set Next Statement: {error}")));
+            }
+            Ok(())
+        }
+        (Command::Continue | Command::Step(_) | Command::SetNext(..), None) => Ok(()),
     };
     match (done, resumes) {
         (Ok(()), true) => send(notes, Note::Running),

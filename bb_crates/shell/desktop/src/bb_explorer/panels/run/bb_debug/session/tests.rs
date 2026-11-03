@@ -48,11 +48,12 @@ fn stop(notes: &mut UnboundedReceiver<Note>, limit: Duration) -> (Vec<Frame>, Ve
     loop {
         match next(notes, limit) {
             Note::Stopped { frames, vars, .. } => return (frames, vars),
-            Note::Running | Note::Building => {}
+            Note::Running | Note::Building | Note::CanSetNext(_) => {}
             other @ (Note::Variables { .. }
             | Note::Output(_)
             | Note::Ended(_)
-            | Note::Failed(_)) => {
+            | Note::Failed(_)
+            | Note::Refused(_)) => {
                 panic!("expected a stop, got {other:?}")
             }
         }
@@ -115,11 +116,12 @@ fn stop_with_reason(
                 frames,
                 ..
             } => return (reason, exception, frames),
-            Note::Running | Note::Building => {}
+            Note::Running | Note::Building | Note::CanSetNext(_) => {}
             other @ (Note::Variables { .. }
             | Note::Output(_)
             | Note::Ended(_)
-            | Note::Failed(_)) => {
+            | Note::Failed(_)
+            | Note::Refused(_)) => {
                 panic!("expected a stop, got {other:?}")
             }
         }
@@ -159,11 +161,12 @@ fn the_all_filter_pauses_on_a_caught_throw_and_names_the_exception() {
     loop {
         match next(&mut notes, Duration::from_secs(30)) {
             Note::Ended(_) => break,
-            Note::Running | Note::Building => {}
+            Note::Running | Note::Building | Note::CanSetNext(_) => {}
             other @ (Note::Stopped { .. }
             | Note::Variables { .. }
             | Note::Output(_)
-            | Note::Failed(_)) => panic!("expected the end, got {other:?}"),
+            | Note::Failed(_)
+            | Note::Refused(_)) => panic!("expected the end, got {other:?}"),
         }
     }
 }
