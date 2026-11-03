@@ -26,7 +26,9 @@ pub enum DocumentError {
     #[error("file I/O: {0}")]
     Io(#[from] std::io::Error),
     /// File bytes are not UTF-8.
-    #[error("file is not UTF-8: {0}")]
+    /// The decoder detail stays in `source()`; the user reads one plain line
+    /// (BB-BUG-030).
+    #[error("binary or non-UTF-8 file: not shown as text")]
     Utf8(#[from] std::string::FromUtf8Error),
     /// A char index is invalid.
     #[error("text edit: {0}")]

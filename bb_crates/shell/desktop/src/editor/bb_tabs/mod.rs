@@ -25,6 +25,8 @@ pub(crate) struct Tabs {
     /// The last whole-line copy or cut (BB-BUG-028): pasted with no
     /// selection, it goes in above the cursor's line.
     pub(crate) line_clip: Option<String>,
+    /// The file the Explorer last opened its folders to (BB-BUG-029).
+    pub(crate) revealed: Option<PathBuf>,
 }
 
 impl Tabs {

@@ -67,3 +67,8 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-027 | `$TMPDIR keeps growing` | FIXED | Run `bb sweep`; which prefix is left with a live pid? |
 | BB-PRC-004 | `a <prefix>-<pid> folder of a dead pid` | FIXED | Is the folder made through `OwnedTempDir` or swept by its family? |
 | BB-BUG-028 | `Cmd+C does not copy` | FIXED | Does `clip::clipboard_key` see the key before `command_key`? |
+| BB-BUG-029 | `the Explorer does not show the open file` | FIXED | Does `follow_active` run (render, or the runner's flush)? |
+| BB-BUG-030 | `file is not UTF-8` | FIXED | A binary file: the message is by design |
+| BB-BUG-031 | `the Explorer hides my files` | OBSERVED | `ls -A` the folder: is the file on disk? |
+| BB-UIX-014 | `only __pycache__ in a package` | OBSERVED | The sources are gone from the checkout, not hidden |
+| BB-TG-016 | `a readback hangs at 0 % CPU` | FIXED | Did the launch open a file? Binary and folder launches start the steps since BB-TG-016 |

@@ -30,3 +30,4 @@
 | BB-UIX-012 | FIXED | A marker that promises an action comes from state and has a handler | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | FIXED | The way to stop an action appears where it was started, only while running | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
 | BB-PRC-004 | FIXED | Every resource has an owner and a sweep; audit the disk too | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
+| BB-UIX-014 | OBSERVED | Diff the view against `ls -A` before fixing a missing file | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |

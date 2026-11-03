@@ -1,21 +1,21 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 28 — FIXED 26, OPEN 2.
+Bugs a user met in the app. Entries: 31 — FIXED 28, OBSERVED 1, OPEN 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
-| BB-BUG-001 | Cmd+M does not minimize the window | FIXED | missing binding | yes | `S01/BB_BUG_001_CMD_M_DOES_NOT_MINIMIZE.md` |
-| BB-BUG-002 | Explorer and side panels not in Menlo; sizes mixed | FIXED | literal fonts per view | yes | `S01/BB_BUG_002_NOT_ONE_FONT_EVERYWHERE.md` |
-| BB-BUG-003 | MCP HARNESS panel still shown after its removal | FIXED | BB-BLD-001 | yes | `S01/BB_BUG_003_MCP_PANEL_STILL_SHOWN.md` |
-| BB-BUG-004 | Test Explorer did not respond to clicks | OPEN | not proven | no | `S01/BB_BUG_004_TEST_EXPLORER_CLICKS_NO_RESPONSE.md` |
-| BB-BUG-005 | Text shifts one column when the cursor moves | FIXED | BB-UIX-001 | yes | `S02/BB_BUG_005_TEXT_SHIFTS_WHEN_THE_CURSOR_MOVES.md` |
-| BB-BUG-006 | Opened from the Dock or Finder, the app shows the disk root | FIXED | no Finder-launch rule | yes | `S02/BB_BUG_006_APP_OPENS_THE_DISK_ROOT.md` |
-| BB-BUG-007 | Home and End (and Cmd+Left/Right) do nothing in the editor | FIXED | missing keys | yes | `S02/BB_BUG_007_HOME_AND_END_DO_NOTHING.md` |
-| BB-BUG-008 | F5 in the installed app finds no netcoredbg | FIXED | Dock launch has no PATH or override | yes | `S02/BB_BUG_008_F5_FROM_THE_DOCK_FINDS_NO_NETCOREDBG.md` |
-| BB-BUG-009 | An app opened from the Dock finds no `dotnet` | FIXED | launchd PATH | yes | `S03/BB_BUG_009_AN_APP_FROM_THE_DOCK_FINDS_NO_DOTNET.md` |
-| BB-BUG-010 | Right at a line end splits a CRLF line break | FIXED | char-by-char movement over `\r\n` | yes | `S03/BB_BUG_010_RIGHT_AT_A_LINE_END_SPLITS_A_CRLF.md` |
-| BB-BUG-011 | Option+arrows move one char, not one word | FIXED | Option was ignored by the editor key map | yes | `S03/BB_BUG_011_OPTION_ARROWS_MOVE_ONE_CHAR_NOT_ONE_WORD.md` |
-| BB-BUG-012 | The macOS Ctrl text keys do nothing | FIXED | the key map had no Ctrl arms | yes | `S03/BB_BUG_012_THE_MACOS_CTRL_TEXT_KEYS_DO_NOTHING.md` |
+| BB-BUG-001 | Cmd+M does not minimize the window | FIXED | missing binding | yes | `D1/S01/BB_BUG_001_CMD_M_DOES_NOT_MINIMIZE.md` |
+| BB-BUG-002 | Explorer and side panels not in Menlo; sizes mixed | FIXED | literal fonts per view | yes | `D1/S01/BB_BUG_002_NOT_ONE_FONT_EVERYWHERE.md` |
+| BB-BUG-003 | MCP HARNESS panel still shown after its removal | FIXED | BB-BLD-001 | yes | `D1/S01/BB_BUG_003_MCP_PANEL_STILL_SHOWN.md` |
+| BB-BUG-004 | Test Explorer did not respond to clicks | OPEN | not proven | no | `D1/S01/BB_BUG_004_TEST_EXPLORER_CLICKS_NO_RESPONSE.md` |
+| BB-BUG-005 | Text shifts one column when the cursor moves | FIXED | BB-UIX-001 | yes | `D1/S02/BB_BUG_005_TEXT_SHIFTS_WHEN_THE_CURSOR_MOVES.md` |
+| BB-BUG-006 | Opened from the Dock or Finder, the app shows the disk root | FIXED | no Finder-launch rule | yes | `D1/S02/BB_BUG_006_APP_OPENS_THE_DISK_ROOT.md` |
+| BB-BUG-007 | Home and End (and Cmd+Left/Right) do nothing in the editor | FIXED | missing keys | yes | `D1/S02/BB_BUG_007_HOME_AND_END_DO_NOTHING.md` |
+| BB-BUG-008 | F5 in the installed app finds no netcoredbg | FIXED | Dock launch has no PATH or override | yes | `D1/S02/BB_BUG_008_F5_FROM_THE_DOCK_FINDS_NO_NETCOREDBG.md` |
+| BB-BUG-009 | An app opened from the Dock finds no `dotnet` | FIXED | launchd PATH | yes | `D1/S03/BB_BUG_009_AN_APP_FROM_THE_DOCK_FINDS_NO_DOTNET.md` |
+| BB-BUG-010 | Right at a line end splits a CRLF line break | FIXED | char-by-char movement over `\r\n` | yes | `D1/S03/BB_BUG_010_RIGHT_AT_A_LINE_END_SPLITS_A_CRLF.md` |
+| BB-BUG-011 | Option+arrows move one char, not one word | FIXED | Option was ignored by the editor key map | yes | `D1/S03/BB_BUG_011_OPTION_ARROWS_MOVE_ONE_CHAR_NOT_ONE_WORD.md` |
+| BB-BUG-012 | The macOS Ctrl text keys do nothing | FIXED | the key map had no Ctrl arms | yes | `D1/S03/BB_BUG_012_THE_MACOS_CTRL_TEXT_KEYS_DO_NOTHING.md` |
 | BB-BUG-013 | Long lines are clipped at the pane's edge; no horizontal scroll | FIXED | rows had no horizontal offset; the list clipped them | yes | `D2/S04/BB_BUG_013_LONG_LINES_ARE_CLIPPED_WITH_NO_HORIZONTAL_SCROLL.md` |
 | BB-BUG-014 | Cmd+Backspace does nothing | FIXED | the key map had no Cmd+Backspace arm (BB-UIX-007) | yes | `D2/S04/BB_BUG_014_CMD_BACKSPACE_DOES_NOTHING.md` |
 | BB-BUG-015 | Tab with a selection replaces it; Shift+Tab inserts a tab | FIXED | Tab typed its char over the selection; no indent command (BB-UIX-007) | yes | `D2/S04/BB_BUG_015_TAB_WITH_A_SELECTION_REPLACES_IT.md` |
@@ -32,3 +32,6 @@ Bugs a user met in the app. Entries: 28 — FIXED 26, OPEN 2.
 | BB-BUG-026 | A running test cannot be stopped | FIXED | the stop was far from the run (BB-UIX-013) | yes | `D2/S07/BB_BUG_026_A_RUNNING_TEST_CANNOT_BE_STOPPED.md` |
 | BB-BUG-027 | backback leaves temp folders behind | FIXED | temp folders outlive their process (BB-PRC-004) | yes | `D2/S07/BB_BUG_027_BACKBACK_LEAVES_TEMP_FOLDERS_BEHIND.md` |
 | BB-BUG-028 | Cmd+C does not copy | FIXED | design: not built | yes | `D2/S07/BB_BUG_028_CMD_C_DOES_NOT_COPY.md` |
+| BB-BUG-029 | The Explorer does not follow the active file | FIXED | design: not built | yes | `D3/S08/BB_BUG_029_THE_EXPLORER_DOES_NOT_FOLLOW_THE_ACTIVE_FILE.md` |
+| BB-BUG-030 | A binary file opens with a raw decoder error | FIXED | the decoder's text | yes | `D3/S08/BB_BUG_030_A_BINARY_FILE_OPENS_WITH_A_RAW_DECODER_ERROR.md` |
+| BB-BUG-031 | The Explorer seems to hide files | OBSERVED | not a bug: the folders hold only caches (BB-UIX-014) | no | `D3/S08/BB_BUG_031_THE_EXPLORER_SEEMS_TO_HIDE_FILES.md` |

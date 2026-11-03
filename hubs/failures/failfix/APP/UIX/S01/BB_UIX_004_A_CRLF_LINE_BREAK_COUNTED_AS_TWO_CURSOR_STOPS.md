@@ -22,4 +22,4 @@ or special-casing Right alone.
 Red first: 3 `Document` tests (step over, delete whole, no cursor inside).
 Readback in the release build on `class A\r\n{\r\n}\r\n`: the bytes after
 Right, `x`, Cmd+S are `class A\r\nx{\r\n}\r\n`; before the fix
-`class A\rx\n{`. Byte dumps in `hubs/bugs/bugfix/S03/BB_BUG_010_*.md`.
+`class A\rx\n{`. Byte dumps in `hubs/bugs/bugfix/D1/S03/BB_BUG_010_*.md`.

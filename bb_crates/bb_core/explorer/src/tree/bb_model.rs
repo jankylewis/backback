@@ -155,6 +155,47 @@ impl Explorer {
         rows
     }
 
+    /// Open every folder down to `path` and give its row in [`Self::visible`]
+    /// (BB-BUG-029: the Explorer follows the active file). `None` when the
+    /// path is not under the tree; folders on the way stay open.
+    ///
+    /// # Errors
+    /// A folder on the way cannot be read.
+    pub fn reveal(&mut self, path: &Path) -> Result<Option<usize>, ExplorerError> {
+        let mut at: PathBuf = self.root.path.clone();
+        while at != path {
+            let entry: &Entry =
+                find(&self.root, &at).ok_or_else(|| ExplorerError::NotFound(at.clone()))?;
+            if !entry.expandable() {
+                return Ok(None);
+            }
+            let children: Option<Vec<Entry>> = if entry.children.is_none() {
+                Some(self.read_children(entry)?)
+            } else {
+                None
+            };
+            let target: &mut Entry =
+                find_mut(&mut self.root, &at).ok_or_else(|| ExplorerError::NotFound(at.clone()))?;
+            if let Some(children) = children {
+                target.children = Some(children);
+            }
+            target.expanded = true;
+            let Some(next): Option<PathBuf> = target
+                .children()
+                .iter()
+                .find(|child: &&Entry| leads_to(child, path))
+                .map(|child: &Entry| child.path.clone())
+            else {
+                return Ok(None);
+            };
+            at = next;
+        }
+        Ok(self
+            .visible()
+            .iter()
+            .position(|(_, entry): &(usize, &Entry)| entry.path == path))
+    }
+
     /// Expand every reachable folder, returning the count below the root.
     ///
     /// # Errors
@@ -167,3 +208,18 @@ impl Explorer {
         read_children_from(&self.source, parent)
     }
 }
+
+/// Whether `path` lies under `child`: inside its folder, or, for a project
+/// of a solution, inside the project's folder.
+fn leads_to(child: &Entry, path: &Path) -> bool {
+    path.starts_with(&child.path)
+        || (child.kind == EntryKind::Project
+            && child
+                .path
+                .parent()
+                .is_some_and(|folder: &Path| path.starts_with(folder)))
+}
+
+#[cfg(test)]
+#[path = "reveal_tests.rs"]
+mod reveal_tests;
