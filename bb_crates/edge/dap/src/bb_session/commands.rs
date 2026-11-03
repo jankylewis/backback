@@ -219,3 +219,18 @@ impl DapSession {
         Ok(())
     }
 }
+
+/// Set Next Statement as one call (BBEOD05).
+impl DapSession {
+    /// Set Next Statement: move the paused `thread_id` to the first target
+    /// `gotoTargets` offers on `line` (1-based) of `source`.
+    ///
+    /// # Errors
+    /// [`DapError::NoTarget`] when the line offers none, and no `goto` is
+    /// sent; unsupported capability or DAP request error.
+    pub async fn set_next(&self, thread_id: i64, source: &Path, line: u32) -> Result<(), DapError> {
+        let targets: Vec<GotoTarget> = self.goto_targets(source, line).await?;
+        let first: &GotoTarget = targets.first().ok_or(DapError::NoTarget(line))?;
+        self.goto(thread_id, first.id).await
+    }
+}

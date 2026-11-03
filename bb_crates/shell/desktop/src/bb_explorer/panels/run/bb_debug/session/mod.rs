@@ -26,6 +26,9 @@ pub(crate) enum Command {
     Breakpoints(PathBuf, Vec<usize>),
     /// The exceptions to break on changed (the adapter's filter ids).
     Exceptions(Vec<String>),
+    /// Ctrl+Shift+F10 while paused: run this file's 0-based line next
+    /// (Set Next Statement, BBEOD05).
+    SetNext(PathBuf, usize),
 }
 
 /// A step command.
@@ -76,6 +79,10 @@ pub(crate) enum Note {
     Variables { frame: i64, vars: Vec<Var> },
     /// Program or debugger output.
     Output(String),
+    /// The adapter can move the next statement (`supportsGotoTargetsRequest`).
+    CanSetNext(bool),
+    /// A command the debugger refused; the session goes on, still paused.
+    Refused(String),
     /// The session ended (program exit or Stop).
     Ended(String),
     /// The session could not start or broke.

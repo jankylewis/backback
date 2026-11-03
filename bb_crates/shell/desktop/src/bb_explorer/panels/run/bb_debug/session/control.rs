@@ -23,6 +23,8 @@ pub(crate) struct Live {
     pub(crate) output: String,
     /// The session's notes when no task pumps them (unit tests poll).
     pending: Option<UnboundedReceiver<Note>>,
+    /// The adapter can move the next statement (BBEOD05).
+    pub(crate) can_set_next: bool,
 }
 
 /// Where the session is.
@@ -79,6 +81,7 @@ pub(crate) fn start_or_continue(
         phase: Phase::Building,
         output: String::new(),
         pending: Some(notes),
+        can_set_next: false,
     });
     // Seam: gpui's test scheduler refuses wake-ups from the session thread;
     // unit tests drain the notes with `poll` (as the terminal does).
@@ -95,9 +98,14 @@ pub(crate) fn start_or_continue(
 }
 
 /// A paused session with no thread behind it: window tests of the panel.
+/// Returns the commands the window sends.
 #[cfg(test)]
-pub(crate) fn fake_paused(view: &mut ExplorerView, frames: Vec<Frame>, exception: Option<String>) {
-    let (commands, _nobody): (UnboundedSender<Command>, UnboundedReceiver<Command>) =
+pub(crate) fn fake_paused(
+    view: &mut ExplorerView,
+    frames: Vec<Frame>,
+    exception: Option<String>,
+) -> UnboundedReceiver<Command> {
+    let (commands, sent): (UnboundedSender<Command>, UnboundedReceiver<Command>) =
         tokio::sync::mpsc::unbounded_channel();
     view.debug.live = Some(Live {
         commands,
@@ -110,7 +118,9 @@ pub(crate) fn fake_paused(view: &mut ExplorerView, frames: Vec<Frame>, exception
         },
         output: String::new(),
         pending: None,
+        can_set_next: false,
     });
+    sent
 }
 
 /// Apply the notes that have arrived (unit tests, see the seam above).
@@ -140,6 +150,32 @@ pub(crate) fn step(view: &mut ExplorerView, kind: StepKind) {
             live.send(Command::Step(kind));
         }
     }
+}
+
+/// Ctrl+Shift+F10 while paused: the active tab's cursor line runs next (Set
+/// Next Statement, BBEOD05), on an adapter that advertises it.
+pub(crate) fn set_next(view: &mut ExplorerView) {
+    let Some((path, line)): Option<(PathBuf, usize)> = view
+        .tabs
+        .active_tab()
+        .map(|tab: &crate::editor::Tab| (tab.path.clone(), tab.document.cursor_line()))
+    else {
+        return;
+    };
+    if can_set_next(view) {
+        if let Some(live) = view.debug.live.as_ref() {
+            live.send(Command::SetNext(path, line));
+        }
+    }
+}
+
+/// Paused on an adapter that can Set Next: the action exists only then, so
+/// its key does nothing and its menu item greys otherwise.
+pub(crate) fn can_set_next(view: &ExplorerView) -> bool {
+    view.debug
+        .live
+        .as_ref()
+        .is_some_and(|live: &Live| live.can_set_next && matches!(live.phase, Phase::Stopped { .. }))
 }
 
 /// Shift+F5.

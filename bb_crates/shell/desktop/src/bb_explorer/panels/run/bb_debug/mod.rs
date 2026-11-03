@@ -56,11 +56,17 @@ debug_action!(
     StepInto,
     StepOut,
     BreakOnAllExceptions,
-    BreakOnUserUnhandledExceptions
+    BreakOnUserUnhandledExceptions,
+    SetNextStatement
 );
 
-/// The debug keys (registered on the window root).
-pub(crate) fn actions<E: gpui::InteractiveElement>(area: E, cx: &mut Context<ExplorerView>) -> E {
+/// The debug keys (registered on the window root). Set Next Statement only
+/// while it can run (`set_next`), so its menu item greys otherwise.
+pub(crate) fn actions<E: gpui::InteractiveElement>(
+    area: E,
+    set_next: bool,
+    cx: &mut Context<ExplorerView>,
+) -> E {
     let keys: E = area
         .on_action(cx.listener(on_toggle))
         .on_action(cx.listener(
@@ -95,7 +101,7 @@ pub(crate) fn actions<E: gpui::InteractiveElement>(area: E, cx: &mut Context<Exp
                 session::control::step(v, session::StepKind::Out);
             },
         ));
-    exception_actions(keys, cx)
+    exception_actions(set_next_action(keys, set_next, cx), cx)
 }
 
 /// The exception ticks' actions (the Debug menu).
@@ -134,6 +140,26 @@ pub(crate) fn toggle_exceptions(view: &mut ExplorerView, kind: ExceptionKind) {
     view.status = Some(format!("Break on {}: {state}", kind.label().to_lowercase()));
 }
 
+/// Ctrl+Shift+F10, only while Set Next can run (BBEOD05): without the
+/// handler the key does nothing and the menu item greys.
+fn set_next_action<E: gpui::InteractiveElement>(
+    keys: E,
+    set_next: bool,
+    cx: &mut Context<ExplorerView>,
+) -> E {
+    if !set_next {
+        return keys;
+    }
+    keys.on_action(cx.listener(
+        |v: &mut ExplorerView,
+         _: &SetNextStatement,
+         _: &mut Window,
+         _: &mut Context<ExplorerView>| {
+            session::control::set_next(v);
+        },
+    ))
+}
+
 /// The Debug menu: the keys of VS Code and Rider, then the exception ticks.
 pub(crate) fn debug_menu() -> gpui::Menu {
     use gpui::MenuItem;
@@ -144,6 +170,7 @@ pub(crate) fn debug_menu() -> gpui::Menu {
         MenuItem::action("Step Over", StepOver),
         MenuItem::action("Step Into", StepInto),
         MenuItem::action("Step Out", StepOut),
+        MenuItem::action("Set Next Statement", SetNextStatement),
         MenuItem::separator(),
         MenuItem::action("Toggle Breakpoint", ToggleBreakpoint),
         MenuItem::action("Break on All Exceptions", BreakOnAllExceptions),

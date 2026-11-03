@@ -70,6 +70,9 @@ pub enum DapError {
     /// A feature was not advertised by the adapter.
     #[error("adapter does not support {0}")]
     Unsupported(&'static str),
+    /// Set Next Statement: `gotoTargets` offered no target on this line.
+    #[error("line {0} is not a target in the paused method (never out of a catch or finally)")]
+    NoTarget(u32),
     /// A setup command was sent in the wrong order.
     #[error("DAP session setup order is invalid")]
     State,
