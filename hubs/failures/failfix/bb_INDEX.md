@@ -35,3 +35,4 @@
 | BB-UIX-013 | FIXED | The starting control turns into its stop while running | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
 | BB-PRC-004 | FIXED | One owner per folder; sweep what a dead owner left | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-PRF-003 | FIXED | `DOTNET_gcServer=0` for the Roslyn child unless the user set it | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
+| BB-PRF-004 | FIXED | `RENDER_CAP` where a line is shaped and styled | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |

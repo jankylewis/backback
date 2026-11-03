@@ -73,3 +73,6 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-UIX-014 | `only __pycache__ in a package` | OBSERVED | The sources are gone from the checkout, not hidden |
 | BB-TG-016 | `a readback hangs at 0 % CPU` | FIXED | Did the launch open a file? Binary and folder launches start the steps since BB-TG-016 |
 | BB-PRF-003 | `roslyn-language-server RSS grows past 2 GB` | FIXED | Is `DOTNET_gcServer` set in the app's environment (a user value wins)? |
+| BB-BUG-032 | `the editor freezes on a minified file` | FIXED | Is the line past `RENDER_CAP`? It should end in `…` |
+| BB-BUG-033 | `the cursor stops inside é or an emoji` | OPEN | Moves are by code point; graphemes not handled yet |
+| BB-PRF-004 | `UI work grows with line length` | FIXED | Does the slow path go through `Columns::shape` or `styled_line` (both capped)? |

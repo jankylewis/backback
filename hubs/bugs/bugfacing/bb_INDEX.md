@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 31 — FIXED 29, OBSERVED 2.
+Bugs a user met in the app. Entries: 33 — FIXED 30, OBSERVED 2, OPEN 1.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -35,3 +35,5 @@ Bugs a user met in the app. Entries: 31 — FIXED 29, OBSERVED 2.
 | BB-BUG-029 | The Explorer does not follow the active file | FIXED | design: not built | yes | `D3/S08/BB_BUG_029_THE_EXPLORER_DOES_NOT_FOLLOW_THE_ACTIVE_FILE.md` |
 | BB-BUG-030 | A binary file opens with a raw decoder error | FIXED | the decoder's text | yes | `D3/S08/BB_BUG_030_A_BINARY_FILE_OPENS_WITH_A_RAW_DECODER_ERROR.md` |
 | BB-BUG-031 | The Explorer seems to hide files | OBSERVED | not a bug: the folders hold only caches (BB-UIX-014) | no | `D3/S08/BB_BUG_031_THE_EXPLORER_SEEMS_TO_HIDE_FILES.md` |
+| BB-BUG-032 | A very long line freezes the editor | FIXED | every frame shaped and styled the whole line (BB-PRF-004) | yes | `D3/S08/BB_BUG_032_A_VERY_LONG_LINE_FREEZES_THE_EDITOR.md` |
+| BB-BUG-033 | The cursor stops inside a combined character | OPEN | not proven: moves by code point | no | `D3/S09/BB_BUG_033_THE_CURSOR_STOPS_INSIDE_A_COMBINED_CHARACTER.md` |

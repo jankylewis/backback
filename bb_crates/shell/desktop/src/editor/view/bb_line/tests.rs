@@ -236,3 +236,13 @@ fn a_link_range_marks_exactly_its_chars(cx: &mut TestAppContext) {
         assert_eq!(text, LINE);
     });
 }
+
+/// BB-PRF-004: a line is drawn and measured up to `RENDER_CAP` chars.
+#[test]
+fn a_long_line_is_cut_at_the_render_cap_and_a_short_one_is_kept() {
+    let long: String = "é".repeat(super::caret::RENDER_CAP + 5);
+    let (shown, cut): (&str, bool) = super::caret::rendered(&long);
+    assert!(cut);
+    assert_eq!(shown.chars().count(), super::caret::RENDER_CAP);
+    assert_eq!(super::caret::rendered("int x;"), ("int x;", false));
+}
