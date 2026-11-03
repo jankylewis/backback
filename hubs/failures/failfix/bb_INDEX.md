@@ -19,3 +19,4 @@
 | BB-LSP-005 | FIXED | Assert the server reply to our own request (shutdown), not a side-effect line | `APP/LSP/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
+| BB-DAP-001 | FIXED | Headline from `details.fullTypeName` and `details.message`; else the id without its category | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |

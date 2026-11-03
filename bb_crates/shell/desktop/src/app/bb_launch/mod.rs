@@ -123,6 +123,7 @@ fn menus() -> Vec<Menu> {
             "Build Solution",
             crate::run::build::BuildSolution,
         )]),
+        crate::run::bb_debug::debug_menu(),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
         bb_window::window_menu(),
     ]
@@ -173,7 +174,7 @@ pub(crate) fn fresh_view(
         link: None,
         editor_scroll: gpui::UniformListScrollHandle::new(),
         tests: crate::tests_panel::TestsState::new(),
-        debug: crate::run::bb_debug::DebugState::default(),
+        debug: crate::run::bb_debug::DebugState::load(&root),
         quick_open: None,
         quick_focus: cx.focus_handle(),
         terminal: crate::terminal::Terminal::new(cx.focus_handle()),

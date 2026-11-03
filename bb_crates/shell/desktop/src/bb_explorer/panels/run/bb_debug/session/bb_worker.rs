@@ -1,7 +1,8 @@
 //! The debug session runs on its own thread, as the C# server does: it
-//! builds the target, starts netcoredbg, sends the breakpoints and reports
-//! each stop with its call stack and the top frame's variables. The UI holds
-//! only the channel ends, so no handler ever waits on the debugger.
+//! builds the target, starts netcoredbg, sends the breakpoints and the
+//! exception filters, and reports each stop with its call stack and the top
+//! frame's variables. The UI holds only the channel ends, so no handler ever
+//! waits on the debugger.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -11,84 +12,12 @@ use bb_dap::{DapSession, Event, SourceBreakpoint, Step};
 use serde_json::Value;
 use tokio::sync::mpsc::{unbounded_channel, Receiver, UnboundedReceiver, UnboundedSender};
 
+use super::{Command, Note, Start, StepKind, Var};
+
 /// Each adapter request's deadline.
 const DEADLINE: Duration = Duration::from_secs(30);
 /// Each `dotnet` call of the build.
 const BUILD: Duration = Duration::from_secs(180);
-
-/// UI to session.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum Command {
-    /// F5 while stopped.
-    Continue,
-    /// F10, F11, Shift+F11.
-    Step(StepKind),
-    /// Shift+F5: end the program and the session.
-    Stop,
-    /// A call-stack row was picked: its variables.
-    Frame(i64),
-    /// A file's breakpoints changed (0-based lines).
-    Breakpoints(PathBuf, Vec<usize>),
-}
-
-/// A step command.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum StepKind {
-    /// F10.
-    Over,
-    /// F11.
-    Into,
-    /// Shift+F11.
-    Out,
-}
-
-/// One frame of a stop. `path` is `None` for code with no source (the
-/// framework); such frames are listed but cannot be opened.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Frame {
-    pub(crate) id: i64,
-    pub(crate) name: String,
-    pub(crate) path: Option<PathBuf>,
-    /// 0-based.
-    pub(crate) line: usize,
-}
-
-/// One variable: name and value as the adapter shows them.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Var {
-    pub(crate) name: String,
-    pub(crate) value: String,
-}
-
-/// Session to UI.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum Note {
-    /// Building the target.
-    Building,
-    /// The program runs.
-    Running,
-    /// Stopped: frames top first, and the top frame's variables.
-    Stopped {
-        reason: String,
-        frames: Vec<Frame>,
-        vars: Vec<Var>,
-    },
-    /// The variables of a picked frame.
-    Variables { frame: i64, vars: Vec<Var> },
-    /// Program or debugger output.
-    Output(String),
-    /// The session ended (program exit or Stop).
-    Ended(String),
-    /// The session could not start or broke.
-    Failed(String),
-}
-
-/// What to debug: a `.csproj` (built first) or a `.dll`, and every file's
-/// breakpoints (0-based lines).
-pub(crate) struct Start {
-    pub(crate) target: PathBuf,
-    pub(crate) breakpoints: Vec<(PathBuf, Vec<usize>)>,
-}
 
 /// Start the session thread.
 pub(crate) fn start(start: Start) -> (UnboundedSender<Command>, UnboundedReceiver<Note>) {
@@ -152,6 +81,10 @@ async fn open(start: &Start) -> Result<(DapSession, Receiver<Event>), String> {
             .await
             .map_err(|error: bb_dap::DapError| text(&error))?;
     }
+    session
+        .set_exception_breakpoints(&start.exceptions)
+        .await
+        .map_err(|error: bb_dap::DapError| text(&error))?;
     session
         .configuration_done()
         .await
@@ -222,6 +155,7 @@ async fn on_command(
         (Command::Breakpoints(path, lines), _) => set_breakpoints(session, &path, &lines)
             .await
             .map(|_: Value| ()),
+        (Command::Exceptions(filters), _) => session.set_exception_breakpoints(&filters).await,
         (Command::Frame(frame), _) => super::stops::frame_vars(session, frame)
             .await
             .map(|vars: Vec<Var>| send(notes, Note::Variables { frame, vars })),

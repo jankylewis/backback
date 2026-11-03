@@ -28,3 +28,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/S03/BB_BUG_010_*.md` |
 | BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/S03/BB_BUG_011_*.md` |
 | BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/S03/BB_BUG_012_*.md` |
+| BB-DAP-001 | FIXED | The raw `exceptionInfo` reply in `docs/plan/readback/V2/BBEOD19/bb_READBACK.md` |

@@ -1,7 +1,9 @@
 //! The Debug panel under the editor while a session lives: the program's
 //! output while it builds or runs; when paused, Call Stack next to
-//! Variables (as in VS Code). A frame with source opens its call site on a
-//! click; frames without source (the framework) are listed, greyed.
+//! Variables (as in VS Code), under the exception the program stopped on,
+//! if any. A frame with source opens its call site on a click; frames
+//! without source (the framework) are listed, greyed. The title row carries
+//! the two exception ticks (`ticks`).
 
 use std::path::Path;
 
@@ -9,6 +11,7 @@ use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, AnyElement, ClickEvent, Context, Window};
 
 use super::notes::select_frame;
+use super::ticks::title_row;
 use crate::intel::view::one_line;
 use crate::run::bb_debug::session::control::{Live, Phase};
 use crate::run::bb_debug::session::{Frame, Var};
@@ -21,27 +24,19 @@ const TAIL: usize = 12;
 pub(crate) fn panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
     let live: &Live = view.debug.live.as_ref()?;
     let theme: Theme = view.theme;
-    let (title, body): (String, AnyElement) = match &live.phase {
-        Phase::Building => (
-            format!("Debug: building {}", live.label),
-            output(live, theme),
-        ),
-        Phase::Running => (
-            format!("Debug: {} running", live.label),
-            output(live, theme),
-        ),
+    let body: AnyElement = match &live.phase {
+        Phase::Building | Phase::Running => output(live, theme),
         Phase::Stopped {
             frames,
             selected,
             vars,
-        } => (
-            format!("Debug: {} paused", live.label),
-            div()
-                .flex()
-                .flex_1()
-                .child(stack(frames, *selected, &view.root, theme, cx))
-                .child(variables(vars, theme))
-                .into_any_element(),
+            exception,
+        } => paused(
+            view,
+            (frames.as_slice(), *selected, vars.as_slice()),
+            exception.as_deref(),
+            theme,
+            cx,
         ),
     };
     Some(
@@ -55,15 +50,49 @@ pub(crate) fn panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Opti
             .border_t_1()
             .border_color(color(theme.border))
             .text_color(color(theme.text))
-            .child(
-                one_line(22.0)
-                    .px_2()
-                    .text_color(color(theme.text_dim))
-                    .child(title),
-            )
+            .child(title_row(view, title(live), theme, cx))
             .child(body)
             .into_any_element(),
     )
+}
+
+/// `Debug: <project> building | running | paused [on an exception]`.
+fn title(live: &Live) -> String {
+    match &live.phase {
+        Phase::Building => format!("Debug: building {}", live.label),
+        Phase::Running => format!("Debug: {} running", live.label),
+        Phase::Stopped {
+            exception: Some(_), ..
+        } => format!("Debug: {} paused on an exception", live.label),
+        Phase::Stopped {
+            exception: None, ..
+        } => format!("Debug: {} paused", live.label),
+    }
+}
+
+/// Paused: the exception, if any, above Call Stack next to Variables.
+fn paused(
+    view: &ExplorerView,
+    (frames, selected, vars): (&[Frame], usize, &[Var]),
+    exception: Option<&str>,
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> AnyElement {
+    div()
+        .flex()
+        .flex_col()
+        .flex_1()
+        .min_h(px(0.0))
+        .children(exception.map(|what: &str| exception_row(what, theme)))
+        .child(
+            div()
+                .flex()
+                .flex_1()
+                .min_h(px(0.0))
+                .child(stack(frames, selected, &view.root, theme, cx))
+                .child(variables(vars, theme)),
+        )
+        .into_any_element()
 }
 
 fn output(live: &Live, theme: Theme) -> AnyElement {
@@ -162,4 +191,15 @@ fn variables(vars: &[Var], theme: Theme) -> gpui::Div {
                 .child(var.value.clone()),
         )
     }))
+}
+
+/// The exception paused on, above the stack, in the error colour.
+fn exception_row(what: &str, theme: Theme) -> AnyElement {
+    one_line(20.0)
+        .id("debug-exception")
+        .debug_selector(|| "debug-exception".to_owned())
+        .px_2()
+        .text_color(color(theme.error))
+        .child(what.to_owned())
+        .into_any_element()
 }

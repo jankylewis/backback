@@ -23,3 +23,4 @@ One file per failure mechanism. This hub owns the id. Entries: 19 — FIXED 17, 
 | BB-LSP-005 | A test asserted a Roslyn log line that only a side effect writes | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | A yanked transitive crate fails `cargo deny` on CI | FIXED | yes | yes | none | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
+| BB-DAP-001 | netcoredbg's `exceptionInfo` names the CLR category and the module, not the type and message | FIXED | yes | yes | none | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |

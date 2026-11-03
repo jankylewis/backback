@@ -35,6 +35,8 @@ pub(crate) enum Phase {
         /// The picked call-stack row.
         selected: usize,
         vars: Vec<Var>,
+        /// The exception paused on, as `Type: message`.
+        exception: Option<String>,
     },
 }
 
@@ -69,6 +71,7 @@ pub(crate) fn start_or_continue(
     let (commands, notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
         target,
         breakpoints: view.debug.breakpoints.all(),
+        exceptions: view.debug.exceptions.filters(),
     });
     view.debug.live = Some(Live {
         commands,
@@ -89,6 +92,25 @@ pub(crate) fn start_or_continue(
             pump(notes, window, cx);
         }
     }
+}
+
+/// A paused session with no thread behind it: window tests of the panel.
+#[cfg(test)]
+pub(crate) fn fake_paused(view: &mut ExplorerView, frames: Vec<Frame>, exception: Option<String>) {
+    let (commands, _nobody): (UnboundedSender<Command>, UnboundedReceiver<Command>) =
+        tokio::sync::mpsc::unbounded_channel();
+    view.debug.live = Some(Live {
+        commands,
+        label: String::from("Fake"),
+        phase: Phase::Stopped {
+            frames,
+            selected: 0,
+            vars: Vec::new(),
+            exception,
+        },
+        output: String::new(),
+        pending: None,
+    });
 }
 
 /// Apply the notes that have arrived (unit tests, see the seam above).

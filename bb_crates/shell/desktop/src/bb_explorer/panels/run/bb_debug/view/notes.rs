@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use gpui::{Context, Window};
 
 use crate::run::bb_debug::session::control::{Live, Phase};
-use crate::run::bb_debug::session::{Command, Frame, Note};
+use crate::run::bb_debug::session::{Command, Frame, Note, Var};
 use crate::ExplorerView;
 
 /// Program output kept for the panel, in chars.
@@ -32,9 +32,10 @@ pub(crate) fn apply(
         }
         Note::Stopped {
             reason,
+            exception,
             frames,
             vars,
-        } => stopped(view, (reason, frames, vars), window, cx),
+        } => stopped(view, (reason, exception), (frames, vars), window, cx),
         Note::Variables { frame, vars } => variables(live, frame, vars),
         Note::Output(text) => keep_output(&mut live.output, &text),
         Note::Ended(why) => {
@@ -48,10 +49,12 @@ pub(crate) fn apply(
     }
 }
 
-/// A stop: show the first frame with source and say why and where.
+/// A stop: show the first frame with source and say why and where; on an
+/// exception, which one.
 fn stopped(
     view: &mut ExplorerView,
-    (reason, frames, vars): (String, Vec<Frame>, Vec<crate::run::bb_debug::session::Var>),
+    (reason, exception): (String, Option<String>),
+    (frames, vars): (Vec<Frame>, Vec<Var>),
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
@@ -63,14 +66,18 @@ fn stopped(
         .iter()
         .position(|f: &Frame| f.path.is_some())
         .unwrap_or(0);
+    view.status = Some(match exception.as_deref() {
+        Some(what) => format!("Paused on {what} in {name}"),
+        None => format!("Paused ({reason}) in {name}"),
+    });
     if let Some(live) = view.debug.live.as_mut() {
         live.phase = Phase::Stopped {
             frames,
             selected: shown,
             vars,
+            exception,
         };
     }
-    view.status = Some(format!("Paused ({reason}) in {name}"));
     open_selected(view, window, cx);
 }
 
@@ -80,6 +87,7 @@ fn variables(live: &mut Live, frame: i64, vars: Vec<crate::run::bb_debug::sessio
         frames,
         selected,
         vars: shown,
+        ..
     } = &mut live.phase
     {
         if frames.get(*selected).is_some_and(|f: &Frame| f.id == frame) {
@@ -159,6 +167,7 @@ pub(crate) fn describe(view: &ExplorerView) -> String {
             frames,
             selected,
             vars,
+            exception,
         } => {
             let stack: Vec<String> = frames
                 .iter()
@@ -166,9 +175,11 @@ pub(crate) fn describe(view: &ExplorerView) -> String {
                 .collect();
             let values: Vec<String> = vars
                 .iter()
-                .map(|v: &crate::run::bb_debug::session::Var| format!("{}={}", v.name, v.value))
+                .map(|v: &Var| format!("{}={}", v.name, v.value))
                 .collect();
-            format!("session=paused selected={selected} frames={stack:?} vars={values:?}")
+            format!(
+                "session=paused selected={selected} exception={exception:?} frames={stack:?} vars={values:?}"
+            )
         }
     }
 }
