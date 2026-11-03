@@ -2,7 +2,7 @@
 
 id: BB-BUG-004
 family: TST
-status: OPEN
+status: OBSERVED
 date: 2026-11-01
 signature: Test Explorer click no response
 observed: real-app readback by a mate on branch `bbeod-08-reap`: Run clicks in
@@ -30,4 +30,10 @@ reached the window at all. Reproduce by hand first.
 - The window test `test_panel_lists_runs_a_class_and_opens_a_failure` clicks
   the Tests header, a project and a class Run and sees the outcomes.
 
-Still not proven: a hand click in the real app. Needs the headmate.
+## Closed 2026-11-04: not reproduced
+
+The headmate's own feedback of 2026-11-03 is the hand check: they pressed
+▶ on a test in the Tests panel, the test ran, and they asked for a way to
+stop it (BB-BUG-026). A hand click runs tests. The first report came from
+synthetic input that never reached the window (BB-TG-007). Not a backback
+bug: no fix.

@@ -7,7 +7,7 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-001 | `Cmd+M does nothing` | FIXED | Window menu has a Minimize item bound to `cmd-m` |
 | BB-BUG-002 | `Explorer rows not in Menlo` | FIXED | Every surface reads one font token, not a literal |
 | BB-BUG-003 | `HARNESS Select an MCP server` | FIXED | Build time of the running binary vs `master` (BB-BLD-001) |
-| BB-BUG-004 | `Test Explorer click no response` | OPEN | Reproduce by hand before blaming the input driver |
+| BB-BUG-004 | `Test Explorer click no response` | OBSERVED | Not reproduced by hand (2026-11-03); check the input reached the window (BB-TG-007) |
 | BB-BUG-005 | `text after the cursor shifts right` | FIXED | Cursor is an overlay, never a char in the text runs (BB-UIX-001) |
 | BB-BUG-007 | `end key does not move the cursor` | FIXED | Editor keys: only left/right handled in `input.rs` |
 | BB-BUG-008 | `Debug failed: netcoredbg not found` | FIXED | Opened from the Dock? `PATH` is minimal; check `~/.local/share/backback/netcoredbg` |
