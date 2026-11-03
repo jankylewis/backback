@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 34 — FIXED 32, OBSERVED 2.
+Bugs a user met in the app. Entries: 35 — FIXED 33, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -38,3 +38,4 @@ Bugs a user met in the app. Entries: 34 — FIXED 32, OBSERVED 2.
 | BB-BUG-032 | A very long line freezes the editor | FIXED | every frame shaped and styled the whole line (BB-PRF-004) | yes | `D3/S08/BB_BUG_032_A_VERY_LONG_LINE_FREEZES_THE_EDITOR.md` |
 | BB-BUG-033 | The cursor stops inside a combined character | FIXED | moves stepped one code point, not one grapheme | yes | `D3/S09/BB_BUG_033_THE_CURSOR_STOPS_INSIDE_A_COMBINED_CHARACTER.md` |
 | BB-BUG-034 | A save overwrites another tool's change | FIXED | save never compared the file with what it had read (BB-UIX-015) | yes | `D3/S09/BB_BUG_034_A_SAVE_OVERWRITES_ANOTHER_TOOLS_CHANGE.md` |
+| BB-BUG-035 | A clean tab keeps stale text after an outside change | FIXED | nothing compared the file with what was read (BB-UIX-015) | yes | `D3/S09/BB_BUG_035_A_CLEAN_TAB_KEEPS_STALE_TEXT_AFTER_AN_OUTSIDE_CHANGE.md` |

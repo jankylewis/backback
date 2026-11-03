@@ -79,3 +79,4 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-TG-017 | `progress.last() (2, 3) != (3, 3)` | FIXED | Read the failed list in the message: which project did Roslyn fail to load? |
 | BB-BUG-034 | `changed on disk since it was opened` | FIXED | By design: save again to overwrite, or reopen to take the disk's text |
 | BB-UIX-015 | `an outside change is lost after a save` | FIXED | Does `save` see `DiskGuard.seen` (stamped at `open`)? |
+| BB-BUG-035 | `the tab shows old text after git checkout` | FIXED | Does the tab hold unsaved edits? Those are never reloaded |

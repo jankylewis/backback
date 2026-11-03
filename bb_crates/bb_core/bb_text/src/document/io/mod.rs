@@ -7,22 +7,6 @@ use std::{
 
 use super::{Document, DocumentError};
 
-/// A file's modification time and length.
-type Stamp = (std::time::SystemTime, u64);
-
-/// The file as last read or written, and whether a save over a newer file
-/// was refused once (BB-BUG-034: a save overwrote another tool's change).
-#[derive(Debug, Default)]
-pub(super) struct DiskGuard {
-    pub(super) seen: Option<Stamp>,
-    pub(super) armed: bool,
-}
-
-fn stamp(path: &Path) -> Option<Stamp> {
-    let metadata: fs::Metadata = fs::metadata(path).ok()?;
-    Some((metadata.modified().ok()?, metadata.len()))
-}
-
 /// UTF-8 byte order mark.
 const BOM: [u8; 3] = [0xef, 0xbb, 0xbf];
 
@@ -179,46 +163,10 @@ fn read_only(target: &Path, error: std::io::Error) -> DocumentError {
     }
 }
 
-#[cfg(test)]
-mod disk_tests {
-    use super::*;
+#[path = "bb_disk.rs"]
+mod disk;
+pub(super) use disk::DiskGuard;
+use disk::{stamp, Stamp};
 
-    /// BB-BUG-034: a save over a file another tool changed is refused once;
-    /// the next save overwrites; saves of our own changes never trip it.
-    #[test]
-    fn a_save_over_an_outside_change_is_refused_once_then_overwrites() {
-        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let file: PathBuf = dir.path().join("A.cs");
-        fs::write(&file, "class A\n{\n}\n").unwrap();
-        let mut doc: Document = Document::open(&file).unwrap();
-        doc.insert("x").unwrap();
-        doc.save().unwrap();
-        doc.insert("y").unwrap();
-        doc.save().unwrap();
-        assert_eq!(
-            fs::read_to_string(&file).unwrap(),
-            "xyclass A\n{\n}\n",
-            "our own saves pass"
-        );
-        fs::write(&file, "class A\n{\n    // another tool\n}\n").unwrap();
-        doc.insert("z").unwrap();
-        let refused: Result<(), DocumentError> = doc.save();
-        assert!(
-            matches!(refused, Err(DocumentError::ChangedOnDisk(_))),
-            "{refused:?}"
-        );
-        assert_eq!(
-            fs::read_to_string(&file).unwrap(),
-            "class A\n{\n    // another tool\n}\n",
-            "kept"
-        );
-        doc.save().unwrap();
-        assert_eq!(
-            fs::read_to_string(&file).unwrap(),
-            "xyzclass A\n{\n}\n",
-            "the second save overwrites"
-        );
-        doc.insert("w").unwrap();
-        doc.save().unwrap();
-    }
-}
+#[cfg(test)]
+mod tests;

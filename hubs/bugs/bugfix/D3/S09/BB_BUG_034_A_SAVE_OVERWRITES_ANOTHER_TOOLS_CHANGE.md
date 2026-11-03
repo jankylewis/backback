@@ -22,7 +22,6 @@ Readback on the branch build: after the outside write, the first Cmd+S
 left the disk as the other tool wrote it, with the message; the second
 Cmd+S wrote backback's text.
 
-## Not done
+## Done since
 
-A clean buffer is not reloaded when the file changes on disk (VS Code
-reloads it); the guard only stops a save over it.
+A clean buffer now takes the disk's text by itself (BB-BUG-035).
