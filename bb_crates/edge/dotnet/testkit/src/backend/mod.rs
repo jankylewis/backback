@@ -73,6 +73,11 @@ impl TempDir {
     /// The folder cannot be created.
     pub fn new() -> Result<Self, TestkitError> {
         static NEXT: AtomicU64 = AtomicU64::new(0);
+        static SWEPT: std::sync::Once = std::sync::Once::new();
+        // Folders of runs whose process died before their drop (BB-PRC-004).
+        SWEPT.call_once(|| {
+            let _swept: usize = bb_process::sweep("bb-testkit");
+        });
         let n: u64 = NEXT.fetch_add(1, Ordering::Relaxed);
         let path: PathBuf =
             std::env::temp_dir().join(format!("bb-testkit-{}-{n}", std::process::id()));

@@ -501,6 +501,7 @@ dependencies = [
  "bb-dotnet",
  "bb-intel",
  "bb-lsp",
+ "bb-process",
  "bb-syntax",
  "bb-testkit",
  "bb-text",
