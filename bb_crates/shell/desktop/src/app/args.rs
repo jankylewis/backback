@@ -2,16 +2,32 @@
 
 use std::path::{Path, PathBuf};
 
-/// What the command line asks for.
+/// A workspace to open: its Explorer root and the file to show.
 pub(crate) struct Start {
     pub(crate) root: PathBuf,
     pub(crate) file: Option<PathBuf>,
     pub(crate) no_write: bool,
-    /// Show the Open panel at start: nothing to open was given or remembered.
-    pub(crate) ask: bool,
 }
 
-pub(crate) fn parse_args() -> Start {
+/// What a launch opens: a workspace, or the start page (BBEOD23).
+pub(crate) enum Launch {
+    /// A folder, a solution or a file, from the argument or the working folder.
+    Workspace(Start),
+    /// A Finder or Dock launch with no argument.
+    StartPage { no_write: bool },
+}
+
+impl Launch {
+    /// `--no-write`: every save is locked.
+    pub(crate) fn no_write(&self) -> bool {
+        match self {
+            Self::Workspace(start) => start.no_write,
+            Self::StartPage { no_write } => *no_write,
+        }
+    }
+}
+
+pub(crate) fn parse_args() -> Launch {
     let args: Vec<std::ffi::OsString> = std::env::args_os().skip(1).collect();
     let no_write: bool = args.iter().any(|a: &std::ffi::OsString| a == "--no-write");
     let given: Option<PathBuf> = args
@@ -20,33 +36,17 @@ pub(crate) fn parse_args() -> Start {
         .map(PathBuf::from);
     let cwd: PathBuf =
         std::env::current_dir().unwrap_or_else(|_: std::io::Error| PathBuf::from("/"));
-    let home: PathBuf = std::env::var_os("HOME").map_or_else(|| PathBuf::from("/"), PathBuf::from);
-    let (argument, ask): (PathBuf, bool) =
-        resolve(given, &cwd, crate::launch::recent::last(), &home);
-    let mut start: Start = start_for(argument, no_write);
-    start.ask = ask;
-    start
+    match resolve(given, &cwd) {
+        Some(argument) => Launch::Workspace(start_for(argument, no_write)),
+        None => Launch::StartPage { no_write },
+    }
 }
 
 /// What to open: the argument; else the working folder, except for a Finder
-/// or Dock launch (working folder `/`), which opens the newest recent
-/// workspace, or the home folder and asks (BB-BUG-006: never the disk root).
-pub(crate) fn resolve(
-    given: Option<PathBuf>,
-    cwd: &Path,
-    recent: Option<PathBuf>,
-    home: &Path,
-) -> (PathBuf, bool) {
-    if let Some(path) = given {
-        return (path, false);
-    }
-    if cwd != Path::new("/") {
-        return (cwd.to_path_buf(), false);
-    }
-    match recent {
-        Some(path) => (path, false),
-        None => (home.to_path_buf(), true),
-    }
+/// or Dock launch (working folder `/`): None, the start page (BBEOD23;
+/// BB-BUG-006: never the disk root).
+pub(crate) fn resolve(given: Option<PathBuf>, cwd: &Path) -> Option<PathBuf> {
+    given.or_else(|| (cwd != Path::new("/")).then(|| cwd.to_path_buf()))
 }
 
 /// The workspace for a folder, solution or file path.
@@ -57,7 +57,6 @@ pub(crate) fn start_for(argument: PathBuf, no_write: bool) -> Start {
         root,
         file,
         no_write,
-        ask: false,
     }
 }
 
@@ -89,27 +88,16 @@ fn split_argument(argument: PathBuf) -> (PathBuf, Option<PathBuf>) {
 mod tests {
     use super::*;
 
-    /// BB-BUG-006: a Finder or Dock launch runs in `/` with no argument.
+    /// BB-BUG-006: a Finder or Dock launch runs in `/` with no argument; it
+    /// shows the start page (BBEOD23), never the disk root.
     #[test]
-    fn a_finder_launch_never_opens_the_disk_root() {
-        let (home, recent): (PathBuf, PathBuf) = (PathBuf::from("/h/u"), PathBuf::from("/w/App"));
+    fn a_finder_launch_shows_the_start_page_and_never_opens_the_disk_root() {
         let slash: &Path = Path::new("/");
-        assert_eq!(
-            resolve(None, slash, Some(recent.clone()), &home),
-            (recent, false)
-        );
-        assert_eq!(resolve(None, slash, None, &home), (home.clone(), true));
+        assert_eq!(resolve(None, slash), None, "a Finder or Dock launch");
         let cwd: PathBuf = PathBuf::from("/w/Here");
-        assert_eq!(
-            resolve(None, &cwd, None, &home),
-            (cwd, false),
-            "a terminal launch"
-        );
+        assert_eq!(resolve(None, &cwd), Some(cwd.clone()), "a terminal launch");
         let given: PathBuf = PathBuf::from("/w/Given.slnx");
-        assert_eq!(
-            resolve(Some(given.clone()), slash, None, &home),
-            (given, false)
-        );
+        assert_eq!(resolve(Some(given.clone()), slash), Some(given));
     }
 
     #[test]

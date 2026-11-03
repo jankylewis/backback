@@ -5,7 +5,7 @@ use gpui::{AsyncWindowContext, WeakEntity};
 use crate::ExplorerView;
 
 pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext) {
-    let _gone: gpui::Result<()> = view.read_with(cx, |v: &ExplorerView, _: &gpui::App| {
+    let _gone: gpui::Result<()> = view.read_with(cx, |v: &ExplorerView, app: &gpui::App| {
         let tab: Option<&crate::editor::Tab> = v.tabs.active_tab();
         let hover: String = v
             .intel
@@ -20,7 +20,7 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             t.document.cursor().raw().saturating_sub(start).saturating_add(1)
         });
         eprintln!(
-            "bb_state status={:?} tab={:?} line={} col={col} read_only={} scroll_x={} completion={:?} hover={hover:?} refs={:?} rename={:?} actions={:?} problems={} message={:?} link={:?}",
+            "bb_state status={:?} tab={:?} line={} col={col} read_only={} scroll_x={} completion={:?} hover={hover:?} refs={:?} rename={:?} actions={:?} problems={} message={:?} link={:?} root={:?}",
             v.intel.status_label(),
             tab.map(|t: &crate::editor::Tab| t.path.display().to_string()),
             tab.map_or(0, |t: &crate::editor::Tab| t.document.cursor_line().saturating_add(1)),
@@ -33,8 +33,9 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             v.intel.problems().len(),
             v.status,
             v.intel.link.as_ref().map(|l: &crate::intel::model::popups::LinkTarget| (l.start.raw(), l.end.raw(), l.confirmed)),
+            v.root.display().to_string(),
         );
-        places(v.intel.references.as_ref());
+        panels(v, app);
         if let Some(tab) = tab {
             let at: Vec<String> = v.intel.diagnostics_of(&tab.path).iter()
                 .map(|d: &bb_intel::Diagnostic| format!("{}:{}", d.span.start.line.saturating_add(1), d.span.start.character.saturating_add(1)))
@@ -52,6 +53,13 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             eprintln!("bb_debug_state breakpoints={:?} {}", v.debug.breakpoints.lines(&tab.path), crate::run::bb_debug::view::notes::describe(v));
         }
     });
+}
+
+/// The lines for the open panels: the places panel (BBEOD24) and the start
+/// page (BBEOD23).
+fn panels(v: &ExplorerView, app: &gpui::App) {
+    places(v.intel.references.as_ref());
+    eprintln!("{}", crate::launch::start_state(app));
 }
 
 /// The places panel, when open, as shown: its title and each row's file and
