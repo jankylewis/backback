@@ -1,7 +1,7 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 27 — FIXED 25, OBSERVED 1, OPEN 1.
-One file per failure mechanism. This hub owns the id. Entries: 27 — FIXED 25, OBSERVED 1, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 28 — FIXED 26, OBSERVED 1, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 28 — FIXED 26, OBSERVED 1, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -32,3 +32,4 @@ One file per failure mechanism. This hub owns the id. Entries: 27 — FIXED 25, 
 | BB-UIX-006 | Editor rows had no horizontal offset, so the list clipped every wide line | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_006_ROWS_HAD_NO_HORIZONTAL_OFFSET.md` |
 | BB-UIX-007 | Tab and the Cmd deletes had no line-wise commands: Tab typed over the selection, Cmd+Backspace did nothing | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_007_TAB_AND_THE_CMD_DELETES_HAD_NO_LINE_COMMANDS.md` |
 | BB-UIX-008 | The Cmd map lacked Select All and the comment toggle | FIXED | yes | yes | none | `APP/UIX/S02/BB_UIX_008_THE_CMD_MAP_LACKED_SELECT_ALL_AND_THE_COMMENT_TOGGLE.md` |
+| BB-UIX-009 | The rename box did not select the old name, so a typed name was glued onto it | FIXED | yes | yes | none | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |

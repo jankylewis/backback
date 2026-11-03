@@ -115,8 +115,32 @@ fn rename_box(input: &RenameInput, theme: Theme) -> gpui::Div {
                 .bg(color(theme.bg))
                 .border_1()
                 .border_color(color(theme.accent))
-                .child(format!("{}│", input.text)),
+                .child(name_field(input, theme)),
         )
+}
+
+/// The name: drawn as a selection while it is the old one, untouched
+/// (BB-BUG-018), then as typed, with the caret after it.
+fn name_field(input: &RenameInput, theme: Theme) -> gpui::Div {
+    let name: gpui::Div = div().child(input.text.clone());
+    div()
+        .flex()
+        .debug_selector({
+            let fresh: bool = input.fresh;
+            move || {
+                String::from(if fresh {
+                    "rename-fresh"
+                } else {
+                    "rename-typed"
+                })
+            }
+        })
+        .child(if input.fresh {
+            name.bg(color(theme.accent)).text_color(color(theme.bg))
+        } else {
+            name
+        })
+        .child("│")
 }
 
 /// The hover tooltip at the mouse, if any.

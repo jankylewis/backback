@@ -27,3 +27,4 @@
 | BB-UIX-006 | FIXED | A per-tab `scroll_x`: clipped text viewport, caret/clicks offset, wheel scroll, caret kept in sight | `APP/UIX/S02/BB_UIX_006_ROWS_HAD_NO_HORIZONTAL_OFFSET.md` |
 | BB-UIX-007 | FIXED | Line-wise commands in the text model; Tab, Shift+Tab, Cmd+Backspace, Cmd+Delete get their own arms | `APP/UIX/S02/BB_UIX_007_TAB_AND_THE_CMD_DELETES_HAD_NO_LINE_COMMANDS.md` |
 | BB-UIX-008 | FIXED | `select_all` and `toggle_line_comment` in the text model, arms in `command_key` | `APP/UIX/S02/BB_UIX_008_THE_CMD_MAP_LACKED_SELECT_ALL_AND_THE_COMMENT_TOGGLE.md` |
+| BB-UIX-009 | FIXED | `RenameInput::fresh`: the old name opens selected; the first key replaces it | `APP/UIX/S03/BB_UIX_009_THE_RENAME_BOX_DID_NOT_SELECT_THE_OLD_NAME.md` |

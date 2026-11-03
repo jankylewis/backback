@@ -43,3 +43,6 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-016 | FIXED | Sweep 2 G1 bytes before, the rerun after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
 | BB-BUG-017 | FIXED | Sweep 2 G8 bytes before, the rerun after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
 | BB-UIX-008 | FIXED | The BB-BUG-016 and BB-BUG-017 sweeps above |
+| BB-BUG-018 | FIXED | Sweep 3 H6 bytes before (`HalfHalve`) and after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
+| BB-BUG-019 | OPEN | Sweep 3 H6 states in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md`: `problems=11` three times after the rename, `0` on a fresh load; `dotnet build` clean |
+| BB-UIX-009 | FIXED | The BB-BUG-018 sweep above |

@@ -48,3 +48,6 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-016 | `Cmd+A does nothing` | FIXED | Does `command_key` have an `"a"` arm to `select_all`? |
 | BB-BUG-017 | `Cmd+/ does nothing` | FIXED | Does `command_key` have a `"/"` arm to `toggle_line_comment`? |
 | BB-UIX-008 | `a standard Cmd key does nothing` | FIXED | Has the Cmd table been swept against VS Code's default keymap? |
+| BB-BUG-018 | `HalfHalve` | FIXED | Does `RenameInput` open `fresh` and does the first key clear it? |
+| BB-BUG-019 | `problems=11 after a rename, 0 on a fresh load` | OPEN | Which pull delivered them; does a later edit replace them? |
+| BB-UIX-009 | `a typed name glued onto the old one` | FIXED | Is the prefilled name selected when the box opens? |
