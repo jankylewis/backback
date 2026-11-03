@@ -77,3 +77,5 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-033 | `the cursor stops inside é or an emoji` | FIXED | Does the key go through `graphemes::before` / `after`? |
 | BB-PRF-004 | `UI work grows with line length` | FIXED | Does the slow path go through `Columns::shape` or `styled_line` (both capped)? |
 | BB-TG-017 | `progress.last() (2, 3) != (3, 3)` | FIXED | Read the failed list in the message: which project did Roslyn fail to load? |
+| BB-BUG-034 | `changed on disk since it was opened` | FIXED | By design: save again to overwrite, or reopen to take the disk's text |
+| BB-UIX-015 | `an outside change is lost after a save` | FIXED | Does `save` see `DiskGuard.seen` (stamped at `open`)? |

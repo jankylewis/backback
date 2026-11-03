@@ -33,3 +33,4 @@
 | BB-UIX-014 | OBSERVED | Diff the view against `ls -A` before fixing a missing file | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |
 | BB-PRF-003 | FIXED | Count every child's memory; a child's runtime defaults are ours to choose | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
 | BB-PRF-004 | FIXED | Bench real file shapes; bound per-frame cost by what fits on screen | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-UIX-015 | FIXED | A write checks the file is still the one read; data loss is never silent | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |

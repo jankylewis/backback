@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 37 — FIXED 34, OBSERVED 2, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 38 — FIXED 35, OBSERVED 2, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -41,3 +41,4 @@ One file per failure mechanism. This hub owns the id. Entries: 37 — FIXED 34, 
 | BB-UIX-014 | A folder with only `__pycache__` reads as a tree that hides files | OBSERVED | no | yes | none | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |
 | BB-PRF-003 | Roslyn ran the server GC: 2.4 GB where the workstation GC keeps 0.66 GB | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
 | BB-PRF-004 | Every frame shaped and styled the whole line: seconds a key past 100 000 chars | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-UIX-015 | Save never compared the file with what it had read, so an outside change was lost | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |

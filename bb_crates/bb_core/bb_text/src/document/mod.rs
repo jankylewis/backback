@@ -19,6 +19,9 @@ pub enum DocumentError {
     /// The target file cannot be written; it was left unchanged.
     #[error("file is read-only: {}", .0.display())]
     ReadOnly(PathBuf),
+    /// The file changed on disk since it was read: one save is refused, the next overwrites.
+    #[error("changed on disk since it was opened: save again to overwrite, or reopen it")]
+    ChangedOnDisk(PathBuf),
     /// Writes are locked for this document (no-write mode, metadata).
     #[error("writes are locked for this document: {}", .0.display())]
     WriteLocked(PathBuf),
@@ -76,6 +79,7 @@ pub struct Document {
     saved_state: u64,
     next_state: u64,
     write_locked: bool,
+    disk: io::DiskGuard,
 }
 
 impl Document {
@@ -102,6 +106,7 @@ impl Document {
             saved_state: 0,
             next_state: 1,
             write_locked: false,
+            disk: io::DiskGuard::default(),
         }
     }
 

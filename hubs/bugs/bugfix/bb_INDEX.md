@@ -33,3 +33,4 @@
 | BB-BUG-021 | `move_lines` / `copy_lines` on Alt / Shift+Alt arrows; one undo step; breaks kept | FIXED | 5 unit + window test | `D2/S06/BB_BUG_021_MOVE_COPY_AND_SELECT_LINE_KEYS_DO_NOTHING.md` |
 | BB-BUG-032 | Lines drawn and measured up to 10 000 chars (`RENDER_CAP`) | FIXED | unit test + readback 42 s -> 2 s | `D3/S08/BB_BUG_032_A_VERY_LONG_LINE_FREEZES_THE_EDITOR.md` |
 | BB-BUG-033 | Left/Right/Backspace/Delete step one grapheme (`graphemes.rs`) | FIXED | unit test + readback col 22 -> 21 | `D3/S09/BB_BUG_033_THE_CURSOR_STOPS_INSIDE_A_COMBINED_CHARACTER.md` |
+| BB-BUG-034 | `DiskGuard`: a save over a newer file is refused once, then overwrites | FIXED | unit test + readback | `D3/S09/BB_BUG_034_A_SAVE_OVERWRITES_ANOTHER_TOOLS_CHANGE.md` |

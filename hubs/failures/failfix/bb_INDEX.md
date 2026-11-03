@@ -36,3 +36,4 @@
 | BB-PRC-004 | FIXED | One owner per folder; sweep what a dead owner left | `SYS/PRC/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-PRF-003 | FIXED | `DOTNET_gcServer=0` for the Roslyn child unless the user set it | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
 | BB-PRF-004 | FIXED | `RENDER_CAP` where a line is shaped and styled | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-UIX-015 | FIXED | Stamp at read and write; refuse once on a mismatch | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
