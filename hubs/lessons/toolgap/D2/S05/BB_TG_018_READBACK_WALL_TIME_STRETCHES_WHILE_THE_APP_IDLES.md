@@ -18,10 +18,19 @@ The cause: most likely macOS App Nap throttling the timers of a
 background app nobody looks at; proving it needs the app's defaults
 changed (`NSAppSleepDisabled`), which is the headmate's app.
 
+## Later evidence (03:30)
+
+Per-key UI work inflated too: 0.42 ms p50 at 01:00, 8 to 9 ms at 03:00
+on the same file and keys. An A/B of `2701492` and `caf30df`, four
+interleaved 4-round soaks, gave the same numbers for both (p50 7.4 to
+8.3 ms, parse 3 ms): the machine state, not a change, made the
+difference (Spotlight at 97 % CPU, other fleets' runs).
+
 ## Workaround
 
-Judge readbacks by `bb_keys` UI work and per-step state, not wall time
-across many keys; keep long runs short or split them.
+Compare builds only interleaved in the same hour (old, new, old, new);
+never against a number taken earlier in the night. Judge by per-step
+state; keep long runs short or split them.
 
 ## Status
 
