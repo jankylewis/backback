@@ -21,3 +21,7 @@ Sweep the reference keymap page by page: basic editing, line commands,
 selection, navigation. One page swept says nothing about the next. A
 window test does not install the app's key bindings: before mapping a
 key, grep `KeyBinding::new` for it, and read the key back on the app.
+
+Added 2026-11-04 (BB-BUG-036): before naming a key to the headmate, read
+it in the bindings (`open::bindings`, `bind_keys`); "VS Code has it" is not
+"backback has it".

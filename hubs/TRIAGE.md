@@ -80,3 +80,4 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-034 | `changed on disk since it was opened` | FIXED | By design: save again to overwrite, or reopen to take the disk's text |
 | BB-UIX-015 | `an outside change is lost after a save` | FIXED | Does `save` see `DiskGuard.seen` (stamped at `open`)? |
 | BB-BUG-035 | `the tab shows old text after git checkout` | FIXED | Does the tab hold unsaved edits? Those are never reloaded |
+| BB-BUG-036 | `Cmd+P does nothing` | FIXED | Is `cmd-p` in `open::bindings`? Cmd+Shift+O vs Go to Symbol awaits a ruling |

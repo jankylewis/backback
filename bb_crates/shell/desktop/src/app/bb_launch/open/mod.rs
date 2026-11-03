@@ -62,9 +62,11 @@ where
     answer.await.ok()?.ok()??.into_iter().next()
 }
 
-pub(crate) fn bindings() -> [KeyBinding; 6] {
+pub(crate) fn bindings() -> [KeyBinding; 7] {
     [
         KeyBinding::new("cmd-o", OpenWorkspace, None),
+        // Cmd+P is VS Code's Go to File (BB-BUG-036); Cmd+Shift+O stays until ruled.
+        KeyBinding::new("cmd-p", crate::quick_open::GoToFile, None),
         KeyBinding::new("cmd-shift-o", crate::quick_open::GoToFile, None),
         KeyBinding::new("cmd-[", crate::editor::GoBack, None),
         KeyBinding::new("cmd-]", crate::editor::GoForward, None),

@@ -90,6 +90,9 @@ fn tests_line(v: &ExplorerView) {
 /// page (BBEOD23).
 fn panels(v: &ExplorerView, app: &gpui::App) {
     places(v.intel.references.as_ref());
+    if let Some(quick) = &v.quick_open {
+        eprintln!("{}", quick.describe());
+    }
     eprintln!("{}", crate::launch::start_state(app));
 }
 
