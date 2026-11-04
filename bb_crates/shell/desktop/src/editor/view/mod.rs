@@ -5,8 +5,9 @@ use gpui::{div, prelude::*, uniform_list, Context, FocusHandle, IntoElement, Win
 mod bb_line;
 mod pane;
 #[cfg(test)]
-pub(crate) use pane::window_tests as pane_tests;
+pub(crate) use pane::lines_tests as pane_tests;
 mod status;
+mod test_marks;
 use super::bb_tabs::Tab;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
@@ -14,7 +15,7 @@ use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
 pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines};
-pub(crate) use pane::{layout as layout_panes, panes, DIVIDER_PX};
+pub(crate) use pane::{layout as layout_panes, panes};
 pub(crate) use status::{build, status_bar};
 
 pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
@@ -53,7 +54,7 @@ pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
                     },
                 ),
             )
-            .track_scroll(&view.tabs.scroll)
+            .track_scroll(view.tabs.scroll())
             .h_full(),
         )
         .children(crate::intel::view::bb_popups::hover(
@@ -97,7 +98,7 @@ fn focused_line(
 /// cursor, its line and the popups at it (BB-BUG-040).
 pub(super) fn editor_line(
     view: &ExplorerView,
-    side: super::Side,
+    side: super::Group,
     index: usize,
     window: &Window,
     cx: &mut Context<ExplorerView>,
@@ -127,7 +128,7 @@ pub(super) fn editor_line(
             .iter()
             .any(|method: &bb_syntax::TestMethod| method.line == index)
             .then(|| TestGutter {
-                target: pane::test_marks::target(view, tab, index),
+                target: test_marks::target(view, tab, index),
             }),
         overlay,
         caret,

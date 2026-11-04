@@ -5,7 +5,7 @@
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, Context, IntoElement, MouseButton, Render, Window};
 
-use super::super::{Side, Tab, Tabs};
+use super::super::{Group, Tab, Tabs};
 use super::{menu, TabMenu};
 use crate::{color, ExplorerView};
 
@@ -34,7 +34,7 @@ impl Render for DragGhost {
 
 pub(crate) fn tab_bar(
     tabs: &Tabs,
-    side: Side,
+    side: Group,
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
@@ -46,7 +46,7 @@ pub(crate) fn tab_bar(
     let menu: Option<TabMenu> = tabs.menu.filter(|open: &TabMenu| {
         tabs.items()
             .get(open.index)
-            .is_some_and(|tab: &Tab| tab.side == side)
+            .is_some_and(|tab: &Tab| tab.group == side)
     });
     div()
         .h(px(36.0))

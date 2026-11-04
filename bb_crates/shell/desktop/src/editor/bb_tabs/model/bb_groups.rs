@@ -1,9 +1,10 @@
-//! Two editor groups side by side (BB-BUG-040), as VS Code's split editor.
-//! Every tab is in one list, tagged with its side, the left tabs first, so
-//! all code that walks every tab (the C# server, rename, the disk watch,
-//! the quit prompt) still sees them all. A file is open once: opening it
-//! again shows it in its group. `active` is the focused group's tab and
-//! `other_active` the other group's; `scroll` is the focused pane's list.
+//! Editor groups side by side (BB-BUG-040), up to three (BB-BUG-045), as
+//! VS Code's split editor. Every tab is in one list, tagged with its group,
+//! the groups in order, so all code that walks every tab (the C# server,
+//! rename, the disk watch, the quit prompt) still sees them all. A file is
+//! open once: opening it again shows it in its group. Each group keeps its
+//! active tab and its pane's scroll list; groups are numbered 0.. with no
+//! gap (a group left empty closes and those right of it move left).
 
 use std::path::PathBuf;
 
@@ -11,77 +12,86 @@ use gpui::UniformListScrollHandle;
 
 use super::super::{Tab, Tabs};
 
-/// Which group a tab is in.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(crate) enum Side {
-    #[default]
-    Left,
-    Right,
-}
+/// The most groups side by side.
+pub(crate) const MAX_GROUPS: usize = 3;
 
-impl Side {
-    pub(crate) fn other(self) -> Self {
-        match self {
-            Self::Left => Self::Right,
-            Self::Right => Self::Left,
-        }
+/// Which editor group a tab is in: 0 is the leftmost.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct Group(pub(crate) usize);
+
+impl Group {
+    /// The group to the left, if any.
+    pub(crate) fn left(self) -> Option<Self> {
+        self.0.checked_sub(1).map(Self)
+    }
+
+    /// The group to the right (it may not exist yet).
+    pub(crate) fn right(self) -> Self {
+        Self(self.0.saturating_add(1))
     }
 }
 
-/// Each group's active file, left then right.
-pub(super) type Actives = (Option<PathBuf>, Option<PathBuf>);
+/// Each group's active file, by group number.
+pub(super) type Actives = [Option<PathBuf>; MAX_GROUPS];
 
 impl Tabs {
-    /// Whether a right group shows.
-    pub(crate) fn is_split(&self) -> bool {
-        self.items.iter().any(|tab: &Tab| tab.side == Side::Right)
+    /// How many groups show (1 with no tabs).
+    pub(crate) fn groups(&self) -> usize {
+        self.items
+            .iter()
+            .map(|tab: &Tab| tab.group.0.saturating_add(1))
+            .max()
+            .unwrap_or(1)
     }
 
-    pub(crate) fn focused(&self) -> Side {
+    /// Whether more than one group shows.
+    pub(crate) fn is_split(&self) -> bool {
+        self.groups() > 1
+    }
+
+    pub(crate) fn focused(&self) -> Group {
         self.focused
     }
 
-    /// The tabs of `side`, with their indices in the whole list.
-    pub(crate) fn group(&self, side: Side) -> impl Iterator<Item = (usize, &Tab)> {
+    /// The tabs of `group`, with their indices in the whole list.
+    pub(crate) fn group(&self, group: Group) -> impl Iterator<Item = (usize, &Tab)> {
         self.items
             .iter()
             .enumerate()
-            .filter(move |(_, tab): &(usize, &Tab)| tab.side == side)
+            .filter(move |(_, tab): &(usize, &Tab)| tab.group == group)
     }
 
-    pub(crate) fn active_of(&self, side: Side) -> Option<usize> {
-        if side == self.focused {
-            self.active
-        } else {
-            self.other_active
-        }
+    pub(crate) fn active_of(&self, group: Group) -> Option<usize> {
+        self.actives.get(group.0).copied().flatten()
     }
 
-    pub(crate) fn active_tab_of(&self, side: Side) -> Option<&Tab> {
-        self.active_of(side)
+    pub(crate) fn active_tab_of(&self, group: Group) -> Option<&Tab> {
+        self.active_of(group)
             .and_then(|index: usize| self.items.get(index))
     }
 
-    /// The pane list of the group that is not focused.
-    pub(crate) fn other_scroll(&self) -> &UniformListScrollHandle {
-        &self.other_scroll
+    /// The focused pane's line list.
+    pub(crate) fn scroll(&self) -> &UniformListScrollHandle {
+        self.scroll_of(self.focused)
     }
 
-    /// Focus `side`'s group, if it has tabs.
-    pub(crate) fn focus(&mut self, side: Side) {
-        if side == self.focused || self.group(side).next().is_none() {
-            return;
+    /// `group`'s pane line list.
+    pub(crate) fn scroll_of(&self, group: Group) -> &UniformListScrollHandle {
+        self.scrolls.get(group.0).unwrap_or(&self.spare_scroll)
+    }
+
+    /// Focus `group`, if it has tabs.
+    pub(crate) fn focus(&mut self, group: Group) {
+        if self.group(group).next().is_some() {
+            self.focused = group;
         }
-        std::mem::swap(&mut self.active, &mut self.other_active);
-        std::mem::swap(&mut self.scroll, &mut self.other_scroll);
-        self.focused = side;
     }
 
     /// Show tab `index` in its group and focus that group.
     pub(crate) fn switch(&mut self, index: usize) {
-        if let Some(side) = self.items.get(index).map(|tab: &Tab| tab.side) {
-            self.focus(side);
-            self.active = Some(index);
+        if let Some(group) = self.items.get(index).map(|tab: &Tab| tab.group) {
+            self.focused = group;
+            self.set_active(group, Some(index));
         }
     }
 
@@ -91,63 +101,66 @@ impl Tabs {
             .group(self.focused)
             .nth(n)
             .map(|(index, _): (usize, &Tab)| index);
-        if let Some(index) = found {
-            self.active = Some(index);
+        if found.is_some() {
+            self.set_active(self.focused, found);
         }
     }
 
-    /// Move tab `index` into `side`'s group (made if it does not exist yet),
-    /// as a drop or Ctrl+Cmd+Arrow does; that group gets focus.
-    pub(crate) fn move_to(&mut self, index: usize, side: Side) {
-        let Some(from): Option<Side> = self.items.get(index).map(|tab: &Tab| tab.side) else {
+    pub(in crate::editor::bb_tabs) fn set_active(&mut self, group: Group, index: Option<usize>) {
+        if let Some(slot) = self.actives.get_mut(group.0) {
+            *slot = index;
+        }
+    }
+
+    /// Move tab `index` into `to` (a new group right of the last one is
+    /// made, up to [`MAX_GROUPS`]), as a drop or Ctrl+Cmd+Arrow does; that
+    /// group gets focus.
+    pub(crate) fn move_to(&mut self, index: usize, to: Group) {
+        let Some(from): Option<Group> = self.items.get(index).map(|tab: &Tab| tab.group) else {
             return;
         };
-        if from == side {
+        let to: Group = Group(to.0.min(self.groups()).min(MAX_GROUPS.saturating_sub(1)));
+        if from == to {
             return;
         }
-        let (mut left, mut right): Actives = self.actives();
+        let mut actives: Actives = self.actives();
         // A move is no close: no Closed event, the server keeps the file.
         let mut tab: Tab = self.items.remove(index);
         let path: PathBuf = tab.path.clone();
-        let next: Option<PathBuf> = self.neighbour(index, from);
-        let source: &mut Option<PathBuf> = if from == Side::Left {
-            &mut left
-        } else {
-            &mut right
-        };
-        if source.as_deref() == Some(path.as_path()) {
-            *source = next;
+        self.pass_on(&mut actives, index, from, &path);
+        if self.group(to).next().is_none() {
+            if let Some(scroll) = self.scrolls.get_mut(to.0) {
+                *scroll = UniformListScrollHandle::default();
+            }
         }
-        if !self.is_split() {
-            self.other_scroll = UniformListScrollHandle::default();
-        }
-        tab.side = side;
+        tab.group = to;
         self.place(tab);
-        if side == Side::Left {
-            left = Some(path);
-        } else {
-            right = Some(path);
+        if let Some(slot) = actives.get_mut(to.0) {
+            *slot = Some(path);
         }
-        self.restore((left, right), side);
+        self.restore(actives, to);
     }
 
-    /// Close tab `index`; its group shows the next tab, or goes.
+    /// Close tab `index`; its group shows the next tab, or closes.
     pub(in crate::editor::bb_tabs) fn remove(&mut self, index: usize) {
-        let Some(side): Option<Side> = self.items.get(index).map(|tab: &Tab| tab.side) else {
+        let Some(group): Option<Group> = self.items.get(index).map(|tab: &Tab| tab.group) else {
             return;
         };
-        let (mut left, mut right): (Option<PathBuf>, Option<PathBuf>) = self.actives();
+        let mut actives: Actives = self.actives();
         let tab: Tab = self.items.remove(index);
-        let next: Option<PathBuf> = self.neighbour(index, side);
-        let slot: &mut Option<PathBuf> = if side == Side::Left {
-            &mut left
-        } else {
-            &mut right
-        };
-        if slot.as_deref() == Some(tab.path.as_path()) {
-            *slot = next;
-        }
+        self.pass_on(&mut actives, index, group, &tab.path);
         self.events.push(super::super::TabEvent::Closed(tab.path));
-        self.restore((left, right), self.focused);
+        self.restore(actives, self.focused);
+    }
+
+    /// `path` left `group` from `index`: if it was the group's active file,
+    /// its neighbour takes over.
+    fn pass_on(&self, actives: &mut Actives, index: usize, group: Group, path: &std::path::Path) {
+        let next: Option<PathBuf> = self.neighbour(index, group);
+        if let Some(slot) = actives.get_mut(group.0) {
+            if slot.as_deref() == Some(path) {
+                *slot = next;
+            }
+        }
     }
 }

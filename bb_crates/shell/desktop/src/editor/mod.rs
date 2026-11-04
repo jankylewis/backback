@@ -6,16 +6,16 @@ mod view;
 #[cfg(test)]
 pub(crate) use view::pane_tests;
 
-pub(crate) use bb_tabs::Side;
 pub(crate) use bb_tabs::{
     apply_tab_menu, on_tab_actions, tab_bindings, tab_menu_item, TabMenuItem,
 };
 pub(crate) use bb_tabs::{go_back, go_forward, GoBack, GoForward, Tab, TabError, TabEvent, Tabs};
+pub(crate) use bb_tabs::{Group, MAX_GROUPS};
 pub(crate) use input::handle_key;
 pub(crate) use input::link;
 pub(crate) use prompt::Quit;
 pub(crate) use view::{
-    bottom_handle, build, handle, layout_panes, panes, status_bar, Columns, Edge, Lines, DIVIDER_PX,
+    bottom_handle, build, handle, layout_panes, panes, status_bar, Columns, Edge, Lines,
 };
 
 /// How often open files are checked against the disk (BB-BUG-035).

@@ -5,6 +5,7 @@
 
 use gpui::{div, prelude::*, px, Context, MouseButton, Window};
 
+use crate::editor::MAX_GROUPS;
 use crate::{color, ExplorerView};
 
 /// Which line is being dragged.
@@ -12,33 +13,61 @@ use crate::{color, ExplorerView};
 pub(crate) enum Edge {
     /// The tool window's edge: its width.
     Panel,
-    /// The line between the panes: the left pane's share.
-    Split,
+    /// The line right of pane `n`: its share and its right neighbour's.
+    Split(usize),
     /// The top of the panel under the editor: its height.
     Bottom,
+}
+
+/// A drag under way: the line, the press point (x or y), the size then,
+/// and for a line between panes the two panes' width together.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Drag {
+    edge: Edge,
+    at: f32,
+    size: f32,
+    pair: f32,
 }
 
 /// The sizes the lines set, and the drag under way.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Lines {
-    /// The line being dragged, the press point (x or y) and the size then.
-    pub(crate) dragging: Option<(Edge, f32, f32)>,
-    /// The left pane's share of the two panes' width.
-    pub(crate) split: f32,
+    pub(crate) dragging: Option<Drag>,
+    /// Each pane's share of the panes' width (BB-BUG-045).
+    pub(crate) shares: [f32; MAX_GROUPS],
+    /// How many panes `shares` is for; another count shares evenly again.
+    shares_for: usize,
+    /// Each pane's width, set as the window draws.
+    pub(crate) widths: [f32; MAX_GROUPS],
     /// The height of the panel under the editor.
     pub(crate) bottom_px: f32,
-    /// The right pane's width while split, set as the window draws.
-    pub(crate) right_px: f32,
 }
 
 impl Default for Lines {
     fn default() -> Self {
         Self {
             dragging: None,
-            split: 0.5,
+            shares: [1.0, 0.0, 0.0],
+            shares_for: 1,
+            widths: [0.0; MAX_GROUPS],
             bottom_px: 200.0,
-            right_px: 0.0,
         }
+    }
+}
+
+impl Lines {
+    /// Share the area evenly when the number of panes changed.
+    pub(crate) fn share_for(&mut self, count: usize) {
+        if count == self.shares_for || count == 0 {
+            return;
+        }
+        let even: f32 = 1.0 / f32::from(u16::try_from(count).unwrap_or(1));
+        self.shares = std::array::from_fn(|g: usize| if g < count { even } else { 0.0 });
+        self.shares_for = count;
+    }
+
+    fn width(&self, pane: usize) -> f32 {
+        self.widths.get(pane).copied().unwrap_or(0.0)
     }
 }
 
@@ -54,7 +83,7 @@ pub(crate) fn handle(
 ) -> gpui::Stateful<gpui::Div> {
     let line: gpui::Div = div().flex_shrink_0().bg(color(theme.border));
     let line: gpui::Div = match edge {
-        Edge::Panel | Edge::Split => line.h_full().cursor_col_resize(),
+        Edge::Panel | Edge::Split(_) => line.h_full().cursor_col_resize(),
         Edge::Bottom => line.w_full().cursor_row_resize(),
     };
     line.id(name)
@@ -66,12 +95,24 @@ pub(crate) fn handle(
                       event: &gpui::MouseDownEvent,
                       _: &mut Window,
                       cx: &mut Context<ExplorerView>| {
-                    let (at, size): (f32, f32) = match edge {
-                        Edge::Panel => (f32::from(event.position.x), view.panel_width),
-                        Edge::Split => (f32::from(event.position.x), view.tabs.pane_px),
-                        Edge::Bottom => (f32::from(event.position.y), view.lines.bottom_px),
+                    let (x, y): (f32, f32) =
+                        (f32::from(event.position.x), f32::from(event.position.y));
+                    let lines: &Lines = &view.lines;
+                    let (at, size, pair): (f32, f32, f32) = match edge {
+                        Edge::Panel => (x, view.panel_width, 0.0),
+                        Edge::Split(n) => (
+                            x,
+                            lines.width(n),
+                            lines.width(n) + lines.width(n.saturating_add(1)),
+                        ),
+                        Edge::Bottom => (y, lines.bottom_px, 0.0),
                     };
-                    view.lines.dragging = Some((edge, at, size));
+                    view.lines.dragging = Some(Drag {
+                        edge,
+                        at,
+                        size,
+                        pair,
+                    });
                     cx.stop_propagation();
                 },
             ),
@@ -85,7 +126,13 @@ impl ExplorerView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let Some((edge, from, size)): Option<(Edge, f32, f32)> = self.lines.dragging else {
+        let Some(Drag {
+            edge,
+            at: from,
+            size,
+            pair,
+        }): Option<Drag> = self.lines.dragging
+        else {
             return;
         };
         if !event.dragging() {
@@ -103,10 +150,15 @@ impl ExplorerView {
                 };
                 self.panel_width = (size + moved).clamp(180.0, 800.0);
             }
-            Edge::Split => {
-                let room: f32 = super::area(self, window, &fonts) - super::DIVIDER_PX;
-                let left: f32 = (size + x - from).clamp(MIN_PX, (room - MIN_PX).max(MIN_PX));
-                self.lines.split = (left / room.max(1.0)).clamp(0.0, 1.0);
+            Edge::Split(n) => {
+                let room: f32 = self.lines.widths.iter().sum::<f32>().max(1.0);
+                let left: f32 = (size + x - from).clamp(MIN_PX, (pair - MIN_PX).max(MIN_PX));
+                if let Some(share) = self.lines.shares.get_mut(n) {
+                    *share = left / room;
+                }
+                if let Some(share) = self.lines.shares.get_mut(n.saturating_add(1)) {
+                    *share = (pair - left) / room;
+                }
             }
             Edge::Bottom => {
                 let tallest: f32 = f32::from(window.viewport_size().height) * 0.8;

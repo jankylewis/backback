@@ -33,8 +33,8 @@ pub(crate) struct Tab {
     /// Pinned tabs stay left of the others and outlive the bulk closes
     /// that skip pinned tabs (BB-BUG-039).
     pub(crate) pinned: bool,
-    /// The editor group it shows in (BB-BUG-040).
-    pub(crate) side: super::Side,
+    /// The editor group it shows in (BB-BUG-040, BB-BUG-045).
+    pub(crate) group: super::Group,
 }
 
 /// A tab opened or closed; the code intelligence link reads these.
@@ -92,7 +92,7 @@ impl Tab {
             sighted: None,
             widest_px: 0.0,
             pinned: false,
-            side: super::Side::Left,
+            group: super::Group(0),
         })
     }
 

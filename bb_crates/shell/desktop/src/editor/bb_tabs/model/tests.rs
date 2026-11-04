@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::super::{Side, Tab, TabEvent, Tabs};
+use super::super::{Group, Tab, TabEvent, Tabs};
 
 /// Tabs on `names` in `dir`, opened in order (the last active).
 fn open(dir: &tempfile::TempDir, names: &[&str]) -> Tabs {
@@ -14,7 +14,7 @@ fn open(dir: &tempfile::TempDir, names: &[&str]) -> Tabs {
     tabs
 }
 
-/// Names in list order: `>` marks the right group, `*` a pin, `[]` each
+/// Names in list order: one `>` per group past the first, `*` a pin, `[]` each
 /// group's active tab, and `!` the focused group's.
 fn shown(tabs: &Tabs) -> Vec<String> {
     tabs.items()
@@ -25,14 +25,14 @@ fn shown(tabs: &Tabs) -> Vec<String> {
             if tab.pinned {
                 name.push('*');
             }
-            if tabs.active_of(tab.side) == Some(index) {
+            if tabs.active_of(tab.group) == Some(index) {
                 name = format!("[{name}]");
-                if tab.side == tabs.focused() {
+                if tab.group == tabs.focused() {
                     name.push('!');
                 }
             }
-            if tab.side == Side::Right {
-                name = format!(">{name}");
+            if tab.group.0 > 0 {
+                name = format!("{}{name}", ">".repeat(tab.group.0));
             }
             name
         })
@@ -43,7 +43,7 @@ fn shown(tabs: &Tabs) -> Vec<String> {
 fn a_move_right_splits_focuses_the_new_group_and_leaves_the_neighbour() {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let mut tabs: Tabs = open(&dir, &["a.cs", "b.cs", "c.cs"]);
-    tabs.move_to(2, Side::Right);
+    tabs.move_to(2, Group(1));
     assert!(tabs.is_split());
     assert_eq!(shown(&tabs), ["a.cs", "[b.cs]", ">[c.cs]!"]);
     assert_eq!(
@@ -65,7 +65,7 @@ fn a_move_right_splits_focuses_the_new_group_and_leaves_the_neighbour() {
 fn a_file_opens_once_and_new_files_open_in_the_focused_group() {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let mut tabs: Tabs = open(&dir, &["a.cs", "b.cs"]);
-    tabs.move_to(1, Side::Right);
+    tabs.move_to(1, Group(1));
     tabs.switch(0);
     tabs.open(&dir.path().join("b.cs")).unwrap();
     assert_eq!(
@@ -83,12 +83,12 @@ fn a_file_opens_once_and_new_files_open_in_the_focused_group() {
 fn closing_a_groups_last_tab_or_moving_it_away_ends_the_split() {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let mut tabs: Tabs = open(&dir, &["a.cs", "b.cs", "c.cs"]);
-    tabs.move_to(2, Side::Right);
+    tabs.move_to(2, Group(1));
     assert!(tabs.close(2));
     assert!(!tabs.is_split());
     assert_eq!(shown(&tabs), ["a.cs", "[b.cs]!"]);
-    tabs.move_to(1, Side::Right);
-    tabs.move_to(0, Side::Right);
+    tabs.move_to(1, Group(1));
+    tabs.move_to(0, Group(1));
     assert!(!tabs.is_split(), "every tab moved right: one group again");
     assert_eq!(shown(&tabs), ["b.cs", "[a.cs]!"]);
 }
@@ -97,8 +97,8 @@ fn closing_a_groups_last_tab_or_moving_it_away_ends_the_split() {
 fn bulk_closes_and_pins_stay_inside_their_group() {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let mut tabs: Tabs = open(&dir, &["a.cs", "b.cs", "c.cs", "d.cs"]);
-    tabs.move_to(3, Side::Right);
-    tabs.move_to(2, Side::Right);
+    tabs.move_to(3, Group(1));
+    tabs.move_to(2, Group(1));
     assert_eq!(shown(&tabs), ["a.cs", "[b.cs]", ">d.cs", ">[c.cs]!"]);
     tabs.toggle_pin(3);
     assert_eq!(shown(&tabs), ["a.cs", "[b.cs]", ">[c.cs*]!", ">d.cs"]);
@@ -122,7 +122,7 @@ fn the_save_prompt_keeps_its_file_while_tabs_move() {
     // While asked, c.cs is pinned (to the front) and b.cs moves right:
     // a.cs is no longer at its old place.
     tabs.toggle_pin(2);
-    tabs.move_to(2, Side::Right);
+    tabs.move_to(2, Group(1));
     assert_eq!(shown(&tabs), ["c.cs*", "[a.cs]", ">[b.cs]!"]);
     tabs.discard_close();
     assert_eq!(
@@ -130,4 +130,22 @@ fn the_save_prompt_keeps_its_file_while_tabs_move() {
         ["[c.cs*]", ">[b.cs]!"],
         "a.cs closed, not c.cs"
     );
+}
+
+#[test]
+fn three_groups_close_up_when_the_middle_one_empties() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let mut tabs: Tabs = open(&dir, &["a.cs", "b.cs", "c.cs"]);
+    tabs.move_to(2, Group(1));
+    tabs.move_to(1, Group(2));
+    assert_eq!(tabs.groups(), 3);
+    assert_eq!(shown(&tabs), ["[a.cs]", ">[c.cs]", ">>[b.cs]!"]);
+    // Past the last group goes to the last: never a fourth. The emptied
+    // first group closes and the others move left.
+    tabs.move_to(0, Group(5));
+    assert_eq!(tabs.groups(), 2);
+    assert_eq!(shown(&tabs), ["[c.cs]", ">b.cs", ">[a.cs]!"]);
+    assert!(tabs.close(0));
+    assert_eq!(tabs.groups(), 1, "groups close up");
+    assert_eq!(shown(&tabs), ["b.cs", "[a.cs]!"]);
 }
