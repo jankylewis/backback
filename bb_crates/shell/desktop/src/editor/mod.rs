@@ -15,7 +15,7 @@ pub(crate) use input::handle_key;
 pub(crate) use input::link;
 pub(crate) use prompt::Quit;
 pub(crate) use view::{
-    bottom_handle, build, handle, layout_panes, panes, status_bar, Columns, Edge, Lines,
+    bottom_handle, build, handle, layout_panes, panes, status_bar, Columns, Edge, Lines, HANDLE_PX,
 };
 
 /// How often open files are checked against the disk (BB-BUG-035).

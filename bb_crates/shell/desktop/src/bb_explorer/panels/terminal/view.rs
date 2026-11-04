@@ -1,11 +1,11 @@
-//! The terminal panel: one shaped Menlo line per row and a block cursor;
-//! keys go to the shell, Cmd+V pastes. The grid follows the panel's size.
+//! The terminal panel: one line per row in the editor's font and the
+//! theme's text colour (BB-BUG-046), and a block cursor; keys go to the
+//! shell, Cmd+V pastes. Its top edge drags its height; the grid follows.
 
 use gpui::{div, prelude::*, px, AnyElement, Context, KeyDownEvent, Window};
 
 use super::bb_session::Screen;
 use super::keys::{bytes, Mods};
-use super::HEIGHT;
 use crate::{color, ExplorerView};
 
 /// Rows and columns that fit, from the font and the editor area's width.
@@ -17,7 +17,10 @@ fn grid(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> (usi
         .max(1.0);
     (
         fit(width - 16.0, cell),
-        fit(HEIGHT - 12.0, fonts.line_height()),
+        fit(
+            view.lines.terminal_px - 12.0 - crate::editor::HANDLE_PX,
+            fonts.line_height(),
+        ),
     )
 }
 
@@ -100,6 +103,12 @@ fn row(text: String, cursor: Option<usize>, theme: bb_ui::Theme, height: f32) ->
         .child(after)
 }
 
+/// The terminal's text and background: the editor's (BB-BUG-046). Before,
+/// no text colour was set and rows drew black on the dark theme.
+pub(super) fn colors(theme: bb_ui::Theme) -> (bb_ui::Rgb, bb_ui::Rgb) {
+    (theme.text, theme.bg)
+}
+
 /// The panel when open; also fits the shell's grid to it.
 pub(crate) fn panel(
     view: &mut ExplorerView,
@@ -134,16 +143,18 @@ pub(crate) fn panel(
             .debug_selector(|| "terminal".to_owned())
             .track_focus(&view.terminal.focus)
             .on_key_down(cx.listener(key))
-            .h(px(HEIGHT))
+            .h(px(view.lines.terminal_px))
             .flex_none()
-            .p(px(6.0))
             .flex()
             .flex_col()
             .overflow_hidden()
-            .bg(color(theme.bg))
-            .border_t_1()
-            .border_color(color(theme.border))
-            .children(rows)
+            .bg(color(colors(theme).1))
+            .text_color(color(colors(theme).0))
+            .child(
+                crate::editor::handle(crate::editor::Edge::Terminal, "terminal-edge", theme, cx)
+                    .h(px(crate::editor::HANDLE_PX)),
+            )
+            .child(div().p(px(6.0)).flex().flex_col().children(rows))
             .into_any_element(),
     )
 }

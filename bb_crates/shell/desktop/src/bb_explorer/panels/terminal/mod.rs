@@ -12,9 +12,6 @@ use crate::ExplorerView;
 pub(crate) use bb_session::Session;
 pub(crate) use view::panel;
 
-/// Panel height in px; the rows that fit are the terminal's lines.
-pub(crate) const HEIGHT: f32 = 240.0;
-
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
 #[action(namespace = backback)]
 pub(crate) struct ToggleTerminal;
@@ -94,3 +91,6 @@ fn redraw_on_output(
     )
     .detach();
 }
+
+#[cfg(test)]
+mod tests;

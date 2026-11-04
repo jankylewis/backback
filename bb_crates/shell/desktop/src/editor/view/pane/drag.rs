@@ -17,6 +17,8 @@ pub(crate) enum Edge {
     Split(usize),
     /// The top of the panel under the editor: its height.
     Bottom,
+    /// The top of the terminal: its height (BB-BUG-046).
+    Terminal,
 }
 
 /// A drag under way: the line, the press point (x or y), the size then,
@@ -41,6 +43,8 @@ pub(crate) struct Lines {
     pub(crate) widths: [f32; MAX_GROUPS],
     /// The height of the panel under the editor.
     pub(crate) bottom_px: f32,
+    /// The height of the terminal.
+    pub(crate) terminal_px: f32,
 }
 
 impl Default for Lines {
@@ -51,6 +55,7 @@ impl Default for Lines {
             shares_for: 1,
             widths: [0.0; MAX_GROUPS],
             bottom_px: 200.0,
+            terminal_px: 240.0,
         }
     }
 }
@@ -64,6 +69,15 @@ impl Lines {
         let even: f32 = 1.0 / f32::from(u16::try_from(count).unwrap_or(1));
         self.shares = std::array::from_fn(|g: usize| if g < count { even } else { 0.0 });
         self.shares_for = count;
+    }
+
+    /// The height a top edge sets: the terminal's or the bottom panel's.
+    fn height_mut(&mut self, edge: Edge) -> &mut f32 {
+        if edge == Edge::Terminal {
+            &mut self.terminal_px
+        } else {
+            &mut self.bottom_px
+        }
     }
 
     fn width(&self, pane: usize) -> f32 {
@@ -84,7 +98,7 @@ pub(crate) fn handle(
     let line: gpui::Div = div().flex_shrink_0().bg(color(theme.border));
     let line: gpui::Div = match edge {
         Edge::Panel | Edge::Split(_) => line.h_full().cursor_col_resize(),
-        Edge::Bottom => line.w_full().cursor_row_resize(),
+        Edge::Bottom | Edge::Terminal => line.w_full().cursor_row_resize(),
     };
     line.id(name)
         .debug_selector(move || name.to_owned())
@@ -106,6 +120,7 @@ pub(crate) fn handle(
                             lines.width(n) + lines.width(n.saturating_add(1)),
                         ),
                         Edge::Bottom => (y, lines.bottom_px, 0.0),
+                        Edge::Terminal => (y, lines.terminal_px, 0.0),
                     };
                     view.lines.dragging = Some(Drag {
                         edge,
@@ -160,9 +175,9 @@ impl ExplorerView {
                     *share = (pair - left) / room;
                 }
             }
-            Edge::Bottom => {
+            Edge::Bottom | Edge::Terminal => {
                 let tallest: f32 = f32::from(window.viewport_size().height) * 0.8;
-                self.lines.bottom_px = (size + from - y).clamp(MIN_PX, tallest.max(MIN_PX));
+                *self.lines.height_mut(edge) = (size + from - y).clamp(MIN_PX, tallest.max(MIN_PX));
             }
         }
         cx.notify();
