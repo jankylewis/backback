@@ -114,3 +114,24 @@ fn place(hit: &Hit) -> Option<Place> {
         preview: hit.preview.clone(),
     })
 }
+
+/// Go to line `line` (0-based) of the active file.
+pub(super) fn go_to_line(
+    view: &mut ExplorerView,
+    line: usize,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let Some(path): Option<std::path::PathBuf> = view
+        .tabs
+        .active_tab()
+        .map(|tab: &crate::editor::Tab| tab.path.clone())
+    else {
+        return;
+    };
+    let at: bb_text::LspPoint = bb_text::LspPoint {
+        line: u32::try_from(line).unwrap_or(u32::MAX),
+        character: 0,
+    };
+    crate::intel::glue::goto_point(view, &path, at, window, cx);
+}

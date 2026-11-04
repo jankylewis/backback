@@ -70,7 +70,8 @@ pub(crate) fn bindings() -> [KeyBinding; 7] {
         KeyBinding::new("cmd-]", crate::editor::GoForward, None),
         KeyBinding::new("cmd-f12", crate::quick_open::GoToSymbol, None),
         KeyBinding::new("cmd-shift-f", crate::quick_open::FindInFiles, None),
-        // Cmd+P is VS Code's Go to File (BB-BUG-036); Cmd+Shift+O stays until ruled.
+        // Cmd+P is VS Code's Go to File (BB-BUG-036); Cmd+Shift+O stays Go to
+        // File and Cmd+[ / Cmd+] stay Back / Forward (headmate ruling 2026-11-04).
         KeyBinding::new("cmd-p", crate::quick_open::GoToFile, None),
     ]
 }

@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 41 — FIXED 39, OBSERVED 2.
+Bugs a user met in the app. Entries: 42 — FIXED 40, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -45,3 +45,4 @@ Bugs a user met in the app. Entries: 41 — FIXED 39, OBSERVED 2.
 | BB-BUG-039 | No pinned tabs and no bulk close | FIXED | not built (VS Code tab menu) | yes | `D3/S10/BB_BUG_039_NO_PINNED_TABS_AND_NO_BULK_CLOSE.md` |
 | BB-BUG-040 | No split editor: a tab cannot be dragged to the right side | FIXED | not built (VS Code split editor) | yes | `D3/S10/BB_BUG_040_NO_SPLIT_EDITOR.md` |
 | BB-BUG-041 | The save prompt acts on the wrong tab after tabs move | FIXED | the prompt held an index, not a file | yes | `D3/S11/BB_BUG_041_THE_SAVE_PROMPT_ACTS_ON_THE_WRONG_TAB_AFTER_A_MOVE.md` |
+| BB-BUG-042 | Go to File / Find in Files cannot be closed by a click outside | FIXED | only Escape closed it, and only with key focus | yes | `D3/S11/BB_BUG_042_GO_TO_FILE_AND_FIND_IN_FILES_CANNOT_BE_CLOSED_BY_A_CLICK.md` |
