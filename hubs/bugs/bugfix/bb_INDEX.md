@@ -42,3 +42,4 @@
 | BB-BUG-040 | Two editor groups; drag, menu rows and keys move a tab | FIXED | unit + window tests + readback | `D3/S10/BB_BUG_040_NO_SPLIT_EDITOR.md` |
 | BB-BUG-041 | The save prompt holds the file's path | FIXED | red-first unit test + readback | `D3/S11/BB_BUG_041_THE_SAVE_PROMPT_ACTS_ON_THE_WRONG_TAB_AFTER_A_MOVE.md` |
 | BB-BUG-042 | A press outside closes the box; a row press opens it | FIXED | window test (mutation-checked) + readback | `D3/S11/BB_BUG_042_GO_TO_FILE_AND_FIND_IN_FILES_CANNOT_BE_CLOSED_BY_A_CLICK.md` |
+| BB-BUG-043 | Status bar names the build; fix installed; split-layout window test | FIXED | window test + build stamp | `D3/S11/BB_BUG_043_GO_TO_FILE_STILL_DID_NOT_CLOSE_ON_A_CLICK_OUTSIDE.md` |

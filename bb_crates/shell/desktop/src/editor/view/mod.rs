@@ -12,7 +12,7 @@ use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
 pub(crate) use pane::{layout as layout_panes, panes, DIVIDER_PX};
-pub(crate) use status::status_bar;
+pub(crate) use status::{build, status_bar};
 
 pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
     let (tabs, focus, theme): (&Tabs, &FocusHandle, Theme) =

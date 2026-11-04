@@ -36,3 +36,4 @@
 | BB-UIX-015 | FIXED | A write checks the file is still the one read; data loss is never silent | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | FIXED | Anything shown from disk is checked against the disk again | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | FIXED | An owner's name is as unique as its users; a flake that names its cause is a bug report | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
+| BB-BLD-003 | FIXED | Merged is not installed: name the running build | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |

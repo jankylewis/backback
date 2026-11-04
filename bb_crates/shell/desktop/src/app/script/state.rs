@@ -46,6 +46,7 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
         tests_line(v);
         tree_line(v);
         tabs_line(v);
+        eprintln!("bb_build_state commit={}", crate::editor::build());
         if let Some(tab) = tab {
             eprintln!("bb_debug_state breakpoints={:?} {}", v.debug.breakpoints.lines(&tab.path), crate::run::bb_debug::view::notes::describe(v));
         }

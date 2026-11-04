@@ -52,6 +52,19 @@ pub(super) fn click(
     });
 }
 
+/// A real left press at window point (`x`, `y`): anywhere, such as the
+/// Explorer or a pane outside a popup (BB-TG-019).
+pub(super) fn press_at(cx: &mut AsyncWindowContext, (x, y): (f32, f32)) {
+    let _gone: gpui::Result<()> = cx.update(|window: &mut Window, cx: &mut gpui::App| {
+        press(
+            window,
+            cx,
+            gpui::point(gpui::px(x), gpui::px(y)),
+            keys(false),
+        );
+    });
+}
+
 /// A real left click on `line` near the window's right edge: past the line's
 /// last char, where a person clicks to reach the end of a line (BB-BUG-022).
 pub(super) fn click_past(

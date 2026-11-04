@@ -87,3 +87,5 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BUG-038 | `(2, 3) != (3, 3); failed: [...]` | FIXED | Is each worker's folder `backback-intel-<pid>-<n>`? |
 | BB-PRC-005 | `a project load fails only with two workers` | FIXED | Do two owners in one process share a folder name? |
 | BB-PRC-006 | `a temp folder kept although its owner is gone` | FIXED | Is the pid's process younger than the folder (`ps -o etime=`)? |
+| BB-BLD-003 | `still broken after the fix merged` | FIXED | `BBCommit` of the running app (status bar) holds the fix? |
+| BB-TG-019 | `a runner press outside a popup did nothing` | OBSERVED | Did the readback window draw a frame after the popup opened? |

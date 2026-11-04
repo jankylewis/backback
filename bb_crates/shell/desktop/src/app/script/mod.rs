@@ -6,7 +6,8 @@
 //! pauses), `state` (prints what the window shows), `testopen:<name>` /
 //! `testrun:<name>` (the first spec whose name holds `name`: a row click /
 //! its ▶), `teststop` (the ■), `open:<path>` (a file under the root), `tabmenu:<n>:<row>`
-//! (tab `n`'s right-click menu row, e.g. `close-others`, `pin`). Keys and mouse go
+//! (tab `n`'s right-click menu row, e.g. `close-others`, `pin`), `pressat:<x>:<y>`
+//! (a left press at a window point), `size` (prints the window size). Keys and mouse go
 //! through the window's own dispatch.
 
 use std::time::{Duration, Instant};
@@ -37,6 +38,17 @@ pub(crate) async fn run(
         ["cmdhover", line, col] => bb_pointer::hover(view, cx, (number(line), number(col)), true),
         ["cmdclick", line, col] => bb_pointer::click(view, cx, (number(line), number(col)), true),
         ["clickpast", line] => bb_pointer::click_past(view, cx, number(line)),
+        ["pressat", x, y] => bb_pointer::press_at(cx, (pixels(x), pixels(y))),
+        ["size"] => {
+            let _gone: gpui::Result<()> = cx.update(|window: &mut Window, _: &mut gpui::App| {
+                let size: gpui::Size<gpui::Pixels> = window.viewport_size();
+                eprintln!(
+                    "bb_size_state w={} h={}",
+                    f32::from(size.width),
+                    f32::from(size.height)
+                );
+            });
+        }
         ["mark", name] => {
             eprintln!("bb_mark {name}");
             pause(cx, 1_500).await;
@@ -100,6 +112,11 @@ fn open(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, relative: 
             v.open_file(&file, window, cx);
         },
     );
+}
+
+/// A window coordinate in points; a bad one is 0.
+fn pixels(text: &str) -> f32 {
+    text.parse::<f32>().unwrap_or(0.0)
 }
 
 fn number(text: &str) -> usize {
