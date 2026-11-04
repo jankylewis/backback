@@ -7,13 +7,14 @@
 //! first sweeps the folders of its prefix whose process is gone.
 
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::sync::{Mutex, MutexGuard, PoisonError};
-use std::time::{Duration, Instant};
+
+use crate::owner::{owner, owns};
 
 /// Every prefix backback and its tests name temp folders with.
-pub const FAMILIES: [&str; 9] = [
+pub const FAMILIES: [&str; 10] = [
     "backback-intel",
+    "backback-obj",
     "backback-testhost",
     "bb-e2e",
     "bb-list",
@@ -25,8 +26,6 @@ pub const FAMILIES: [&str; 9] = [
 ];
 
 static OWNED: Mutex<Vec<PathBuf>> = Mutex::new(Vec::new());
-/// Deadline for one `/bin/ps -p` call.
-const PROBE_DEADLINE: Duration = Duration::from_millis(500);
 
 /// A temp folder this process owns.
 #[derive(Debug)]
@@ -98,7 +97,7 @@ pub fn sweep_all() -> usize {
 }
 
 /// Remove `prefix`'s folders whose process is gone; how many were removed.
-/// A folder whose pid is alive, or that cannot be checked, is kept.
+/// A folder its pid still owns ([`owns`]), or that cannot be checked, is kept.
 #[must_use]
 pub fn sweep(prefix: &str) -> usize {
     let Ok(entries): std::io::Result<std::fs::ReadDir> = std::fs::read_dir(std::env::temp_dir())
@@ -112,64 +111,17 @@ pub fn sweep(prefix: &str) -> usize {
         let Some(pid): Option<u32> = owner(&name, prefix) else {
             continue;
         };
-        if pid != own && !alive(pid) && std::fs::remove_dir_all(entry.path()).is_ok() {
+        if pid != own && !owns(pid, &entry.path()) && std::fs::remove_dir_all(entry.path()).is_ok()
+        {
             removed = removed.saturating_add(1);
         }
     }
     removed
 }
 
-/// The pid of `<prefix>-[<name>-...]<pid>[-<suffix>]`: the first part
-/// after the prefix made only of digits.
-fn owner(name: &str, prefix: &str) -> Option<u32> {
-    let rest: &str = name.strip_prefix(prefix)?.strip_prefix('-')?;
-    rest.split('-')
-        .find(|part: &&str| !part.is_empty() && part.bytes().all(|b: u8| b.is_ascii_digit()))?
-        .parse()
-        .ok()
-}
-
-/// Whether process `pid` exists, whoever owns it (`ps -p`; `kill -0`
-/// fails on another user's process). A probe that cannot run says alive,
-/// so nothing is removed on doubt.
-fn alive(pid: u32) -> bool {
-    let spawned: std::io::Result<std::process::Child> = Command::new("/bin/ps")
-        .args(["-p", &pid.to_string()])
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn();
-    let Ok(mut probe): std::io::Result<std::process::Child> = spawned else {
-        return true;
-    };
-    let deadline: Instant = Instant::now() + PROBE_DEADLINE;
-    loop {
-        match probe.try_wait() {
-            Ok(Some(status)) => return status.success(),
-            Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(5)),
-            Ok(None) | Err(_) => {
-                let _stopped: std::io::Result<()> = probe.kill();
-                let _reaped: std::io::Result<std::process::ExitStatus> = probe.wait();
-                return true;
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn only_a_prefix_then_a_pid_names_an_owner() {
-        assert_eq!(owner("bb-x-123", "bb-x"), Some(123));
-        assert_eq!(owner("bb-x-123-ThreadId(2)", "bb-x"), Some(123));
-        assert_eq!(owner("bb-x-e2e-123", "bb-x"), Some(123), "a fixture name");
-        assert_eq!(owner("bb-x-e2e", "bb-x"), None, "no pid");
-        assert_eq!(owner("bb-xy-123", "bb-x"), None);
-        assert_eq!(owner("bb-x-", "bb-x"), None);
-        assert_eq!(owner("bb-x-12a", "bb-x"), None);
-    }
 
     #[test]
     fn a_folder_goes_on_drop_and_a_dead_owners_folder_on_the_next_create() {

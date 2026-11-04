@@ -60,9 +60,10 @@ pub(crate) async fn run(probe: &Probe) -> Result<(), CommandError> {
         path: log_dir.clone(),
         source,
     })?;
-    let (log_path, log): (PathBuf, std::fs::File) = bb_open::create_log(&log_dir)?;
+    let (log_path, log): (PathBuf, std::fs::File) = super::logs::create_log(&log_dir)?;
+    let owned: bb_process::OwnedTempDir = bb_open::scratch(&solution)?;
     let config: Config = Config {
-        scratch: bb_open::scratch_dir(&solution, std::process::id()),
+        scratch: owned.path().to_path_buf(),
         solution,
         restore: Restore::Off,
         log_dir,

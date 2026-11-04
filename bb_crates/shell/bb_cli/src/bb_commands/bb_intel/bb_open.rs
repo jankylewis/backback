@@ -22,7 +22,8 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
     let (sln, listing): (SolutionPath, Solution) = describe(solution, restore)?;
     let binary: PathBuf = roslyn::locate()?;
     let log_dir: PathBuf = std::env::temp_dir().join("backback-roslyn-logs");
-    let scratch: PathBuf = scratch_dir(sln.as_path(), std::process::id());
+    let owned: bb_process::OwnedTempDir = scratch(sln.as_path())?;
+    let scratch: PathBuf = owned.path().to_path_buf();
     let root: &Path = sln.as_path().parent().unwrap_or_else(|| Path::new("/"));
     let started: Instant = Instant::now();
     let mut client: LspClient =
@@ -37,7 +38,7 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
         .unwrap_or_default();
     println!("initialize: {:?} (server {server})", started.elapsed());
     roslyn::open_solution(&client, sln.as_path()).await?;
-    let (log_path, mut log): (PathBuf, std::fs::File) = create_log(&log_dir)?;
+    let (log_path, mut log): (PathBuf, std::fs::File) = super::logs::create_log(&log_dir)?;
     let load: roslyn::Loaded = roslyn::wait_for_load(
         &mut incoming,
         SOLUTION_LOAD_TIMEOUT,
@@ -55,8 +56,7 @@ pub(crate) async fn run(solution: &Path, restore: roslyn::Restore) -> Result<(),
     .await?;
     let stopped: Result<(), bb_lsp::LspError> = client.shutdown().await;
     roslyn::drain_log(&mut incoming, DRAIN_TIMEOUT, &mut log).await?;
-    // Best effort: a scratch folder left behind is only temp space.
-    let _removed: std::io::Result<()> = std::fs::remove_dir_all(&scratch);
+    drop(owned);
     stopped.map_err(roslyn::RoslynError::Client)?;
     Ok(())
 }
@@ -120,50 +120,28 @@ fn describe(
     Ok((sln, listing))
 }
 
-/// Most names [`create_log`] tries before it gives up.
-const LOG_NAME_TRIES: u32 = 1000;
-
-/// Create this run's server log in `log_dir`: `open-<unix ms>-<pid>-<n>.log`,
-/// created only if new, so two runs never write into one file.
-pub(crate) fn create_log(log_dir: &Path) -> Result<(PathBuf, std::fs::File), CommandError> {
-    let millis: u128 = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |d: Duration| d.as_millis());
-    let pid: u32 = std::process::id();
-    let mut last: Option<(PathBuf, std::io::Error)> = None;
-    for n in 0..LOG_NAME_TRIES {
-        let path: PathBuf = log_dir.join(format!("open-{millis}-{pid}-{n}.log"));
-        match std::fs::File::options()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-        {
-            Ok(file) => return Ok((path, file)),
-            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => last = Some((path, e)),
-            Err(source) => return Err(CommandError::Read { path, source }),
+/// Where the design-time build writes when restore is off: one owned folder
+/// per solution and per run, `backback-obj-<pid>-<solution>`, outside the
+/// solution, so parallel runs never share build files. Dropping it removes
+/// it on every exit path; a crashed run's folder is swept (BB-PRC-006).
+pub(crate) fn scratch(solution: &Path) -> Result<bb_process::OwnedTempDir, CommandError> {
+    let key: String = scratch_key(solution);
+    bb_process::OwnedTempDir::create_with("backback-obj", &key).map_err(|source: std::io::Error| {
+        CommandError::Read {
+            path: std::env::temp_dir().join(format!("backback-obj-{key}")),
+            source,
         }
-    }
-    let (path, source): (PathBuf, std::io::Error) = last.unwrap_or_else(|| {
-        (
-            log_dir.to_path_buf(),
-            std::io::Error::from(std::io::ErrorKind::AlreadyExists),
-        )
-    });
-    Err(CommandError::Read { path, source })
+    })
 }
 
-/// Where the design-time build writes when restore is off: one folder per
-/// solution and per run (`pid`), outside the solution, so parallel runs never
-/// share build files. The run removes it when it ends.
-pub(crate) fn scratch_dir(solution: &Path, pid: u32) -> PathBuf {
-    let key: String = solution
+/// The solution path as one folder-name part: no `-`, so the sweep reads
+/// the pid before it.
+fn scratch_key(solution: &Path) -> String {
+    solution
         .to_string_lossy()
         .chars()
         .map(|c: char| if c.is_ascii_alphanumeric() { c } else { '_' })
-        .collect();
-    std::env::temp_dir()
-        .join("backback-obj")
-        .join(format!("{key}-{pid}"))
+        .collect()
 }
 
 #[cfg(test)]
@@ -171,24 +149,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn two_logs_created_in_one_millisecond_never_share_a_file() {
-        let dir: PathBuf =
-            std::env::temp_dir().join(format!("bb-open-logs-{}", std::process::id()));
-        let _fresh: std::io::Result<()> = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
-        let (first, mut file): (PathBuf, std::fs::File) = create_log(&dir).unwrap();
-        std::io::Write::write_all(&mut file, b"first run\n").unwrap();
-        let (second, _other): (PathBuf, std::fs::File) = create_log(&dir).unwrap();
-        let kept: String = std::fs::read_to_string(&first).unwrap();
-        let _gone: std::io::Result<()> = std::fs::remove_dir_all(&dir);
-        assert_ne!(first, second);
-        assert_eq!(kept, "first run\n");
-    }
-
-    #[test]
-    fn parallel_runs_on_one_solution_get_their_own_scratch_folder() {
-        let sln: &Path = Path::new("/r/A.slnx");
-        assert_ne!(scratch_dir(sln, 1), scratch_dir(sln, 2));
-        assert_ne!(scratch_dir(Path::new("/r/B.slnx"), 1), scratch_dir(sln, 1));
+    fn each_solution_gets_its_own_owned_scratch_folder() {
+        let sln: &Path = Path::new("/r/A-1.slnx");
+        assert_ne!(scratch_key(Path::new("/r/B.slnx")), scratch_key(sln));
+        assert!(
+            !scratch_key(sln).contains('-'),
+            "the pid stays the first digit part"
+        );
+        let dir: bb_process::OwnedTempDir = scratch(sln).unwrap();
+        let path: PathBuf = dir.path().to_path_buf();
+        let name: String = path.file_name().unwrap().to_string_lossy().into_owned();
+        assert!(name.starts_with(&format!("backback-obj-{}-", std::process::id())));
+        assert!(path.is_dir());
+        drop(dir);
+        assert!(!path.exists(), "drop removes it");
     }
 }

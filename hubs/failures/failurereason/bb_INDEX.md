@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 40 — FIXED 37, OBSERVED 2, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 41 — FIXED 38, OBSERVED 2, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -44,3 +44,4 @@ One file per failure mechanism. This hub owns the id. Entries: 40 — FIXED 37, 
 | BB-UIX-015 | Save never compared the file with what it had read, so an outside change was lost | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | The Explorer read each folder once, so outside changes never showed | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | Two intel workers in one process shared and removed one owned temp folder | FIXED | yes | yes | BB-TG-017 | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
+| BB-PRC-006 | Dev-tool logs and scratch folders grew; a reused pid kept a dead owner's folder | FIXED | yes | no | none | `SYS/PRC/S02/BB_PRC_006_DEV_TOOL_TEMP_FILES_GREW_AND_A_REUSED_PID_KEPT_A_FOLDER.md` |
