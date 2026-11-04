@@ -47,3 +47,4 @@
 | BB-BUG-045 | Up to three groups; each line drags; groups close up | FIXED | model + window tests | `D4/S12/BB_BUG_045_ONLY_TWO_EDITOR_PANES.md` |
 | BB-BUG-046 | Theme text colour; terminal top edge drags | FIXED | contrast test (mutation-checked) + window test | `D4/S12/BB_BUG_046_TERMINAL_TEXT_UNREADABLE_AND_HEIGHT_FIXED.md` |
 | BB-BUG-047 | ✕ on every bottom panel; View → Terminal | FIXED | window tests + menu unit test | `D4/S12/BB_BUG_047_PANELS_COULD_NOT_BE_CLOSED_AND_NO_TERMINAL_MENU.md` |
+| BB-BUG-048 | Window titled by folder; File > New Window | FIXED | window test (mutation-checked) + menu/key test | `D4/S12/BB_BUG_048_NO_NEW_WINDOW_AND_WINDOWS_NOT_IN_THE_WINDOW_MENU.md` |

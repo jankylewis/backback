@@ -89,6 +89,8 @@ fn build_window(
     let view: gpui::Entity<ExplorerView> = new_view(tree, workspace, window.appearance(), cx);
     let focus: FocusHandle = view.read(cx).focus.clone();
     window.focus(&focus, cx);
+    // A titled window is listed in the Window menu (BB-BUG-048).
+    window.set_window_title(&bb_window::title(&wanted.root));
     install_close_guard(window, &view, cx);
     install_appearance_observer(window, &view, cx);
     view.update(

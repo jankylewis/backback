@@ -80,6 +80,13 @@ fn down_and_enter_open_the_second_entry_and_close_the_page(cx: &mut TestAppConte
         vec![second],
         "the second entry opened in its own window"
     );
+    // BB-BUG-048: titled with its folder, so the Window menu lists it.
+    let opened: AnyWindowHandle = windows
+        .into_iter()
+        .find(|w: &AnyWindowHandle| w.downcast::<ExplorerView>().is_some())
+        .unwrap();
+    let mut wcx: VisualTestContext = VisualTestContext::from_window(opened, cx);
+    assert_eq!(wcx.window_title().as_deref(), Some("Second"));
 }
 
 /// BB-BUG-036: Cmd+P is Go to File, as in VS Code.
@@ -96,4 +103,24 @@ fn cmd_p_opens_go_to_file() {
             && binding.action().name() == gpui::Action::name(&crate::quick_open::GoToFile)
     });
     assert!(found, "cmd-p is bound to GoToFile");
+}
+
+/// BB-BUG-048: File > New Window, Cmd+Shift+N, as in VS Code.
+#[test]
+fn new_window_is_first_in_the_file_menu_and_on_cmd_shift_n() {
+    let bound: bool = super::bindings().iter().any(|binding: &gpui::KeyBinding| {
+        binding
+            .keystrokes()
+            .first()
+            .is_some_and(|key: &gpui::KeybindingKeystroke| {
+                key.inner().key == "n" && key.inner().modifiers == gpui::Modifiers::command_shift()
+            })
+            && binding.action().name() == gpui::Action::name(&super::NewWindow)
+    });
+    assert!(bound, "cmd-shift-n is bound to NewWindow");
+    let menu: gpui::Menu = super::file_menu();
+    assert!(matches!(
+        menu.items.first(),
+        Some(gpui::MenuItem::Action { name, .. }) if name.as_ref() == "New Window"
+    ));
 }
