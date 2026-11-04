@@ -105,19 +105,7 @@ fn key(
     cx.stop_propagation();
     let key: &str = event.keystroke.key.as_str();
     if key == "escape" || key == "enter" {
-        let chosen: Option<Chosen> = view
-            .quick_open
-            .take()
-            .and_then(|quick: QuickOpen| (key == "enter").then(|| quick.chosen()).flatten());
-        view.tabs.leave_here();
-        match chosen {
-            Some(Chosen::File(path)) => view.open_file(&path, window, cx),
-            Some(Chosen::Line(line)) => go_to_line(view, line, window, cx),
-            Some(Chosen::Find(query)) => super::find::run(view, &query, window, cx),
-            None => {}
-        }
-        window.focus(&view.editor_focus, cx);
-        cx.notify();
+        finish(view, key == "enter", window, cx);
         return;
     }
     let Some(quick): Option<&mut QuickOpen> = view.quick_open.as_mut() else {
@@ -139,17 +127,59 @@ fn key(
     cx.notify();
 }
 
-fn rows(quick: &QuickOpen, theme: bb_ui::bb_theme::Theme) -> Vec<gpui::Div> {
+/// Close the box; with `accept`, open what is selected (Enter, a row
+/// click). Escape and a press outside the box close it as is (BB-BUG-042).
+fn finish(
+    view: &mut ExplorerView,
+    accept: bool,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let chosen: Option<Chosen> = view
+        .quick_open
+        .take()
+        .and_then(|quick: QuickOpen| accept.then(|| quick.chosen()).flatten());
+    if chosen.is_some() {
+        view.tabs.leave_here();
+    }
+    match chosen {
+        Some(Chosen::File(path)) => view.open_file(&path, window, cx),
+        Some(Chosen::Line(line)) => super::find::go_to_line(view, line, window, cx),
+        Some(Chosen::Find(query)) => super::find::run(view, &query, window, cx),
+        None => {}
+    }
+    window.focus(&view.editor_focus, cx);
+    cx.notify();
+}
+
+fn rows(
+    quick: &QuickOpen,
+    theme: bb_ui::bb_theme::Theme,
+    cx: &mut Context<ExplorerView>,
+) -> Vec<gpui::Stateful<gpui::Div>> {
     quick
         .matches()
         .into_iter()
         .enumerate()
         .map(|(index, path): (usize, &std::path::Path)| {
             div()
+                .id(("quick-open-row", index))
+                .debug_selector(move || format!("quick-open-row-{index}"))
+                .on_click(cx.listener(
+                    move |view: &mut ExplorerView,
+                          _: &gpui::ClickEvent,
+                          window: &mut Window,
+                          cx: &mut Context<ExplorerView>| {
+                        if let Some(quick) = view.quick_open.as_mut() {
+                            quick.selected = index;
+                        }
+                        finish(view, true, window, cx);
+                    },
+                ))
                 .px(px(8.0))
                 .py(px(2.0))
                 .rounded(px(3.0))
-                .when(index == quick.selected, |row: gpui::Div| {
+                .when(index == quick.selected, |row: gpui::Stateful<gpui::Div>| {
                     row.bg(color(theme.surface))
                 })
                 .child(path.display().to_string())
@@ -157,35 +187,23 @@ fn rows(quick: &QuickOpen, theme: bb_ui::bb_theme::Theme) -> Vec<gpui::Div> {
         .collect()
 }
 
-fn go_to_line(
-    view: &mut ExplorerView,
-    line: usize,
-    window: &mut Window,
-    cx: &mut Context<ExplorerView>,
-) {
-    let Some(path): Option<std::path::PathBuf> = view
-        .tabs
-        .active_tab()
-        .map(|tab: &crate::editor::Tab| tab.path.clone())
-    else {
-        return;
-    };
-    let at: bb_text::LspPoint = bb_text::LspPoint {
-        line: u32::try_from(line).unwrap_or(u32::MAX),
-        character: 0,
-    };
-    crate::intel::glue::goto_point(view, &path, at, window, cx);
-}
-
 pub(crate) fn overlay(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
     let quick: &QuickOpen = view.quick_open.as_ref()?;
     let theme: bb_ui::bb_theme::Theme = view.theme;
-    let rows: Vec<gpui::Div> = rows(quick, theme);
+    let rows: Vec<gpui::Stateful<gpui::Div>> = rows(quick, theme, cx);
     let query: String = format!("{}: {}", quick.title(), quick.query);
     let panel: gpui::Stateful<gpui::Div> = div()
         .id("quick-open")
         .track_focus(&view.quick_focus)
         .on_key_down(cx.listener(key))
+        .on_mouse_down_out(cx.listener(
+            |view: &mut ExplorerView,
+             _: &gpui::MouseDownEvent,
+             window: &mut Window,
+             cx: &mut Context<ExplorerView>| {
+                finish(view, false, window, cx);
+            },
+        ))
         .w(px(560.0))
         .p(px(6.0))
         .flex()

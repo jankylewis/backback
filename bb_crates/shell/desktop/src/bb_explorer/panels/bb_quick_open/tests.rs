@@ -174,3 +174,73 @@ fn go_to_file_opens_at_once_and_lists_files_off_the_ui_thread(cx: &mut gpui::Tes
             assert_eq!(quick.matches(), [Path::new("A.cs")]);
         });
 }
+
+fn show_box(
+    rig: &crate::intel::glue::window_tests::bb_rig::Rig,
+    vcx: &mut gpui::VisualTestContext,
+) {
+    rig.view.update_in(
+        vcx,
+        |v: &mut crate::ExplorerView,
+         w: &mut gpui::Window,
+         cx: &mut gpui::Context<crate::ExplorerView>| {
+            super::view::show(v, w, cx);
+        },
+    );
+    vcx.run_until_parked();
+}
+
+fn box_open(
+    rig: &crate::intel::glue::window_tests::bb_rig::Rig,
+    vcx: &mut gpui::VisualTestContext,
+) -> bool {
+    rig.view
+        .read_with(vcx, |v: &crate::ExplorerView, _: &gpui::App| {
+            v.quick_open.is_some()
+        })
+}
+
+/// BB-BUG-042: a press outside closes the box (focus left the box, so
+/// Escape no longer reached it); a press on a row opens that file.
+#[gpui::test]
+fn a_press_outside_closes_the_box_and_a_row_press_opens_its_file(cx: &mut gpui::TestAppContext) {
+    use crate::intel::glue::window_tests::bb_rig::{rig, Rig};
+    let (rig, vcx): (Rig, &mut gpui::VisualTestContext) = rig(cx, false);
+    std::fs::write(rig.root.join("B.cs"), "class B {}\n").unwrap();
+    show_box(&rig, vcx);
+    assert!(box_open(&rig, vcx));
+    let outside: gpui::Point<gpui::Pixels> =
+        vcx.debug_bounds("editor-area").unwrap().bottom_right()
+            - gpui::point(gpui::px(20.0), gpui::px(20.0));
+    vcx.simulate_click(outside, gpui::Modifiers::default());
+    assert!(!box_open(&rig, vcx), "a press outside closed the box");
+    show_box(&rig, vcx);
+    let row: usize = rig
+        .view
+        .read_with(vcx, |v: &crate::ExplorerView, _: &gpui::App| {
+            let quick: &QuickOpen = v.quick_open.as_ref().unwrap();
+            quick
+                .matches()
+                .iter()
+                .position(|p: &&Path| *p == Path::new("B.cs"))
+                .unwrap()
+        });
+    let selector: &'static str = Box::leak(format!("quick-open-row-{row}").into_boxed_str());
+    let at: gpui::Point<gpui::Pixels> = vcx.debug_bounds(selector).unwrap().center();
+    vcx.simulate_click(at, gpui::Modifiers::default());
+    vcx.run_until_parked();
+    let active: String = rig
+        .view
+        .read_with(vcx, |v: &crate::ExplorerView, _: &gpui::App| {
+            v.tabs
+                .active_tab()
+                .unwrap()
+                .path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned()
+        });
+    assert!(!box_open(&rig, vcx));
+    assert_eq!(active, "B.cs", "the pressed row opened");
+}
