@@ -46,3 +46,4 @@
 | BB-BUG-044 | Drag lines (`Lines`); results scroll both ways, match first | FIXED | window tests (mutation-checked) | `D3/S11/BB_BUG_044_PANES_AND_THE_RESULTS_PANEL_COULD_NOT_BE_RESIZED_OR_SCROLLED.md` |
 | BB-BUG-045 | Up to three groups; each line drags; groups close up | FIXED | model + window tests | `D4/S12/BB_BUG_045_ONLY_TWO_EDITOR_PANES.md` |
 | BB-BUG-046 | Theme text colour; terminal top edge drags | FIXED | contrast test (mutation-checked) + window test | `D4/S12/BB_BUG_046_TERMINAL_TEXT_UNREADABLE_AND_HEIGHT_FIXED.md` |
+| BB-BUG-047 | ✕ on every bottom panel; View → Terminal | FIXED | window tests + menu unit test | `D4/S12/BB_BUG_047_PANELS_COULD_NOT_BE_CLOSED_AND_NO_TERMINAL_MENU.md` |

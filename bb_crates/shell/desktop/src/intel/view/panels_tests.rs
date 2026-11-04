@@ -79,3 +79,76 @@ fn the_panel_drags_taller_lists_the_match_first_and_scrolls_sideways(cx: &mut Te
     });
     assert!(x < -100.0, "scrolled sideways: {x}");
 }
+
+/// Click the element drawn with `selector`.
+fn click(vcx: &mut VisualTestContext, selector: &'static str) {
+    let at: gpui::Point<gpui::Pixels> = vcx.debug_bounds(selector).unwrap().center();
+    vcx.simulate_click(at, gpui::Modifiers::default());
+    vcx.run_until_parked();
+}
+
+/// BB-BUG-047: every panel under the editor closes on its ✕.
+#[gpui::test]
+fn find_in_files_results_close_on_their_cross(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = split_ab(cx);
+    show_long_hit(&rig, vcx);
+    vcx.run_until_parked();
+    click(vcx, "intel-panel-close");
+    assert!(vcx.debug_bounds("intel-panel").is_none(), "panel gone");
+    let left: bool = rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.intel.references.is_some() || v.intel.problems_open
+    });
+    assert!(!left, "nothing left to show");
+}
+
+#[gpui::test]
+fn the_terminal_closes_on_its_cross_and_the_shell_goes_on(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = split_ab(cx);
+    vcx.dispatch_action(crate::terminal::ToggleTerminal);
+    vcx.run_until_parked();
+    click(vcx, "terminal-close");
+    assert!(vcx.debug_bounds("terminal").is_none(), "terminal hidden");
+    let shell: bool = rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.terminal.session.is_some()
+    });
+    assert!(shell, "the shell still runs");
+    vcx.dispatch_action(crate::terminal::ToggleTerminal);
+    vcx.run_until_parked();
+    assert!(
+        vcx.debug_bounds("terminal").is_some(),
+        "Ctrl+` brings it back"
+    );
+    vcx.dispatch_action(crate::terminal::ToggleTerminal);
+}
+
+#[gpui::test]
+fn the_debug_panel_hides_on_its_cross_and_comes_back_on_a_pause(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = split_ab(cx);
+    rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            drop(crate::run::bb_debug::session::control::fake_paused(
+                v,
+                Vec::new(),
+                None,
+            ));
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    click(vcx, "debug-panel-close");
+    assert!(
+        vcx.debug_bounds("debug-panel").is_none(),
+        "debug panel hidden"
+    );
+    let live: bool = rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.debug.live.is_some()
+    });
+    assert!(live, "the session goes on");
+    vcx.dispatch_action(crate::run::bb_debug::StartOrContinue);
+    vcx.run_until_parked();
+    assert!(
+        vcx.debug_bounds("debug-panel").is_some(),
+        "F5 shows it again"
+    );
+}

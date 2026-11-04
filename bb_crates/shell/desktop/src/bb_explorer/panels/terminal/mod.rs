@@ -32,6 +32,12 @@ impl Terminal {
     }
 }
 
+/// Hide the panel and give the editor the keys; the shell keeps running.
+pub(crate) fn hide(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
+    view.terminal.open = false;
+    window.focus(&view.editor_focus, cx);
+}
+
 /// Ctrl+backtick: open (starting the shell once) and focus, or hide.
 pub(crate) fn on_toggle(
     view: &mut ExplorerView,
@@ -40,8 +46,7 @@ pub(crate) fn on_toggle(
     cx: &mut Context<ExplorerView>,
 ) {
     if view.terminal.open {
-        view.terminal.open = false;
-        window.focus(&view.editor_focus, cx);
+        hide(view, window, cx);
         cx.notify();
         return;
     }

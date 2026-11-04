@@ -29,7 +29,12 @@ fn menus_go_app_then_file_then_view_as_on_every_mac() {
     assert_eq!(configured[1].name.as_ref(), "File");
     assert_eq!(configured[2].name.as_ref(), "View");
     let view: Vec<String> = names(&configured[2]);
-    assert_eq!(view.len(), 6, "{view:?}");
+    assert_eq!(view.len(), 7, "{view:?}");
+    // BB-BUG-047: View -> Terminal.
+    assert!(
+        view.iter().any(|name: &String| name == "Terminal"),
+        "{view:?}"
+    );
     assert!(
         view.iter()
             .any(|name: &String| name == "Move Tool Window to Other Side"),

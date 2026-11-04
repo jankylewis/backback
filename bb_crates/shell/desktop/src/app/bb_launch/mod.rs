@@ -122,6 +122,9 @@ fn menus() -> Vec<Menu> {
                 MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
                 MenuItem::action("Follow macOS Appearance", FollowAppearance),
                 MenuItem::separator(),
+                // Ctrl+` shows it, a second time hides it (BB-BUG-047).
+                MenuItem::action("Terminal", crate::terminal::ToggleTerminal),
+                MenuItem::separator(),
             ]
             .into_iter()
             .chain(crate::settings::zoom_menu_items()),

@@ -25,6 +25,8 @@ pub(crate) struct Live {
     pending: Option<UnboundedReceiver<Note>>,
     /// The adapter can move the next statement (BBEOD05).
     pub(crate) can_set_next: bool,
+    /// Its ✕ hid the panel; the next pause shows it again (BB-BUG-047).
+    pub(crate) hidden: bool,
 }
 
 /// Where the session is.
@@ -55,7 +57,9 @@ pub(crate) fn start_or_continue(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    if let Some(live) = view.debug.live.as_ref() {
+    if let Some(live) = view.debug.live.as_mut() {
+        // F5 on a hidden panel shows it again (BB-BUG-047).
+        live.hidden = false;
         if matches!(live.phase, Phase::Stopped { .. }) && live.send(Command::Continue) {
             return;
         }
@@ -82,6 +86,7 @@ pub(crate) fn start_or_continue(
         output: String::new(),
         pending: Some(notes),
         can_set_next: false,
+        hidden: false,
     });
     // Seam: gpui's test scheduler refuses wake-ups from the session thread;
     // unit tests drain the notes with `poll` (as the terminal does).
@@ -119,6 +124,7 @@ pub(crate) fn fake_paused(
         output: String::new(),
         pending: None,
         can_set_next: false,
+        hidden: false,
     });
     sent
 }
