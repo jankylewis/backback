@@ -45,10 +45,38 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
         }
         tests_line(v);
         tree_line(v);
+        tabs_line(v);
         if let Some(tab) = tab {
             eprintln!("bb_debug_state breakpoints={:?} {}", v.debug.breakpoints.lines(&tab.path), crate::run::bb_debug::view::notes::describe(v));
         }
     });
+}
+
+/// The tab bar's line: names in order, `*` after a pinned one (BB-BUG-039).
+fn tabs_line(v: &ExplorerView) {
+    let names: Vec<String> = v
+        .tabs
+        .items()
+        .iter()
+        .map(|tab: &crate::editor::Tab| {
+            let name: String = tab
+                .path
+                .file_name()
+                .map_or_else(String::new, |n: &std::ffi::OsStr| {
+                    n.to_string_lossy().into_owned()
+                });
+            if tab.pinned {
+                format!("{name}*")
+            } else {
+                name
+            }
+        })
+        .collect();
+    eprintln!(
+        "bb_tabs_state tabs={names:?} active={:?} asking={}",
+        v.tabs.active_index().map(|i: usize| i.saturating_add(1)),
+        v.tabs.pending_close()
+    );
 }
 
 /// The Explorer's line: its selected row and how many rows show (BB-BUG-029).

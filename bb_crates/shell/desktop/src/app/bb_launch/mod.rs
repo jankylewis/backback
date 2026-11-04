@@ -227,6 +227,7 @@ pub(crate) fn bind_keys(cx: &mut App) {
     ]);
     cx.bind_keys(bb_window::bindings());
     cx.bind_keys(open::bindings());
+    cx.bind_keys(crate::editor::tab_bindings());
     cx.bind_keys(crate::settings::zoom_bindings());
 }
 

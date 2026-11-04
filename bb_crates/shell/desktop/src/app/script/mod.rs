@@ -5,7 +5,8 @@
 //! the line's end), `mark:<name>` (prints a line a capture script waits for, then
 //! pauses), `state` (prints what the window shows), `testopen:<name>` /
 //! `testrun:<name>` (the first spec whose name holds `name`: a row click /
-//! its ▶), `teststop` (the ■), `open:<path>` (a file under the root). Keys and mouse go
+//! its ▶), `teststop` (the ■), `open:<path>` (a file under the root), `tabmenu:<n>:<row>`
+//! (tab `n`'s right-click menu row, e.g. `close-others`, `pin`). Keys and mouse go
 //! through the window's own dispatch.
 
 use std::time::{Duration, Instant};
@@ -47,6 +48,7 @@ pub(crate) async fn run(
         ["testrun", name] => test_steps::run(view, cx, name),
         ["teststop"] => test_steps::stop(view, cx),
         ["open", relative] => open(view, cx, relative),
+        ["tabmenu", n, row] => tab_menu(view, cx, number(n), row),
         _ => return false,
     }
     true
@@ -65,6 +67,21 @@ fn tests(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, expand: b
             } else {
                 crate::tests_panel::open(v, window, cx);
             }
+        },
+    );
+}
+
+/// `tabmenu:<n>:<row>`: what that row of tab `n`'s menu does (1-based).
+fn tab_menu(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, n: usize, row: &str) {
+    let Some(item): Option<crate::editor::TabMenuItem> = crate::editor::tab_menu_item(row) else {
+        eprintln!("bb_script no tab menu row {row}");
+        return;
+    };
+    let _gone: gpui::Result<()> = view.update_in(
+        cx,
+        |v: &mut ExplorerView, _: &mut Window, cx: &mut Context<ExplorerView>| {
+            crate::editor::apply_tab_menu(v, n.saturating_sub(1), item);
+            cx.notify();
         },
     );
 }

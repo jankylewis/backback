@@ -3,11 +3,15 @@ mod input;
 mod prompt;
 mod view;
 
+pub(crate) use bb_tabs::bb_view::tab_bar;
+pub(crate) use bb_tabs::{
+    apply_tab_menu, on_tab_actions, tab_bindings, tab_menu_item, TabMenuItem,
+};
 pub(crate) use bb_tabs::{go_back, go_forward, GoBack, GoForward, Tab, TabError, TabEvent, Tabs};
 pub(crate) use input::handle_key;
 pub(crate) use input::link;
 pub(crate) use prompt::Quit;
-pub(crate) use view::{editor_body, status_bar, tab_bar, Columns};
+pub(crate) use view::{editor_body, status_bar, Columns};
 
 /// How often open files are checked against the disk (BB-BUG-035).
 const DISK_CHECK: std::time::Duration = std::time::Duration::from_secs(2);

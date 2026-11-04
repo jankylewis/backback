@@ -38,3 +38,4 @@
 | BB-BUG-036 | Cmd+P bound to Go to File; Cmd+Shift+O awaits a ruling | FIXED | unit test + readback | `D3/S09/BB_BUG_036_CMD_P_DOES_NOT_OPEN_GO_TO_FILE.md` |
 | BB-BUG-037 | The 2 s disk check re-reads loaded folders, merged by path | FIXED | unit test + readback | `D3/S10/BB_BUG_037_THE_EXPLORER_MISSES_FILES_MADE_OR_REMOVED_OUTSIDE.md` |
 | BB-BUG-038 | One `backback-intel-<pid>-<n>` folder per worker | FIXED | red-first unit test + gate | `D3/S10/BB_BUG_038_A_SECOND_WINDOW_WIPES_THE_FIRSTS_ROSLYN_FOLDER.md` |
+| BB-BUG-039 | Pinned tabs, a tab menu and the bulk closes, VS Code keys | FIXED | unit + window tests + readback | `D3/S10/BB_BUG_039_NO_PINNED_TABS_AND_NO_BULK_CLOSE.md` |
