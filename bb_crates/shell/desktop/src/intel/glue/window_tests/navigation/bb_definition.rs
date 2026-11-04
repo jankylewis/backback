@@ -183,7 +183,7 @@ fn long_problem_rows_never_squeeze_the_explorer(cx: &mut TestAppContext) {
     vcx.run_until_parked();
     vcx.simulate_keystrokes("cmd-shift-m");
     let left: f32 = rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
-        f32::from(v.tabs.scroll.0.borrow().base_handle.bounds().origin.x)
+        f32::from(v.tabs.scroll().0.borrow().base_handle.bounds().origin.x)
     });
     assert!(
         left >= 300.0,

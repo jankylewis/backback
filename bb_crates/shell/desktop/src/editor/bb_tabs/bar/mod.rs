@@ -8,9 +8,11 @@ use std::path::PathBuf;
 use super::{Tab, Tabs};
 
 pub(crate) mod bb_view;
+mod keys;
 mod menu;
 
-pub(crate) use menu::{apply, bindings, item, on_tab_actions, Item};
+pub(crate) use keys::{bindings, on_tab_actions};
+pub(crate) use menu::{apply, item, Item};
 
 /// Which tabs a bulk close takes, seen from the tab whose menu it is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -53,11 +55,11 @@ impl Tabs {
         if index >= self.items.len() {
             return;
         }
-        let actives: (Option<PathBuf>, Option<PathBuf>) = self.actives();
+        let actives: [Option<PathBuf>; super::MAX_GROUPS] = self.actives();
         let mut tab: Tab = self.items.remove(index);
         tab.pinned = !tab.pinned;
         // Pinned or not, it goes where the group's pinned run ends.
-        let at: usize = self.pins_end(tab.side);
+        let at: usize = self.pins_end(tab.group);
         self.items.insert(at, tab);
         self.restore(actives, self.focused);
     }
@@ -66,7 +68,7 @@ impl Tabs {
     /// tabs with unsaved edits queue for the save prompt, one at a time.
     /// The menu's tab, if still open, becomes active. `true`: no prompt.
     pub(crate) fn close_set(&mut self, at: usize, set: CloseSet) -> bool {
-        let Some(side): Option<super::Side> = self.items.get(at).map(|tab: &Tab| tab.side) else {
+        let Some(side): Option<super::Group> = self.items.get(at).map(|tab: &Tab| tab.group) else {
             return true;
         };
         let anchor: Option<PathBuf> = self.items.get(at).map(|tab: &Tab| tab.path.clone());
@@ -74,7 +76,7 @@ impl Tabs {
             .items
             .iter()
             .enumerate()
-            .filter(|(index, tab): &(usize, &Tab)| tab.side == side && set.takes(at, *index, tab))
+            .filter(|(index, tab): &(usize, &Tab)| tab.group == side && set.takes(at, *index, tab))
             .map(|(_, tab): (usize, &Tab)| tab.path.clone())
             .collect();
         for path in taken {
@@ -114,5 +116,3 @@ impl Tabs {
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod window_tests;

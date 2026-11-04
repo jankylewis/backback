@@ -124,7 +124,8 @@ fn pointer(
     let view: gpui::Entity<ExplorerView> = view.upgrade()?;
     let (left, top, scrolled, text): (f32, f32, f32, String) =
         view.read_with(cx, |v: &ExplorerView, _: &gpui::App| {
-            let state: std::cell::Ref<'_, gpui::UniformListScrollState> = v.tabs.scroll.0.borrow();
+            let state: std::cell::Ref<'_, gpui::UniformListScrollState> =
+                v.tabs.scroll().0.borrow();
             let bounds: gpui::Bounds<gpui::Pixels> = state.base_handle.bounds();
             (
                 v.editor_left(&crate::settings::typography(cx))

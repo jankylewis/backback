@@ -10,7 +10,7 @@ pub(crate) use bar::{
     apply as apply_tab_menu, bindings as tab_bindings, item as tab_menu_item, Item as TabMenuItem,
 };
 pub(crate) use bar::{bb_view, on_tab_actions, TabMenu};
-pub(crate) use model::bb_groups::Side;
+pub(crate) use model::bb_groups::{Group, MAX_GROUPS};
 pub(crate) use model::history::{go_back, go_forward, GoBack, GoForward, History};
 pub(crate) use tab::{Tab, TabError, TabEvent};
 
@@ -21,15 +21,12 @@ pub(crate) use tab::LARGE_FILE_BYTES;
 pub(crate) struct Tabs {
     items: Vec<Tab>,
     loading: Vec<PathBuf>,
-    /// The focused group's active tab; `other_active` the other group's.
-    active: Option<usize>,
-    other_active: Option<usize>,
-    focused: Side,
-    /// The focused pane's line list; `other_scroll` the other pane's.
-    pub(crate) scroll: gpui::UniformListScrollHandle,
-    other_scroll: gpui::UniformListScrollHandle,
-    /// The left pane's width while split, set as the window draws.
-    pub(crate) pane_px: f32,
+    /// Each group's active tab, and the focused group (BB-BUG-045).
+    actives: [Option<usize>; MAX_GROUPS],
+    focused: Group,
+    /// Each group's pane line list; `spare_scroll` answers a group past them.
+    scrolls: [gpui::UniformListScrollHandle; MAX_GROUPS],
+    spare_scroll: gpui::UniformListScrollHandle,
     /// The file the save prompt asks about: by path, so a tab that moves
     /// while it asks is still the one saved or discarded (BB-BUG-041).
     pending_close: Option<PathBuf>,
@@ -68,8 +65,8 @@ impl Tabs {
             tab.document.lock_writes();
         }
         self.events.push(TabEvent::Opened(tab.path.clone()));
-        tab.side = self.focused;
-        let actives: (Option<PathBuf>, Option<PathBuf>) = self.actives();
+        tab.group = self.focused;
+        let actives: [Option<PathBuf>; MAX_GROUPS] = self.actives();
         let at: usize = self.place(tab);
         self.restore(actives, self.focused);
         at
@@ -132,17 +129,18 @@ impl Tabs {
     }
 
     pub(crate) fn active_index(&self) -> Option<usize> {
-        self.active
+        self.active_of(self.focused)
     }
 
     pub(crate) fn active(&self) -> Option<&Document> {
-        self.active
+        self.active_of(self.focused)
             .and_then(|index: usize| self.items.get(index))
             .map(|tab: &Tab| &tab.document)
     }
 
     pub(crate) fn active_tab(&self) -> Option<&Tab> {
-        self.active.and_then(|index: usize| self.items.get(index))
+        self.active_of(self.focused)
+            .and_then(|index: usize| self.items.get(index))
     }
 
     pub(crate) fn tab_mut(&mut self, path: &Path) -> Option<&mut Tab> {
@@ -152,12 +150,12 @@ impl Tabs {
     }
 
     pub(crate) fn active_tab_mut(&mut self) -> Option<&mut Tab> {
-        self.active
+        self.active_of(self.focused)
             .and_then(|index: usize| self.items.get_mut(index))
     }
 
     pub(crate) fn active_mut(&mut self) -> Option<&mut Document> {
-        self.active
+        self.active_of(self.focused)
             .and_then(|index: usize| self.items.get_mut(index))
             .map(|tab: &mut Tab| &mut tab.document)
     }
@@ -171,7 +169,7 @@ impl Tabs {
     }
 
     pub(crate) fn close_active(&mut self) -> bool {
-        let index: usize = match self.active {
+        let index: usize = match self.active_of(self.focused) {
             Some(index) => index,
             None => return true,
         };

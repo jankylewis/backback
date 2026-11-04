@@ -80,7 +80,7 @@ pub(crate) fn apply(view: &mut ExplorerView, cx: &mut Context<ExplorerView>) {
     if let (Some(at), Some(doc)) = (target, view.tabs.active_mut()) {
         if doc.set_cursor(at).is_ok() {
             view.tabs
-                .scroll
+                .scroll()
                 .scroll_to_item(*line, ScrollStrategy::Center);
             view.tests.pending_jump = None;
             cx.notify();
