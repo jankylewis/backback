@@ -6,7 +6,11 @@ use std::time::Instant;
 use bb_syntax::{test_methods, CSharpSyntax, LiveTree, SyntaxError, TestMethod, Tree};
 use bb_text::{Document, DocumentError, TextChange};
 
-use super::window;
+mod bb_window;
+use bb_window as window;
+
+#[cfg(test)]
+pub(crate) use bb_window::LARGE_FILE_BYTES;
 
 pub(crate) struct Tab {
     pub(crate) path: PathBuf,
@@ -26,6 +30,9 @@ pub(crate) struct Tab {
     pub(crate) sighted: Option<bb_text::CharIdx>,
     /// The widest line in sight, in pixels, plus some slack: the scroll's end.
     pub(crate) widest_px: f32,
+    /// Pinned tabs stay left of the others and outlive the bulk closes
+    /// that skip pinned tabs (BB-BUG-039).
+    pub(crate) pinned: bool,
 }
 
 /// A tab opened or closed; the code intelligence link reads these.
@@ -82,6 +89,7 @@ impl Tab {
             scroll_x: 0.0,
             sighted: None,
             widest_px: 0.0,
+            pinned: false,
         })
     }
 

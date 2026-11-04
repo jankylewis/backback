@@ -1,99 +1,18 @@
 use bb_text::Document;
 use bb_ui::bb_theme::Theme;
-use gpui::{div, prelude::*, px, uniform_list, Context, FocusHandle, IntoElement, Window};
+use gpui::{div, prelude::*, uniform_list, Context, FocusHandle, IntoElement, Window};
 
-use super::bb_tabs::Tab;
 mod bb_line;
 mod hscroll;
 mod status;
 mod test_marks;
+use super::bb_tabs::Tab;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
 pub(crate) use status::status_bar;
-
-pub(crate) fn tab_bar(
-    tabs: &Tabs,
-    theme: Theme,
-    cx: &mut Context<ExplorerView>,
-) -> impl IntoElement {
-    div()
-        .h(px(36.0))
-        .flex()
-        .bg(color(theme.surface))
-        .children(
-            tabs.items()
-                .iter()
-                .enumerate()
-                .map(|(index, tab): (usize, &Tab)| {
-                    tab_item(index, tab, tabs.active_index() == Some(index), theme, cx)
-                }),
-        )
-        .children(tabs.loading().iter().map(|path: &std::path::PathBuf| {
-            div()
-                .h_full()
-                .px_2()
-                .flex()
-                .items_center()
-                .text_color(color(theme.text_dim))
-                .child(format!("Loading {}…", file_name(path)))
-        }))
-}
-
-fn file_name(path: &std::path::Path) -> String {
-    path.file_name().map_or_else(
-        || String::from("Untitled"),
-        |part: &std::ffi::OsStr| part.to_string_lossy().into_owned(),
-    )
-}
-
-fn tab_item(
-    index: usize,
-    tab: &Tab,
-    active: bool,
-    theme: Theme,
-    cx: &mut Context<ExplorerView>,
-) -> impl IntoElement {
-    let name: String = file_name(&tab.path);
-    let dirty: &'static str = if tab.document.is_dirty() { " ●" } else { "" };
-    div()
-        .id(index)
-        .h_full()
-        .px_2()
-        .flex()
-        .items_center()
-        .bg(color(if active { theme.bg } else { theme.surface }))
-        .text_color(color(theme.text))
-        .on_click(cx.listener(
-            move |view: &mut ExplorerView,
-                  _: &gpui::ClickEvent,
-                  window: &mut Window,
-                  cx: &mut Context<ExplorerView>| {
-                view.tabs.switch(index);
-                window.focus(&view.editor_focus, cx);
-                cx.notify();
-            },
-        ))
-        .child(div().text_color(color(theme.icon_csharp)).child("C# "))
-        .child(format!("{name}{dirty}"))
-        .child(
-            div()
-                .id(format!("close-{index}"))
-                .ml_2()
-                .child("×")
-                .on_click(cx.listener(
-                    move |view: &mut ExplorerView,
-                          _: &gpui::ClickEvent,
-                          _: &mut Window,
-                          cx: &mut Context<ExplorerView>| {
-                        view.tabs.close(index);
-                        cx.notify();
-                    },
-                )),
-        )
-}
 
 pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
     let (tabs, focus, theme): (&Tabs, &FocusHandle, Theme) =
@@ -112,6 +31,7 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .on_action(cx.listener(crate::run::build::on_build))
         .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
         .on_action(cx.listener(super::go_forward))
+        .map(|area: gpui::Stateful<gpui::Div>| crate::editor::on_tab_actions(area, cx))
         .on_scroll(cx.listener(hscroll::on_wheel))
         .child(
             uniform_list(

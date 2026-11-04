@@ -2,15 +2,19 @@ use std::path::{Path, PathBuf};
 
 use bb_text::{Document, DocumentError};
 
+mod bar;
 mod history;
 mod tab;
-mod window;
 
+pub(crate) use bar::{
+    apply as apply_tab_menu, bindings as tab_bindings, item as tab_menu_item, Item as TabMenuItem,
+};
+pub(crate) use bar::{bb_view, on_tab_actions, TabMenu};
 pub(crate) use history::{go_back, go_forward, GoBack, GoForward, History};
 pub(crate) use tab::{Tab, TabError, TabEvent};
 
 #[cfg(test)]
-pub(crate) use window::LARGE_FILE_BYTES;
+pub(crate) use tab::LARGE_FILE_BYTES;
 
 #[derive(Default)]
 pub(crate) struct Tabs {
@@ -18,6 +22,10 @@ pub(crate) struct Tabs {
     loading: Vec<PathBuf>,
     active: Option<usize>,
     pending_close: Option<usize>,
+    /// Tabs with unsaved edits a bulk close still has to ask about.
+    closing: Vec<PathBuf>,
+    /// The open right-click menu of a tab.
+    pub(crate) menu: Option<TabMenu>,
     events: Vec<TabEvent>,
     no_write: bool,
     /// Back / Forward across jumps.
@@ -189,11 +197,13 @@ impl Tabs {
 
     pub(crate) fn cancel_close(&mut self) {
         self.pending_close = None;
+        self.closing.clear();
     }
 
     pub(crate) fn discard_close(&mut self) {
         if let Some(index) = self.pending_close.take() {
             self.remove(index);
+            let _asked: bool = self.next_close();
         }
     }
 
@@ -204,6 +214,7 @@ impl Tabs {
             }
             self.pending_close = None;
             self.remove(index);
+            let _asked: bool = self.next_close();
         }
         Ok(())
     }
