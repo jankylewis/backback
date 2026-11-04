@@ -132,6 +132,7 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
     assert_eq!(
         names(&file),
         [
+            "New Window",
             "Open...",
             "Start Page...",
             "Go to File...",

@@ -21,11 +21,18 @@ pub(crate) struct OpenWorkspace;
 #[action(namespace = backback)]
 pub(crate) struct ShowStartPage;
 
+/// File > New Window (Cmd+Shift+N): a window with no folder yet, the start
+/// page, as VS Code's empty window (BB-BUG-048).
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct NewWindow;
+
 /// App-wide handlers; the start page opens workspaces with `no_write`, the
 /// launch's `--no-write`.
 pub(crate) fn register(cx: &mut App, no_write: bool) {
     cx.on_action(|_: &OpenWorkspace, cx: &mut App| ask(cx, false, None));
     cx.on_action(move |_: &ShowStartPage, cx: &mut App| show_start_page(no_write, cx));
+    cx.on_action(move |_: &NewWindow, cx: &mut App| show_start_page(no_write, cx));
 }
 
 /// Show the open panel; open what the user picks in a new window, then close
@@ -62,7 +69,7 @@ where
     answer.await.ok()?.ok()??.into_iter().next()
 }
 
-pub(crate) fn bindings() -> [KeyBinding; 7] {
+pub(crate) fn bindings() -> [KeyBinding; 8] {
     [
         KeyBinding::new("cmd-o", OpenWorkspace, None),
         KeyBinding::new("cmd-shift-o", crate::quick_open::GoToFile, None),
@@ -73,11 +80,14 @@ pub(crate) fn bindings() -> [KeyBinding; 7] {
         // Cmd+P is VS Code's Go to File (BB-BUG-036); Cmd+Shift+O stays Go to
         // File and Cmd+[ / Cmd+] stay Back / Forward (headmate ruling 2026-11-04).
         KeyBinding::new("cmd-p", crate::quick_open::GoToFile, None),
+        // BB-BUG-048: last, so the bindings above keep their places.
+        KeyBinding::new("cmd-shift-n", NewWindow, None),
     ]
 }
 
 pub(crate) fn file_menu() -> Menu {
     Menu::new("File").items([
+        MenuItem::action("New Window", NewWindow),
         MenuItem::action("Open...", OpenWorkspace),
         MenuItem::action("Start Page...", ShowStartPage),
         MenuItem::action("Go to File...", crate::quick_open::GoToFile),

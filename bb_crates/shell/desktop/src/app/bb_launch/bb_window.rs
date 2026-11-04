@@ -64,3 +64,12 @@ pub(crate) fn window_menu() -> Menu {
         MenuItem::action("Zoom", Zoom),
     ])
 }
+
+/// A workspace window's title, the folder's name as VS Code shows it:
+/// macOS lists only titled windows in the Window menu (BB-BUG-048).
+pub(crate) fn title(root: &std::path::Path) -> String {
+    root.file_name().map_or_else(
+        || root.display().to_string(),
+        |name: &std::ffi::OsStr| name.to_string_lossy().into_owned(),
+    )
+}
