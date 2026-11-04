@@ -1,5 +1,7 @@
-//! The panel under the editor: rename preview, references or Problems.
-//! A row click goes to its place.
+//! The panel under the editor: rename preview, references, Find in Files
+//! or Problems. A row click goes to its place. Its top edge drags its
+//! height; rows keep their full width and the list scrolls both ways, the
+//! match first and its path after it (BB-BUG-044).
 
 use std::path::Path;
 
@@ -37,23 +39,38 @@ pub(crate) fn bottom(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Opt
     Some(
         div()
             .id("intel-panel")
-            .h(px(180.0))
+            .debug_selector(|| "intel-panel".to_owned())
+            .h(px(view.lines.bottom_px))
+            .flex_none()
             .flex()
             .flex_col()
-            .overflow_y_scroll()
             .bg(color(theme.surface))
-            .border_t_1()
-            .border_color(color(theme.border))
             .text_color(color(theme.text))
+            .child(crate::editor::bottom_handle(theme, cx))
             .child(
                 super::one_line(22.0)
                     .px_2()
                     .text_color(color(theme.text_dim))
                     .child(title),
             )
-            .children(rows)
+            .child(row_list(view, rows))
             .into_any_element(),
     )
+}
+
+/// The rows, scrolled both ways: a row keeps its full width (BB-BUG-044).
+fn row_list(view: &ExplorerView, rows: Vec<AnyElement>) -> impl IntoElement {
+    div()
+        .id("intel-rows")
+        .debug_selector(|| "intel-rows".to_owned())
+        .flex_1()
+        .min_h(px(0.0))
+        .overflow_scroll()
+        .track_scroll(&view.intel.rows_scroll)
+        .flex()
+        .flex_col()
+        .items_start()
+        .children(rows)
 }
 
 fn short(path: &Path, root: &Path) -> String {
@@ -76,12 +93,26 @@ fn place_row(
     };
     let line: u32 = place.location.span.start.line.saturating_add(1);
     let column: u32 = place.location.span.start.character.saturating_add(1);
-    let label: String = format!("{name}:{line}:{column}  {}", place.preview);
-    super::one_line(20.0)
+    let place_text: String = format!("{name}:{line}:{column}");
+    div()
         .id(("place", index))
+        .debug_selector(move || format!("place-{index}"))
+        .min_h(px(20.0))
+        .min_w_full()
+        .flex_none()
+        .flex()
+        .items_center()
+        .whitespace_nowrap()
         .px_2()
         .hover(|el: gpui::StyleRefinement| el.bg(color(theme.overlay)))
-        .child(label)
+        .child(place.preview.trim().to_owned())
+        .child(
+            div()
+                .debug_selector(move || format!("place-path-{index}"))
+                .ml_4()
+                .text_color(color(theme.text_dim))
+                .child(place_text),
+        )
         .on_click(cx.listener(
             move |view: &mut ExplorerView,
                   _: &ClickEvent,

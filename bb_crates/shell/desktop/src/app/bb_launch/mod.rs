@@ -169,7 +169,7 @@ pub(crate) fn fresh_view(
         reparse_ns: 0,
         closing_window: false,
         panel_width: 300.0,
-        resizing: false,
+        lines: crate::editor::Lines::default(),
         theme: resolved_theme(None, Some(appearance)),
         theme_override: None,
         appearance_subscription: None,

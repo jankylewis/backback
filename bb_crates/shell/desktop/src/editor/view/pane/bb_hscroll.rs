@@ -78,7 +78,11 @@ fn scrolled_to_sight(scroll_x: f32, caret: f32, width: f32) -> f32 {
 /// The width the text may use: the editor's width less the gutter.
 fn text_viewport_width(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> f32 {
     if view.tabs.is_split() {
-        return (view.tabs.pane_px - fonts.gutter_width()).max(0.0);
+        let pane: f32 = match view.tabs.focused() {
+            crate::editor::Side::Left => view.tabs.pane_px,
+            crate::editor::Side::Right => view.lines.right_px,
+        };
+        return (pane - fonts.gutter_width()).max(0.0);
     }
     let total: f32 = f32::from(window.viewport_size().width);
     (total - view.editor_left(fonts) - fonts.gutter_width()).max(0.0)

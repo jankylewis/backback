@@ -4,6 +4,7 @@
 //! tab and takes focus on the first press, which then acts as usual.
 
 pub(crate) mod bb_hscroll;
+pub(crate) mod drag;
 pub(crate) mod test_marks;
 
 use gpui::{div, prelude::*, px, relative, uniform_list, Context, IntoElement, Window};
@@ -28,7 +29,7 @@ impl ExplorerView {
 }
 
 /// The line between the two panes.
-pub(crate) const DIVIDER_PX: f32 = 1.0;
+pub(crate) const DIVIDER_PX: f32 = drag::HANDLE_PX;
 
 fn name(side: Side) -> &'static str {
     match side {
@@ -37,22 +38,30 @@ fn name(side: Side) -> &'static str {
     }
 }
 
-/// Size this frame's panes: while split, the left one takes half the
-/// editor area (the click and scroll maths read it, BB-BUG-040).
-pub(crate) fn layout(view: &mut ExplorerView, window: &Window, cx: &gpui::App) {
-    let fonts: bb_ui::Typography = crate::settings::typography(cx);
+/// The editor area's width: the window less the tool window and its edge.
+pub(crate) fn area(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> f32 {
     let right_dock: f32 = if fonts.panel_right {
         view.panel_width + 6.0
     } else {
         0.0
     };
     let left: f32 = fonts.editor_x(view.panel_width) - fonts.gutter_width();
-    let area: f32 = f32::from(window.viewport_size().width) - left - right_dock;
-    view.tabs.pane_px = if view.tabs.is_split() {
-        ((area - DIVIDER_PX) / 2.0).floor().max(0.0)
+    f32::from(window.viewport_size().width) - left - right_dock
+}
+
+/// Size this frame's panes: while split, the left one takes its share of
+/// the editor area, as the line between them was dragged (BB-BUG-044); the
+/// click and scroll maths read both widths (BB-BUG-040).
+pub(crate) fn layout(view: &mut ExplorerView, window: &Window, cx: &gpui::App) {
+    let fonts: bb_ui::Typography = crate::settings::typography(cx);
+    let room: f32 = (area(view, window, &fonts) - DIVIDER_PX).max(0.0);
+    let left: f32 = if view.tabs.is_split() {
+        (room * view.lines.split).floor()
     } else {
         0.0
     };
+    view.tabs.pane_px = left;
+    view.lines.right_px = room - left;
 }
 
 pub(crate) fn panes(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
@@ -61,12 +70,7 @@ pub(crate) fn panes(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl
         return root.child(pane(view, Side::Left, None, cx));
     }
     root.child(pane(view, Side::Left, Some(view.tabs.pane_px), cx))
-        .child(
-            div()
-                .w(px(DIVIDER_PX))
-                .h_full()
-                .bg(color(view.theme.border)),
-        )
+        .child(drag::handle(drag::Edge::Split, "pane-divider", view.theme, cx).w(px(DIVIDER_PX)))
         .child(pane(view, Side::Right, None, cx))
 }
 
@@ -185,4 +189,4 @@ fn drop_zone(
 }
 
 #[cfg(test)]
-mod window_tests;
+pub(crate) mod window_tests;

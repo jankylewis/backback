@@ -175,3 +175,56 @@ fn go_to_file_closes_on_a_press_anywhere_outside_it_with_two_panes(cx: &mut Test
         assert!(!box_open(&rig, vcx), "{name}: a press outside closed it");
     }
 }
+
+// BB-BUG-044: the line between the panes and the top of the panel under
+// the editor drag; the panel lists the match first and scrolls sideways.
+
+pub(crate) fn drag(
+    vcx: &mut VisualTestContext,
+    selector: &'static str,
+    by: gpui::Point<gpui::Pixels>,
+) {
+    let from: gpui::Point<gpui::Pixels> = vcx.debug_bounds(selector).unwrap().center();
+    let button: Option<MouseButton> = Some(MouseButton::Left);
+    vcx.simulate_mouse_down(from, MouseButton::Left, Modifiers::default());
+    vcx.simulate_mouse_move(from + by, button, Modifiers::default());
+    vcx.simulate_mouse_up(from + by, MouseButton::Left, Modifiers::default());
+    vcx.run_until_parked();
+}
+
+fn width(vcx: &mut VisualTestContext, selector: &'static str) -> f32 {
+    f32::from(vcx.debug_bounds(selector).unwrap().size.width)
+}
+
+/// A window with `A.cs` and `B.cs`, `B.cs` in a right pane.
+pub(crate) fn split_ab(cx: &mut TestAppContext) -> (Rig, &mut VisualTestContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = two_tabs(cx);
+    vcx.simulate_keystrokes("ctrl-cmd-right");
+    (rig, vcx)
+}
+
+#[gpui::test]
+fn the_line_between_the_panes_and_the_tool_window_edge_drag(cx: &mut TestAppContext) {
+    let (_rig, vcx): (Rig, &mut VisualTestContext) = split_ab(cx);
+    let (left, right): (f32, f32) = (width(vcx, "pane-left"), width(vcx, "pane-right"));
+    drag(
+        vcx,
+        "pane-divider",
+        gpui::point(gpui::px(60.0), gpui::px(0.0)),
+    );
+    let (left2, right2): (f32, f32) = (width(vcx, "pane-left"), width(vcx, "pane-right"));
+    assert!((left2 - left - 60.0).abs() <= 1.0, "left {left} -> {left2}");
+    assert!(
+        (right - right2 - 60.0).abs() <= 1.0,
+        "right {right} -> {right2}"
+    );
+    drag(
+        vcx,
+        "explorer-resize-edge",
+        gpui::point(gpui::px(-40.0), gpui::px(0.0)),
+    );
+    assert!(
+        width(vcx, "pane-left") > left2,
+        "a narrower tool window widens the panes"
+    );
+}

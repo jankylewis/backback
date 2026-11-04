@@ -84,6 +84,8 @@ pub(crate) struct IntelModel {
     pub(crate) rename_preview: Option<RenamePreview>,
     /// Whether the Problems panel shows.
     pub(crate) problems_open: bool,
+    /// The panel's row list, scrolled both ways (BB-BUG-044).
+    pub(crate) rows_scroll: gpui::ScrollHandle,
     /// UI frames drawn so far.
     pub(crate) frame: u64,
     /// Completion latency rows, newest last.
@@ -116,6 +118,7 @@ impl IntelModel {
             link: None,
             rename_preview: None,
             problems_open: false,
+            rows_scroll: gpui::ScrollHandle::new(),
             frame: 0,
             trace: Vec::new(),
             undrawn: None,

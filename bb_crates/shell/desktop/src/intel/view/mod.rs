@@ -86,3 +86,6 @@ mod tests {
         assert_eq!(offenders, Vec::<String>::new());
     }
 }
+
+#[cfg(test)]
+mod panels_tests;
