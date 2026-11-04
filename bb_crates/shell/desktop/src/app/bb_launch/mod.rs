@@ -179,7 +179,6 @@ pub(crate) fn fresh_view(
         root: root.clone(),
         intel: crate::intel::model::IntelModel::new(crate::intel::model::LoadStatus::NoSolution),
         link: None,
-        editor_scroll: gpui::UniformListScrollHandle::new(),
         tests: crate::tests_panel::TestsState::new(),
         debug: crate::run::bb_debug::DebugState::load(&root),
         quick_open: None,

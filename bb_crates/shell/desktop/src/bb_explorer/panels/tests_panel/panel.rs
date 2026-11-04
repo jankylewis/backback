@@ -161,12 +161,6 @@ pub(crate) fn resize_edge(theme: Theme, cx: &mut Context<ExplorerView>) -> impl 
 }
 
 impl ExplorerView {
-    /// The editor's left edge in the window: after the tool window and its
-    /// 6 px edge when it docks left, else the window's left edge.
-    pub(crate) fn editor_left(&self, fonts: &bb_ui::Typography) -> f32 {
-        fonts.editor_x(self.panel_width) - fonts.gutter_width()
-    }
-
     pub(crate) fn move_resize(
         &mut self,
         event: &gpui::MouseMoveEvent,

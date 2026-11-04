@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 39 — FIXED 37, OBSERVED 2.
+Bugs a user met in the app. Entries: 41 — FIXED 39, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -43,3 +43,5 @@ Bugs a user met in the app. Entries: 39 — FIXED 37, OBSERVED 2.
 | BB-BUG-037 | The Explorer misses files made or removed outside | FIXED | each folder was read once (BB-UIX-016) | yes | `D3/S10/BB_BUG_037_THE_EXPLORER_MISSES_FILES_MADE_OR_REMOVED_OUTSIDE.md` |
 | BB-BUG-038 | A second window wipes the first's Roslyn folder | FIXED | two workers shared one owned temp folder (BB-PRC-005) | yes | `D3/S10/BB_BUG_038_A_SECOND_WINDOW_WIPES_THE_FIRSTS_ROSLYN_FOLDER.md` |
 | BB-BUG-039 | No pinned tabs and no bulk close | FIXED | not built (VS Code tab menu) | yes | `D3/S10/BB_BUG_039_NO_PINNED_TABS_AND_NO_BULK_CLOSE.md` |
+| BB-BUG-040 | No split editor: a tab cannot be dragged to the right side | FIXED | not built (VS Code split editor) | yes | `D3/S10/BB_BUG_040_NO_SPLIT_EDITOR.md` |
+| BB-BUG-041 | The save prompt acts on the wrong tab after tabs move | FIXED | the prompt held an index, not a file | yes | `D3/S11/BB_BUG_041_THE_SAVE_PROMPT_ACTS_ON_THE_WRONG_TAB_AFTER_A_MOVE.md` |

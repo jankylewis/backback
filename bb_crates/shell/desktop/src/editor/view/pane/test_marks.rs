@@ -1,9 +1,9 @@
-use super::super::bb_tabs::Tab;
+use super::super::super::bb_tabs::Tab;
 use crate::ExplorerView;
 use bb_testkit::Fqn;
 use std::path::PathBuf;
 
-pub(super) fn target(view: &ExplorerView, tab: &Tab, line: usize) -> Option<(PathBuf, Fqn)> {
+pub(crate) fn target(view: &ExplorerView, tab: &Tab, line: usize) -> Option<(PathBuf, Fqn)> {
     let name: &str = tab
         .test_methods
         .iter()

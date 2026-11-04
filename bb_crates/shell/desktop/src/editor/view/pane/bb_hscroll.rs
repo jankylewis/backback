@@ -5,8 +5,8 @@
 
 use gpui::{div, prelude::*, px, Context, IntoElement, ScrollEvent, Window};
 
-use super::super::bb_tabs::Tab;
-use super::bb_line::Columns;
+use super::super::super::bb_tabs::Tab;
+use super::super::bb_line::Columns;
 use crate::ExplorerView;
 
 /// Space kept between the caret and the viewport's edges when it scrolls.
@@ -16,7 +16,7 @@ const SLACK: &str = "MMMMMMMM";
 
 /// The text's window in a row: what is left after the gutter, clipped; the
 /// shaped line inside sits `scroll_x` pixels to the left.
-pub(super) fn text_viewport(scroll_x: f32, text: impl IntoElement) -> impl IntoElement {
+pub(crate) fn text_viewport(scroll_x: f32, text: impl IntoElement) -> impl IntoElement {
     div()
         .flex_1()
         .min_w(px(0.0))
@@ -29,7 +29,7 @@ pub(super) fn text_viewport(scroll_x: f32, text: impl IntoElement) -> impl IntoE
 
 /// Before the visible rows paint: note the widest line in sight and, when
 /// the cursor moved, scroll so its caret is in sight.
-pub(super) fn before_rows(
+pub(crate) fn before_rows(
     view: &mut ExplorerView,
     visible: &std::ops::Range<usize>,
     window: &Window,
@@ -54,7 +54,7 @@ pub(super) fn before_rows(
         return;
     }
     tab.sighted = Some(cursor);
-    let caret: f32 = super::caret_x(tab, line, window, &fonts);
+    let caret: f32 = super::super::caret_x(tab, line, window, &fonts);
     tab.scroll_x = scrolled_to_sight(tab.scroll_x, caret, viewport);
 }
 
@@ -77,13 +77,16 @@ fn scrolled_to_sight(scroll_x: f32, caret: f32, width: f32) -> f32 {
 
 /// The width the text may use: the editor's width less the gutter.
 fn text_viewport_width(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> f32 {
+    if view.tabs.is_split() {
+        return (view.tabs.pane_px - fonts.gutter_width()).max(0.0);
+    }
     let total: f32 = f32::from(window.viewport_size().width);
     (total - view.editor_left(fonts) - fonts.gutter_width()).max(0.0)
 }
 
 /// A wheel or trackpad move with a horizontal part scrolls the text; the
 /// vertical part stays with the line list (never stopped here).
-pub(super) fn on_wheel(
+pub(crate) fn on_wheel(
     view: &mut ExplorerView,
     event: &ScrollEvent,
     window: &mut Window,

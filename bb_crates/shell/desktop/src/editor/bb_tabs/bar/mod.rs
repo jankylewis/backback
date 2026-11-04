@@ -1,8 +1,9 @@
 //! Pinned tabs and the bulk closes of a tab's menu (BB-BUG-039), as VS Code
 //! has them: pinned tabs stay left; Close Others / to the Right / to the
 //! Left and Close All Except Pinned skip them; Close All takes every tab.
+//! Each acts on the group of the tab whose menu it is (BB-BUG-040).
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use super::{Tab, Tabs};
 
@@ -46,34 +47,34 @@ pub(crate) struct TabMenu {
 }
 
 impl Tabs {
-    fn position(&self, path: &Path) -> Option<usize> {
-        self.items.iter().position(|tab: &Tab| tab.path == path)
-    }
-
-    /// Pin or unpin tab `index`: a pin moves it to the end of the pinned
-    /// run, an unpin to just after it. The active tab stays the same file.
+    /// Pin or unpin tab `index` in its group: a pin moves it to the end of
+    /// the pinned run, an unpin to just after it. The active tabs stay.
     pub(crate) fn toggle_pin(&mut self, index: usize) {
         if index >= self.items.len() {
             return;
         }
-        let active: Option<PathBuf> = self.active_tab().map(|tab: &Tab| tab.path.clone());
+        let actives: (Option<PathBuf>, Option<PathBuf>) = self.actives();
         let mut tab: Tab = self.items.remove(index);
         tab.pinned = !tab.pinned;
-        let at: usize = self.items.iter().take_while(|t: &&Tab| t.pinned).count();
+        // Pinned or not, it goes where the group's pinned run ends.
+        let at: usize = self.pins_end(tab.side);
         self.items.insert(at, tab);
-        self.active = active.and_then(|path: PathBuf| self.position(&path));
+        self.restore(actives, self.focused);
     }
 
     /// Close the tabs `set` takes, seen from tab `at`. Clean tabs close now;
     /// tabs with unsaved edits queue for the save prompt, one at a time.
     /// The menu's tab, if still open, becomes active. `true`: no prompt.
     pub(crate) fn close_set(&mut self, at: usize, set: CloseSet) -> bool {
+        let Some(side): Option<super::Side> = self.items.get(at).map(|tab: &Tab| tab.side) else {
+            return true;
+        };
         let anchor: Option<PathBuf> = self.items.get(at).map(|tab: &Tab| tab.path.clone());
         let taken: Vec<PathBuf> = self
             .items
             .iter()
             .enumerate()
-            .filter(|(index, tab): &(usize, &Tab)| set.takes(at, *index, tab))
+            .filter(|(index, tab): &(usize, &Tab)| tab.side == side && set.takes(at, *index, tab))
             .map(|(_, tab): (usize, &Tab)| tab.path.clone())
             .collect();
         for path in taken {
@@ -91,7 +92,7 @@ impl Tabs {
             }
         }
         if let Some(index) = anchor.and_then(|path: PathBuf| self.position(&path)) {
-            self.active = Some(index);
+            self.switch(index);
         }
         self.next_close()
     }
@@ -102,8 +103,8 @@ impl Tabs {
         while !self.closing.is_empty() {
             let path: PathBuf = self.closing.remove(0);
             if let Some(index) = self.position(&path) {
-                self.pending_close = Some(index);
-                self.active = Some(index);
+                self.pending_close = Some(path);
+                self.switch(index);
                 return false;
             }
         }

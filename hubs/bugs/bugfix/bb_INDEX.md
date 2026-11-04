@@ -39,3 +39,5 @@
 | BB-BUG-037 | The 2 s disk check re-reads loaded folders, merged by path | FIXED | unit test + readback | `D3/S10/BB_BUG_037_THE_EXPLORER_MISSES_FILES_MADE_OR_REMOVED_OUTSIDE.md` |
 | BB-BUG-038 | One `backback-intel-<pid>-<n>` folder per worker | FIXED | red-first unit test + gate | `D3/S10/BB_BUG_038_A_SECOND_WINDOW_WIPES_THE_FIRSTS_ROSLYN_FOLDER.md` |
 | BB-BUG-039 | Pinned tabs, a tab menu and the bulk closes, VS Code keys | FIXED | unit + window tests + readback | `D3/S10/BB_BUG_039_NO_PINNED_TABS_AND_NO_BULK_CLOSE.md` |
+| BB-BUG-040 | Two editor groups; drag, menu rows and keys move a tab | FIXED | unit + window tests + readback | `D3/S10/BB_BUG_040_NO_SPLIT_EDITOR.md` |
+| BB-BUG-041 | The save prompt holds the file's path | FIXED | red-first unit test + readback | `D3/S11/BB_BUG_041_THE_SAVE_PROMPT_ACTS_ON_THE_WRONG_TAB_AFTER_A_MOVE.md` |

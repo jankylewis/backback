@@ -26,7 +26,7 @@ pub(super) fn command_key(
             }),
         "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => {
             if let Ok(number) = key.parse::<usize>() {
-                view.tabs.switch(number.saturating_sub(1));
+                view.tabs.switch_nth(number.saturating_sub(1));
             }
             Ok(())
         }

@@ -1,10 +1,12 @@
 //! A tab's right-click menu and the keys, as in VS Code: Cmd+K Shift+Enter
-//! pins or unpins, Cmd+Alt+T closes the others, Cmd+K Cmd+W closes all.
+//! pins or unpins, Cmd+Alt+T closes the others, Cmd+K Cmd+W closes all;
+//! Ctrl+Cmd+Right / Left move the tab to the right / left group and Cmd+\
+//! to the other one (BB-BUG-040: one tab per file, so a split moves it).
 
 use bb_ui::bb_theme::Theme;
 use gpui::{anchored, deferred, div, prelude::*, Context, IntoElement, KeyBinding, Window};
 
-use super::super::Tabs;
+use super::super::{Side, Tabs};
 use super::{CloseSet, TabMenu};
 use crate::{color, ExplorerView};
 
@@ -23,11 +25,29 @@ pub(crate) struct CloseOtherTabs;
 #[action(namespace = backback)]
 pub(crate) struct CloseAllTabs;
 
-pub(crate) fn bindings() -> [KeyBinding; 3] {
+/// Move the active tab to the right group (made if needed).
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct MoveTabRight;
+
+/// Move the active tab to the left group.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct MoveTabLeft;
+
+/// Move the active tab to the other group: VS Code's Split Editor key.
+#[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
+#[action(namespace = backback)]
+pub(crate) struct SplitEditor;
+
+pub(crate) fn bindings() -> [KeyBinding; 6] {
     [
         KeyBinding::new("cmd-k shift-enter", PinTab, Some("Editor")),
         KeyBinding::new("cmd-alt-t", CloseOtherTabs, Some("Editor")),
         KeyBinding::new("cmd-k cmd-w", CloseAllTabs, Some("Editor")),
+        KeyBinding::new("ctrl-cmd-right", MoveTabRight, Some("Editor")),
+        KeyBinding::new("ctrl-cmd-left", MoveTabLeft, Some("Editor")),
+        KeyBinding::new("cmd-\\", SplitEditor, Some("Editor")),
     ]
 }
 
@@ -37,6 +57,7 @@ pub(crate) enum Item {
     Close,
     Set(CloseSet),
     Pin,
+    Move(Side),
 }
 
 /// The rows: selector name, label, what it does.
@@ -59,8 +80,11 @@ const ROWS: [(&str, &str, Item); 6] = [
 
 /// The row a selector name stands for (the readback `tabmenu` step).
 pub(crate) fn item(name: &str) -> Option<Item> {
-    if name == "pin" {
-        return Some(Item::Pin);
+    match name {
+        "pin" => return Some(Item::Pin),
+        "move-right" => return Some(Item::Move(Side::Right)),
+        "move-left" => return Some(Item::Move(Side::Left)),
+        _ => {}
     }
     ROWS.iter()
         .find(|(key, _, _): &&(&str, &str, Item)| *key == name)
@@ -78,6 +102,7 @@ pub(crate) fn apply(view: &mut ExplorerView, index: usize, item: Item) {
             let _asked: bool = view.tabs.close_set(index, set);
         }
         Item::Pin => view.tabs.toggle_pin(index),
+        Item::Move(side) => view.tabs.move_to(index, side),
     }
 }
 
@@ -87,10 +112,12 @@ pub(super) fn tab_menu(
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
-    let pinned: bool = tabs
-        .items()
-        .get(open.index)
-        .is_some_and(|tab: &super::Tab| tab.pinned);
+    let tab: Option<&super::Tab> = tabs.items().get(open.index);
+    let pinned: bool = tab.is_some_and(|tab: &super::Tab| tab.pinned);
+    let shift: (&'static str, &'static str, Item) = match tab.map(|tab: &super::Tab| tab.side) {
+        Some(Side::Right) => ("move-left", "Move to Left Group", Item::Move(Side::Left)),
+        Some(Side::Left) | None => ("move-right", "Move to Right Group", Item::Move(Side::Right)),
+    };
     let pin: (&'static str, &'static str, Item) =
         ("pin", if pinned { "Unpin" } else { "Pin" }, Item::Pin);
     let body: gpui::Stateful<gpui::Div> =
@@ -110,7 +137,7 @@ pub(super) fn tab_menu(
                     cx.notify();
                 },
             ))
-            .children(ROWS.iter().chain(std::iter::once(&pin)).map(
+            .children(ROWS.iter().chain([&pin, &shift]).map(
                 |&spec: &(&'static str, &'static str, Item)| row(open.index, spec, theme, cx),
             ));
     deferred(anchored().position(open.at).child(body)).with_priority(2)
@@ -148,6 +175,39 @@ pub(crate) fn on_tab_actions(
     area.on_action(cx.listener(ExplorerView::on_pin_tab))
         .on_action(cx.listener(ExplorerView::on_close_other_tabs))
         .on_action(cx.listener(ExplorerView::on_close_all_tabs))
+        .on_action(cx.listener(
+            |v: &mut ExplorerView,
+             _: &MoveTabRight,
+             w: &mut Window,
+             cx: &mut Context<ExplorerView>| move_active(v, Some(Side::Right), w, cx),
+        ))
+        .on_action(cx.listener(
+            |v: &mut ExplorerView,
+             _: &MoveTabLeft,
+             w: &mut Window,
+             cx: &mut Context<ExplorerView>| move_active(v, Some(Side::Left), w, cx),
+        ))
+        .on_action(cx.listener(
+            |v: &mut ExplorerView,
+             _: &SplitEditor,
+             w: &mut Window,
+             cx: &mut Context<ExplorerView>| move_active(v, None, w, cx),
+        ))
+}
+
+/// Move the active tab to `side`, or to the other group for `None`.
+fn move_active(
+    view: &mut ExplorerView,
+    side: Option<Side>,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    if let Some(index) = view.tabs.active_index() {
+        let to: Side = side.unwrap_or_else(|| view.tabs.focused().other());
+        apply(view, index, Item::Move(to));
+        window.focus(&view.editor_focus, cx);
+    }
+    cx.notify();
 }
 
 impl ExplorerView {
