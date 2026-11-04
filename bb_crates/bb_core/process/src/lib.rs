@@ -3,6 +3,7 @@
 //! (`shell_env`).
 
 mod bb_group;
+mod owner;
 pub mod shell_env;
 mod temp;
 
