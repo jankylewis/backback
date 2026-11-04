@@ -73,6 +73,7 @@ fn stopped(
         None => format!("Paused ({reason}) in {name}"),
     });
     if let Some(live) = view.debug.live.as_mut() {
+        live.hidden = false;
         live.phase = Phase::Stopped {
             frames,
             selected: shown,

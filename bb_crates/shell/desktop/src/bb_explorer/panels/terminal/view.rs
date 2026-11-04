@@ -18,7 +18,7 @@ fn grid(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> (usi
     (
         fit(width - 16.0, cell),
         fit(
-            view.lines.terminal_px - 12.0 - crate::editor::HANDLE_PX,
+            view.lines.terminal_px - 12.0 - crate::editor::HANDLE_PX - crate::intel::view::TITLE_PX,
             fonts.line_height(),
         ),
     )
@@ -154,9 +154,26 @@ pub(crate) fn panel(
                 crate::editor::handle(crate::editor::Edge::Terminal, "terminal-edge", theme, cx)
                     .h(px(crate::editor::HANDLE_PX)),
             )
+            .child(title(theme, cx))
             .child(div().p(px(6.0)).flex().flex_col().children(rows))
             .into_any_element(),
     )
+}
+
+/// `TERMINAL` and its ✕, which hides the panel; the shell goes on
+/// (BB-BUG-047).
+fn title(theme: bb_ui::Theme, cx: &mut Context<ExplorerView>) -> AnyElement {
+    crate::intel::view::one_line(crate::intel::view::TITLE_PX)
+        .px_2()
+        .text_color(color(theme.text_dim))
+        .child(div().flex_1().child("TERMINAL"))
+        .child(crate::intel::view::close_x(
+            "terminal-close",
+            theme,
+            cx,
+            super::hide,
+        ))
+        .into_any_element()
 }
 
 #[cfg(test)]

@@ -34,7 +34,20 @@ pub(super) fn title_row(
             theme,
             cx,
         ))
+        .child(crate::intel::view::close_x(
+            "debug-panel-close",
+            theme,
+            cx,
+            hide,
+        ))
         .into_any_element()
+}
+
+/// The ✕: hides the panel; the session goes on (BB-BUG-047).
+pub(crate) fn hide(view: &mut ExplorerView, _: &mut Window, _: &mut Context<ExplorerView>) {
+    if let Some(live) = view.debug.live.as_mut() {
+        live.hidden = true;
+    }
 }
 
 /// One tick; a click flips it.

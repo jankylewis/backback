@@ -22,7 +22,7 @@ const TAIL: usize = 12;
 
 /// The panel, if a session lives.
 pub(crate) fn panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
-    let live: &Live = view.debug.live.as_ref()?;
+    let live: &Live = view.debug.live.as_ref().filter(|l: &&Live| !l.hidden)?;
     let theme: Theme = view.theme;
     let body: AnyElement = match &live.phase {
         Phase::Building | Phase::Running => output(live, theme),

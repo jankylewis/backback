@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 46 — FIXED 44, OBSERVED 2.
+Bugs a user met in the app. Entries: 47 — FIXED 45, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -50,3 +50,4 @@ Bugs a user met in the app. Entries: 46 — FIXED 44, OBSERVED 2.
 | BB-BUG-044 | The panes and the results panel could not be resized; long results were cut off | FIXED | not built (fixed sizes, clipped rows) | yes | `D3/S11/BB_BUG_044_PANES_AND_THE_RESULTS_PANEL_COULD_NOT_BE_RESIZED_OR_SCROLLED.md` |
 | BB-BUG-045 | Only two editor panes; three files could not show side by side | FIXED | not built (two groups only) | yes | `D4/S12/BB_BUG_045_ONLY_TWO_EDITOR_PANES.md` |
 | BB-BUG-046 | The terminal's text was unreadable and its height fixed | FIXED | no text colour set (gpui default black); fixed height | yes | `D4/S12/BB_BUG_046_TERMINAL_TEXT_UNREADABLE_AND_HEIGHT_FIXED.md` |
+| BB-BUG-047 | Panels had no close button; the View menu had no Terminal | FIXED | not built (key-only close; no menu item) | yes | `D4/S12/BB_BUG_047_PANELS_COULD_NOT_BE_CLOSED_AND_NO_TERMINAL_MENU.md` |

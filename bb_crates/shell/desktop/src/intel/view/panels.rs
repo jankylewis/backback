@@ -48,10 +48,11 @@ pub(crate) fn bottom(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Opt
             .text_color(color(theme.text))
             .child(crate::editor::bottom_handle(theme, cx))
             .child(
-                super::one_line(22.0)
+                super::one_line(super::TITLE_PX)
                     .px_2()
                     .text_color(color(theme.text_dim))
-                    .child(title),
+                    .child(div().flex_1().child(title))
+                    .child(super::close_x("intel-panel-close", theme, cx, close)),
             )
             .child(row_list(view, rows))
             .into_any_element(),
@@ -162,6 +163,14 @@ fn severity_word(severity: Option<Severity>) -> &'static str {
         Some(Severity::Hint) => "hint",
         None => "note",
     }
+}
+
+/// The ✕: closes the rename preview, references, Find in Files and
+/// Problems alike, as Esc does (BB-BUG-047).
+pub(crate) fn close(view: &mut ExplorerView, _: &mut Window, _: &mut Context<ExplorerView>) {
+    view.intel.rename_preview = None;
+    view.intel.references = None;
+    view.intel.problems_open = false;
 }
 
 fn rename_rows(plan: &RenamePreview, root: &Path, theme: Theme) -> (String, Vec<AnyElement>) {

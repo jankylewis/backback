@@ -24,6 +24,41 @@ pub(crate) fn one_line(height: f32) -> gpui::Div {
         .text_ellipsis()
 }
 
+/// Height of a panel's title row.
+pub(crate) const TITLE_PX: f32 = 22.0;
+
+/// The ✕ at the right of a panel's title row: a click closes the panel
+/// (BB-BUG-047).
+pub(crate) fn close_x(
+    id: &'static str,
+    theme: bb_ui::bb_theme::Theme,
+    cx: &mut gpui::Context<crate::ExplorerView>,
+    close: fn(&mut crate::ExplorerView, &mut gpui::Window, &mut gpui::Context<crate::ExplorerView>),
+) -> gpui::AnyElement {
+    div()
+        .id(id)
+        .debug_selector(move || id.to_owned())
+        .px_1()
+        .cursor_pointer()
+        .text_color(crate::color(theme.text_dim))
+        .hover(|el: gpui::StyleRefinement| {
+            el.bg(crate::color(theme.overlay))
+                .text_color(crate::color(theme.text))
+        })
+        .child("✕")
+        .on_click(cx.listener(
+            move |view: &mut crate::ExplorerView,
+                  _: &gpui::ClickEvent,
+                  window: &mut gpui::Window,
+                  cx: &mut gpui::Context<crate::ExplorerView>| {
+                cx.stop_propagation();
+                close(view, window, cx);
+                cx.notify();
+            },
+        ))
+        .into_any_element()
+}
+
 /// Count a frame. A completion answer applied since the last frame is drawn
 /// in this one: record how many frames and how long it waited.
 pub(crate) fn note_frame(model: &mut IntelModel) {
