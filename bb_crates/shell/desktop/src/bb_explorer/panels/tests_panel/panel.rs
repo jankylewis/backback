@@ -6,9 +6,7 @@ use std::ops::Range;
 
 use bb_explorer::Entry;
 use bb_ui::bb_theme::Theme;
-use gpui::{
-    div, prelude::*, px, uniform_list, AnyElement, Context, IntoElement, MouseButton, Window,
-};
+use gpui::{div, prelude::*, px, uniform_list, AnyElement, Context, IntoElement, Window};
 
 use crate::bb_row_view::{row, RowState};
 use crate::{color, ExplorerView};
@@ -150,52 +148,15 @@ fn rows_in(
         .collect()
 }
 
+/// The tool window's edge: drag it to set the tool window's width.
 pub(crate) fn resize_edge(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
-    div()
-        .id("explorer-resize-edge")
-        .w(px(6.0))
-        .h_full()
-        .flex_shrink_0()
-        .bg(color(theme.border))
-        .on_mouse_down(MouseButton::Left, cx.listener(ExplorerView::start_resize))
-}
-
-impl ExplorerView {
-    pub(crate) fn move_resize(
-        &mut self,
-        event: &gpui::MouseMoveEvent,
-        window: &mut gpui::Window,
-        cx: &mut Context<Self>,
-    ) {
-        if self.resizing && event.dragging() {
-            let x: f32 = f32::from(event.position.x);
-            let wide: f32 = if crate::settings::typography(cx).panel_right {
-                f32::from(window.viewport_size().width) - x
-            } else {
-                x
-            };
-            self.panel_width = wide.clamp(180.0, 800.0);
-            cx.notify();
-        }
-    }
-
-    pub(crate) fn finish_resize(
-        &mut self,
-        _: &gpui::MouseUpEvent,
-        _: &mut gpui::Window,
-        _: &mut Context<Self>,
-    ) {
-        self.resizing = false;
-    }
-
-    fn start_resize(
-        &mut self,
-        _: &gpui::MouseDownEvent,
-        _: &mut gpui::Window,
-        _: &mut Context<Self>,
-    ) {
-        self.resizing = true;
-    }
+    crate::editor::handle(
+        crate::editor::Edge::Panel,
+        "explorer-resize-edge",
+        theme,
+        cx,
+    )
+    .w(px(6.0))
 }
 
 #[cfg(test)]

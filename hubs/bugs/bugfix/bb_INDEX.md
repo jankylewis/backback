@@ -43,3 +43,4 @@
 | BB-BUG-041 | The save prompt holds the file's path | FIXED | red-first unit test + readback | `D3/S11/BB_BUG_041_THE_SAVE_PROMPT_ACTS_ON_THE_WRONG_TAB_AFTER_A_MOVE.md` |
 | BB-BUG-042 | A press outside closes the box; a row press opens it | FIXED | window test (mutation-checked) + readback | `D3/S11/BB_BUG_042_GO_TO_FILE_AND_FIND_IN_FILES_CANNOT_BE_CLOSED_BY_A_CLICK.md` |
 | BB-BUG-043 | Status bar names the build; fix installed; split-layout window test | FIXED | window test + build stamp | `D3/S11/BB_BUG_043_GO_TO_FILE_STILL_DID_NOT_CLOSE_ON_A_CLICK_OUTSIDE.md` |
+| BB-BUG-044 | Drag lines (`Lines`); results scroll both ways, match first | FIXED | window tests (mutation-checked) | `D3/S11/BB_BUG_044_PANES_AND_THE_RESULTS_PANEL_COULD_NOT_BE_RESIZED_OR_SCROLLED.md` |

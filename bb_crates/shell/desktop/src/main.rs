@@ -55,7 +55,7 @@ struct ExplorerView {
     reparse_ns: u64,
     closing_window: bool,
     panel_width: f32,
-    resizing: bool,
+    lines: editor::Lines,
     theme: Theme,
     theme_override: Option<ThemeKind>,
     appearance_subscription: Option<gpui::Subscription>,
