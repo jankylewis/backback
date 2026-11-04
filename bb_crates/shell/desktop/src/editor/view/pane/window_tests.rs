@@ -133,3 +133,45 @@ fn cmd_backslash_moves_the_tab_back_and_the_split_ends(cx: &mut TestAppContext) 
     );
     assert!(vcx.debug_bounds("pane-right").is_none());
 }
+
+fn box_open(rig: &Rig, vcx: &mut VisualTestContext) -> bool {
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.quick_open.is_some()
+    })
+}
+
+/// BB-BUG-043: with two panes, a press anywhere outside Go to File closes it:
+/// an Explorer row, the focused pane's text, the other pane, the status bar.
+#[gpui::test]
+fn go_to_file_closes_on_a_press_anywhere_outside_it_with_two_panes(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = two_tabs(cx);
+    vcx.simulate_keystrokes("ctrl-cmd-right");
+    let size: gpui::Size<gpui::Pixels> =
+        vcx.update(|window: &mut gpui::Window, _: &mut gpui::App| window.viewport_size());
+    let right: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("pane-right").unwrap();
+    let left: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("pane-left").unwrap();
+    let places: [(&str, gpui::Point<gpui::Pixels>); 4] = [
+        (
+            "explorer",
+            gpui::point(gpui::px(40.0), size.height - gpui::px(120.0)),
+        ),
+        (
+            "focused text",
+            right.bottom_right() - gpui::point(gpui::px(30.0), gpui::px(60.0)),
+        ),
+        (
+            "other pane",
+            left.bottom_left() + gpui::point(gpui::px(30.0), -gpui::px(60.0)),
+        ),
+        (
+            "status bar",
+            gpui::point(size.width / 2.0, size.height - gpui::px(6.0)),
+        ),
+    ];
+    for (name, at) in places {
+        vcx.simulate_keystrokes("cmd-shift-o");
+        assert!(box_open(&rig, vcx), "{name}: the box opened");
+        vcx.simulate_click(at, Modifiers::default());
+        assert!(!box_open(&rig, vcx), "{name}: a press outside closed it");
+    }
+}

@@ -40,3 +40,4 @@
 | BB-UIX-016 | FIXED | Re-read loaded folders on the disk check, merged by path | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | FIXED | A folder per worker (`create_with` + counter) | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
 | BB-PRC-006 | FIXED | Owned scratch folder, newest 50 logs, owner must predate its folder | `SYS/PRC/S02/BB_PRC_006_DEV_TOOL_TEMP_FILES_GREW_AND_A_REUSED_PID_KEPT_A_FOLDER.md` |
+| BB-BLD-003 | FIXED | The status bar names the build; check `BBCommit` before saying fixed | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |

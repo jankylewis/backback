@@ -11,7 +11,7 @@ pub(crate) use bb_tabs::{go_back, go_forward, GoBack, GoForward, Tab, TabError, 
 pub(crate) use input::handle_key;
 pub(crate) use input::link;
 pub(crate) use prompt::Quit;
-pub(crate) use view::{layout_panes, panes, status_bar, Columns, DIVIDER_PX};
+pub(crate) use view::{build, layout_panes, panes, status_bar, Columns, DIVIDER_PX};
 
 /// How often open files are checked against the disk (BB-BUG-035).
 const DISK_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
