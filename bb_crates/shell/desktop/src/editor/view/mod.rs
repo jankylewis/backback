@@ -14,7 +14,7 @@ use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
-pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines};
+pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines, HANDLE_PX};
 pub(crate) use pane::{layout as layout_panes, panes};
 pub(crate) use status::{build, status_bar};
 
