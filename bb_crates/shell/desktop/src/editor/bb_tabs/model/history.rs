@@ -91,10 +91,10 @@ impl History {
     }
 }
 
-impl super::Tabs {
+impl super::super::Tabs {
     /// The active tab's file and cursor, for Back / Forward.
     pub(crate) fn here(&self) -> Option<Place> {
-        let tab: &super::Tab = self.active_tab()?;
+        let tab: &super::super::Tab = self.active_tab()?;
         let at: bb_text::LspPoint = tab.document.lsp_point(tab.document.cursor()).ok()?;
         Some(Place {
             path: tab.path.clone(),

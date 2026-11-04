@@ -52,7 +52,8 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
     });
 }
 
-/// The tab bar's line: names in order, `*` after a pinned one (BB-BUG-039).
+/// The tab bar's line: names in order, `*` after a pinned one (BB-BUG-039),
+/// `>` before a right-group one (BB-BUG-040).
 fn tabs_line(v: &ExplorerView) {
     let names: Vec<String> = v
         .tabs
@@ -65,6 +66,11 @@ fn tabs_line(v: &ExplorerView) {
                 .map_or_else(String::new, |n: &std::ffi::OsStr| {
                     n.to_string_lossy().into_owned()
                 });
+            let name: String = if tab.side == crate::editor::Side::Right {
+                format!(">{name}")
+            } else {
+                name
+            };
             if tab.pinned {
                 format!("{name}*")
             } else {
@@ -73,9 +79,11 @@ fn tabs_line(v: &ExplorerView) {
         })
         .collect();
     eprintln!(
-        "bb_tabs_state tabs={names:?} active={:?} asking={}",
+        "bb_tabs_state tabs={names:?} active={:?} asking={:?} focused={:?} split_px={}",
         v.tabs.active_index().map(|i: usize| i.saturating_add(1)),
-        v.tabs.pending_close()
+        v.tabs.asking().and_then(std::path::Path::file_name),
+        v.tabs.focused(),
+        v.tabs.pane_px
     );
 }
 

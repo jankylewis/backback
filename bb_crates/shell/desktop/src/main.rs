@@ -66,7 +66,6 @@ struct ExplorerView {
     root: PathBuf,
     intel: intel::model::IntelModel,
     link: Option<intel::bb_worker::Link>,
-    editor_scroll: UniformListScrollHandle,
     tests: tests_panel::TestsState,
     debug: run::bb_debug::DebugState,
     quick_open: Option<quick_open::QuickOpen>,
@@ -200,6 +199,7 @@ impl Render for ExplorerView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         intel::glue::flush(self);
         intel::view::note_frame(&mut self.intel);
+        editor::layout_panes(self, window, cx);
         let status: String = self.intel.status_label();
         let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
         let shell: Option<gpui::AnyElement> = terminal::panel(self, window, cx);
@@ -229,8 +229,7 @@ impl Render for ExplorerView {
                     .h_full()
                     .flex()
                     .flex_col()
-                    .child(editor::tab_bar(&self.tabs, self.theme, cx))
-                    .child(editor::editor_body(self, cx))
+                    .child(editor::panes(self, cx))
                     .children(panel)
                     .children(shell)
                     .child(editor::status_bar(

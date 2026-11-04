@@ -83,7 +83,7 @@ pub(super) fn line_row(
             theme,
             cx,
         ))
-        .child(super::hscroll::text_viewport(
+        .child(super::pane::bb_hscroll::text_viewport(
             scroll_x,
             line_text(index, runs, (theme, &fonts)),
         ))

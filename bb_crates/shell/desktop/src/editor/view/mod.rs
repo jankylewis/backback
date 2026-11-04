@@ -3,18 +3,18 @@ use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, uniform_list, Context, FocusHandle, IntoElement, Window};
 
 mod bb_line;
-mod hscroll;
+mod pane;
 mod status;
-mod test_marks;
 use super::bb_tabs::Tab;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
+pub(crate) use pane::{layout as layout_panes, panes, DIVIDER_PX};
 pub(crate) use status::status_bar;
 
-pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
+pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
     let (tabs, focus, theme): (&Tabs, &FocusHandle, Theme) =
         (&view.tabs, &view.editor_focus, view.theme);
     let lines: usize = tabs.active().map_or(0, Document::len_lines);
@@ -32,7 +32,7 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
         .on_action(cx.listener(super::go_forward))
         .map(|area: gpui::Stateful<gpui::Div>| crate::editor::on_tab_actions(area, cx))
-        .on_scroll(cx.listener(hscroll::on_wheel))
+        .on_scroll(cx.listener(pane::bb_hscroll::on_wheel))
         .child(
             uniform_list(
                 "editor-lines",
@@ -43,14 +43,14 @@ pub(crate) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
                      window: &mut Window,
                      row_cx: &mut Context<ExplorerView>| {
                         follow_view(view, &range, window, row_cx);
-                        hscroll::before_rows(view, &range, window, row_cx);
+                        pane::bb_hscroll::before_rows(view, &range, window, row_cx);
                         range
-                            .map(|index: usize| editor_line(view, index, window, row_cx))
+                            .map(|index: usize| focused_line(view, index, window, row_cx))
                             .collect::<Vec<_>>()
                     },
                 ),
             )
-            .track_scroll(&view.editor_scroll)
+            .track_scroll(&view.tabs.scroll)
             .h_full(),
         )
         .children(crate::intel::view::bb_popups::hover(
@@ -81,16 +81,28 @@ fn follow_view(
     }
 }
 
-fn editor_line(
+fn focused_line(
     view: &ExplorerView,
     index: usize,
     window: &Window,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
-    let Some(tab): Option<&Tab> = view.tabs.active_tab() else {
+    editor_line(view, view.tabs.focused(), index, window, cx)
+}
+
+/// Line `index` of `side`'s active tab. Only the focused pane draws the
+/// cursor, its line and the popups at it (BB-BUG-040).
+pub(super) fn editor_line(
+    view: &ExplorerView,
+    side: super::Side,
+    index: usize,
+    window: &Window,
+    cx: &mut Context<ExplorerView>,
+) -> impl IntoElement {
+    let Some(tab): Option<&Tab> = view.tabs.active_tab_of(side) else {
         return line_row(LineRow::blank(index), &[], view.theme, cx);
     };
-    let current: bool = tab.document.cursor_line() == index;
+    let current: bool = side == view.tabs.focused() && tab.document.cursor_line() == index;
     let marks: Vec<Mark> = line_marks(&tab.document, view.intel.diagnostics_of(&tab.path), index);
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
     let caret: Option<f32> = current.then(|| caret_x(tab, index, window, &fonts));
@@ -112,7 +124,7 @@ fn editor_line(
             .iter()
             .any(|method: &bb_syntax::TestMethod| method.line == index)
             .then(|| TestGutter {
-                target: test_marks::target(view, tab, index),
+                target: pane::test_marks::target(view, tab, index),
             }),
         overlay,
         caret,
