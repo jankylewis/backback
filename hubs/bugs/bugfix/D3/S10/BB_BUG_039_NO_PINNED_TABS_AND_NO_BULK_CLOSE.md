@@ -24,3 +24,8 @@ Unit tests in `bar/tests.rs` (pin order, the skip rules, the dirty queue
 and Cancel). Window tests in `bar/window_tests.rs`: a real right-click
 opens the menu and its rows act; the Cmd+K Shift+Enter chord pins and
 inserts no line.
+Readback (branch build, scratch files, `--no-write`): pin by menu, the
+chord, close right / left / except pinned / all, and the dirty-tab prompt,
+6 of 6 as expected. Its first run caught a slip in the new runner step:
+`tabmenu:<n>` made `n` 0-based twice (`number` already does), so it acted
+on the tab before; fixed before the PR.

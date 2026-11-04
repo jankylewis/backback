@@ -71,7 +71,8 @@ fn tests(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, expand: b
     );
 }
 
-/// `tabmenu:<n>:<row>`: what that row of tab `n`'s menu does (1-based).
+/// `tabmenu:<n>:<row>`: what that row of tab `n`'s menu does (`n` is
+/// 1-based in the step; [`number`] made it 0-based).
 fn tab_menu(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, n: usize, row: &str) {
     let Some(item): Option<crate::editor::TabMenuItem> = crate::editor::tab_menu_item(row) else {
         eprintln!("bb_script no tab menu row {row}");
@@ -80,7 +81,7 @@ fn tab_menu(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, n: usi
     let _gone: gpui::Result<()> = view.update_in(
         cx,
         |v: &mut ExplorerView, _: &mut Window, cx: &mut Context<ExplorerView>| {
-            crate::editor::apply_tab_menu(v, n.saturating_sub(1), item);
+            crate::editor::apply_tab_menu(v, n, item);
             cx.notify();
         },
     );
