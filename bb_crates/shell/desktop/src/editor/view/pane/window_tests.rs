@@ -206,3 +206,32 @@ fn scroll_x(rig: &Rig, vcx: &mut VisualTestContext) -> f32 {
         v.tabs.active_tab().unwrap().scroll_x
     })
 }
+
+/// BB-BUG-056: with the tool window docked right, the end of a long line
+/// lay under it: the text width did not leave the panel out.
+#[gpui::test]
+fn with_the_panel_on_the_right_the_line_end_scrolls_into_sight(cx: &mut TestAppContext) {
+    let long: String = format!("class A\n{{\n    // {}\n}}\n", "word ".repeat(120));
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, true, &long);
+    vcx.update(|_: &mut gpui::Window, cx: &mut gpui::App| {
+        let mut fonts: bb_ui::Typography = crate::settings::typography(cx);
+        fonts.panel_right = true;
+        crate::settings::apply(cx, fonts);
+    });
+    rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            let doc: &mut bb_text::Document = v.tabs.active_mut().unwrap();
+            let end: usize = doc.line_start(3).unwrap().raw().saturating_sub(1);
+            doc.set_cursor(bb_text::CharIdx::new(end)).unwrap();
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    let area: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("editor-area").unwrap();
+    let caret: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("editor-caret").unwrap();
+    assert!(
+        caret.right() <= area.right(),
+        "caret {caret:?} within {area:?}"
+    );
+}

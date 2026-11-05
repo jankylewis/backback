@@ -78,7 +78,8 @@ fn scrolled_to_sight(scroll_x: f32, caret: f32, width: f32) -> f32 {
     }
 }
 
-/// The width the text may use: the editor's width less the gutter.
+/// The width the text may use: the editor's width less the gutter, either
+/// side of a docked tool window (BB-BUG-056).
 fn text_viewport_width(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> f32 {
     if view.tabs.is_split() {
         let pane: f32 = view
@@ -89,8 +90,7 @@ fn text_viewport_width(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typo
             .unwrap_or(0.0);
         return (pane - fonts.gutter_width()).max(0.0);
     }
-    let total: f32 = f32::from(window.viewport_size().width);
-    (total - view.editor_left(fonts) - fonts.gutter_width()).max(0.0)
+    (super::area(view, window, fonts) - fonts.gutter_width()).max(0.0)
 }
 
 /// A wheel or trackpad move with a horizontal part scrolls the text; the
