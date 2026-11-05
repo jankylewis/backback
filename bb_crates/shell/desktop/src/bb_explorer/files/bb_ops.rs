@@ -1,6 +1,7 @@
-//! The Explorer's file changes (BB-BUG-050): a new file or folder, a
-//! rename, a move to the Trash. Each checks the name first and never
-//! overwrites: an existing target is an error, as in VS Code.
+//! The Explorer's file changes (BB-BUG-050, BB-BUG-052): a new file or
+//! folder, a rename, a move to the Trash, a paste of a copy. Each checks the
+//! name first and never overwrites: an existing target is an error, and a
+//! paste takes a free `name copy` name, as in VS Code.
 
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
@@ -27,6 +28,8 @@ pub(crate) enum FileOpError {
     Trash { path: PathBuf, status: ExitStatus },
     #[error("the Trash did not answer in {}s", TRASH_DEADLINE.as_secs())]
     TimedOut,
+    #[error("{} cannot be pasted into itself", .0.display())]
+    IntoItself(PathBuf),
 }
 
 /// A checked file name: one path part, trimmed.
@@ -100,6 +103,61 @@ pub(crate) fn trash_with(program: &Path, path: &Path) -> Result<(), FileOpError>
         }
         std::thread::sleep(Duration::from_millis(20));
     }
+}
+
+/// A copy of `from` (file or whole folder) in `folder`, under its own name
+/// or the first free `name copy`, `name copy 2`, ...; links stay links.
+pub(crate) fn copy_into(from: &Path, folder: &Path) -> Result<PathBuf, FileOpError> {
+    let meta: std::fs::Metadata = from.symlink_metadata()?;
+    if meta.is_dir() && folder.starts_with(from) {
+        return Err(FileOpError::IntoItself(from.to_path_buf()));
+    }
+    let to: PathBuf = free_name(from, folder);
+    copy_tree(from, &to)?;
+    Ok(to)
+}
+
+/// `folder/name`, else the first free `name copy.ext`, `name copy 2.ext`, ...
+/// (10,000 tries; then `name` itself, which the copy refuses as existing).
+fn free_name(from: &Path, folder: &Path) -> PathBuf {
+    let own: PathBuf = folder.join(from.file_name().unwrap_or_default());
+    if own.symlink_metadata().is_err() {
+        return own;
+    }
+    let stem: String = from
+        .file_stem()
+        .map(|s: &std::ffi::OsStr| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let ext: String = from
+        .extension()
+        .map(|e: &std::ffi::OsStr| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
+    (1_u32..=10_000)
+        .map(|n: u32| match n {
+            1 => folder.join(format!("{stem} copy{ext}")),
+            _ => folder.join(format!("{stem} copy {n}{ext}")),
+        })
+        .find(|p: &PathBuf| p.symlink_metadata().is_err())
+        .unwrap_or(own)
+}
+
+fn copy_tree(from: &Path, to: &Path) -> Result<(), FileOpError> {
+    let meta: std::fs::Metadata = from.symlink_metadata()?;
+    if meta.file_type().is_symlink() {
+        std::os::unix::fs::symlink(std::fs::read_link(from)?, to)?;
+    } else if meta.is_dir() {
+        std::fs::create_dir(to).map_err(|error: std::io::Error| exists_or(error, to))?;
+        for entry in std::fs::read_dir(from)? {
+            let entry: std::fs::DirEntry = entry?;
+            copy_tree(&entry.path(), &to.join(entry.file_name()))?;
+        }
+    } else {
+        if to.symlink_metadata().is_ok() {
+            return Err(FileOpError::Exists(to.to_path_buf()));
+        }
+        let _bytes: u64 = std::fs::copy(from, to)?;
+    }
+    Ok(())
 }
 
 fn exists_or(error: std::io::Error, path: &Path) -> FileOpError {

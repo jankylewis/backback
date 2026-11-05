@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 51 — FIXED 49, OBSERVED 2.
+Bugs a user met in the app. Entries: 52 — FIXED 50, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -55,3 +55,4 @@ Bugs a user met in the app. Entries: 51 — FIXED 49, OBSERVED 2.
 | BB-BUG-049 | A wider window kept the text scrolled sideways and cut off | FIXED | scroll clamped only on a swipe | yes | `D4/S13/BB_BUG_049_A_WIDER_WINDOW_KEPT_THE_TEXT_SCROLLED_AND_CUT.md` |
 | BB-BUG-050 | No New File, New Folder, Rename or Delete in the Explorer | FIXED | not built | yes | `D4/S13/BB_BUG_050_NO_NEW_RENAME_OR_DELETE_IN_THE_EXPLORER.md` |
 | BB-BUG-051 | The editor had no scroll bars | FIXED | not built | yes | `D4/S13/BB_BUG_051_NO_SCROLL_BARS_IN_THE_EDITOR.md` |
+| BB-BUG-052 | No Copy, Paste or Open Terminal Here in the Explorer | FIXED | not built | yes | `D4/S13/BB_BUG_052_NO_COPY_PASTE_OR_TERMINAL_HERE_IN_THE_EXPLORER.md` |

@@ -58,7 +58,7 @@ fn the_trash_runs_its_program_and_a_refusal_is_an_error() {
     assert!(kept.exists());
 }
 
-fn right_click(vcx: &mut VisualTestContext, row: usize) {
+pub(super) fn right_click(vcx: &mut VisualTestContext, row: usize) {
     let selector: &'static str = if row == 0 {
         "explorer-row-0"
     } else {
@@ -70,7 +70,7 @@ fn right_click(vcx: &mut VisualTestContext, row: usize) {
     vcx.run_until_parked();
 }
 
-fn click(vcx: &mut VisualTestContext, selector: &'static str) {
+pub(super) fn click(vcx: &mut VisualTestContext, selector: &'static str) {
     let at: gpui::Point<gpui::Pixels> = vcx.debug_bounds(selector).unwrap().center();
     vcx.simulate_click(at, Modifiers::default());
     vcx.run_until_parked();
@@ -86,7 +86,7 @@ fn tabs(rig: &Rig, vcx: &mut VisualTestContext) -> Vec<PathBuf> {
     })
 }
 
-fn status(rig: &Rig, vcx: &mut VisualTestContext) -> String {
+pub(super) fn status(rig: &Rig, vcx: &mut VisualTestContext) -> String {
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
         v.status.clone().unwrap_or_default()
     })

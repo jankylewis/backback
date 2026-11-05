@@ -70,7 +70,7 @@ struct ExplorerView {
     quick_open: Option<quick_open::QuickOpen>,
     quick_focus: FocusHandle,
     terminal: terminal::Terminal,
-    file_menu: Option<files::FileMenu>,
+    file_menu: files::Menus,
 }
 impl ExplorerView {
     fn editor_key_down(
