@@ -1,12 +1,18 @@
 //! The terminal panel: one line per row in the editor's font and the
 //! theme's text colour (BB-BUG-046), and a block cursor; keys go to the
 //! shell, Cmd+V pastes. Its top edge drags its height; the grid follows.
+//! A mouse drag selects (BB-BUG-053), drawn in the theme's `selection`;
+//! Cmd+C copies it.
 
 use gpui::{div, prelude::*, px, AnyElement, Context, KeyDownEvent, Window};
 
+mod bb_mouse;
+mod keys;
+mod rows;
+
 use super::bb_session::Screen;
-use super::keys::{bytes, Mods};
 use crate::{color, ExplorerView};
+use keys::{bytes, Mods};
 
 /// Rows and columns that fit, from the font and the editor area's width.
 fn grid(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> (usize, usize) {
@@ -45,6 +51,10 @@ fn key(
         return;
     };
     let stroke: &gpui::Keystroke = &event.keystroke;
+    if stroke.modifiers.platform && stroke.key == "c" {
+        copy(session, cx);
+        return;
+    }
     let screen_modes: Screen = session.screen();
     if stroke.modifiers.platform && stroke.key == "v" {
         if let Some(text) = cx
@@ -75,32 +85,19 @@ fn key(
         mods,
         screen_modes.app_cursor,
     ) {
+        session.clear_selection();
         session.input(out);
         cx.stop_propagation();
+        cx.notify();
     }
 }
 
-fn row(text: String, cursor: Option<usize>, theme: bb_ui::Theme, height: f32) -> gpui::Div {
-    let base: gpui::Div = div().h(px(height)).flex().flex_none().whitespace_nowrap();
-    let Some(at): Option<usize> = cursor else {
-        return base.child(text);
-    };
-    let chars: Vec<char> = text.chars().collect();
-    let before: String = chars.iter().take(at).collect();
-    let under: String = chars
-        .get(at)
-        .map_or_else(|| " ".to_owned(), char::to_string);
-    let after: String = chars.iter().skip(at.saturating_add(1)).collect();
-    let pad: String = " ".repeat(at.saturating_sub(chars.len()));
-    base.child(format!("{before}{pad}"))
-        .child(
-            div()
-                .debug_selector(|| "terminal-cursor".to_owned())
-                .bg(color(theme.text))
-                .text_color(color(theme.bg))
-                .child(under),
-        )
-        .child(after)
+/// Cmd+C: the selection to the clipboard (nothing selected: nothing).
+fn copy(session: &super::Session, cx: &mut Context<ExplorerView>) {
+    if let Some(text) = session.selected_text() {
+        cx.write_to_clipboard(gpui::ClipboardItem::new_string(text));
+        cx.stop_propagation();
+    }
 }
 
 /// The terminal's text and background: the editor's (BB-BUG-046). Before,
@@ -125,18 +122,7 @@ pub(crate) fn panel(
     let screen: Screen = session.screen();
     let theme: bb_ui::Theme = view.theme;
     let height: f32 = fonts.line_height();
-    let rows: Vec<gpui::Div> = screen
-        .rows
-        .into_iter()
-        .enumerate()
-        .map(|(index, text): (usize, String)| {
-            let at: Option<usize> = screen
-                .cursor
-                .filter(|(line, _): &(usize, usize)| *line == index)
-                .map(|(_, column): (usize, usize)| column);
-            row(text, at, theme, height)
-        })
-        .collect();
+    let rows: Vec<gpui::Div> = rows::drawn(screen, theme, height);
     Some(
         div()
             .id("terminal")
@@ -155,7 +141,11 @@ pub(crate) fn panel(
                     .h(px(crate::editor::HANDLE_PX)),
             )
             .child(title(theme, cx))
-            .child(div().p(px(6.0)).flex().flex_col().children(rows))
+            .child(
+                div()
+                    .p(px(6.0))
+                    .child(bb_mouse::grid(view, cx).children(rows)),
+            )
             .into_any_element(),
     )
 }
@@ -177,48 +167,4 @@ fn title(theme: bb_ui::Theme, cx: &mut Context<ExplorerView>) -> AnyElement {
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::intel::glue::window_tests::bb_rig::{rig, Rig};
-    use crate::ExplorerView;
-    use gpui::{TestAppContext, VisualTestContext};
-
-    fn rows(rig: &Rig, vcx: &mut VisualTestContext) -> Vec<String> {
-        rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
-            v.terminal
-                .session
-                .as_ref()
-                .map(|s: &super::super::Session| s.screen().rows)
-                .unwrap_or_default()
-        })
-    }
-
-    /// Ctrl+backtick opens the shell; keys typed in the window run there and
-    /// the output is on the panel's screen.
-    #[gpui::test]
-    fn keys_typed_in_the_window_run_in_the_shell(cx: &mut TestAppContext) {
-        let (rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
-        vcx.dispatch_action(super::super::ToggleTerminal);
-        vcx.run_until_parked();
-        assert!(rig
-            .view
-            .read_with(vcx, |v: &ExplorerView, _: &gpui::App| v.terminal.open));
-        vcx.simulate_keystrokes("e c h o space b b 4 2 o k enter");
-        let mut seen: bool = false;
-        for _ in 0..500 {
-            vcx.run_until_parked();
-            if rows(&rig, vcx)
-                .iter()
-                .any(|row: &String| row.contains("bb42ok"))
-            {
-                seen = true;
-                break;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(20));
-        }
-        assert!(seen, "{:?}", rows(&rig, vcx));
-        vcx.dispatch_action(super::super::ToggleTerminal);
-        assert!(!rig
-            .view
-            .read_with(vcx, |v: &ExplorerView, _: &gpui::App| v.terminal.open));
-    }
-}
+mod tests;

@@ -159,13 +159,14 @@ fn line_text(
         .child(StyledText::new(text).with_runs(styles))
 }
 
-fn text_run(run: &Run, theme: Theme, family: &str) -> TextRun {
-    let ink: bb_ui::Rgb = match run.kind {
-        HighlightKind::Keyword => theme.keyword,
-        HighlightKind::String => theme.string,
-        HighlightKind::Comment => theme.comment,
-        HighlightKind::Type => theme.ty,
-        HighlightKind::Plain => theme.text,
+pub(super) fn text_run(run: &Run, theme: Theme, family: &str) -> TextRun {
+    let ink: bb_ui::Rgb = match (run.selected, run.link, run.kind) {
+        (true, _, _) | (false, false, HighlightKind::Plain) => theme.text, // BB-BUG-054
+        (false, true, _) => theme.accent,
+        (false, false, HighlightKind::Keyword) => theme.keyword,
+        (false, false, HighlightKind::String) => theme.string,
+        (false, false, HighlightKind::Comment) => theme.comment,
+        (false, false, HighlightKind::Type) => theme.ty,
     };
     let link_line: Option<gpui::UnderlineStyle> = run.link.then(|| gpui::UnderlineStyle {
         thickness: px(1.0),
@@ -175,8 +176,8 @@ fn text_run(run: &Run, theme: Theme, family: &str) -> TextRun {
     TextRun {
         len: run.text.len(),
         font: gpui::font(family.to_owned()),
-        color: color(if run.link { theme.accent } else { ink }).into(),
-        background_color: run.selected.then(|| color(theme.accent).into()),
+        color: color(ink).into(),
+        background_color: run.selected.then(|| color(theme.selection).into()),
         underline: link_line.or_else(|| {
             run.mark.map(|s: Ink| gpui::UnderlineStyle {
                 thickness: px(1.0),

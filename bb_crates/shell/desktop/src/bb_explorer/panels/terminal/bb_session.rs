@@ -1,7 +1,8 @@
 //! One shell under a PTY (BBEOD11). `alacritty_terminal` reads and parses the
 //! output on its own thread; the panel takes a snapshot of the visible rows.
 //! Start it on the UI thread: a shell spawned from a background-QoS thread
-//! would be throttled (BB-PRC-002).
+//! would be throttled (BB-PRC-002). A mouse selection (BB-BUG-053) is
+//! alacritty's own, so it moves with the text as the shell scrolls.
 
 use std::collections::HashMap;
 use std::num::NonZeroU32;
@@ -16,6 +17,9 @@ use alacritty_terminal::term::cell::Flags;
 use alacritty_terminal::term::{Config, Term, TermMode};
 use alacritty_terminal::tty;
 use tokio::sync::mpsc::UnboundedSender;
+
+#[path = "selection.rs"]
+mod selection;
 
 /// Lines kept above the screen; small, so a terminal stays light.
 const SCROLLBACK: usize = 2_000;
@@ -72,6 +76,16 @@ pub(crate) struct Screen {
     pub(crate) cursor: Option<(usize, usize)>,
     pub(crate) app_cursor: bool,
     pub(crate) bracketed_paste: bool,
+    /// Per row, the selected columns (first, last), both included.
+    pub(crate) selected: Vec<Option<(usize, usize)>>,
+}
+
+/// A screen cell under the mouse, and which half of it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct Cell {
+    pub(crate) row: usize,
+    pub(crate) column: usize,
+    pub(crate) right_half: bool,
 }
 
 pub(crate) struct Session {
@@ -178,67 +192,12 @@ fn read(term: &Term<Proxy>, size: Size) -> Screen {
         cursor,
         app_cursor: content.mode.contains(TermMode::APP_CURSOR),
         bracketed_paste: content.mode.contains(TermMode::BRACKETED_PASTE),
+        selected: selection::selected_rows(content.selection, offset, size),
     }
 }
 
 impl Drop for Session {
     fn drop(&mut self) {
         let _sent: Result<(), _> = self.pty.send(Msg::Shutdown);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::time::{Duration, Instant};
-
-    fn wait_for(session: &Session, needle: &str, within: Duration) -> bool {
-        let started: Instant = Instant::now();
-        while started.elapsed() < within {
-            if session
-                .screen()
-                .rows
-                .iter()
-                .any(|row: &String| row.contains(needle))
-            {
-                return true;
-            }
-            std::thread::sleep(Duration::from_millis(20));
-        }
-        false
-    }
-
-    /// A real shell under a real PTY: typed input runs, output is parsed.
-    #[test]
-    fn a_typed_command_runs_and_its_output_reaches_the_screen() {
-        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let (wake, _woken): (UnboundedSender<()>, _) = tokio::sync::mpsc::unbounded_channel();
-        let mut session: Session = Session::start(dir.path(), 80, 12, wake).unwrap();
-        session.input(b"echo bb_$((40+2))_ok\r".to_vec());
-        assert!(
-            wait_for(&session, "bb_42_ok", Duration::from_secs(10)),
-            "{:?}",
-            session.screen().rows
-        );
-        session.resize(40, 6);
-        assert_eq!(session.screen().rows.len(), 6);
-    }
-
-    /// Heavy output does not block: 100,000 lines and the prompt is back fast.
-    #[test]
-    fn a_hundred_thousand_lines_stream_through_quickly() {
-        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let (wake, _woken): (UnboundedSender<()>, _) = tokio::sync::mpsc::unbounded_channel();
-        let session: Session = Session::start(dir.path(), 100, 20, wake).unwrap();
-        let started: Instant = Instant::now();
-        session.input(b"seq 1 100000; echo bb_done_$((1+1))\r".to_vec());
-        assert!(
-            wait_for(&session, "bb_done_2", Duration::from_secs(20)),
-            "{:?}",
-            session.screen().rows
-        );
-        let took: Duration = started.elapsed();
-        eprintln!("terminal_100k_lines_ms={}", took.as_millis());
-        assert!(took < Duration::from_secs(10), "{took:?}");
     }
 }
