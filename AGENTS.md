@@ -43,6 +43,15 @@ This grant does not extend to any other repository.
 - Explicit types: every Rust `let` and closure parameter is typed; C# never
   uses `var`. No `unwrap`/`expect`/`panic`/`as` casts/`[i]` outside tests.
 
+## Code map (read it before the source)
+
+Start every task with the map, not with whole files. From `bb_crates/`:
+`cargo run -q -p bb -- map` (one line per crate, ~600 tokens), then
+`map <path>` (each file's purpose and its public items with line numbers;
+`--all` adds private ones), or `map --find <name|Owner::name>`. Then open
+only the lines it names. The map is read from the source on every call, so
+it is never stale; nothing to regenerate.
+
 ## Gate (all must pass, quote real counts)
 
 One command: `docs/release/scripts/gate.sh` (sets PATH and netcoredbg). The

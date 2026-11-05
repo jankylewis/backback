@@ -1,5 +1,10 @@
 # Backback progress
 
+- CODE-MAP (2026-11-05, `code-map`): `bb map` (crate `bb-kmap`) for agents:
+  crate index, file outline with line numbers, `--find`. Read from source
+  each call (never stale). BB-TG-020. README, architecture, conventions and
+  roadmap brought up to date (16 crates, gate.sh, shipped features).
+
 - BBEOD08-REAP (`backback_2`): `bbeod-08-reap` from `1391b5c`.
   Shared group ownership covers testkit, Roslyn, and DAP. Red-first tests passed. Gate: 304 passed in 49 suites,
   0 failed or ignored; format, Clippy, deny, and audit passed. Desktop SIGTERM
