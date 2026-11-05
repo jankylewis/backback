@@ -106,3 +106,30 @@ fn three_panes_share_the_editor_and_their_lines_drag(cx: &mut TestAppContext) {
         "from the third pane Cmd+\\ moves left"
     );
 }
+
+/// BB-BUG-054: selected text, of any kind, is the theme's plain text on its
+/// `selection` colour (it was the syntax colour on the light accent).
+#[test]
+fn selected_text_is_plain_text_on_the_selection_colour() {
+    for theme in [bb_ui::bb_theme::DARK, bb_ui::bb_theme::LIGHT] {
+        for (kind, link) in [
+            (bb_syntax::HighlightKind::Keyword, false),
+            (bb_syntax::HighlightKind::Comment, false),
+            (bb_syntax::HighlightKind::Plain, true),
+        ] {
+            let run: super::super::bb_line::Run = super::super::bb_line::Run {
+                text: "AIQ_ENV".to_owned(),
+                kind,
+                selected: true,
+                mark: None,
+                link,
+            };
+            let styled: gpui::TextRun = super::super::bb_line::text_run(&run, theme, "Menlo");
+            assert_eq!(styled.color, crate::color(theme.text).into(), "{kind:?}");
+            assert_eq!(
+                styled.background_color,
+                Some(crate::color(theme.selection).into())
+            );
+        }
+    }
+}

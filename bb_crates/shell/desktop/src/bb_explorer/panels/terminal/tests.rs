@@ -69,3 +69,94 @@ fn the_terminal_top_edge_drags_taller_and_the_shell_gets_more_rows(cx: &mut Test
     );
     vcx.dispatch_action(super::ToggleTerminal);
 }
+
+/// The shell under a PTY, without a window (BBEOD11).
+mod session {
+    use super::super::Session;
+    use std::time::{Duration, Instant};
+    use tokio::sync::mpsc::UnboundedSender;
+
+    fn wait_for(session: &Session, needle: &str, within: Duration) -> bool {
+        let started: Instant = Instant::now();
+        while started.elapsed() < within {
+            if session
+                .screen()
+                .rows
+                .iter()
+                .any(|row: &String| row.contains(needle))
+            {
+                return true;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        false
+    }
+
+    /// A real shell under a real PTY: typed input runs, output is parsed.
+    #[test]
+    fn a_typed_command_runs_and_its_output_reaches_the_screen() {
+        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let (wake, _woken): (UnboundedSender<()>, _) = tokio::sync::mpsc::unbounded_channel();
+        let mut session: Session = Session::start(dir.path(), 80, 12, wake).unwrap();
+        session.input(b"echo bb_$((40+2))_ok\r".to_vec());
+        assert!(
+            wait_for(&session, "bb_42_ok", Duration::from_secs(10)),
+            "{:?}",
+            session.screen().rows
+        );
+        session.resize(40, 6);
+        assert_eq!(session.screen().rows.len(), 6);
+    }
+
+    /// Heavy output does not block: 100,000 lines and the prompt is back fast.
+    #[test]
+    fn a_hundred_thousand_lines_stream_through_quickly() {
+        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let (wake, _woken): (UnboundedSender<()>, _) = tokio::sync::mpsc::unbounded_channel();
+        let session: Session = Session::start(dir.path(), 100, 20, wake).unwrap();
+        let started: Instant = Instant::now();
+        session.input(b"seq 1 100000; echo bb_done_$((1+1))\r".to_vec());
+        assert!(
+            wait_for(&session, "bb_done_2", Duration::from_secs(20)),
+            "{:?}",
+            session.screen().rows
+        );
+        let took: Duration = started.elapsed();
+        eprintln!("terminal_100k_lines_ms={}", took.as_millis());
+        assert!(took < Duration::from_secs(10), "{took:?}");
+    }
+
+    /// BB-BUG-053: a selection over echoed output reads back as that text,
+    /// shows as a column range on its row, and a clear drops it.
+    #[test]
+    fn a_selection_reads_back_the_selected_text() {
+        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let (wake, _woken): (UnboundedSender<()>, _) = tokio::sync::mpsc::unbounded_channel();
+        let session: Session = Session::start(dir.path(), 80, 12, wake).unwrap();
+        session.input(b"echo bb_sel_$((1+1))ok\r".to_vec());
+        assert!(wait_for(&session, "bb_sel_2ok", Duration::from_secs(10)));
+        let row: usize = session
+            .screen()
+            .rows
+            .iter()
+            .position(|r: &String| r.starts_with("bb_sel_2ok"))
+            .unwrap();
+        session.select_from(cell(row, 0, false));
+        session.select_to(cell(row, 9, true));
+        assert_eq!(session.selected_text().as_deref(), Some("bb_sel_2ok"));
+        assert_eq!(
+            session.screen().selected.get(row).copied().flatten(),
+            Some((0, 9))
+        );
+        session.clear_selection();
+        assert_eq!(session.selected_text(), None);
+    }
+
+    fn cell(row: usize, column: usize, right_half: bool) -> super::super::Cell {
+        super::super::Cell {
+            row,
+            column,
+            right_half,
+        }
+    }
+}

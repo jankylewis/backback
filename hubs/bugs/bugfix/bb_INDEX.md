@@ -52,3 +52,5 @@
 | BB-BUG-050 | Explorer right-click menu; Trash with a seam | FIXED | unit + window tests | `D4/S13/BB_BUG_050_NO_NEW_RENAME_OR_DELETE_IN_THE_EXPLORER.md` |
 | BB-BUG-051 | Vertical + horizontal scroll bars, draggable | FIXED | unit + window tests | `D4/S13/BB_BUG_051_NO_SCROLL_BARS_IN_THE_EDITOR.md` |
 | BB-BUG-052 | Open Terminal Here, Copy/Paste, Copy Path | FIXED | unit + real-shell + window tests (mutation-checked) | `D4/S13/BB_BUG_052_NO_COPY_PASTE_OR_TERMINAL_HERE_IN_THE_EXPLORER.md` |
+| BB-BUG-053 | Mouse drag selects (alacritty selection); Cmd+C copies | FIXED | session + window tests (mutation-checked) | `D4/S14/BB_BUG_053_TERMINAL_TEXT_COULD_NOT_BE_SELECTED.md` |
+| BB-BUG-054 | `selection` token, plain text on it | FIXED | contrast + run tests (mutation-checked) | `D4/S14/BB_BUG_054_SELECTED_TEXT_WAS_UNREADABLE.md` |

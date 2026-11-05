@@ -4,7 +4,7 @@
 //! running shell there with `cd`.
 
 mod bb_session;
-mod keys;
+
 mod view;
 
 use std::path::Path;
@@ -13,7 +13,7 @@ use gpui::{AsyncWindowContext, Context, FocusHandle, WeakEntity, Window};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 use crate::ExplorerView;
-pub(crate) use bb_session::Session;
+pub(crate) use bb_session::{Cell, Session};
 pub(crate) use view::panel;
 
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
@@ -24,6 +24,10 @@ pub(crate) struct Terminal {
     pub(crate) session: Option<Session>,
     pub(crate) open: bool,
     pub(crate) focus: FocusHandle,
+    /// The grid's place on screen last frame, for mouse cells.
+    pub(crate) grid: gpui::ScrollHandle,
+    /// A mouse press began a selection and the button is still down.
+    pub(crate) selecting: bool,
 }
 
 impl Terminal {
@@ -32,6 +36,8 @@ impl Terminal {
             session: None,
             open: false,
             focus,
+            grid: gpui::ScrollHandle::new(),
+            selecting: false,
         }
     }
 }
