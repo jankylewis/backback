@@ -33,12 +33,14 @@ pub(crate) fn row(
         expandable: entry.expandable(),
     };
     let tooltip_path: String = action.path.display().to_string();
+    let menu_path: PathBuf = action.path.clone();
     let name: String = entry.name().to_owned();
     let text_color: gpui::Rgba = row_text_color(entry, state.theme);
     let layout: RowLayout = RowLayout::new(depth, state.panel_width, f32::MAX);
     let border: gpui::Rgba = row_border_color(state);
     div()
         .id(index)
+        .debug_selector(move || format!("explorer-row-{index}"))
         .pl_2()
         .min_h(px(30.0))
         .flex()
@@ -57,6 +59,7 @@ pub(crate) fn row(
                 activate(view, &action, window, cx);
             },
         ))
+        .map(|item: gpui::Stateful<gpui::Div>| menu_on_right_click(item, index, menu_path, cx))
         .children(
             layout
                 .guide_offsets
@@ -66,6 +69,28 @@ pub(crate) fn row(
         .child(div().w(px(16.0)).flex_shrink_0().child(chevron(entry)))
         .child(icons::icon(entry, color(icons::tint(entry, &state.theme))))
         .child(name_box(name, layout.name_width))
+}
+
+/// BB-BUG-050: a right-click selects the row and opens New / Rename / Delete.
+fn menu_on_right_click(
+    item: gpui::Stateful<gpui::Div>,
+    index: usize,
+    path: PathBuf,
+    cx: &mut Context<ExplorerView>,
+) -> gpui::Stateful<gpui::Div> {
+    item.on_mouse_down(
+        gpui::MouseButton::Right,
+        cx.listener(
+            move |view: &mut ExplorerView,
+                  event: &gpui::MouseDownEvent,
+                  _: &mut Window,
+                  cx: &mut Context<ExplorerView>| {
+                view.select_row(index, cx);
+                crate::files::open_menu(view, path.clone(), event.position);
+                cx.stop_propagation();
+            },
+        ),
+    )
 }
 
 fn row_text_color(entry: &Entry, theme: Theme) -> gpui::Rgba {

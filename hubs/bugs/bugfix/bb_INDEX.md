@@ -48,3 +48,5 @@
 | BB-BUG-046 | Theme text colour; terminal top edge drags | FIXED | contrast test (mutation-checked) + window test | `D4/S12/BB_BUG_046_TERMINAL_TEXT_UNREADABLE_AND_HEIGHT_FIXED.md` |
 | BB-BUG-047 | ✕ on every bottom panel; View → Terminal | FIXED | window tests + menu unit test | `D4/S12/BB_BUG_047_PANELS_COULD_NOT_BE_CLOSED_AND_NO_TERMINAL_MENU.md` |
 | BB-BUG-048 | Window titled by folder; File > New Window | FIXED | window test (mutation-checked) + menu/key test | `D4/S12/BB_BUG_048_NO_NEW_WINDOW_AND_WINDOWS_NOT_IN_THE_WINDOW_MENU.md` |
+| BB-BUG-049 | Scroll clamped every frame | FIXED | window test (mutation-checked) | `D4/S13/BB_BUG_049_A_WIDER_WINDOW_KEPT_THE_TEXT_SCROLLED_AND_CUT.md` |
+| BB-BUG-050 | Explorer right-click menu; Trash with a seam | FIXED | unit + window tests | `D4/S13/BB_BUG_050_NO_NEW_RENAME_OR_DELETE_IN_THE_EXPLORER.md` |

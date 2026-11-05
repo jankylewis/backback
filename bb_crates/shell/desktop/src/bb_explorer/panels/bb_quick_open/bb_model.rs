@@ -18,6 +18,8 @@ pub(crate) enum Chosen {
     Line(usize),
     /// A Find in Files query.
     Find(String),
+    /// A typed name for a new entry or a rename (BB-BUG-050).
+    Name(crate::files::NameAsk, String),
 }
 
 struct Item {
@@ -35,6 +37,8 @@ pub(crate) struct QuickOpen {
     find: bool,
     /// Go to File before its background walk has filled the list.
     loading: bool,
+    /// A name box for an Explorer change: no list, Enter gives the name.
+    name: Option<crate::files::NameAsk>,
 }
 
 impl QuickOpen {
@@ -56,6 +60,7 @@ impl QuickOpen {
             items: Vec::new(),
             find: false,
             loading: true,
+            name: None,
         }
     }
 
@@ -98,6 +103,7 @@ impl QuickOpen {
                 .collect(),
             find: false,
             loading: false,
+            name: None,
         }
     }
 
@@ -110,6 +116,16 @@ impl QuickOpen {
             items: Vec::new(),
             find: true,
             loading: false,
+            name: None,
+        }
+    }
+
+    /// A name box for `ask`, holding `typed` (a rename starts with the name).
+    pub(crate) fn name_box(ask: crate::files::NameAsk, typed: String) -> QuickOpen {
+        QuickOpen {
+            query: typed,
+            name: Some(ask),
+            ..QuickOpen::find_box()
         }
     }
 
@@ -127,7 +143,9 @@ impl QuickOpen {
     }
 
     pub(crate) fn title(&self) -> &'static str {
-        if self.find {
+        if let Some(ask) = &self.name {
+            ask.op.title()
+        } else if self.find {
             "Find in Files"
         } else if self.loading {
             "Go to File (listing files...)"
@@ -166,6 +184,11 @@ impl QuickOpen {
 
     /// The selected match: a file to open, or a line of the active file.
     pub(crate) fn chosen(&self) -> Option<Chosen> {
+        if let Some(ask) = &self.name {
+            let typed: Option<String> =
+                Some(self.query.trim().to_owned()).filter(|t: &String| !t.is_empty());
+            return typed.map(|t: String| Chosen::Name(ask.clone(), t));
+        }
         if self.find {
             return (!self.query.is_empty()).then(|| Chosen::Find(self.query.clone()));
         }

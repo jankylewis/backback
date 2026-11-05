@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 48 — FIXED 46, OBSERVED 2.
+Bugs a user met in the app. Entries: 50 — FIXED 48, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -52,3 +52,5 @@ Bugs a user met in the app. Entries: 48 — FIXED 46, OBSERVED 2.
 | BB-BUG-046 | The terminal's text was unreadable and its height fixed | FIXED | no text colour set (gpui default black); fixed height | yes | `D4/S12/BB_BUG_046_TERMINAL_TEXT_UNREADABLE_AND_HEIGHT_FIXED.md` |
 | BB-BUG-047 | Panels had no close button; the View menu had no Terminal | FIXED | not built (key-only close; no menu item) | yes | `D4/S12/BB_BUG_047_PANELS_COULD_NOT_BE_CLOSED_AND_NO_TERMINAL_MENU.md` |
 | BB-BUG-048 | No New Window; open windows were not in the Window menu | FIXED | not built (untitled windows; no New Window) | yes | `D4/S12/BB_BUG_048_NO_NEW_WINDOW_AND_WINDOWS_NOT_IN_THE_WINDOW_MENU.md` |
+| BB-BUG-049 | A wider window kept the text scrolled sideways and cut off | FIXED | scroll clamped only on a swipe | yes | `D4/S13/BB_BUG_049_A_WIDER_WINDOW_KEPT_THE_TEXT_SCROLLED_AND_CUT.md` |
+| BB-BUG-050 | No New File, New Folder, Rename or Delete in the Explorer | FIXED | not built | yes | `D4/S13/BB_BUG_050_NO_NEW_RENAME_OR_DELETE_IN_THE_EXPLORER.md` |

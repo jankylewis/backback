@@ -188,6 +188,7 @@ pub(crate) fn fresh_view(
         debug: crate::run::bb_debug::DebugState::load(&root),
         quick_open: None,
         quick_focus: cx.focus_handle(),
+        file_menu: None,
         terminal: crate::terminal::Terminal::new(cx.focus_handle()),
     }
 }

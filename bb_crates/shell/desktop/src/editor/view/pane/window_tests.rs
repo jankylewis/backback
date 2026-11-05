@@ -178,3 +178,31 @@ fn go_to_file_closes_on_a_press_anywhere_outside_it_with_two_panes(cx: &mut Test
         assert!(!box_open(&rig, vcx), "{name}: a press outside closed it");
     }
 }
+
+/// BB-BUG-049: scrolled to a long line's end, then the window widened past
+/// the line: the text came back to its start, not cut off on the left.
+#[gpui::test]
+fn a_wider_window_pulls_a_scrolled_line_back(cx: &mut TestAppContext) {
+    let long: String = format!("class A\n{{\n    // {}\n}}\n", "word ".repeat(120));
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, true, &long);
+    rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            let doc: &mut bb_text::Document = v.tabs.active_mut().unwrap();
+            let end: usize = doc.line_start(3).unwrap().raw().saturating_sub(1);
+            doc.set_cursor(bb_text::CharIdx::new(end)).unwrap();
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    assert!(scroll_x(&rig, vcx) > 0.0, "scrolled to the line end");
+    vcx.simulate_resize(gpui::size(gpui::px(20_000.0), gpui::px(800.0)));
+    vcx.run_until_parked();
+    assert_eq!(scroll_x(&rig, vcx), 0.0, "the whole line fits now");
+}
+
+fn scroll_x(rig: &Rig, vcx: &mut VisualTestContext) -> f32 {
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.tabs.active_tab().unwrap().scroll_x
+    })
+}
