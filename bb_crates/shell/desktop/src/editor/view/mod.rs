@@ -6,14 +6,15 @@ mod bb_line;
 mod pane;
 #[cfg(test)]
 pub(crate) use pane::lines_tests as pane_tests;
-mod status;
-mod test_marks;
+mod chrome;
 use super::bb_tabs::Tab;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_line, LineRow, TestGutter};
+pub(crate) use chrome::bb_scrollbar;
+use chrome::{status, test_marks};
 pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines, HANDLE_PX};
 pub(crate) use pane::{layout as layout_panes, panes};
 pub(crate) use status::{build, status_bar};
@@ -21,11 +22,11 @@ pub(crate) use status::{build, status_bar};
 pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
     let (tabs, focus, theme): (&Tabs, &FocusHandle, Theme) =
         (&view.tabs, &view.editor_focus, view.theme);
-    let lines: usize = tabs.active().map_or(0, Document::len_lines);
     div()
         .id("editor-area")
         .debug_selector(|| "editor-area".to_owned())
         .flex_1()
+        .relative()
         .bg(color(theme.bg))
         .key_context("Editor")
         .track_focus(focus)
@@ -37,26 +38,8 @@ pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .on_action(cx.listener(super::go_forward))
         .map(|area: gpui::Stateful<gpui::Div>| crate::editor::on_tab_actions(area, cx))
         .on_scroll(cx.listener(pane::bb_hscroll::on_wheel))
-        .child(
-            uniform_list(
-                "editor-lines",
-                lines,
-                cx.processor(
-                    |view: &mut ExplorerView,
-                     range: std::ops::Range<usize>,
-                     window: &mut Window,
-                     row_cx: &mut Context<ExplorerView>| {
-                        follow_view(view, &range, window, row_cx);
-                        pane::bb_hscroll::before_rows(view, &range, window, row_cx);
-                        range
-                            .map(|index: usize| focused_line(view, index, window, row_cx))
-                            .collect::<Vec<_>>()
-                    },
-                ),
-            )
-            .track_scroll(view.tabs.scroll())
-            .h_full(),
-        )
+        .child(focused_lines(view, cx))
+        .children(bb_scrollbar::bars(view, view.tabs.focused(), cx))
         .children(crate::intel::view::bb_popups::hover(
             view.intel.hover.as_ref(),
             theme,
@@ -67,6 +50,30 @@ pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
                 element.child(super::prompt::close_prompt(theme, cx))
             },
         )
+}
+
+/// The focused pane's lines; each frame first follows the view and the
+/// sideways scroll.
+fn focused_lines(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> gpui::UniformList {
+    let lines: usize = view.tabs.active().map_or(0, Document::len_lines);
+    uniform_list(
+        "editor-lines",
+        lines,
+        cx.processor(
+            |view: &mut ExplorerView,
+             range: std::ops::Range<usize>,
+             window: &mut Window,
+             row_cx: &mut Context<ExplorerView>| {
+                follow_view(view, &range, window, row_cx);
+                pane::bb_hscroll::before_rows(view, &range, window, row_cx);
+                range
+                    .map(|index: usize| focused_line(view, index, window, row_cx))
+                    .collect::<Vec<_>>()
+            },
+        ),
+    )
+    .track_scroll(view.tabs.scroll())
+    .h_full()
 }
 
 /// A large file parses only lines near the view: move the window with it.
