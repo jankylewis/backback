@@ -49,6 +49,9 @@ pub enum CommandError {
     /// Audit could not read the tree.
     #[error(transparent)]
     Audit(#[from] bb_audit::AuditError),
+    /// `bb map` problem.
+    #[error(transparent)]
+    Map(#[from] bb_kmap::KmapError),
     /// `bb bench` problem.
     #[error(transparent)]
     Bench(#[from] bench::BenchError),
@@ -103,6 +106,7 @@ pub async fn run(command: Command) -> Result<(), CommandError> {
             .map_err(CommandError::from),
         Command::Probe(probe) => bb_intel::probe::run(&probe).await,
         Command::Test(args) => dotnet::test(&args).await,
+        Command::Map(args) => map(&args),
     }
 }
 
@@ -178,6 +182,16 @@ fn audit(root: &Path) -> Result<(), CommandError> {
     } else {
         Err(CommandError::Violations(found.len()))
     }
+}
+
+fn map(args: &crate::cli::MapArgs) -> Result<(), CommandError> {
+    let text: String = match args {
+        crate::cli::MapArgs::Index => bb_kmap::index(Path::new("."))?,
+        crate::cli::MapArgs::Outline { path, all } => bb_kmap::outline(path, *all)?,
+        crate::cli::MapArgs::Find { name, root } => bb_kmap::find(root, name)?,
+    };
+    print!("{text}");
+    Ok(())
 }
 
 /// Read a file as text with a typed error.

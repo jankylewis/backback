@@ -6,7 +6,7 @@
 
 mod bb_tree;
 mod csharp;
-mod lexer;
+pub mod lexer;
 mod rust;
 
 use std::path::{Path, PathBuf};

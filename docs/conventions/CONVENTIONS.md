@@ -31,13 +31,15 @@
 
 ## Gate
 
-Run from `bb_crates/`; all four commands must pass:
+One command, from the repo root: `bash docs/release/scripts/gate.sh`. It runs,
+from `bb_crates/`, and all five must pass:
 
 ```sh
 cargo fmt --check
-cargo clippy --all-targets -- -D warnings
+cargo clippy --all-targets --all-features -- -D warnings
 cargo test --workspace
 cargo deny check
+cargo run -p bb -- audit ..
 ```
 
 Report the observed test counts and any failure. The gate in `AGENTS.md`

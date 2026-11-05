@@ -500,6 +500,7 @@ dependencies = [
  "bb-dap",
  "bb-dotnet",
  "bb-intel",
+ "bb-kmap",
  "bb-lsp",
  "bb-process",
  "bb-syntax",
@@ -577,6 +578,14 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "bb-kmap"
+version = "0.0.1"
+dependencies = [
+ "bb-audit",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

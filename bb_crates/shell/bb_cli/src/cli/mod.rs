@@ -1,9 +1,11 @@
 //! Argument parsing for the headless commands.
 
 mod bb_probe;
+mod map_args;
 mod test_args;
 
 pub use bb_probe::{Feature, Probe, MAX_REPEAT};
+pub use map_args::MapArgs;
 pub use test_args::{BackendChoice, TestAction, TestArgs};
 
 use std::path::PathBuf;
@@ -19,6 +21,7 @@ pub const USAGE: &str = "usage:
                             never writes into it unless --restore is given
   bb outline <file.cs>      print the tree-sitter outline of one file
   bb audit [path]           check HD taxonomy, caps, backbone marker, explicit types
+  bb map [path] [--all] | --find <name> [path]   code map: crates, files, items
   bb sweep                  remove backback's temp folders whose process is gone
   bb bench [solution] [--runs N]
                             time the fixed set: 1 warm-up + N runs (default 5)
@@ -89,6 +92,8 @@ pub enum Command {
     },
     /// Ask Roslyn one feature at one position.
     Probe(Probe),
+    /// Print the code map.
+    Map(MapArgs),
     /// List or run tests.
     Test(TestArgs),
 }
@@ -144,6 +149,9 @@ pub fn parse(args: &[String]) -> Result<Command, CliError> {
     }
     if word == "probe" {
         return bb_probe::parse(it.as_slice()).map(Command::Probe);
+    }
+    if word == "map" {
+        return map_args::parse(it.as_slice()).map(Command::Map);
     }
     if word == "test" {
         return test_args::parse(it.as_slice()).map(Command::Test);

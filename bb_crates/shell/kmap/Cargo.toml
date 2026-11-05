@@ -1,0 +1,14 @@
+[package]
+name = "bb-kmap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Code map for agents: crates, files and items read from the source on every call"
+
+[dependencies]
+bb-audit.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

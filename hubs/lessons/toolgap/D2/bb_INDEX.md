@@ -5,4 +5,4 @@ Drawer of shelves S04 to S07 (ids 013 to 028); the hub-level `bb_INDEX.md` has t
 | Entry | What |
 |---|---|
 | `S04/` | BB-TG-013 to BB-TG-016 |
-| `S05/` | BB-TG-017 onward |
+| `S05/` | BB-TG-017 to BB-TG-020 |

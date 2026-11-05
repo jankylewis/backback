@@ -4,9 +4,13 @@ A very lightweight, dark-by-default, open-source IDE for **C# only**, built for
 maximum performance: a Rust shell in front of Microsoft's own Roslyn language
 server and Samsung's `netcoredbg`.
 
-**Status:** early macOS desktop build. The `backback` app opens a C# solution.
-The `bb` command line provides doctor, scan, open, outline, and audit tools.
-See [the roadmap](docs/plan/bb_roadmap/bb_ROADMAP.md) for planned work.
+**Status:** a working macOS desktop app. It opens a `.sln`/`.slnx` or a folder:
+Explorer (New, Rename, Delete, Copy/Paste, Open Terminal Here), tabs with pins,
+up to three editor panes, tree-sitter highlighting, Roslyn code intelligence
+(completion, diagnostics, definition, references, rename, fixes), Go to File /
+Symbol, Find in Files, Build, a netcoredbg debugger (breakpoints, step, locals,
+Set Next Statement), a Test Explorer, and a terminal. Live state:
+[goals board](docs/plan/bb_roadmap/GOALS.md); bugs: [hubs/TRIAGE.md](hubs/TRIAGE.md).
 
 The [mascot](docs/release/bb_assets/bb_mascot/bb_mascot.svg) is an original
 chibi scientist. Its [dark contact sheet](docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
@@ -41,44 +45,37 @@ search, process plumbing. Semantics stay in .NET where they already exist.
 ```
 backback/
   AGENTS.md, CLAUDE.md  agent laws (outside the 5-entry count)
-  LICENSE, README.md
   bb_crates/            Cargo workspace: one lint gate, .deny.toml, Cargo.lock
-    bb_core/
-      bb_text/          bb-text     rope buffer, CharIdx / LineIdx / LspPoint newtypes
-      syntax/           bb-syntax   tree-sitter C# parse, outline
-    edge/
-      bb_lsp/           bb-lsp      JSON-RPC client + Roslyn specifics
-      framing/          bb-framing  Content-Length codec shared by LSP and DAP
-      dap/              bb-dap      DAP envelope + netcoredbg discovery
-      dotnet/           bb-dotnet   SDK, .sln/.slnx, projects, runsettings, tests
-    shell/
-      bb_cli/           bb          CLI: doctor, scan, open, outline, audit
-      desktop/          backback    native macOS GUI
-      ui/               bb-ui       theme tokens (dark default)
-      audit/            bb-audit    convention audit; `cargo test` runs it on the repo
-  docs/                 design, plan, R&D
-  bb_crates/shell/desktop/fixtures/_Harness/    small C# solution for readback
+    bb_core/            bb-text (rope, CharIdx/LspPoint), bb-process (child
+                        groups), bb-syntax (tree-sitter C#), bb-explorer, bb-search
+    edge/               bb-lsp + bb-framing, bb-dap, bb-dotnet (dotnet/bb_sdk),
+                        bb-testkit (dotnet/testkit), bb-intel (Roslyn features)
+    shell/              bb (bb_cli), backback (desktop), bb-ui (theme),
+                        bb-audit (conventions), bb-kmap (code map)
+  docs/                 design, conventions, plan, release, R&D
+  hubs/                 every bug, failure, lesson and tool gap
 ```
 
 Conventions (enforced by `bb-audit`, rules in [AGENTS.md](AGENTS.md)): at most
 5 visible entries per folder; `.md` ≤ 100 lines, `.rs`/`.cs` ≤ 250; one backbone
 marker per folder (`_` in C# trees, `bb_` in Rust and neutral trees).
 
-## Build and gate
+## Build, gate and CLI
 
 ```sh
 # toolchain (once): https://rustup.rs  then  cargo install cargo-deny
 dotnet tool install --global roslyn-language-server --prerelease
+bash docs/release/scripts/gate.sh   # fmt, clippy, test, deny, audit
 cd bb_crates
-cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings \
-  && cargo test --workspace && cargo deny check
-cargo run -p bb -- doctor
+cargo run -p bb -- doctor           # dotnet, Roslyn, netcoredbg
+cargo run -p bb -- map              # code map: crates; then map <path>, --find
 cargo run -p bb -- scan shell/desktop/fixtures/_Harness/Harness.slnx
 cargo run -p bb -- open path/to/Solution.slnx
-cargo run -p bb -- outline path/to/File.cs
 cargo run -p bb -- audit ..
 ```
 
+`bb` also has `outline`, `sweep`, `bench`, `debug`, `probe` and `test`; run
+`bb` with no command for the full usage. Agents read `bb map` before source.
 `netcoredbg` is needed for F5, `bb debug` and the debugger tests: install it in
 `~/.local/share/backback/netcoredbg/`, on `PATH`, or set `BACKBACK_NETCOREDBG`.
 

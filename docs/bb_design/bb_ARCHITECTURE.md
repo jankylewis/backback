@@ -4,7 +4,7 @@
 
 ```
             ┌──────────────── backback (one Rust process) ────────────────┐
- keyboard → │ frontend (GPUI, M1)                                         │
+ keyboard → │ frontend (GPUI)                                             │
  mouse    → │   └─ views: editor · explorer · problems · tests · debug    │
             │ bb-ui: theme tokens, Frontend trait                          │
             │ editor core (sync, no await):                                │
@@ -21,29 +21,28 @@
 Three external processes, all MIT, all owned by the .NET SDK or a `dotnet tool`.
 backback never links .NET; it speaks three text protocols over pipes.
 
-## Crate graph (no cycles; arrows = depends on)
+## Crates (no cycles; `bb map` prints this from the Cargo.toml files)
 
-```
-bb ──► bb-ui
-   ──► bb-dotnet
-   ──► bb-lsp ──► bb-framing
-   ──► bb-dap ──► bb-framing
-   ──► bb-syntax
-(bb-text is used by the editor core in M1; bb depends on it then)
-```
-
-| Crate | Owns | Must never |
+| Crate | Owns | Uses |
 |---|---|---|
-| `bb-text` | rope buffer, `CharIdx`/`LineIdx`/`LspPoint` newtypes, checked conversions | know about LSP, files or UI |
-| `bb-syntax` | tree-sitter C# parse, outline (highlight queries next) | call Roslyn |
-| `bb-dotnet` | SDK discovery, `.sln`/`.slnx` listing, `dotnet` runner with deadlines, test platform enum | evaluate MSBuild itself |
-| `bb-framing` | `Content-Length` codec (incremental, skips bad frames) | know message meaning |
-| `bb-lsp` | JSON-RPC client (writer task, reader task, id map, deadlines) + Roslyn specifics | block the UI thread |
-| `bb-dap` | DAP envelope types, netcoredbg discovery (session machine in M4) | use `vsdbg` |
-| `bb-ui` | theme tokens (dark default), `Frontend` trait, `Headless` | depend on a GUI crate |
-| `bb` | CLI: `doctor`, `scan`, `open`, `outline`, `audit`, `bench` (M0 proof) | contain editor logic |
+| `bb-text` | rope buffer, `CharIdx`/`LineIdx`/`LspPoint`, checked conversions | - |
+| `bb-process` | owned child process groups, app shutdown | - |
+| `bb-syntax` | tree-sitter C#: highlight, fold, outline (never calls Roslyn) | text |
+| `bb-explorer` | lazy solution and folder tree model | dotnet |
+| `bb-search` | Find in Files: text or regex, git-ignore aware | - |
+| `bb-framing` | `Content-Length` codec shared by LSP and DAP | - |
+| `bb-lsp` | JSON-RPC client (writer/reader tasks, deadlines) + Roslyn specifics | dotnet framing process |
+| `bb-dap` | DAP client types, netcoredbg discovery | process framing |
+| `bb-dotnet` | SDK discovery, `.sln`/`.slnx`/project model (never evaluates MSBuild) | - |
+| `bb-testkit` | list and run tests via the Apex CLI or `dotnet test`, read TRX | dotnet process |
+| `bb-intel` | Roslyn features behind a typed API, document sync | dotnet lsp text |
+| `bb-ui` | theme tokens (dark default), `Frontend` trait | - |
+| `backback` | the GPUI desktop app (shell/desktop) | all of the above but cli |
+| `bb` | CLI proof and readback path; holds no editor logic | most crates |
+| `bb-audit` | the convention audit run by the gate | - |
+| `bb-kmap` | code map for agents (`bb map`) | audit |
 
-## Data flow for one keystroke (M1 target)
+## Data flow for one keystroke
 
 1. Frontend receives the key → `editor.insert(CharIdx, "x")` on the main thread
    (`bb-text`, O(log n), no allocation beyond the rope node).

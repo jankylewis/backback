@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "backback command line: doctor, scan, open, outline, audit, bench, probe, test (the M0 proof path)"
+description = "backback command line: doctor, scan, open, outline, audit, map, bench, probe, test (the M0 proof path)"
 
 [[bin]]
 name = "bb"
@@ -13,6 +13,7 @@ path = "src/main.rs"
 [dependencies]
 bb-process.workspace = true
 bb-audit.workspace = true
+bb-kmap.workspace = true
 bb-dap.workspace = true
 bb-dotnet.workspace = true
 bb-intel.workspace = true
