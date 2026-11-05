@@ -1,7 +1,6 @@
-//! Horizontal scrolling of the editor (BB-BUG-013): a tab keeps how many
-//! pixels its text has moved left; the gutter never moves. A cursor move
-//! keeps the caret in sight, as VS Code does; a horizontal wheel or trackpad
-//! swipe scrolls; nothing scrolls past the longest line on screen.
+//! Horizontal scrolling (BB-BUG-013): a tab keeps how far its text moved left;
+//! the gutter stays. A cursor move keeps the caret in sight (as VS Code); a
+//! sideways swipe scrolls; nothing scrolls past the longest line on screen.
 
 use gpui::{div, prelude::*, px, Context, IntoElement, ScrollEvent, Window};
 
@@ -27,8 +26,8 @@ pub(crate) fn text_viewport(scroll_x: f32, text: impl IntoElement) -> impl IntoE
         .child(div().relative().left(px(-scroll_x)).child(text))
 }
 
-/// Before the visible rows paint: note the widest line in sight and, when
-/// the cursor moved, scroll so its caret is in sight.
+/// Before the visible rows paint: note the widest line in sight, keep the
+/// scroll within it and, when the cursor moved, bring the caret in sight.
 pub(crate) fn before_rows(
     view: &mut ExplorerView,
     visible: &std::ops::Range<usize>,
@@ -48,6 +47,10 @@ pub(crate) fn before_rows(
         .unwrap_or_default();
     tab.widest_px = Columns::shape(window, &widest, &fonts).x_of(widest.chars().count())
         + Columns::shape(window, SLACK, &fonts).x_of(SLACK.len());
+    // BB-BUG-049: a wider window pulls the text back; skip the 1-row measure pass.
+    if visible.len() > 1 || tab.document.len_lines() <= 1 {
+        tab.scroll_x = tab.scroll_x.min((tab.widest_px - viewport).max(0.0));
+    }
     let cursor: bb_text::CharIdx = tab.document.cursor();
     let line: usize = tab.document.cursor_line();
     if tab.sighted == Some(cursor) || !visible.contains(&line) {

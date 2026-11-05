@@ -17,13 +17,13 @@ pub(crate) fn chevron(entry: &Entry) -> &'static str {
 pub(crate) fn icon(entry: &Entry, tint: Rgba) -> Svg {
     let data: &'static [u8] = match entry.kind() {
         EntryKind::Folder if entry.expanded() => {
-            include_bytes!("../../bb_assets/bb_folders/open.svg")
+            include_bytes!("../../../bb_assets/bb_folders/open.svg")
         }
-        EntryKind::Folder => include_bytes!("../../bb_assets/bb_folders/bb_closed.svg"),
-        EntryKind::CSharp => include_bytes!("../../bb_assets/files/bb_csharp.svg"),
-        EntryKind::Markdown => include_bytes!("../../bb_assets/files/markdown.svg"),
-        EntryKind::Project => include_bytes!("../../bb_assets/files/project.svg"),
-        EntryKind::Solution => include_bytes!("../../bb_assets/files/solution.svg"),
+        EntryKind::Folder => include_bytes!("../../../bb_assets/bb_folders/bb_closed.svg"),
+        EntryKind::CSharp => include_bytes!("../../../bb_assets/files/bb_csharp.svg"),
+        EntryKind::Markdown => include_bytes!("../../../bb_assets/files/markdown.svg"),
+        EntryKind::Project => include_bytes!("../../../bb_assets/files/project.svg"),
+        EntryKind::Solution => include_bytes!("../../../bb_assets/files/solution.svg"),
         EntryKind::Other => type_icon(file_type(entry.name())),
     };
     svg()
@@ -113,20 +113,20 @@ fn by_extension(ext: &str) -> FileType {
 
 fn type_icon(kind: FileType) -> &'static [u8] {
     match kind {
-        FileType::Json => include_bytes!("../../bb_assets/types/data/bb_json.svg"),
-        FileType::Xml => include_bytes!("../../bb_assets/types/data/xml.svg"),
-        FileType::Build => include_bytes!("../../bb_assets/types/data/build.svg"),
-        FileType::Yaml => include_bytes!("../../bb_assets/types/data/yaml.svg"),
-        FileType::Razor => include_bytes!("../../bb_assets/types/bb_code/razor.svg"),
-        FileType::Sql => include_bytes!("../../bb_assets/types/bb_code/sql.svg"),
-        FileType::Shell => include_bytes!("../../bb_assets/types/bb_code/shell.svg"),
-        FileType::Script => include_bytes!("../../bb_assets/types/bb_code/bb_script.svg"),
-        FileType::Web => include_bytes!("../../bb_assets/types/bb_code/web.svg"),
-        FileType::Image => include_bytes!("../../bb_assets/types/misc/image.svg"),
-        FileType::Config => include_bytes!("../../bb_assets/types/misc/config.svg"),
-        FileType::Docker => include_bytes!("../../bb_assets/types/misc/docker.svg"),
-        FileType::Text => include_bytes!("../../bb_assets/types/misc/bb_text.svg"),
-        FileType::Generic => include_bytes!("../../bb_assets/files/generic.svg"),
+        FileType::Json => include_bytes!("../../../bb_assets/types/data/bb_json.svg"),
+        FileType::Xml => include_bytes!("../../../bb_assets/types/data/xml.svg"),
+        FileType::Build => include_bytes!("../../../bb_assets/types/data/build.svg"),
+        FileType::Yaml => include_bytes!("../../../bb_assets/types/data/yaml.svg"),
+        FileType::Razor => include_bytes!("../../../bb_assets/types/bb_code/razor.svg"),
+        FileType::Sql => include_bytes!("../../../bb_assets/types/bb_code/sql.svg"),
+        FileType::Shell => include_bytes!("../../../bb_assets/types/bb_code/shell.svg"),
+        FileType::Script => include_bytes!("../../../bb_assets/types/bb_code/bb_script.svg"),
+        FileType::Web => include_bytes!("../../../bb_assets/types/bb_code/web.svg"),
+        FileType::Image => include_bytes!("../../../bb_assets/types/misc/image.svg"),
+        FileType::Config => include_bytes!("../../../bb_assets/types/misc/config.svg"),
+        FileType::Docker => include_bytes!("../../../bb_assets/types/misc/docker.svg"),
+        FileType::Text => include_bytes!("../../../bb_assets/types/misc/bb_text.svg"),
+        FileType::Generic => include_bytes!("../../../bb_assets/files/generic.svg"),
     }
 }
 

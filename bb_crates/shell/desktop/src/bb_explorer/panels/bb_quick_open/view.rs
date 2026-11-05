@@ -146,6 +146,7 @@ fn finish(
         Some(Chosen::File(path)) => view.open_file(&path, window, cx),
         Some(Chosen::Line(line)) => super::find::go_to_line(view, line, window, cx),
         Some(Chosen::Find(query)) => super::find::run(view, &query, window, cx),
+        Some(Chosen::Name(ask, typed)) => crate::files::apply_name(view, &ask, &typed, window, cx),
         None => {}
     }
     window.focus(&view.editor_focus, cx);

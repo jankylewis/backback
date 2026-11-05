@@ -1,7 +1,7 @@
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, AnyView, App, Context, IntoElement, Render, Window};
 
-use super::color;
+use crate::color;
 
 struct PathTooltip {
     path: String,

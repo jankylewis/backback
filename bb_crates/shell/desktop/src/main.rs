@@ -1,12 +1,13 @@
 //! macOS desktop shell for the backback Explorer.
 #[path = "app/args.rs"]
 mod args;
-#[path = "bb_explorer/bb_row_view.rs"]
-mod bb_row_view;
 mod editor;
-#[path = "bb_explorer/icons.rs"]
-mod icons;
+#[path = "bb_explorer/files/mod.rs"]
+mod files;
 mod intel;
+#[path = "bb_explorer/bb_rows/mod.rs"]
+mod rows;
+use rows::{bb_row_view, icons, tooltip};
 #[path = "app/latency.rs"]
 mod latency;
 #[path = "app/bb_launch/mod.rs"]
@@ -29,9 +30,6 @@ mod terminal;
 mod tests_panel;
 #[path = "app/theme.rs"]
 mod theme;
-use theme::color;
-#[path = "bb_explorer/tooltip.rs"]
-mod tooltip;
 use bb_explorer::{Entry, Explorer};
 use bb_ui::bb_theme::{Theme, ThemeKind};
 use editor::{Tab, TabError, Tabs};
@@ -42,6 +40,7 @@ use gpui::{
 use intel::glue::RestartServer;
 use navigation::{MoveDown, MoveLeft, MoveRight, MoveUp, Open};
 use std::path::PathBuf;
+use theme::color;
 struct ExplorerView {
     tree: Explorer,
     selected: usize,
@@ -71,6 +70,7 @@ struct ExplorerView {
     quick_open: Option<quick_open::QuickOpen>,
     quick_focus: FocusHandle,
     terminal: terminal::Terminal,
+    file_menu: Option<files::FileMenu>,
 }
 impl ExplorerView {
     fn editor_key_down(

@@ -48,6 +48,7 @@ pub(crate) fn explorer_panel(
             .track_scroll(&view.explorer_scroll)
             .flex_1(),
         )
+        .children(crate::files::menu(view, cx))
 }
 
 fn explorer_header(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
