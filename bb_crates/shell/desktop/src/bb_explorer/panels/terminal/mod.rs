@@ -1,9 +1,13 @@
 //! The terminal (BBEOD11, Ctrl+backtick): the user's shell in the solution folder,
 //! under the editor. Minimal on purpose: text, a cursor, keys and paste.
+//! Open Terminal Here (BB-BUG-052) starts it in a folder, or moves the
+//! running shell there with `cd`.
 
 mod bb_session;
 mod keys;
 mod view;
+
+use std::path::Path;
 
 use gpui::{AsyncWindowContext, Context, FocusHandle, WeakEntity, Window};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
@@ -50,22 +54,63 @@ pub(crate) fn on_toggle(
         cx.notify();
         return;
     }
-    if view.terminal.session.is_none() {
-        let (wake, woken): (UnboundedSender<()>, UnboundedReceiver<()>) = unbounded_channel();
-        match Session::start(&view.root, 80, 12, wake) {
-            Ok(session) => view.terminal.session = Some(session),
-            Err(error) => {
-                view.report(&format!("Terminal could not start: {error}"));
-                cx.notify();
-                return;
-            }
+    let root: std::path::PathBuf = view.root.clone();
+    if view.terminal.session.is_some() || start(view, &root, window, cx) {
+        show(view, window, cx);
+    }
+}
+
+/// Open Terminal Here: the shell in `folder`. A running shell gets a
+/// cleared line and `cd` (the panel keeps one shell, as before).
+pub(crate) fn open_in(
+    view: &mut ExplorerView,
+    folder: &Path,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let started: bool = match &view.terminal.session {
+        Some(session) => {
+            session.input(cd_line(folder));
+            true
         }
-        // Seam: gpui's test scheduler refuses wake-ups from the PTY thread;
-        // unit tests read the screen themselves.
-        if !cfg!(test) {
-            redraw_on_output(woken, window, cx);
+        None => start(view, folder, window, cx),
+    };
+    if started {
+        show(view, window, cx);
+    }
+}
+
+/// Ctrl+U (clear the typed line), then `cd -- 'folder'`, safely quoted.
+pub(crate) fn cd_line(folder: &Path) -> Vec<u8> {
+    let quoted: String = folder.to_string_lossy().replace('\'', "'\\''");
+    format!("\u{15}cd -- '{quoted}'\r").into_bytes()
+}
+
+/// Start the shell in `cwd`; false (and a status) when it cannot start.
+fn start(
+    view: &mut ExplorerView,
+    cwd: &Path,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) -> bool {
+    let (wake, woken): (UnboundedSender<()>, UnboundedReceiver<()>) = unbounded_channel();
+    match Session::start(cwd, 80, 12, wake) {
+        Ok(session) => view.terminal.session = Some(session),
+        Err(error) => {
+            view.report(&format!("Terminal could not start: {error}"));
+            cx.notify();
+            return false;
         }
     }
+    // Seam: gpui's test scheduler refuses wake-ups from the PTY thread;
+    // unit tests read the screen themselves.
+    if !cfg!(test) {
+        redraw_on_output(woken, window, cx);
+    }
+    true
+}
+
+fn show(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
     view.terminal.open = true;
     window.focus(&view.terminal.focus, cx);
     cx.notify();

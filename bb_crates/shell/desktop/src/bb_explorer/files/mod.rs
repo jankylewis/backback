@@ -1,21 +1,28 @@
-//! A right-click on an Explorer row (BB-BUG-050), as in VS Code: New
-//! File..., New Folder..., Rename... and Delete (to the Trash). A name is
-//! typed in the Go to File box; a delete asks first. A file with unsaved
-//! changes is never renamed or deleted under its tab; `--no-write` refuses
-//! every change.
+//! A right-click on an Explorer row (BB-BUG-050, BB-BUG-052), as in VS
+//! Code: New File..., New Folder..., Open Terminal Here, Copy, Paste, Copy
+//! Path, Rename... and Delete (to the Trash). A name is typed in the Go to
+//! File box; a delete asks first. A file with unsaved changes is never
+//! renamed or deleted under its tab; `--no-write` refuses every change.
 
 use std::path::{Path, PathBuf};
 
 use gpui::{Context, Pixels, Point, Window};
 
 pub(crate) mod bb_ops;
+mod jobs;
 #[cfg(test)]
 mod tests;
-mod trash;
 mod view;
 pub(crate) use view::menu;
 
 use crate::ExplorerView;
+
+/// The Explorer's menu state: the open menu, and what Copy last took.
+#[derive(Default)]
+pub(crate) struct Menus {
+    pub(crate) open: Option<FileMenu>,
+    pub(crate) copied: Option<PathBuf>,
+}
 
 /// The open menu: the row's path, whether it is the root, where the click was.
 pub(crate) struct FileMenu {
@@ -53,43 +60,78 @@ pub(crate) struct NameAsk {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Item {
     Name(NameOp),
+    Terminal,
+    Copy,
+    Paste,
+    CopyPath,
     Delete,
+}
+
+impl Item {
+    /// Whether the row changes the folder (and so `--no-write` refuses it).
+    fn writes(self) -> bool {
+        match self {
+            Item::Name(_) | Item::Paste | Item::Delete => true,
+            Item::Terminal | Item::Copy | Item::CopyPath => false,
+        }
+    }
 }
 
 /// A right-click on the row of `path`.
 pub(crate) fn open_menu(view: &mut ExplorerView, path: PathBuf, at: Point<Pixels>) {
     let root: bool = path == view.tree.root().path();
-    view.file_menu = Some(FileMenu { path, root, at });
+    view.file_menu.open = Some(FileMenu { path, root, at });
 }
 
-/// A menu row's click: the name box, or the delete question.
+/// A menu row's click: the name box, the delete question, a copy or paste,
+/// the path to the clipboard, or the terminal in the row's folder.
 pub(crate) fn apply(
     view: &mut ExplorerView,
     item: Item,
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let Some(menu): Option<FileMenu> = view.file_menu.take() else {
+    let Some(menu): Option<FileMenu> = view.file_menu.open.take() else {
         return;
     };
-    if view.tabs.no_write() {
+    if item.writes() && view.tabs.no_write() {
         view.report(&"File change refused: --no-write keeps the folder unchanged");
         return;
     }
     match item {
-        Item::Name(op) => {
-            let (target, typed): (PathBuf, String) = match op {
-                NameOp::Rename => (menu.path.clone(), file_name(&menu.path)),
-                NameOp::NewFile | NameOp::NewFolder => (folder_of(&menu.path), String::new()),
-            };
-            view.quick_open = Some(crate::quick_open::QuickOpen::name_box(
-                NameAsk { op, target },
-                typed,
-            ));
-            window.focus(&view.quick_focus, cx);
+        Item::Name(op) => ask_name(view, op, &menu.path, window, cx),
+        Item::Delete => jobs::ask_delete(menu.path, window, cx),
+        Item::Terminal => crate::terminal::open_in(view, &folder_of(&menu.path), window, cx),
+        Item::Copy => {
+            view.status = Some(format!("Copied {}", file_name(&menu.path)));
+            view.file_menu.copied = Some(menu.path);
         }
-        Item::Delete => trash::ask_delete(menu.path, window, cx),
+        Item::Paste => jobs::paste(view, folder_of(&menu.path), cx),
+        Item::CopyPath => {
+            let text: String = menu.path.to_string_lossy().into_owned();
+            cx.write_to_clipboard(gpui::ClipboardItem::new_string(text));
+            view.status = Some(format!("Copied the path of {}", file_name(&menu.path)));
+        }
     }
+}
+
+/// The name box for a new entry in `path`'s folder, or a rename of `path`.
+fn ask_name(
+    view: &mut ExplorerView,
+    op: NameOp,
+    path: &Path,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let (target, typed): (PathBuf, String) = match op {
+        NameOp::Rename => (path.to_path_buf(), file_name(path)),
+        NameOp::NewFile | NameOp::NewFolder => (folder_of(path), String::new()),
+    };
+    view.quick_open = Some(crate::quick_open::QuickOpen::name_box(
+        NameAsk { op, target },
+        typed,
+    ));
+    window.focus(&view.quick_focus, cx);
 }
 
 /// Enter in the name box: make or rename, then show the result.
@@ -184,7 +226,7 @@ fn reopen(
 }
 
 /// Take the change into the tree and select `path`'s row.
-fn show(view: &mut ExplorerView, path: &Path, cx: &mut Context<ExplorerView>) {
+pub(super) fn show(view: &mut ExplorerView, path: &Path, cx: &mut Context<ExplorerView>) {
     let _changed: bool = view.tree.refresh().unwrap_or(false);
     if let Ok(Some(row)) = view.tree.reveal(path) {
         view.select_row(row, cx);

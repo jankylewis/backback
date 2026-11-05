@@ -6,19 +6,33 @@ use gpui::{anchored, deferred, div, prelude::*, AnyElement, Context, Window};
 use super::{apply, Item, NameOp};
 use crate::{color, ExplorerView};
 
-/// The rows: selector name, label, what it does; the root keeps only New.
-const ROWS: [(&str, &str, Item); 4] = [
+/// The rows: selector name, label, what it does.
+const ROWS: [(&str, &str, Item); 8] = [
     ("new-file", "New File...", Item::Name(NameOp::NewFile)),
     ("new-folder", "New Folder...", Item::Name(NameOp::NewFolder)),
+    ("terminal", "Open Terminal Here", Item::Terminal),
+    ("copy", "Copy", Item::Copy),
+    ("paste", "Paste", Item::Paste),
+    ("copy-path", "Copy Path", Item::CopyPath),
     ("rename", "Rename...", Item::Name(NameOp::Rename)),
     ("delete", "Delete", Item::Delete),
 ];
 
+/// Whether `item` is offered: the root is not copied, renamed or deleted
+/// here, and Paste shows only after a Copy.
+fn offered(item: Item, open: &super::FileMenu, copied: bool) -> bool {
+    match item {
+        Item::Name(NameOp::NewFile | NameOp::NewFolder) | Item::Terminal | Item::CopyPath => true,
+        Item::Paste => copied,
+        Item::Copy | Item::Name(NameOp::Rename) | Item::Delete => !open.root,
+    }
+}
+
 /// The open menu, if any.
 pub(crate) fn menu(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
-    let open: &super::FileMenu = view.file_menu.as_ref()?;
+    let open: &super::FileMenu = view.file_menu.open.as_ref()?;
     let theme: Theme = view.theme;
-    let shown: usize = if open.root { 2 } else { ROWS.len() };
+    let copied: bool = view.file_menu.copied.is_some();
     let body: gpui::Stateful<gpui::Div> = div()
         .id("file-menu")
         .debug_selector(|| "file-menu".to_owned())
@@ -33,13 +47,13 @@ pub(crate) fn menu(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Optio
              _: &gpui::MouseDownEvent,
              _: &mut Window,
              cx: &mut Context<ExplorerView>| {
-                view.file_menu = None;
+                view.file_menu.open = None;
                 cx.notify();
             },
         ))
         .children(
             ROWS.iter()
-                .take(shown)
+                .filter(|(_, _, item): &&(&str, &str, Item)| offered(*item, open, copied))
                 .map(|&spec: &(&'static str, &'static str, Item)| row(spec, theme, cx)),
         );
     Some(

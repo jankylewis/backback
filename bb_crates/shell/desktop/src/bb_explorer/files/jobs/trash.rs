@@ -8,7 +8,7 @@ use super::{bb_ops, file_name, release};
 use crate::ExplorerView;
 
 /// Ask before a delete; on yes, move `path` to the Trash off the UI thread.
-pub(super) fn ask_delete(path: PathBuf, window: &mut Window, cx: &mut Context<ExplorerView>) {
+pub(crate) fn ask_delete(path: PathBuf, window: &mut Window, cx: &mut Context<ExplorerView>) {
     let question: String = format!("Move \u{201c}{}\u{201d} to the Trash?", file_name(&path));
     on_yes(
         window.prompt(
