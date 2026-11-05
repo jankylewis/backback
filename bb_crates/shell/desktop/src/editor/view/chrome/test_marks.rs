@@ -1,4 +1,4 @@
-use super::super::bb_tabs::Tab;
+use super::super::super::bb_tabs::Tab;
 use crate::ExplorerView;
 use bb_testkit::Fqn;
 use std::path::PathBuf;

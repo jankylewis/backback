@@ -50,3 +50,4 @@
 | BB-BUG-048 | Window titled by folder; File > New Window | FIXED | window test (mutation-checked) + menu/key test | `D4/S12/BB_BUG_048_NO_NEW_WINDOW_AND_WINDOWS_NOT_IN_THE_WINDOW_MENU.md` |
 | BB-BUG-049 | Scroll clamped every frame | FIXED | window test (mutation-checked) | `D4/S13/BB_BUG_049_A_WIDER_WINDOW_KEPT_THE_TEXT_SCROLLED_AND_CUT.md` |
 | BB-BUG-050 | Explorer right-click menu; Trash with a seam | FIXED | unit + window tests | `D4/S13/BB_BUG_050_NO_NEW_RENAME_OR_DELETE_IN_THE_EXPLORER.md` |
+| BB-BUG-051 | Vertical + horizontal scroll bars, draggable | FIXED | unit + window tests | `D4/S13/BB_BUG_051_NO_SCROLL_BARS_IN_THE_EDITOR.md` |

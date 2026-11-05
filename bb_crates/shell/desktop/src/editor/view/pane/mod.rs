@@ -128,6 +128,7 @@ fn other_body(
         .id(("pane-body", group.0))
         .debug_selector(move || format!("pane-body-{}", group.0))
         .flex_1()
+        .relative()
         .bg(color(view.theme.bg))
         .capture_any_mouse_down(cx.listener(
             move |view: &mut ExplorerView,
@@ -159,6 +160,7 @@ fn other_body(
             .track_scroll(view.tabs.scroll_of(group))
             .h_full(),
         )
+        .children(super::bb_scrollbar::bars(view, group, cx))
 }
 
 /// While a tab drags, each pane takes it into its group; the right half of
