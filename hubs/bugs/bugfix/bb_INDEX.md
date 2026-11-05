@@ -55,3 +55,4 @@
 | BB-BUG-053 | Mouse drag selects (alacritty selection); Cmd+C copies | FIXED | session + window tests (mutation-checked) | `D4/S14/BB_BUG_053_TERMINAL_TEXT_COULD_NOT_BE_SELECTED.md` |
 | BB-BUG-054 | `selection` token, plain text on it | FIXED | contrast + run tests (mutation-checked) | `D4/S14/BB_BUG_054_SELECTED_TEXT_WAS_UNREADABLE.md` |
 | BB-BUG-055 | `after_key` scrolls to the cursor line (Nearest) | FIXED | window test, red first | `D4/S14/BB_BUG_055_THE_VIEW_DID_NOT_FOLLOW_THE_CURSOR.md` |
+| BB-BUG-056 | one `editor_area` width for scroll and terminal | FIXED | window tests both sides, red first | `D4/S14/BB_BUG_056_THE_LINE_END_HID_UNDER_A_RIGHT_DOCKED_PANEL.md` |

@@ -104,3 +104,21 @@ fn at(
 ) -> gpui::Point<gpui::Pixels> {
     grid.origin + gpui::point(gpui::px(column * cell), gpui::px((row + 0.5) * line))
 }
+
+/// BB-BUG-056: the terminal's columns fit the editor area on either side;
+/// docked right, they ran under the tool window.
+#[gpui::test]
+fn the_columns_are_the_same_with_the_panel_left_or_right(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    let mut cols: Vec<usize> = Vec::new();
+    for right in [false, true] {
+        let grid: (usize, usize) = vcx.update(|window: &mut gpui::Window, cx: &mut gpui::App| {
+            let mut fonts: bb_ui::Typography = crate::settings::typography(cx);
+            fonts.panel_right = right;
+            crate::settings::apply(cx, fonts.clone());
+            super::grid(rig.view.read(cx), window, &fonts)
+        });
+        cols.push(grid.0);
+    }
+    assert_eq!(cols.first(), cols.last(), "columns left vs right: {cols:?}");
+}

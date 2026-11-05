@@ -14,10 +14,10 @@ use super::bb_session::Screen;
 use crate::{color, ExplorerView};
 use keys::{bytes, Mods};
 
-/// Rows and columns that fit, from the font and the editor area's width.
+/// Columns and rows that fit, from the font and the editor area's width
+/// (the tool window left out on either side, BB-BUG-056).
 fn grid(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typography) -> (usize, usize) {
-    let width: f32 = f32::from(window.viewport_size().width) - fonts.editor_x(view.panel_width)
-        + fonts.gutter_width();
+    let width: f32 = crate::editor::editor_area(view, window, fonts);
     let cell: f32 = crate::editor::Columns::shape(window, "M", fonts)
         .x_of(1)
         .max(1.0);
