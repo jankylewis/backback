@@ -6,3 +6,4 @@ Index of this shelf; the hub-level `bb_INDEX.md` has the full table.
 |---|---|
 | `BB_BUG_053_TERMINAL_TEXT_COULD_NOT_BE_SELECTED.md` | BB-BUG-053 — fix |
 | `BB_BUG_054_SELECTED_TEXT_WAS_UNREADABLE.md` | BB-BUG-054 — fix |
+| `BB_BUG_055_THE_VIEW_DID_NOT_FOLLOW_THE_CURSOR.md` | BB-BUG-055 — fix |

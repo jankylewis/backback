@@ -97,3 +97,30 @@ fn the_thumb_shows_the_share_in_sight_and_where() {
     assert_eq!(huge.length, 24.0, "never shorter than a grip");
     assert_eq!(huge.start, 76.0, "at the end: the track's end");
 }
+
+/// BB-BUG-055: a cursor key that leaves the view scrolls just enough to show
+/// the cursor's line again, both ways, as VS Code does.
+#[gpui::test]
+fn the_lines_follow_the_cursor_up_and_down(cx: &mut TestAppContext) {
+    let text: String = "// line\n".repeat(400);
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, true, &text);
+    settle(vcx);
+    vcx.simulate_keystrokes(&"down ".repeat(120));
+    settle(vcx);
+    let down: f32 = scrolled_down(&rig, vcx);
+    assert!(down > 0.0, "line 120 is below the first screen");
+    vcx.simulate_keystrokes(&"up ".repeat(120));
+    settle(vcx);
+    assert_eq!(
+        scrolled_down(&rig, vcx),
+        0.0,
+        "line 0 is back at the top (was {down})"
+    );
+    vcx.simulate_keystrokes("down");
+    settle(vcx);
+    assert_eq!(
+        scrolled_down(&rig, vcx),
+        0.0,
+        "a move inside the view does not scroll"
+    );
+}

@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 54 — FIXED 52, OBSERVED 2.
+Bugs a user met in the app. Entries: 55 — FIXED 53, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -58,3 +58,4 @@ Bugs a user met in the app. Entries: 54 — FIXED 52, OBSERVED 2.
 | BB-BUG-052 | No Copy, Paste or Open Terminal Here in the Explorer | FIXED | not built | yes | `D4/S13/BB_BUG_052_NO_COPY_PASTE_OR_TERMINAL_HERE_IN_THE_EXPLORER.md` |
 | BB-BUG-053 | Terminal text could not be selected | FIXED | not built | yes | `D4/S14/BB_BUG_053_TERMINAL_TEXT_COULD_NOT_BE_SELECTED.md` |
 | BB-BUG-054 | Selected text was unreadable | FIXED | accent as selection bg (1.29:1) | yes | `D4/S14/BB_BUG_054_SELECTED_TEXT_WAS_UNREADABLE.md` |
+| BB-BUG-055 | The view did not follow the cursor | FIXED | no scroll on cursor keys | yes | `D4/S14/BB_BUG_055_THE_VIEW_DID_NOT_FOLLOW_THE_CURSOR.md` |
