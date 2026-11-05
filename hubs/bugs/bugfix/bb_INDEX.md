@@ -54,3 +54,4 @@
 | BB-BUG-052 | Open Terminal Here, Copy/Paste, Copy Path | FIXED | unit + real-shell + window tests (mutation-checked) | `D4/S13/BB_BUG_052_NO_COPY_PASTE_OR_TERMINAL_HERE_IN_THE_EXPLORER.md` |
 | BB-BUG-053 | Mouse drag selects (alacritty selection); Cmd+C copies | FIXED | session + window tests (mutation-checked) | `D4/S14/BB_BUG_053_TERMINAL_TEXT_COULD_NOT_BE_SELECTED.md` |
 | BB-BUG-054 | `selection` token, plain text on it | FIXED | contrast + run tests (mutation-checked) | `D4/S14/BB_BUG_054_SELECTED_TEXT_WAS_UNREADABLE.md` |
+| BB-BUG-055 | `after_key` scrolls to the cursor line (Nearest) | FIXED | window test, red first | `D4/S14/BB_BUG_055_THE_VIEW_DID_NOT_FOLLOW_THE_CURSOR.md` |

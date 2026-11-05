@@ -106,7 +106,8 @@ fn after_key(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    if let (Some(before), Some(after)) = (before, mark(view)) {
+    let after: Option<Mark> = mark(view);
+    if let (Some(before), Some(after)) = (&before, &after) {
         if before.0 == after.0 {
             crate::run::bb_debug::after_edit(
                 view,
@@ -115,6 +116,12 @@ fn after_key(
                 (before.2, after.2),
             );
         }
+    }
+    if let Some(after) = after.filter(|after: &Mark| before.as_ref() != Some(after)) {
+        // BB-BUG-055: as VS Code, scroll just enough to show the cursor's line.
+        view.tabs
+            .scroll()
+            .scroll_to_item(after.2, gpui::ScrollStrategy::Nearest);
     }
     if let Some(tab) = view.tabs.active_tab_mut() {
         tab.sync_edits();
@@ -126,8 +133,8 @@ fn after_key(
     }
 }
 
-/// The active tab's file, line count and cursor line, around an edit.
-type Mark = (std::path::PathBuf, usize, usize);
+/// The active tab's file, line count, cursor line and cursor, around an edit.
+type Mark = (std::path::PathBuf, usize, usize, bb_text::CharIdx);
 
 fn mark(view: &ExplorerView) -> Option<Mark> {
     view.tabs.active_tab().map(|tab: &super::Tab| {
@@ -135,6 +142,7 @@ fn mark(view: &ExplorerView) -> Option<Mark> {
             tab.path.clone(),
             tab.document.len_lines(),
             tab.document.cursor_line(),
+            tab.document.cursor(),
         )
     })
 }
