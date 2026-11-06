@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 57 — FIXED 55, OBSERVED 2.
+Bugs a user met in the app. Entries: 59 — FIXED 57, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -61,3 +61,5 @@ Bugs a user met in the app. Entries: 57 — FIXED 55, OBSERVED 2.
 | BB-BUG-055 | The view did not follow the cursor | FIXED | no scroll on cursor keys | yes | `D4/S14/BB_BUG_055_THE_VIEW_DID_NOT_FOLLOW_THE_CURSOR.md` |
 | BB-BUG-056 | The line end hid under a right-docked panel | FIXED | text width ignored the right dock | yes | `D4/S14/BB_BUG_056_THE_LINE_END_HID_UNDER_A_RIGHT_DOCKED_PANEL.md` |
 | BB-BUG-057 | The find box took no paste and had no caret | FIXED | box kept a plain string, Cmd keys dropped | yes | `D4/S15/BB_BUG_057_THE_FIND_BOX_TOOK_NO_PASTE_AND_HAD_NO_CARET.md` |
+| BB-BUG-058 | The terminal could not scroll back | FIXED | the panel never handled the wheel | yes | `D4/S15/BB_BUG_058_THE_TERMINAL_COULD_NOT_SCROLL_BACK.md` |
+| BB-BUG-059 | Deleted folders took the recent list's places | FIXED | the saved list kept gone folders | yes | `D4/S15/BB_BUG_059_DELETED_FOLDERS_TOOK_THE_RECENT_LIST_PLACES.md` |

@@ -122,3 +122,52 @@ fn the_columns_are_the_same_with_the_panel_left_or_right(cx: &mut TestAppContext
     }
     assert_eq!(cols.first(), cols.last(), "columns left vs right: {cols:?}");
 }
+
+/// BB-BUG-058: the wheel (or trackpad) over the terminal scrolls up into
+/// its history, as VS Code; a typed key comes back to the prompt.
+#[gpui::test]
+fn the_wheel_scrolls_back_through_the_output_and_a_key_comes_back(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    vcx.dispatch_action(super::super::ToggleTerminal);
+    vcx.run_until_parked();
+    vcx.simulate_keystrokes("s e q space 1 space 3 0 0 enter");
+    let mut seen: bool = false;
+    for _ in 0..500 {
+        vcx.run_until_parked();
+        // "299" only comes from seq's output: typed text echoed before the
+        // shell starts can show "300" on a row of its own.
+        if rows(&rig, vcx).iter().any(|row: &String| row == "299") {
+            seen = true;
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    assert!(seen, "{:?}", rows(&rig, vcx));
+    let grid: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("terminal-grid").unwrap();
+    vcx.simulate_event(gpui::ScrollEvent {
+        position: grid.center(),
+        delta: gpui::ScrollDelta::Lines(gpui::point(0.0, 40.0)),
+        ..gpui::ScrollEvent::default()
+    });
+    vcx.run_until_parked();
+    let up: Vec<String> = rows(&rig, vcx);
+    assert!(
+        !up.iter().any(|row: &String| row == "300"),
+        "40 lines up, the end is out of sight: {up:?}"
+    );
+    assert!(up.iter().any(|row: &String| row == "255"), "{up:?}");
+    vcx.simulate_event(gpui::ScrollEvent {
+        position: grid.center(),
+        delta: gpui::ScrollDelta::Lines(gpui::point(0.0, -15.0)),
+        ..gpui::ScrollEvent::default()
+    });
+    vcx.run_until_parked();
+    assert!(rows(&rig, vcx).iter().any(|row: &String| row == "270"));
+    vcx.simulate_keystrokes("x");
+    vcx.run_until_parked();
+    assert!(
+        rows(&rig, vcx).iter().any(|row: &String| row == "300"),
+        "a key comes back to the prompt"
+    );
+    vcx.dispatch_action(super::super::ToggleTerminal);
+}

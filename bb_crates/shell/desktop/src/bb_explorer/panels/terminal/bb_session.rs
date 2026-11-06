@@ -11,7 +11,7 @@ use std::sync::{Arc, OnceLock};
 
 use alacritty_terminal::event::{Event, EventListener, WindowSize};
 use alacritty_terminal::event_loop::{EventLoop, EventLoopSender, Msg};
-use alacritty_terminal::grid::Dimensions;
+use alacritty_terminal::grid::{Dimensions, Scroll};
 use alacritty_terminal::sync::FairMutex;
 use alacritty_terminal::term::cell::Flags;
 use alacritty_terminal::term::{Config, Term, TermMode};
@@ -139,9 +139,33 @@ impl Session {
         })
     }
 
-    /// Bytes typed or pasted into the shell.
+    /// Bytes typed or pasted into the shell; the view comes back to the
+    /// prompt first, as VS Code's does.
     pub(crate) fn input(&self, bytes: Vec<u8>) {
+        self.term.lock().scroll_display(Scroll::Bottom);
         let _sent: Result<(), _> = self.pty.send(Msg::Input(bytes.into()));
+    }
+
+    /// The wheel (BB-BUG-058): `lines` up (positive) or down through the
+    /// history. A full-screen app (less, vim: the alternate screen) has no
+    /// history, so it gets as many Up or Down keys, as in VS Code.
+    pub(crate) fn scroll(&self, lines: i32) {
+        let mode: TermMode = *self.term.lock().mode();
+        if !mode.contains(TermMode::ALT_SCREEN) {
+            self.term.lock().scroll_display(Scroll::Delta(lines));
+            return;
+        }
+        if !mode.contains(TermMode::ALTERNATE_SCROLL) {
+            return;
+        }
+        let key: &[u8] = match (lines > 0, mode.contains(TermMode::APP_CURSOR)) {
+            (true, true) => b"\x1bOA",
+            (true, false) => b"\x1b[A",
+            (false, true) => b"\x1bOB",
+            (false, false) => b"\x1b[B",
+        };
+        let count: usize = usize::try_from(lines.unsigned_abs()).unwrap_or(0);
+        let _sent: Result<(), _> = self.pty.send(Msg::Input(key.repeat(count).into()));
     }
 
     /// Fit the grid and the PTY to the panel; a no-op when unchanged.
