@@ -28,6 +28,8 @@ pub(crate) struct Terminal {
     pub(crate) grid: gpui::ScrollHandle,
     /// A mouse press began a selection and the button is still down.
     pub(crate) selecting: bool,
+    /// Wheel pixels not yet a whole line (a trackpad sends small steps).
+    pub(crate) scroll_rest: f32,
 }
 
 impl Terminal {
@@ -38,6 +40,7 @@ impl Terminal {
             focus,
             grid: gpui::ScrollHandle::new(),
             selecting: false,
+            scroll_rest: 0.0,
         }
     }
 }

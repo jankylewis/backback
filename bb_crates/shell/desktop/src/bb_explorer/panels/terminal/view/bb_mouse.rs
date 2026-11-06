@@ -22,6 +22,7 @@ pub(super) fn grid(
         .cursor_text()
         .on_mouse_down(MouseButton::Left, cx.listener(press))
         .on_mouse_move(cx.listener(drag))
+        .on_scroll(cx.listener(wheel))
         .on_mouse_up(
             MouseButton::Left,
             cx.listener(
@@ -66,6 +67,27 @@ fn drag(
         session.select_to(cell);
         cx.notify();
     }
+}
+
+/// BB-BUG-058: the wheel scrolls the history by whole lines; a trackpad's
+/// small steps add up in `scroll_rest` until they make one.
+fn wheel(
+    view: &mut ExplorerView,
+    event: &gpui::ScrollEvent,
+    _: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    let height: f32 = crate::settings::typography(cx).line_height().max(1.0);
+    let rest: f32 =
+        view.terminal.scroll_rest + f32::from(event.delta.pixel_delta(gpui::px(height)).y);
+    let (count, left): (usize, f32) = steps(rest.abs(), height);
+    view.terminal.scroll_rest = left.copysign(rest);
+    let lines: i32 = i32::try_from(count).unwrap_or(i32::MAX);
+    if let (Some(session), true) = (view.terminal.session.as_ref(), lines > 0) {
+        session.scroll(if rest > 0.0 { lines } else { -lines });
+        cx.notify();
+    }
+    cx.stop_propagation();
 }
 
 /// The screen cell at `at`, from last frame's grid box and the font.

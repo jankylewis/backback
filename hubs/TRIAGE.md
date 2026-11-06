@@ -91,7 +91,10 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-BLD-003 | `still broken after the fix merged` | FIXED | `BBCommit` of the running app (status bar) holds the fix? |
 | BB-TG-019 | `a runner press outside a popup did nothing` | OBSERVED | Did the readback window draw a frame after the popup opened? |
 | BB-TG-020 | `where is X defined / what does this crate do` | FIXED | Run `bb map` / `bb map --find X` before opening files |
+| BB-TG-021 | `test memory peak above the runner's RAM` | FIXED | Is it a sum of RSS? Read `vm_stat` in-use pages and swap |
 | BB-BUG-055 | `the cursor moved off screen` | FIXED | Does `after_key` call `scroll_to_item` (Nearest)? |
 | BB-BUG-056 | `the line end stays under the Explorer` | FIXED | Is the tool window docked right? Does the width come from `editor_area`? |
 | BB-BUG-057 | `cannot paste in Find in Files` | FIXED | Does `key` pass Cmd+V's text to `QuickOpen::press`? |
+| BB-BUG-058 | `cannot scroll up the terminal` | FIXED | Does the grid's `on_scroll` reach `Session::scroll`? |
+| BB-BUG-059 | `only 3 recent workspaces show` | FIXED | Is the saved list full of deleted folders? `recent::add` drops them |
 | BB-CIP-004 | `not acquired by Runner of type hosted` | FIXED | Rerun it; merge only when every `--json bucket` is `pass` |

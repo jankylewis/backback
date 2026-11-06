@@ -152,6 +152,24 @@ mod session {
         assert_eq!(session.selected_text(), None);
     }
 
+    /// BB-BUG-058: in a full-screen app (the alternate screen: less, vim)
+    /// the wheel sends Up keys, as VS Code does; the app sees them.
+    #[test]
+    fn in_a_full_screen_app_the_wheel_sends_arrow_keys() {
+        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let (wake, _woken): (UnboundedSender<()>, _) = tokio::sync::mpsc::unbounded_channel();
+        let session: Session = Session::start(dir.path(), 80, 12, wake).unwrap();
+        session.input(b"printf '\\033[?1049h'; echo bb_alt_$((1+1)); cat -v\r".to_vec());
+        assert!(wait_for(&session, "bb_alt_2", Duration::from_secs(10)));
+        session.scroll(2);
+        assert!(
+            wait_for(&session, "^[[A^[[A", Duration::from_secs(10)),
+            "{:?}",
+            session.screen().rows
+        );
+        session.input(vec![3]);
+    }
+
     fn cell(row: usize, column: usize, right_half: bool) -> super::super::Cell {
         super::super::Cell {
             row,
