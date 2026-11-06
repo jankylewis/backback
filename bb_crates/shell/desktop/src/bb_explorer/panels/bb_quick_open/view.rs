@@ -111,19 +111,12 @@ fn key(
     let Some(quick): Option<&mut QuickOpen> = view.quick_open.as_mut() else {
         return;
     };
-    match key {
-        "backspace" => quick.backspace(),
-        "up" => quick.step(false),
-        "down" => quick.step(true),
-        _ => {
-            if let (Some(text), false) = (
-                event.keystroke.key_char.as_deref(),
-                event.keystroke.modifiers.platform,
-            ) {
-                quick.type_text(text);
-            }
-        }
-    }
+    // BB-BUG-057: Cmd+V pastes the clipboard's text at the caret.
+    let paste: Option<String> = (key == "v" && event.keystroke.modifiers.platform)
+        .then(|| cx.read_from_clipboard())
+        .flatten()
+        .and_then(|item: gpui::ClipboardItem| item.text());
+    quick.press(&event.keystroke, paste);
     cx.notify();
 }
 
@@ -188,11 +181,28 @@ fn rows(
         .collect()
 }
 
+/// The title and query, with the caret drawn where it is (BB-BUG-057).
+fn query_line(quick: &QuickOpen, theme: bb_ui::bb_theme::Theme) -> gpui::Div {
+    let (before, after): (&str, &str) = quick.split();
+    div()
+        .flex()
+        .items_center()
+        .child(format!("{}: {before}", quick.title()))
+        .child(
+            div()
+                .w(px(2.0))
+                .h(px(16.0))
+                .bg(color(theme.text))
+                .debug_selector(|| "quick-open-caret".to_owned()),
+        )
+        .child(after.to_owned())
+}
+
 pub(crate) fn overlay(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
     let quick: &QuickOpen = view.quick_open.as_ref()?;
     let theme: bb_ui::bb_theme::Theme = view.theme;
     let rows: Vec<gpui::Stateful<gpui::Div>> = rows(quick, theme, cx);
-    let query: String = format!("{}: {}", quick.title(), quick.query);
+    let query: gpui::Div = query_line(quick, theme);
     let panel: gpui::Stateful<gpui::Div> = div()
         .id("quick-open")
         .track_focus(&view.quick_focus)

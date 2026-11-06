@@ -56,3 +56,4 @@
 | BB-BUG-054 | `selection` token, plain text on it | FIXED | contrast + run tests (mutation-checked) | `D4/S14/BB_BUG_054_SELECTED_TEXT_WAS_UNREADABLE.md` |
 | BB-BUG-055 | `after_key` scrolls to the cursor line (Nearest) | FIXED | window test, red first | `D4/S14/BB_BUG_055_THE_VIEW_DID_NOT_FOLLOW_THE_CURSOR.md` |
 | BB-BUG-056 | one `editor_area` width for scroll and terminal | FIXED | window tests both sides, red first | `D4/S14/BB_BUG_056_THE_LINE_END_HID_UNDER_A_RIGHT_DOCKED_PANEL.md` |
+| BB-BUG-057 | one caret model for every quick box: paste, arrows, Delete | FIXED | window test, red first | `D4/S15/BB_BUG_057_THE_FIND_BOX_TOOK_NO_PASTE_AND_HAD_NO_CARET.md` |

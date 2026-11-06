@@ -2,6 +2,11 @@
 //! query as a fuzzy subsequence; names that match rank first. Go to Symbol
 //! (Cmd+F12): the active file's outline in the same box, in source order.
 
+mod bb_line;
+mod rank;
+#[cfg(test)]
+mod window_tests;
+
 use std::path::{Path, PathBuf};
 
 /// Enough for any solution; a huge folder stops listing here.
@@ -29,6 +34,8 @@ struct Item {
 
 pub(crate) struct QuickOpen {
     pub(crate) query: String,
+    /// The caret in `query`: a byte offset on a char boundary.
+    pub(crate) caret: usize,
     pub(crate) selected: usize,
     /// `Some` for Go to File (labels are paths under it), `None` for symbols.
     root: Option<PathBuf>,
@@ -55,6 +62,7 @@ impl QuickOpen {
     pub(crate) fn listing(root: &Path) -> QuickOpen {
         QuickOpen {
             query: String::new(),
+            caret: 0,
             selected: 0,
             root: Some(root.to_path_buf()),
             items: Vec::new(),
@@ -92,6 +100,7 @@ impl QuickOpen {
     pub(crate) fn symbols(outline: Vec<(String, usize)>) -> QuickOpen {
         QuickOpen {
             query: String::new(),
+            caret: 0,
             selected: 0,
             root: None,
             items: outline
@@ -111,6 +120,7 @@ impl QuickOpen {
     pub(crate) fn find_box() -> QuickOpen {
         QuickOpen {
             query: String::new(),
+            caret: 0,
             selected: 0,
             root: None,
             items: Vec::new(),
@@ -123,6 +133,7 @@ impl QuickOpen {
     /// A name box for `ask`, holding `typed` (a rename starts with the name).
     pub(crate) fn name_box(ask: crate::files::NameAsk, typed: String) -> QuickOpen {
         QuickOpen {
+            caret: typed.len(),
             query: typed,
             name: Some(ask),
             ..QuickOpen::find_box()
@@ -169,7 +180,7 @@ impl QuickOpen {
                 } else {
                     item.line
                 };
-                score(&item.label, &query).map(|s: u8| (s, order, item.label.as_path()))
+                rank::score(&item.label, &query).map(|s: u8| (s, order, item.label.as_path()))
             })
             .collect();
         scored.sort_by(|a: &(u8, usize, &Path), b: &(u8, usize, &Path)| {
@@ -204,16 +215,6 @@ impl QuickOpen {
         })
     }
 
-    pub(crate) fn type_text(&mut self, text: &str) {
-        self.query.push_str(text);
-        self.selected = 0;
-    }
-
-    pub(crate) fn backspace(&mut self) {
-        self.query.pop();
-        self.selected = 0;
-    }
-
     pub(crate) fn step(&mut self, down: bool) {
         let last: usize = self.matches().len().saturating_sub(1);
         self.selected = if down {
@@ -222,20 +223,4 @@ impl QuickOpen {
             self.selected.saturating_sub(1)
         };
     }
-}
-
-/// 0: the query is in the file name; 1: in the path; None: no match.
-fn score(file: &Path, query: &str) -> Option<u8> {
-    let name: String = file.file_name()?.to_string_lossy().to_lowercase();
-    if subsequence(&name, query) {
-        return Some(0);
-    }
-    subsequence(&file.to_string_lossy().to_lowercase(), query).then_some(1)
-}
-
-fn subsequence(text: &str, query: &str) -> bool {
-    let mut chars: std::str::Chars<'_> = text.chars();
-    query
-        .chars()
-        .all(|wanted: char| chars.any(|ch: char| ch == wanted))
 }
