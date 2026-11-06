@@ -5,7 +5,8 @@
 use std::path::{Path, PathBuf};
 
 const HEADER: &str = "backback recent v1";
-const KEEP: usize = 8;
+/// As many as VS Code's File > Open Recent shows first.
+const KEEP: usize = 10;
 const FILE: &str = "recent";
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -36,9 +37,13 @@ pub(crate) fn encode(paths: &[PathBuf]) -> String {
     text
 }
 
-/// `path` first, once, and at most `KEEP` paths.
+/// `path` first, once, then the others still on disk (a deleted folder,
+/// such as a test run's temp folder, gives its place up), at most `KEEP`.
 pub(crate) fn add(paths: Vec<PathBuf>, path: PathBuf) -> Vec<PathBuf> {
-    let mut out: Vec<PathBuf> = paths.into_iter().filter(|p: &PathBuf| *p != path).collect();
+    let mut out: Vec<PathBuf> = paths
+        .into_iter()
+        .filter(|p: &PathBuf| *p != path && p.exists())
+        .collect();
     out.insert(0, path);
     out.truncate(KEEP);
     out
@@ -98,19 +103,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_path_goes_first_once_and_the_list_keeps_eight() {
-        let old: Vec<PathBuf> = (0..9)
-            .map(|n: i32| PathBuf::from(format!("/w{n}")))
+    fn a_path_goes_first_once_and_the_list_keeps_ten_still_on_disk() {
+        let base: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let old: Vec<PathBuf> = (0..12)
+            .map(|n: i32| {
+                let path: PathBuf = base.path().join(format!("w{n}"));
+                std::fs::create_dir(&path).unwrap();
+                path
+            })
+            .chain([base.path().join("gone")])
             .collect();
-        let list: Vec<PathBuf> = add(old, PathBuf::from("/w3"));
-        assert_eq!(list.first(), Some(&PathBuf::from("/w3")));
-        assert_eq!(list.len(), 8);
-        assert_eq!(
-            list.iter()
-                .filter(|p: &&PathBuf| p.as_path() == Path::new("/w3"))
-                .count(),
-            1
-        );
+        let w3: PathBuf = base.path().join("w3");
+        let list: Vec<PathBuf> = add(old.clone(), w3.clone());
+        assert_eq!(list.first(), Some(&w3));
+        assert_eq!(list.len(), 10);
+        assert_eq!(list.iter().filter(|p: &&PathBuf| **p == w3).count(), 1);
+        let gone: PathBuf = base.path().join("gone");
+        let short: Vec<PathBuf> = add(vec![gone.clone(), w3.clone()], base.path().join("w1"));
+        assert_eq!(short.len(), 2, "a deleted folder is dropped: {short:?}");
+        assert!(!short.contains(&gone));
     }
 
     #[test]

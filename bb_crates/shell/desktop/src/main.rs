@@ -60,7 +60,7 @@ struct ExplorerView {
     appearance_subscription: Option<gpui::Subscription>,
     status: Option<String>,
     explorer_scroll: UniformListScrollHandle,
-    quit_after_close: bool,
+    after_close: editor::AfterClose,
     /// The folder the Explorer shows; files outside it open read-only.
     root: PathBuf,
     intel: intel::model::IntelModel,
@@ -216,6 +216,7 @@ impl Render for ExplorerView {
             .on_mouse_move(cx.listener(Self::move_resize))
             .on_mouse_up(MouseButton::Left, cx.listener(Self::finish_resize))
             .on_action(cx.listener(ExplorerView::quit))
+            .on_action(cx.listener(ExplorerView::close_workspace))
             .on_action(cx.listener(ExplorerView::restart_server))
             .on_action(cx.listener(terminal::on_toggle))
             .map(|root: gpui::Div| run::root_actions(root, self, cx))

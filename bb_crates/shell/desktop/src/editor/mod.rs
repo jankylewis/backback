@@ -13,7 +13,7 @@ pub(crate) use bb_tabs::{go_back, go_forward, GoBack, GoForward, Tab, TabError, 
 pub(crate) use bb_tabs::{Group, MAX_GROUPS};
 pub(crate) use input::handle_key;
 pub(crate) use input::link;
-pub(crate) use prompt::Quit;
+pub(crate) use prompt::{AfterClose, CloseWorkspace, Quit};
 pub(crate) use view::{
     bottom_handle, build, editor_area, handle, layout_panes, panes, status_bar, Columns, Edge,
     Lines, HANDLE_PX,

@@ -108,3 +108,17 @@ pub(super) fn empty_note(theme: bb_ui::Theme) -> gpui::Div {
         .text_color(color(theme.text_dim))
         .child("No recent workspaces yet")
 }
+
+/// The rows under RECENT: ten recent rows and Open... fit the page; a
+/// smaller window scrolls them.
+pub(super) fn rows_box(rows: Vec<gpui::Stateful<gpui::Div>>) -> gpui::Stateful<gpui::Div> {
+    div()
+        .id("start-rows")
+        .flex_1()
+        .min_h(px(0.0))
+        .overflow_y_scroll()
+        .flex()
+        .flex_col()
+        .gap(px(4.0))
+        .children(rows)
+}
