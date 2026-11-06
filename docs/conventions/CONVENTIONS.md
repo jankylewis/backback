@@ -42,5 +42,11 @@ cargo deny check
 cargo run -p bb -- audit ..
 ```
 
+Locally the tests run one suite at a time. CI (`.github/workflows/bb_ci.yml`)
+runs the same steps but tests with `cargo nextest` in parallel workers on
+its one macOS runner, as many as its RAM allows
+(`.github/bb_scripts/ci_tests.sh`; each run prints its peak memory). CI runs
+once per PR, and on master after a merge.
+
 Report the observed test counts and any failure. The gate in `AGENTS.md`
 controls if this page or an older research note differs.

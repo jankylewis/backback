@@ -24,6 +24,7 @@ One file per failure mechanism. This hub owns the id. Entries: 42 — FIXED 39, 
 | BB-CIP-003 | A yanked transitive crate fails `cargo deny` on CI | FIXED | yes | yes | none | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | A check no runner took was merged over | FIXED | yes | yes | none | `SHIP/CIP/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
+| BB-GAT-002 | A fixture folder shared by parallel test processes | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
 | BB-DAP-001 | netcoredbg's `exceptionInfo` names the CLR category and the module, not the type and message | FIXED | yes | yes | none | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | A restore that ends during the load is waited for again, 120 s, then `restored : false` | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
 | BB-ENV-001 | An app launched by launchd has no shell PATH, so dotnet and netcoredbg are not found | FIXED | yes | yes | BB-TG-012 | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |

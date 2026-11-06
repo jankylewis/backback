@@ -1,5 +1,12 @@
 # Backback progress
 
+- CI-WORKERS (2026-11-06, `ci-nextest-workers`): CI tests run with
+  `cargo nextest` in parallel workers on the one macOS runner, sized to its
+  RAM (2 GB kept free, 1.2 GB a worker); the peak is printed each run.
+  cargo-deny and nextest come prebuilt, pinned and checksummed (deny was
+  built from source, 3.7 min a run). No push run on PR branches. The local
+  gate is unchanged.
+
 - CLOSE-FOLDER (2026-11-06, `close-folder-recent10`): File > Close Folder
   (Cmd+K F) closes the workspace (unsaved tabs ask first) and shows the
   start page. The recent list keeps 10 and drops deleted folders (test
