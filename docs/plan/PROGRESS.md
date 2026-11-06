@@ -1,5 +1,10 @@
 # Backback progress
 
+- CLOSE-FOLDER (2026-11-06, `close-folder-recent10`): File > Close Folder
+  (Cmd+K F) closes the workspace (unsaved tabs ask first) and shows the
+  start page. The recent list keeps 10 and drops deleted folders (test
+  temp folders took 5 of 8 places). Window tests for both close paths.
+
 - CODE-MAP (2026-11-05, `code-map`): `bb map` (crate `bb-kmap`) for agents:
   crate index, file outline with line numbers, `--find`. Read from source
   each call (never stale). BB-TG-020. README, architecture, conventions and

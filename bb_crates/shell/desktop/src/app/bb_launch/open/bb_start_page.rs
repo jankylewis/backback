@@ -11,7 +11,9 @@ use gpui::{
     KeyDownEvent, Subscription, TitlebarOptions, Window, WindowBounds, WindowHandle, WindowOptions,
 };
 
-use super::start_entries::{empty_note, entries, header, label, row_label, row_texts, StartEntry};
+use super::start_entries::{
+    empty_note, entries, header, label, row_label, row_texts, rows_box, StartEntry,
+};
 use crate::editor::Quit;
 use crate::{color, ExplorerView};
 
@@ -50,7 +52,7 @@ pub(crate) fn open(
     no_write: bool,
     cx: &mut App,
 ) -> Option<WindowHandle<StartPage>> {
-    let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(640.0), px(460.0)), cx);
+    let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(640.0), px(640.0)), cx);
     let opened: gpui::Result<WindowHandle<StartPage>> = cx.open_window(
         WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(bounds)),
@@ -237,6 +239,6 @@ impl Render for StartPage {
             .when(none, |page: gpui::Stateful<gpui::Div>| {
                 page.child(empty_note(theme))
             })
-            .children(rows)
+            .child(rows_box(rows))
     }
 }

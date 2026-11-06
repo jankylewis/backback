@@ -134,6 +134,7 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
         [
             "New Window",
             "Open...",
+            "Close Folder",
             "Start Page...",
             "Go to File...",
             "Go to Symbol...",
@@ -156,4 +157,67 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
         Some(false)
     );
     assert!(find.action().partial_eq(&crate::quick_open::FindInFiles));
+}
+
+/// Open `argument` as a workspace window; every window after it.
+fn open_one(
+    argument: std::path::PathBuf,
+    cx: &mut gpui::TestAppContext,
+) -> Vec<gpui::AnyWindowHandle> {
+    cx.update(bind_keys);
+    let start: Start = crate::args::start_for(argument, false);
+    assert!(cx.update(|cx: &mut App| super::open_workspace(&start, cx)));
+    cx.run_until_parked();
+    cx.windows()
+}
+
+/// (workspace windows, start pages) now open.
+fn counts(cx: &mut gpui::TestAppContext) -> (usize, usize) {
+    let windows: Vec<gpui::AnyWindowHandle> = cx.windows();
+    let views: usize = windows
+        .iter()
+        .filter(|w: &&gpui::AnyWindowHandle| w.downcast::<ExplorerView>().is_some())
+        .count();
+    (views, windows.len().saturating_sub(views))
+}
+
+/// File > Close Folder (Cmd+K F), as VS Code: the workspace closes and the
+/// start page shows.
+#[gpui::test]
+fn close_folder_closes_the_workspace_and_shows_the_start_page(cx: &mut gpui::TestAppContext) {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let windows: Vec<gpui::AnyWindowHandle> = open_one(dir.path().to_path_buf(), cx);
+    let window: gpui::AnyWindowHandle = *windows.first().unwrap();
+    assert_eq!(counts(cx), (1, 0));
+    let mut wcx: gpui::VisualTestContext = gpui::VisualTestContext::from_window(window, cx);
+    wcx.simulate_keystrokes("cmd-k f");
+    wcx.run_until_parked();
+    assert_eq!(
+        counts(cx),
+        (0, 1),
+        "the workspace window closed and the start page shows"
+    );
+}
+
+/// Close Folder with an unsaved tab asks first: the window stays, no start
+/// page yet.
+#[gpui::test]
+fn close_folder_with_an_unsaved_tab_asks_first(cx: &mut gpui::TestAppContext) {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let file: std::path::PathBuf = dir.path().join("A.cs");
+    std::fs::write(&file, "class A {}\n").unwrap();
+    let windows: Vec<gpui::AnyWindowHandle> = open_one(file, cx);
+    let window: gpui::AnyWindowHandle = *windows.first().unwrap();
+    let mut wcx: gpui::VisualTestContext = gpui::VisualTestContext::from_window(window, cx);
+    wcx.simulate_keystrokes("x cmd-k f");
+    wcx.run_until_parked();
+    assert_eq!(counts(cx), (1, 0), "the save prompt holds the window");
+    let asking: bool = window
+        .downcast::<ExplorerView>()
+        .unwrap()
+        .read_with(cx, |v: &ExplorerView, _: &App| {
+            v.closing_window && v.after_close == crate::editor::AfterClose::StartPage
+        })
+        .unwrap();
+    assert!(asking, "the save prompt is up, for Close Folder");
 }

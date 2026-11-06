@@ -13,7 +13,7 @@ mod bb_window;
 mod open;
 pub(crate) mod recent;
 pub(crate) use bb_window::on_view as window_actions;
-pub(crate) use open::start_state;
+pub(crate) use open::{show_start_page, start_state};
 
 pub(crate) fn launch() {
     // First, before any thread or child process (BB-BUG-009).
@@ -180,7 +180,7 @@ pub(crate) fn fresh_view(
         appearance_subscription: None,
         status: None,
         explorer_scroll: gpui::UniformListScrollHandle::new(),
-        quit_after_close: false,
+        after_close: crate::editor::AfterClose::Window,
         root: root.clone(),
         intel: crate::intel::model::IntelModel::new(crate::intel::model::LoadStatus::NoSolution),
         link: None,

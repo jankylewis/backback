@@ -69,7 +69,7 @@ where
     answer.await.ok()?.ok()??.into_iter().next()
 }
 
-pub(crate) fn bindings() -> [KeyBinding; 8] {
+pub(crate) fn bindings() -> [KeyBinding; 9] {
     [
         KeyBinding::new("cmd-o", OpenWorkspace, None),
         KeyBinding::new("cmd-shift-o", crate::quick_open::GoToFile, None),
@@ -82,6 +82,8 @@ pub(crate) fn bindings() -> [KeyBinding; 8] {
         KeyBinding::new("cmd-p", crate::quick_open::GoToFile, None),
         // BB-BUG-048: last, so the bindings above keep their places.
         KeyBinding::new("cmd-shift-n", NewWindow, None),
+        // VS Code's Close Folder chord.
+        KeyBinding::new("cmd-k f", crate::editor::CloseWorkspace, None),
     ]
 }
 
@@ -89,6 +91,7 @@ pub(crate) fn file_menu() -> Menu {
     Menu::new("File").items([
         MenuItem::action("New Window", NewWindow),
         MenuItem::action("Open...", OpenWorkspace),
+        MenuItem::action("Close Folder", crate::editor::CloseWorkspace),
         MenuItem::action("Start Page...", ShowStartPage),
         MenuItem::action("Go to File...", crate::quick_open::GoToFile),
         MenuItem::action("Go to Symbol...", crate::quick_open::GoToSymbol),
