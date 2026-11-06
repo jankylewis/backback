@@ -1,6 +1,9 @@
 name: CI
 on:
+  # A PR branch is tested once, by its pull_request run; push runs only
+  # on master (after a merge).
   push:
+    branches: [master]
   pull_request:
 permissions:
   contents: read
@@ -38,6 +41,26 @@ jobs:
           if [[ ! -x $tools/netcoredbg/netcoredbg ]]; then
             unzip -q -o "$archive" -d "$tools"
           fi
+          # Prebuilt, pinned and checked tools: building cargo-deny from
+          # source took 3.7 min a run.
+          nextest=$tools/cargo-nextest-0.9.148.tar.gz
+          if [[ ! -f "$nextest" ]]; then
+            curl --fail --location --retry 3 \
+              https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.148/cargo-nextest-0.9.148-universal-apple-darwin.tar.gz \
+              --output "$nextest"
+          fi
+          echo "6c23b7fb4ca82c571fc8dfedbab45bfa773d45918f933170c85d21cd7f4b852b  $nextest" | shasum -a 256 --check
+          deny=$tools/cargo-deny-0.20.2.tar.gz
+          if [[ ! -f "$deny" ]]; then
+            curl --fail --location --retry 3 \
+              https://github.com/EmbarkStudios/cargo-deny/releases/download/0.20.2/cargo-deny-0.20.2-aarch64-apple-darwin.tar.gz \
+              --output "$deny"
+          fi
+          echo "fe67d82a10d8597a3549364cb733a3f9cc1bfff9031b7ae46384a9f2a72090c3  $deny" | shasum -a 256 --check
+          mkdir -p "$tools/bin"
+          tar -xzf "$nextest" -C "$tools/bin"
+          tar -xzf "$deny" -C "$tools/bin" --strip-components 1 cargo-deny-0.20.2-aarch64-apple-darwin/cargo-deny
+          echo "$tools/bin" >> "$GITHUB_PATH"
           echo "BACKBACK_ROSLYN_LS=$tools/roslyn/roslyn-language-server" >> "$GITHUB_ENV"
           echo "BACKBACK_NETCOREDBG=$tools/netcoredbg/netcoredbg" >> "$GITHUB_ENV"
           echo "$tools/roslyn" >> "$GITHUB_PATH"
@@ -45,8 +68,8 @@ jobs:
           dotnet --version
           dotnet tool list --tool-path $tools/roslyn
           $tools/netcoredbg/netcoredbg --version
-      - name: Install cargo-deny
-        run: cargo install --locked cargo-deny
+          $tools/bin/cargo-nextest --version
+          $tools/bin/cargo-deny --version
       - name: Format
         run: cargo fmt --check
         working-directory: bb_crates
@@ -54,10 +77,12 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
         working-directory: bb_crates
       - name: Tests
-        # These 9 call the Apex CLI, a private package that is not on
-        # nuget.org (BB-TG-004); the local gate in AGENTS.md runs them.
+        # Parallel workers on this one runner, sized to its RAM:
+        # .github/bb_scripts/ci_tests.sh. These 9 call the Apex CLI, a
+        # private package that is not on nuget.org (BB-TG-004); the local
+        # gate in AGENTS.md runs them.
         run: >-
-          cargo test --workspace --no-fail-fast --
+          bash ../.github/bb_scripts/ci_tests.sh
           --skip bb_testing::list_leaves_the_built_solution_tree_unchanged
           --skip bb_testing::list_prints_each_test_project_as_a_tree_with_its_backend_and_time
           --skip bb_testing::run_prints_each_outcome_errors_a_missing_spec_and_never_a_secret
