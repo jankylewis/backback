@@ -19,3 +19,7 @@ at risk this time; the next red could be a real test failure.
 
 Gate a merge on structured fields (`--json bucket`), all `pass`, never on
 grepped text. A "not acquired by Runner" check is rerun, then merged.
+
+Since PR #92 a PR branch has one CI check (its `pull_request` gate; push
+runs only on master). The merge needs at least one check, every one `pass`;
+zero checks means CI never ran, never green.
