@@ -14,6 +14,7 @@
 | BB-PRC-002 | FIXED | Spawn tools on a normal-QoS thread | `SYS/PRC/S01/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
 | BB-LSP-005 | FIXED | Assert only what the server writes because of our request | `APP/LSP/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | FIXED | A yank lives in the index; ask crates.io when CI and local deny disagree | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
+| BB-CIP-004 | FIXED | Gate a merge on structured check fields, never grepped text | `SHIP/CIP/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-GAT-001 | FIXED | Assert the library's contract, not a stronger one | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-DAP-001 | FIXED | Print the adapter's real reply before shaping text a user reads | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | FIXED | Two waits on one stream share one reader state | `APP/LSP/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
