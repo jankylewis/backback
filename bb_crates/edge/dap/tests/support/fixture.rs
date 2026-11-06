@@ -5,15 +5,20 @@ use tokio::process::Command;
 
 pub struct Built {
     pub dir: PathBuf,
+    /// Holds the folder; a static `Built` never drops, so the next run's
+    /// create sweeps it once this process is gone (BB-PRC-004).
+    _owned: bb_process::OwnedTempDir,
 }
 
+/// Build the fixture in a temp folder of this process's own,
+/// `bb-dap-<pid>-<tag>`: test processes run side by side (CI's parallel
+/// workers) must never share one, else one deletes or locks the files
+/// another is building.
 pub async fn build(tag: &str) -> Built {
     let fixture: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixture");
-    let scratch: PathBuf = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("backback-{tag}"));
-    if scratch.exists() {
-        std::fs::remove_dir_all(&scratch).unwrap();
-    }
-    std::fs::create_dir_all(&scratch).unwrap();
+    let owned: bb_process::OwnedTempDir =
+        bb_process::OwnedTempDir::create_with("bb-dap", tag).unwrap();
+    let scratch: PathBuf = owned.path().to_path_buf();
     for entry in std::fs::read_dir(&fixture).unwrap() {
         let path: PathBuf = entry.unwrap().path();
         if path.is_file() {
@@ -39,5 +44,5 @@ pub async fn build(tag: &str) -> Built {
         String::from_utf8_lossy(&output.stdout)
     );
     let dir: PathBuf = scratch.canonicalize().unwrap();
-    Built { dir }
+    Built { dir, _owned: owned }
 }

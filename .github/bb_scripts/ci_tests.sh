@@ -22,21 +22,36 @@ echo "runner: ${ram_mb} MB RAM, ${cores} cores -> ${workers} test workers"
 # Build every test first, with all cores, so the workers only run tests.
 cargo nextest run --workspace --no-run
 
-# Sample the memory in use every 2 s; the peak shows the sizing is right.
+# Sample the memory really in use every 2 s (active + wired + compressed
+# pages, as Activity Monitor counts it; a sum of RSS counts shared pages
+# many times) and the swap used; the peaks show the sizing is right.
+page=$(sysctl -n hw.pagesize)
+used_mb() {
+  vm_stat | awk -v p="$page" '/^Pages active/ {a=$3} /^Pages wired down/ {w=$4}
+    /^Pages occupied by compressor/ {c=$5} END {print int((a+w+c)*p/1048576)}'
+}
+swap_mb() {
+  sysctl -n vm.swapusage | awk '{sub("M", "", $6); print int($6)}'
+}
 peak_file=$(mktemp)
-echo 0 >"$peak_file"
+echo "0 0" >"$peak_file"
 (
   while :; do
-    used=$(ps -A -o rss= | awk '{s += $1} END {print int(s / 1024)}')
-    (( used > $(cat "$peak_file") )) && echo "$used" >"$peak_file"
+    read -r peak_used peak_swap <"$peak_file"
+    used=$(used_mb)
+    swap=$(swap_mb)
+    (( used > peak_used )) && peak_used=$used
+    (( swap > peak_swap )) && peak_swap=$swap
+    echo "$peak_used $peak_swap" >"$peak_file"
     sleep 2
   done
 ) &
 sampler=$!
+echo "memory in use before the tests: $(used_mb) MB, swap $(swap_mb) MB"
 
 rc=0
 cargo nextest run --workspace --no-fail-fast -j "$workers" -- "$@" || rc=$?
 kill "$sampler" 2>/dev/null || true
-peak=$(cat "$peak_file")
-echo "::notice title=Test memory::peak ${peak} MB of ${ram_mb} MB with ${workers} workers"
+read -r peak_used peak_swap <"$peak_file"
+echo "::notice title=Test memory::peak ${peak_used} MB in use of ${ram_mb} MB, swap ${peak_swap} MB, with ${workers} workers"
 exit "$rc"

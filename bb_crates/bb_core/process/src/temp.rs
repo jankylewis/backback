@@ -12,7 +12,7 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use crate::owner::{owner, owns};
 
 /// Every prefix backback and its tests name temp folders with.
-pub const FAMILIES: [&str; 10] = [
+pub const FAMILIES: [&str; 11] = [
     "backback-intel",
     "backback-obj",
     "backback-testhost",
@@ -23,6 +23,7 @@ pub const FAMILIES: [&str; 10] = [
     "bb-intel",
     "bb-gui",
     "bb-process",
+    "bb-dap",
 ];
 
 static OWNED: Mutex<Vec<PathBuf>> = Mutex::new(Vec::new());
