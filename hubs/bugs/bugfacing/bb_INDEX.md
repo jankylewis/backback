@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 56 — FIXED 54, OBSERVED 2.
+Bugs a user met in the app. Entries: 57 — FIXED 55, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -60,3 +60,4 @@ Bugs a user met in the app. Entries: 56 — FIXED 54, OBSERVED 2.
 | BB-BUG-054 | Selected text was unreadable | FIXED | accent as selection bg (1.29:1) | yes | `D4/S14/BB_BUG_054_SELECTED_TEXT_WAS_UNREADABLE.md` |
 | BB-BUG-055 | The view did not follow the cursor | FIXED | no scroll on cursor keys | yes | `D4/S14/BB_BUG_055_THE_VIEW_DID_NOT_FOLLOW_THE_CURSOR.md` |
 | BB-BUG-056 | The line end hid under a right-docked panel | FIXED | text width ignored the right dock | yes | `D4/S14/BB_BUG_056_THE_LINE_END_HID_UNDER_A_RIGHT_DOCKED_PANEL.md` |
+| BB-BUG-057 | The find box took no paste and had no caret | FIXED | box kept a plain string, Cmd keys dropped | yes | `D4/S15/BB_BUG_057_THE_FIND_BOX_TOOK_NO_PASTE_AND_HAD_NO_CARET.md` |
