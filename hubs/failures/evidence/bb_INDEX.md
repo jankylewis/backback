@@ -24,6 +24,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-PRF-002 | FIXED | `docs/plan/bench/BBEOD06/GOTO.md` |
 | BB-LSP-005 | FIXED | CI run 41501823925 (red, PR #30) |
 | BB-CIP-003 | FIXED | CI run 41510600740 (red, PR #33) |
+| BB-CIP-004 | FIXED | Runs 42079599220 (no runner, then rerun green) and 42079606160 (green), PR #88 |
 | BB-GAT-001 | FIXED | CI run 41532817663 (red, PR #39) |
 | BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/D1/S03/BB_BUG_010_*.md` |
 | BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_011_*.md` |

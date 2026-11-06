@@ -92,3 +92,4 @@ One row per bug and per failure reason. Grep the signature in your log.
 | BB-TG-020 | `where is X defined / what does this crate do` | FIXED | Run `bb map` / `bb map --find X` before opening files |
 | BB-BUG-055 | `the cursor moved off screen` | FIXED | Does `after_key` call `scroll_to_item` (Nearest)? |
 | BB-BUG-056 | `the line end stays under the Explorer` | FIXED | Is the tool window docked right? Does the width come from `editor_area`? |
+| BB-CIP-004 | `not acquired by Runner of type hosted` | FIXED | Rerun it; merge only when every `--json bucket` is `pass` |
