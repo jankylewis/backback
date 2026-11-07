@@ -139,3 +139,42 @@ fn anchors_match_at_every_line_end_including_crlf_files() {
         ["Crlf.cs:2", "Lf.cs:1"]
     );
 }
+
+fn run_in(root: &Path, folder: &str, files: &str) -> Vec<String> {
+    let stop: AtomicBool = AtomicBool::new(false);
+    let filter: crate::Filter = crate::Filter::parse(files).unwrap();
+    let found: Found = crate::search_in(
+        &root.join(folder),
+        &filter,
+        &Query::parse("needle").unwrap(),
+        2_000,
+        &stop,
+    );
+    names(&found, root)
+}
+
+/// Find in Files' "in" and "files" fields: a folder, include and exclude
+/// globs; .gitignore still rules, as VS Code.
+#[test]
+fn a_folder_and_files_globs_narrow_the_search() {
+    let dir: tempfile::TempDir = tree(&[
+        ("Core/A.cs", "needle\n"),
+        ("Core/B.md", "needle\n"),
+        ("Tests/T.cs", "needle\n"),
+        ("Gen/G.cs", "needle\n"),
+        (".gitignore", "Gen/\n"),
+    ]);
+    let root: &Path = dir.path();
+    assert_eq!(run_in(root, "", "*.cs"), ["Core/A.cs:0", "Tests/T.cs:0"]);
+    assert_eq!(run_in(root, "", "!Tests"), ["Core/A.cs:0", "Core/B.md:0"]);
+    assert_eq!(run_in(root, "", "*.cs, !Tests"), ["Core/A.cs:0"]);
+    assert_eq!(
+        run_in(root, "", " !*.md , "),
+        ["Core/A.cs:0", "Tests/T.cs:0"]
+    );
+    assert_eq!(run_in(root, "Core", ""), ["Core/A.cs:0", "Core/B.md:0"]);
+    assert!(matches!(
+        crate::Filter::parse("Core/[a"),
+        Err(SearchError::BadGlob(_))
+    ));
+}

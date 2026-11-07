@@ -4,10 +4,12 @@
 //! other dot-folders are searched (BBEOD21).
 
 mod bb_query;
+mod filter;
 mod walk;
 
 #[cfg(test)]
 mod tests;
 
 pub use bb_query::{Query, SearchError};
-pub use walk::{files, search, Found, Hit};
+pub use filter::Filter;
+pub use walk::{files, search, search_in, Found, Hit};

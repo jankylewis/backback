@@ -193,3 +193,49 @@ fn no_write_refuses_every_change(cx: &mut TestAppContext) {
         status(&rig, vcx)
     );
 }
+
+/// Find in Folder... (as Wu / VS Code): the Find in Files box opens with
+/// that folder as its place; Enter searches only there.
+#[gpui::test]
+fn find_in_folder_searches_only_that_folder(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, true, "class A {}\n");
+    right_click(vcx, 0);
+    assert!(vcx.debug_bounds("file-menu-find").is_some(), "offered");
+    click(vcx, "editor-area");
+    for (file, text) in [
+        ("Core/B.cs", "var needle = 1;\n"),
+        ("Other/C.cs", "var needle = 2;\n"),
+    ] {
+        let path: PathBuf = rig.root.join(file);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    }
+    let core: PathBuf = rig.root.join("Core");
+    rig.view.update_in(
+        vcx,
+        |v: &mut ExplorerView, w: &mut gpui::Window, cx: &mut gpui::Context<ExplorerView>| {
+            crate::quick_open::find_in(v, &core, w, cx);
+        },
+    );
+    vcx.simulate_input("needle");
+    vcx.simulate_keystrokes("enter");
+    vcx.run_until_parked();
+    let (title, files): (String, Vec<PathBuf>) =
+        rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+            let panel: &crate::intel::model::popups::PlacesPanel =
+                v.intel.references.as_ref().unwrap();
+            let files: Vec<PathBuf> = panel
+                .places
+                .iter()
+                .filter_map(
+                    |p: &crate::intel::bb_worker::protocol::Place| match &p.location.uri {
+                        bb_intel::DocUri::File(path) => Some(path.as_path().to_path_buf()),
+                        bb_intel::DocUri::Virtual(_) => None,
+                    },
+                )
+                .collect();
+            (panel.title.clone(), files)
+        });
+    assert_eq!(files, [core.join("B.cs")], "{title}");
+    assert_eq!(title, "1 result for needle in Folder · Core, 1 file");
+}

@@ -61,6 +61,8 @@ pub(crate) struct NameAsk {
 pub(crate) enum Item {
     Name(NameOp),
     Terminal,
+    /// Find in Folder...: Find in Files with this folder as its place.
+    Find,
     Copy,
     Paste,
     CopyPath,
@@ -72,7 +74,7 @@ impl Item {
     fn writes(self) -> bool {
         match self {
             Item::Name(_) | Item::Paste | Item::Delete => true,
-            Item::Terminal | Item::Copy | Item::CopyPath => false,
+            Item::Terminal | Item::Find | Item::Copy | Item::CopyPath => false,
         }
     }
 }
@@ -102,6 +104,7 @@ pub(crate) fn apply(
         Item::Name(op) => ask_name(view, op, &menu.path, window, cx),
         Item::Delete => jobs::ask_delete(menu.path, window, cx),
         Item::Terminal => crate::terminal::open_in(view, &folder_of(&menu.path), window, cx),
+        Item::Find => crate::quick_open::find_in(view, &folder_of(&menu.path), window, cx),
         Item::Copy => {
             view.status = Some(format!("Copied {}", file_name(&menu.path)));
             view.file_menu.copied = Some(menu.path);

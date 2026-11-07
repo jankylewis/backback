@@ -3,9 +3,10 @@
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use ignore::overrides::Override;
 use ignore::{DirEntry, WalkBuilder};
 
-use crate::Query;
+use crate::{Filter, Query};
 
 /// One matching line.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,8 +57,22 @@ const PREVIEW_CHARS: usize = 200;
 /// come in name order; `stop` is read before each file.
 #[must_use]
 pub fn search(root: &Path, query: &Query, cap: usize, stop: &AtomicBool) -> Found {
+    search_in(root, &Filter::default(), query, cap, stop)
+}
+
+/// [`search`] over only the files `filter` keeps (Find in Files' files
+/// field); `root` is the folder searched (the workspace, a project or a
+/// folder).
+#[must_use]
+pub fn search_in(
+    root: &Path,
+    filter: &Filter,
+    query: &Query,
+    cap: usize,
+    stop: &AtomicBool,
+) -> Found {
     let mut found: Found = Found::default();
-    for path in files(root) {
+    for path in walk(root, filter) {
         if stop.load(Ordering::Relaxed) {
             found.stopped = true;
             return found;
@@ -86,32 +101,60 @@ pub fn search(root: &Path, query: &Query, cap: usize, stop: &AtomicBool) -> Foun
 /// Every file under `root` a search or Go to File may show, in name order:
 /// not in [`SKIP`] folders, not git-ignored, not a [`SKIP_FILES`] name.
 pub fn files(root: &Path) -> impl Iterator<Item = PathBuf> {
+    walk(root, &Filter::default())
+}
+
+/// [`files`] narrowed by `filter`; a filter that cannot build keeps all.
+fn walk(root: &Path, filter: &Filter) -> impl Iterator<Item = PathBuf> {
+    // Applied beside .gitignore, never over it: a whitelist override would
+    // bring git-ignored files back.
+    let rules: Option<Override> = filter
+        .overrides(root)
+        .ok()
+        .filter(|_: &Override| !filter.is_empty());
+    let dirs: Option<Override> = rules.clone();
     WalkBuilder::new(root)
         .hidden(false)
         .git_ignore(true)
         .git_exclude(true)
         .require_git(false)
         .sort_by_file_name(std::ffi::OsStr::cmp)
-        .filter_entry(|entry: &DirEntry| {
+        .filter_entry(move |entry: &DirEntry| {
             let dir: bool = entry
                 .file_type()
                 .is_some_and(|t: std::fs::FileType| t.is_dir());
-            !(dir
-                && SKIP
-                    .iter()
-                    .any(|name: &&str| entry.file_name() == std::ffi::OsStr::new(name)))
+            let skipped: bool = SKIP
+                .iter()
+                .any(|name: &&str| entry.file_name() == std::ffi::OsStr::new(name));
+            let excluded: bool = dirs
+                .as_ref()
+                .is_some_and(|o: &Override| o.matched(entry.path(), true).is_ignore());
+            !(dir && (skipped || excluded))
         })
         .build()
         .filter_map(Result::ok)
-        .filter(|entry: &DirEntry| {
+        .filter(move |entry: &DirEntry| {
             entry
                 .file_type()
                 .is_some_and(|t: std::fs::FileType| t.is_file())
                 && !SKIP_FILES
                     .iter()
                     .any(|name: &&str| entry.file_name() == std::ffi::OsStr::new(name))
+                && rules
+                    .as_ref()
+                    .is_none_or(|o: &Override| kept(o, entry.path()))
         })
         .map(DirEntry::into_path)
+}
+
+/// A file the files field keeps: matched by an include glob, or not
+/// excluded when there is no include glob.
+fn kept(rules: &Override, path: &Path) -> bool {
+    match rules.matched(path, false) {
+        ignore::Match::Whitelist(_) => true,
+        ignore::Match::Ignore(_) => false,
+        ignore::Match::None => rules.num_whitelists() == 0,
+    }
 }
 
 /// The file as UTF-8 text; `None` for big, binary or unreadable files.

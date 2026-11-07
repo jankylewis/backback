@@ -7,10 +7,11 @@ use super::{apply, Item, NameOp};
 use crate::{color, ExplorerView};
 
 /// The rows: selector name, label, what it does.
-const ROWS: [(&str, &str, Item); 8] = [
+const ROWS: [(&str, &str, Item); 9] = [
     ("new-file", "New File...", Item::Name(NameOp::NewFile)),
     ("new-folder", "New Folder...", Item::Name(NameOp::NewFolder)),
     ("terminal", "Open Terminal Here", Item::Terminal),
+    ("find", "Find in Folder...", Item::Find),
     ("copy", "Copy", Item::Copy),
     ("paste", "Paste", Item::Paste),
     ("copy-path", "Copy Path", Item::CopyPath),
@@ -22,7 +23,10 @@ const ROWS: [(&str, &str, Item); 8] = [
 /// here, and Paste shows only after a Copy.
 fn offered(item: Item, open: &super::FileMenu, copied: bool) -> bool {
     match item {
-        Item::Name(NameOp::NewFile | NameOp::NewFolder) | Item::Terminal | Item::CopyPath => true,
+        Item::Name(NameOp::NewFile | NameOp::NewFolder)
+        | Item::Terminal
+        | Item::Find
+        | Item::CopyPath => true,
         Item::Paste => copied,
         Item::Copy | Item::Name(NameOp::Rename) | Item::Delete => !open.root,
     }

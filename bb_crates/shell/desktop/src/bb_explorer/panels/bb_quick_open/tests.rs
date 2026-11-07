@@ -77,16 +77,6 @@ fn symbols_keep_source_order_and_enter_gives_the_line() {
     assert_eq!(quick.chosen(), Some(Chosen::Line(9)));
 }
 
-#[test]
-fn the_find_box_lists_nothing_and_enter_gives_the_query() {
-    let mut quick: QuickOpen = QuickOpen::find_box();
-    assert_eq!(quick.title(), "Find in Files");
-    assert_eq!(quick.chosen(), None, "an empty query does nothing");
-    quick.type_text("Greet");
-    assert_eq!(quick.matches().len(), 0);
-    assert_eq!(quick.chosen(), Some(Chosen::Find("Greet".to_owned())));
-}
-
 /// BBEOD06: Cmd+Shift+F, a query, Enter: the hits fill the panel and a
 /// click opens the file at the match.
 #[gpui::test]

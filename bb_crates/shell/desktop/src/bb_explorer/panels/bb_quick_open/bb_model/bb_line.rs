@@ -9,34 +9,53 @@ impl super::QuickOpen {
         press(self, stroke, paste);
     }
 
-    /// Type or paste `text` at the caret.
+    /// Type or paste `text` at the caret of the field keys go to.
     pub(crate) fn type_text(&mut self, text: &str) {
-        insert(&mut self.query, &mut self.caret, text);
-        self.selected = 0;
+        let (field, caret): (&mut String, &mut usize) = self.active_field();
+        insert(field, caret, text);
+        self.edited();
     }
 
     pub(crate) fn backspace(&mut self) {
-        backspace(&mut self.query, &mut self.caret);
-        self.selected = 0;
+        let (field, caret): (&mut String, &mut usize) = self.active_field();
+        backspace(field, caret);
+        self.edited();
     }
 
     /// Delete: the char after the caret.
     pub(crate) fn delete(&mut self) {
-        delete(&mut self.query, self.caret);
-        self.selected = 0;
+        let (field, caret): (&mut String, &mut usize) = self.active_field();
+        delete(field, *caret);
+        self.edited();
     }
 
     /// Move the caret.
     pub(crate) fn caret_to(&mut self, to: Move) {
-        self.caret = step(&self.query, self.caret, to);
+        let (field, caret): (&mut String, &mut usize) = self.active_field();
+        *caret = step(field, *caret, to);
     }
 
     /// The query split at the caret: (before, after).
     pub(crate) fn split(&self) -> (&str, &str) {
-        self.query
-            .split_at_checked(self.caret)
-            .unwrap_or((&self.query, ""))
+        split_at(&self.query, self.caret)
     }
+
+    /// A field that narrows the list starts it again from the top; Find in
+    /// Files' text keeps the chosen place.
+    fn edited(&mut self) {
+        if self
+            .find
+            .as_ref()
+            .is_none_or(|f: &super::places::FindFields| f.field != super::Field::Text)
+        {
+            self.selected = 0;
+        }
+    }
+}
+
+/// `text` split at `caret`: (before, after).
+pub(crate) fn split_at(text: &str, caret: usize) -> (&str, &str) {
+    text.split_at_checked(caret).unwrap_or((text, ""))
 }
 
 /// A key the box edits with: arrows move the caret (Alt by word, Cmd or
@@ -44,6 +63,7 @@ impl super::QuickOpen {
 pub(crate) fn press(quick: &mut super::QuickOpen, stroke: &gpui::Keystroke, paste: Option<String>) {
     let platform: bool = stroke.modifiers.platform;
     match (stroke.key.as_str(), platform, stroke.modifiers.alt) {
+        ("tab", _, _) => quick.next_field(stroke.modifiers.shift),
         ("backspace", _, _) => quick.backspace(),
         ("delete", _, _) => quick.delete(),
         ("up", _, _) => quick.step(false),
