@@ -48,3 +48,4 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-057 | `cannot paste in Find in Files` | FIXED | Does `key` pass Cmd+V's text to `QuickOpen::press`? |
 | BB-BUG-058 | `cannot scroll up the terminal` | FIXED | Does the grid's `on_scroll` reach `Session::scroll`? |
 | BB-BUG-059 | `only 3 recent workspaces show` | FIXED | Is the saved list full of deleted folders? `recent::add` drops them |
+| BB-BUG-060 | `the tree does not show the file I am in` | FIXED | Did the click call `reveal_again` (tab, or editor taking focus back)? |

@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 59 — FIXED 57, OBSERVED 2.
+Bugs a user met in the app. Entries: 60 — FIXED 58, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -63,3 +63,4 @@ Bugs a user met in the app. Entries: 59 — FIXED 57, OBSERVED 2.
 | BB-BUG-057 | The find box took no paste and had no caret | FIXED | box kept a plain string, Cmd keys dropped | yes | `D4/S15/BB_BUG_057_THE_FIND_BOX_TOOK_NO_PASTE_AND_HAD_NO_CARET.md` |
 | BB-BUG-058 | The terminal could not scroll back | FIXED | the panel never handled the wheel | yes | `D4/S15/BB_BUG_058_THE_TERMINAL_COULD_NOT_SCROLL_BACK.md` |
 | BB-BUG-059 | Deleted folders took the recent list's places | FIXED | the saved list kept gone folders | yes | `D4/S15/BB_BUG_059_DELETED_FOLDERS_TOOK_THE_RECENT_LIST_PLACES.md` |
+| BB-BUG-060 | The tree did not come back to the file | FIXED | followed a file once per new tab only | yes | `D4/S15/BB_BUG_060_THE_TREE_DID_NOT_COME_BACK_TO_THE_FILE.md` |

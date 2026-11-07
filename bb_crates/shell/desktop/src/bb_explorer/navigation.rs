@@ -97,8 +97,16 @@ pub(crate) fn side_panel(
     }
 }
 
+/// Show the active file in the Explorer again on the next frame
+/// (BB-BUG-060): a tab click, or the editor taking focus back from the tree
+/// or a panel, as VS Code's Explorer follows the file in front.
+pub(crate) fn reveal_again(view: &mut crate::ExplorerView) {
+    view.tabs.revealed = None;
+}
+
 /// Once per newly active file: open the folders down to it, select its row
-/// and scroll it into view. A folder the user closes after that stays closed.
+/// and scroll it into view. A folder the user closes after that stays closed
+/// until the file is shown again ([`reveal_again`]).
 pub(crate) fn follow_active(view: &mut crate::ExplorerView) {
     let Some(path): Option<PathBuf> = view
         .tabs
@@ -123,62 +131,5 @@ pub(crate) fn follow_active(view: &mut crate::ExplorerView) {
 }
 
 #[cfg(test)]
-mod follow_tests {
-    use gpui::{Entity, TestAppContext, VisualTestContext, Window, WindowAppearance};
-    use std::path::PathBuf;
-
-    use crate::ExplorerView;
-
-    /// BB-BUG-029: opening a deep file opens its folders in the Explorer and
-    /// selects its row; a folder closed after that stays closed.
-    #[gpui::test]
-    fn the_explorer_selects_the_active_file(cx: &mut TestAppContext) {
-        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let root: PathBuf = dir.path().canonicalize().unwrap();
-        std::fs::create_dir_all(root.join("MbAx/agentmates")).unwrap();
-        let file: PathBuf = root.join("MbAx/agentmates/walk.py");
-        std::fs::write(&file, "x = 1\n").unwrap();
-        let tree: bb_explorer::Explorer = bb_explorer::Explorer::open(&root).unwrap();
-        let start: PathBuf = root.clone();
-        let (view, vcx): (Entity<ExplorerView>, &mut VisualTestContext) =
-            cx.add_window_view(|_: &mut Window, cx: &mut gpui::Context<ExplorerView>| {
-                crate::launch::fresh_view(tree, (start, false), WindowAppearance::Dark, cx)
-            });
-        vcx.run_until_parked();
-        let target: PathBuf = file.clone();
-        view.update_in(
-            vcx,
-            |v: &mut ExplorerView, window: &mut Window, cx: &mut gpui::Context<ExplorerView>| {
-                v.open_file(&target, window, cx);
-            },
-        );
-        vcx.run_until_parked();
-        let selected: Option<PathBuf> = view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
-            v.tree
-                .visible()
-                .get(v.selected)
-                .map(|(_, entry): &(usize, &bb_explorer::Entry)| entry.path().to_path_buf())
-        });
-        assert_eq!(
-            selected,
-            Some(file.clone()),
-            "the active file's row is selected"
-        );
-        let folder: PathBuf = root.join("MbAx");
-        view.update(
-            vcx,
-            |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
-                v.tree.toggle(&folder).unwrap();
-                cx.notify();
-            },
-        );
-        vcx.run_until_parked();
-        let shown: bool = view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
-            v.tree
-                .visible()
-                .iter()
-                .any(|(_, entry): &(usize, &bb_explorer::Entry)| entry.path() == file.as_path())
-        });
-        assert!(!shown, "the user closed MbAx: it stays closed");
-    }
-}
+#[path = "navigation_tests.rs"]
+mod follow_tests;
