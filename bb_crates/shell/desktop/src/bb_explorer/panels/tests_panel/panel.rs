@@ -18,6 +18,7 @@ pub(crate) fn explorer_panel(
     let count: usize = view.tree.visible().len();
     div()
         .id("explorer-panel")
+        .debug_selector(|| "explorer-panel".to_owned())
         .w(px(view.panel_width))
         .flex_none()
         .h_full()

@@ -99,6 +99,7 @@ fn tab_item(
                   window: &mut Window,
                   cx: &mut Context<ExplorerView>| {
                 view.tabs.switch(index);
+                crate::navigation::reveal_again(view);
                 window.focus(&view.editor_focus, cx);
                 cx.notify();
             },

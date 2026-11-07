@@ -59,3 +59,4 @@
 | BB-BUG-057 | one caret model for every quick box: paste, arrows, Delete | FIXED | window test, red first | `D4/S15/BB_BUG_057_THE_FIND_BOX_TOOK_NO_PASTE_AND_HAD_NO_CARET.md` |
 | BB-BUG-058 | the wheel scrolls the history; arrows in a full-screen app; input back to the prompt | FIXED | window + PTY tests, red first | `D4/S15/BB_BUG_058_THE_TERMINAL_COULD_NOT_SCROLL_BACK.md` |
 | BB-BUG-059 | saving drops gone folders; keeps 10 | FIXED | unit test | `D4/S15/BB_BUG_059_DELETED_FOLDERS_TOOK_THE_RECENT_LIST_PLACES.md` |
+| BB-BUG-060 | `reveal_again` on a tab click and on the editor taking focus back | FIXED | window test, red first | `D4/S15/BB_BUG_060_THE_TREE_DID_NOT_COME_BACK_TO_THE_FILE.md` |

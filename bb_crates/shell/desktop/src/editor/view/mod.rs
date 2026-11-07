@@ -19,6 +19,21 @@ pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines, HANDLE_PX};
 pub(crate) use pane::{area as editor_area, layout as layout_panes, panes};
 pub(crate) use status::{build, status_bar};
 
+/// BB-BUG-060: a press in the editor that takes focus back from the tree
+/// or a panel shows the file in the Explorer again, as VS Code does.
+fn back_in_the_file(
+    view: &mut ExplorerView,
+    _: &gpui::MouseDownEvent,
+    window: &mut gpui::Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    if !view.editor_focus.is_focused(window) {
+        crate::navigation::reveal_again(view);
+        window.focus(&view.editor_focus, cx);
+        cx.notify();
+    }
+}
+
 pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
     let (tabs, focus, theme): (&Tabs, &FocusHandle, Theme) =
         (&view.tabs, &view.editor_focus, view.theme);
@@ -31,6 +46,7 @@ pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .key_context("Editor")
         .track_focus(focus)
         .on_key_down(cx.listener(ExplorerView::editor_key_down))
+        .capture_any_mouse_down(cx.listener(back_in_the_file))
         .map(|area: gpui::Stateful<gpui::Div>| super::link::on_editor(area, view, cx))
         .on_action(cx.listener(super::go_back))
         .on_action(cx.listener(crate::run::build::on_build))
