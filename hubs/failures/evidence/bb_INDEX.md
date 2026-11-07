@@ -31,6 +31,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-CIP-005 | FIXED | PR #97: `OPEN` printed, worktree removed; restored from `daf397d` on origin |
 | BB-PRC-007 | OBSERVED | PR #93 CI run: nextest `LEAK` on `the_server_thread_counts_projects_then_syncs_edits_and_answers` |
 | BB-PRF-005 | FIXED | MbTx process tree at idle (launcher 49 MB); 3+3 runs; `bb probe` hover x10 A/B |
+| BB-PRF-006 | FIXED | MbTx `find_bench` A/B, 3 rounds x 7 runs, 4 queries; `tests/parallel.rs` |
 | BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/D1/S03/BB_BUG_010_*.md` |
 | BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_011_*.md` |
 | BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_012_*.md` |
