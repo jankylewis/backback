@@ -20,7 +20,7 @@ search); ids, families and layers are backback's own.
 A bug is a symptom a user meets in the app (`BB-BUG-nnn`, global numbers).
 A failure is a mechanism: a cause found in a bug, test, gate, CI run or
 readback (`BB-<FAM>-nnn`). A bug links to its cause with `cause:`.
-`TRIAGE.md` has one row per failure reason and per bug: read it first.
+`TRIAGE.md` has one row per failure reason and tool gap, `bugs/TRIAGE.md` one per bug: read them first.
 
 ## Layers and families
 
@@ -76,4 +76,4 @@ cause: <BB-FAM-nnn>       (bugfacing only, when proven)
 3. Every claim cites a source. No invented case, no guessed cause.
 4. Public repo: no secrets, tokens, `.env` contents, e-mails, person names or
    absolute personal paths. Name people by role (`headmate`).
-5. Ids are never reused. Check `TRIAGE.md` before giving a new id.
+5. Ids are never reused. Check `TRIAGE.md` and `bugs/TRIAGE.md` before giving a new id.

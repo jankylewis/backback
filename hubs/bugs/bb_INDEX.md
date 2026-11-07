@@ -6,3 +6,4 @@ Index of this folder; the hub-level `bb_INDEX.md` has the full table.
 |---|---|
 | `bugfacing/` | folder |
 | `bugfix/` | folder |
+| `TRIAGE.md` | one row per bug: signature and first check |
