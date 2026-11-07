@@ -24,7 +24,7 @@ fn native_window_discovers_tests_after_expanding_project() -> Result<(), Box<dyn
     fixture(dir.path())?;
     let output: Output = Command::new(env!("CARGO_BIN_EXE_backback"))
         .arg(dir.path().join("OutcomeSpec.cs"))
-        .env("BB_KEYS", "tests sleep:1000 tests:expand sleep:6000 state")
+        .env("BB_KEYS", "tests sleep:1000 tests:expand wait:tests state")
         .env("BB_KEYS_QUIT", "1")
         .output()?;
     let stderr: String = String::from_utf8_lossy(&output.stderr).into_owned();

@@ -1,5 +1,5 @@
 //! Script steps for live readback, mixed into `BB_KEYS` with the keys:
-//! `wait:ready`, `wait:answer`, `sleep:<ms>`, `goto:<line>:<col>` (1-based),
+//! `wait:ready`, `wait:answer`, `wait:tests`, `sleep:<ms>`, `goto:<line>:<col>` (1-based),
 //! `hover:<line>:<col>` (a real mouse move), `click:<line>:<col>` (a real
 //! click; `cmdhover`/`cmdclick` hold Cmd; `clickpast:<line>` clicks right of
 //! the line's end), `mark:<name>` (prints a line a capture script waits for, then
@@ -30,6 +30,7 @@ pub(crate) async fn run(
     let parts: Vec<&str> = step.split(':').collect();
     match parts.as_slice() {
         ["wait", "ready"] => wait(view, cx, ready).await,
+        ["wait", "tests"] => wait(view, cx, tests_listed).await,
         ["wait", "answer"] => wait(view, cx, |v: &ExplorerView| v.intel.in_flight.is_empty()).await,
         ["sleep", ms] => pause(cx, ms.parse::<u64>().unwrap_or(0)).await,
         ["goto", line, col] => goto(view, cx, (number(line), number(col))),
@@ -101,6 +102,20 @@ fn tab_menu(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, n: usi
 
 fn ready(view: &ExplorerView) -> bool {
     view.intel.status == LoadStatus::Ready
+}
+
+/// `wait:tests`: test discovery finished with specs listed (BB-GAT-003: a
+/// fixed sleep was too short on a loaded machine).
+fn tests_listed(view: &ExplorerView) -> bool {
+    let projects: Vec<&crate::tests_panel::model::ProjectTests> =
+        view.tests.model.projects().values().collect();
+    !projects.is_empty()
+        && projects
+            .iter()
+            .all(|project: &&crate::tests_panel::model::ProjectTests| !project.loading)
+        && projects
+            .iter()
+            .any(|project: &&crate::tests_panel::model::ProjectTests| !project.specs.is_empty())
 }
 
 /// `open:<path>`: open a file under the window's root, as a click does.

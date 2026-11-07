@@ -15,8 +15,10 @@
 | BB-LSP-005 | FIXED | Assert only what the server writes because of our request | `APP/LSP/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
 | BB-CIP-003 | FIXED | A yank lives in the index; ask crates.io when CI and local deny disagree | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | FIXED | Gate a merge on structured check fields, never grepped text | `SHIP/CIP/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
+| BB-CIP-005 | FIXED | Test the value, not the exit code, before removing work | `SHIP/CIP/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
 | BB-GAT-001 | FIXED | Assert the library's contract, not a stronger one | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-GAT-002 | FIXED | A test's scratch folder is its process's own, never a fixed path | `SHIP/GAT/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
+| BB-GAT-003 | FIXED | Wait for the state, never a fixed time | `SHIP/GAT/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
 | BB-DAP-001 | FIXED | Print the adapter's real reply before shaping text a user reads | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | FIXED | Two waits on one stream share one reader state | `APP/LSP/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
 | BB-ENV-001 | FIXED | Read back a macOS app the way the Dock starts it: env -i, launchd's PATH, no TERM | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
