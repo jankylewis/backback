@@ -28,6 +28,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-001 | FIXED | CI run 41532817663 (red, PR #39) |
 | BB-GAT-002 | FIXED | CI run 42191585967 (7 bb-dap red, 4 workers); local repro 5/11 red, after fix 40/40 |
 | BB-PRC-007 | OBSERVED | PR #93 CI run: nextest `LEAK` on `the_server_thread_counts_projects_then_syncs_edits_and_answers` |
+| BB-PRF-005 | FIXED | MbTx process tree at idle (launcher 49 MB); 3+3 runs; `bb probe` hover x10 A/B |
 | BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/D1/S03/BB_BUG_010_*.md` |
 | BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_011_*.md` |
 | BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_012_*.md` |

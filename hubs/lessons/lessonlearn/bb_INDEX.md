@@ -5,8 +5,8 @@
 | BB-BLD-001 | OBSERVED | Name the build before reading a UI report | `SHIP/BLD/BB_BLD_001_STALE_APP_RUN_FROM_A_WORKTREE.md` |
 | BB-BLD-002 | FIXED | A log line is not a window; open the served app | `SHIP/BLD/BB_BLD_002_BUNDLE_OPENED_NO_WINDOW.md` |
 | BB-LSP-001 | FIXED | Wait on a condition, never a wall; a flake is a finding | `APP/LSP/BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` |
-| BB-PRF-001 | FIXED | Profile who holds the bytes before changing code | `SYS/PRF/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
-| BB-PRF-002 | FIXED | Measure every feature at its own declared limit | `SYS/PRF/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
+| BB-PRF-001 | FIXED | Profile who holds the bytes before changing code | `SYS/PRF/S01/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
+| BB-PRF-002 | FIXED | Measure every feature at its own declared limit | `SYS/PRF/S01/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
 | BB-UIX-001 | FIXED | Nothing outside the file goes into the text; every x comes from the shaped line | `APP/UIX/S01/BB_UIX_001_CURSOR_DRAWN_AS_A_TEXT_CHARACTER.md` |
 | BB-CIP-001 | FIXED | CI installs every external tool, pinned; `--no-fail-fast` | `SHIP/CIP/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
 | BB-UIX-002 | FIXED | A window command acts on the window the event reached | `APP/UIX/S01/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
@@ -33,8 +33,9 @@
 | BB-UIX-013 | FIXED | The way to stop an action appears where it was started, only while running | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
 | BB-PRC-004 | FIXED | Every resource has an owner and a sweep; audit the disk too | `SYS/PRC/S01/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-UIX-014 | OBSERVED | Diff the view against `ls -A` before fixing a missing file | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |
-| BB-PRF-003 | FIXED | Count every child's memory; a child's runtime defaults are ours to choose | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
-| BB-PRF-004 | FIXED | Bench real file shapes; bound per-frame cost by what fits on screen | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-PRF-003 | FIXED | Count every child's memory; a child's runtime defaults are ours to choose | `SYS/PRF/S01/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
+| BB-PRF-004 | FIXED | Bench real file shapes; bound per-frame cost by what fits on screen | `SYS/PRF/S01/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-PRF-005 | FIXED | Measure per process by name; beat the run-to-run spread | `SYS/PRF/S02/BB_PRF_005_THE_DOTNET_TOOL_LAUNCHER_STAYED_ALIVE_AS_ROSLYNS_PARENT.md` |
 | BB-UIX-015 | FIXED | A write checks the file is still the one read; data loss is never silent | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | FIXED | Anything shown from disk is checked against the disk again | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | FIXED | An owner's name is as unique as its users; a flake that names its cause is a bug report | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |

@@ -4,7 +4,8 @@ use std::time::{Duration, Instant};
 
 use bb_dotnet::ProjectPath;
 
-use super::{LoadState, RoslynError, PROJECT_INIT_COMPLETE};
+use super::super::{RoslynError, PROJECT_INIT_COMPLETE};
+use super::LoadState;
 use crate::bb_client::{Incoming, LspError};
 
 /// How a finished load ended: how long it took, and the projects Roslyn

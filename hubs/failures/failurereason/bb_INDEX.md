@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 45 — FIXED 41, OBSERVED 3, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 46 — FIXED 42, OBSERVED 3, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -8,8 +8,8 @@ One file per failure mechanism. This hub owns the id. Entries: 45 — FIXED 41, 
 | BB-BLD-002 | The `.app` opened no window; a first-frame readback said it did | FIXED | yes | yes | none | `SHIP/BLD/BB_BLD_002_BUNDLE_OPENED_NO_WINDOW.md` |
 | BB-CIP-001 | The CI runner has no roslyn-language-server or netcoredbg | FIXED | yes | yes | BB-TG-004 | `SHIP/CIP/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
 | BB-LSP-001 | Roslyn tests wait on a fixed wall and count reloads twice | FIXED | yes | yes | none | `APP/LSP/S01/BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` |
-| BB-PRF-001 | A whole-file syntax tree held 97% of the heap on a 20 MB file | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
-| BB-PRF-002 | Go to File walked the whole root on the UI thread | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
+| BB-PRF-001 | A whole-file syntax tree held 97% of the heap on a 20 MB file | FIXED | yes | yes | none | `SYS/PRF/S01/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
+| BB-PRF-002 | Go to File walked the whole root on the UI thread | FIXED | yes | yes | none | `SYS/PRF/S01/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
 | BB-UIX-001 | The cursor is drawn as a text character inside the line | FIXED | yes | yes | BB-TG-003 | `APP/UIX/S01/BB_UIX_001_CURSOR_DRAWN_AS_A_TEXT_CHARACTER.md` |
 | BB-LSP-002 | A test took the first event after Open as the diagnostics | FIXED | yes | no | none | `APP/LSP/S01/BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` |
 | BB-CIP-002 | A runner label no hosted machine serves keeps the job queued | FIXED | yes | no | none | `SHIP/CIP/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
@@ -41,8 +41,9 @@ One file per failure mechanism. This hub owns the id. Entries: 45 — FIXED 41, 
 | BB-UIX-013 | The only stop sat in the toolbar, far from the ▶ that started the run | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
 | BB-PRC-004 | Temp folders named by pid were never removed: a static or a quit never drops | FIXED | yes | yes | none | `SYS/PRC/S01/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
 | BB-UIX-014 | A folder with only `__pycache__` reads as a tree that hides files | OBSERVED | no | yes | none | `APP/UIX/S04/BB_UIX_014_A_FOLDER_OF_ONLY_CACHES_READS_AS_A_TREE_THAT_HIDES_FILES.md` |
-| BB-PRF-003 | Roslyn ran the server GC: 2.4 GB where the workstation GC keeps 0.66 GB | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
-| BB-PRF-004 | Every frame shaped and styled the whole line: seconds a key past 100 000 chars | FIXED | yes | yes | none | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-PRF-003 | Roslyn ran the server GC: 2.4 GB where the workstation GC keeps 0.66 GB | FIXED | yes | yes | none | `SYS/PRF/S01/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
+| BB-PRF-004 | Every frame shaped and styled the whole line: seconds a key past 100 000 chars | FIXED | yes | yes | none | `SYS/PRF/S01/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-PRF-005 | The dotnet tool launcher stayed alive as Roslyn's parent | FIXED | yes | yes | none | `SYS/PRF/S02/BB_PRF_005_THE_DOTNET_TOOL_LAUNCHER_STAYED_ALIVE_AS_ROSLYNS_PARENT.md` |
 | BB-UIX-015 | Save never compared the file with what it had read, so an outside change was lost | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | The Explorer read each folder once, so outside changes never showed | FIXED | yes | yes | none | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | Two intel workers in one process shared and removed one owned temp folder | FIXED | yes | yes | BB-TG-017 | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
