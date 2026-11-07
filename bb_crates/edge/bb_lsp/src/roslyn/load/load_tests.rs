@@ -1,6 +1,7 @@
 //! The load counter on the real Roslyn line sequence (bus 066): readiness
 //! comes from distinct project paths, never from summed batch lines.
 
+use super::super::*;
 use super::*;
 use crate::bb_client::Incoming;
 use bb_dotnet::ProjectPath;

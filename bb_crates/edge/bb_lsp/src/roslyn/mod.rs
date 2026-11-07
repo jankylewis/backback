@@ -17,13 +17,12 @@ use url::Url;
 
 use crate::bb_client::{LspClient, LspError, Settings};
 
-mod bb_load;
-mod load_state;
+mod bb_direct;
+mod load;
 
-pub use bb_load::{
-    drain_log, is_project_reload, log_incoming, wait_for_load, wait_for_restore, Loaded,
+pub use load::{
+    drain_log, is_project_reload, log_incoming, wait_for_load, wait_for_restore, LoadState, Loaded,
 };
-pub use load_state::LoadState;
 
 /// Binary name of the official server (installed with `dotnet tool install -g roslyn-language-server --prerelease`).
 pub const BINARY: &str = "roslyn-language-server";
@@ -160,7 +159,7 @@ pub fn start(
     scratch: &Path,
 ) -> Result<LspClient, RoslynError> {
     create_dir(log_dir)?;
-    let mut cmd: Command = Command::new(binary);
+    let mut cmd: Command = bb_direct::command(binary);
     match restore {
         Restore::Off => {
             for (property, folder) in REDIRECTED_OUTPUTS {
@@ -243,7 +242,5 @@ fn file_url(path: &Path) -> Result<Url, RoslynError> {
     Url::from_file_path(path).map_err(|(): ()| RoslynError::BadPath(path.to_path_buf()))
 }
 
-#[cfg(test)]
-mod load_tests;
 #[cfg(test)]
 mod tests;

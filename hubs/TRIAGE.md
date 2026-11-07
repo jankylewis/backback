@@ -25,6 +25,7 @@ Bugs a user met in the app have their own table: `bugs/TRIAGE.md`.
 | BB-PRC-003 | `SN roslyn-language-server` | OBSERVED | Is the app itself `N`? A zsh `&` launch is niced (BB-TG-006) |
 | BB-GAT-001 | `incremental_parse_equals_a_fresh_parse ... FAILED` | FIXED | Is the text broken? Then only the extent must match |
 | BB-GAT-002 | `fixture build failed` ... `being used by another process` | FIXED | Do parallel test processes share a fixture folder? Use `OwnedTempDir` |
+| BB-GAT-003 | `discovered=0 loading=1` in a native window test | FIXED | Does the test sleep a fixed time? Use `wait:tests` |
 | BB-DAP-001 | `CLR/System.InvalidOperationException: Exception thrown:` | FIXED | Is the headline read from `details`, not the top-level id and description? |
 | BB-LSP-006 | `restored  : false after 120` | FIXED | Is `Restore complete` above the last `Successfully completed load` in the run log? |
 | BB-ENV-001 | `PATH=/usr/bin:/bin:/usr/sbin:/sbin` in `ps eww` of the app | FIXED | Started by launchd? The login shell's PATH must be adopted and installed tools found in their own folders |
@@ -45,6 +46,7 @@ Bugs a user met in the app have their own table: `bugs/TRIAGE.md`.
 | BB-TG-016 | `a readback hangs at 0 % CPU` | FIXED | Did the launch open a file? Binary and folder launches start the steps since BB-TG-016 |
 | BB-PRF-003 | `roslyn-language-server RSS grows past 2 GB` | FIXED | Is `DOTNET_gcServer` set in the app's environment (a user value wins)? |
 | BB-PRF-004 | `UI work grows with line length` | FIXED | Does the slow path go through `Columns::shape` or `styled_line` (both capped)? |
+| BB-PRF-005 | `two roslyn processes per window` | FIXED | Does `bb_direct::server_behind` find exactly one server in the tool store? |
 | BB-TG-017 | `progress.last() (2, 3) != (3, 3)` | FIXED | Read the failed list in the message: which project did Roslyn fail to load? |
 | BB-UIX-015 | `an outside change is lost after a save` | FIXED | Does `save` see `DiskGuard.seen` (stamped at `open`)? |
 | BB-TG-018 | `a readback gets slower each round` | OBSERVED | Is `ui_work` still small? Then the runner's timers are throttled (likely App Nap), not the app |
@@ -57,3 +59,4 @@ Bugs a user met in the app have their own table: `bugs/TRIAGE.md`.
 | BB-TG-020 | `where is X defined / what does this crate do` | FIXED | Run `bb map` / `bb map --find X` before opening files |
 | BB-TG-021 | `test memory peak above the runner's RAM` | FIXED | Is it a sum of RSS? Read `vm_stat` in-use pages and swap |
 | BB-CIP-004 | `not acquired by Runner of type hosted` | FIXED | Rerun it; merge only when every `--json bucket` is `pass` |
+| BB-CIP-005 | `OPEN` then the worktree is gone | FIXED | Is cleanup gated on the state value MERGED? |

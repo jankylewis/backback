@@ -4,23 +4,25 @@
 |---|---|---|---|
 | BB-BLD-002 | FIXED | GUI binary is the bundle executable; served app verified | `SHIP/BLD/BB_BLD_002_BUNDLE_OPENED_NO_WINDOW.md` |
 | BB-LSP-001 | FIXED | Count projects by distinct path; wait on readiness | `APP/LSP/S01/BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` |
-| BB-PRF-001 | FIXED | Files over 4 MiB parse ±1,000 lines around the view | `SYS/PRF/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
+| BB-PRF-001 | FIXED | Files over 4 MiB parse ±1,000 lines around the view | `SYS/PRF/S01/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
 | BB-UIX-001 | FIXED | One shaped line per row: caret quad, clicks, popups and hover share `Columns` | `APP/UIX/S01/BB_UIX_001_CURSOR_DRAWN_AS_A_TEXT_CHARACTER.md` |
 | BB-LSP-002 | FIXED | `first_diagnostics` skips late Progress, names any other event | `APP/LSP/BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` |
-| BB-CIP-001 | FIXED | CI installs pinned dotnet, Roslyn server and netcoredbg; `--no-fail-fast` | `SHIP/CIP/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
-| BB-CIP-002 | FIXED | `runs-on: macos-latest` | `SHIP/CIP/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
+| BB-CIP-001 | FIXED | CI installs pinned dotnet, Roslyn server and netcoredbg; `--no-fail-fast` | `SHIP/CIP/S01/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
+| BB-CIP-002 | FIXED | `runs-on: macos-latest` | `SHIP/CIP/S01/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
 | BB-UIX-002 | FIXED | Minimize/Zoom handled on the root view with its own Window | `APP/UIX/S01/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
 | BB-PRC-001 | FIXED | Own every child's process group; every exit ends the registry | `SYS/PRC/S01/BB_PRC_001_A_CHILD_GROUP_OUTLIVES_ITS_OWNER.md` |
 | BB-UIX-003 | FIXED | Gutter width scales with the size | `APP/UIX/S01/BB_UIX_003_GUTTER_WIDTH_FIXED_WHEN_ZOOMED.md` |
 | BB-PRC-002 | FIXED | Spawn on the UI thread, wait in the background | `SYS/PRC/S01/BB_PRC_002_BUILD_SPAWNED_FROM_A_BACKGROUND_THREAD_HANGS.md` |
 | BB-BLD-001 | FIXED | `install.sh` from clean `master` to `/Applications`; `BBCommit` stamp | `SHIP/BLD/BB_BLD_001_INSTALL_FROM_MASTER.md` |
 | BB-LSP-004 | FIXED | `bb open --restore` waits for a restore end line before shutdown | `APP/LSP/S01/BB_LSP_004_RESTORE_LINE_AFTER_OPEN_EXITS.md` |
-| BB-PRF-002 | FIXED | Box opens at once; files list on the background executor | `SYS/PRF/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
+| BB-PRF-002 | FIXED | Box opens at once; files list on the background executor | `SYS/PRF/S01/BB_PRF_002_GO_TO_FILE_WALKS_THE_ROOT_ON_THE_UI_THREAD.md` |
 | BB-LSP-005 | FIXED | Assert the server reply to our own request (shutdown), not a side-effect line | `APP/LSP/S02/BB_LSP_005_TEST_ASSERTED_AN_INCIDENTAL_ROSLYN_LOG_LINE.md` |
-| BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
-| BB-CIP-004 | FIXED | merge only when every `--json bucket` is `pass`; rerun a no-runner check | `SHIP/CIP/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
+| BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/S01/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
+| BB-CIP-004 | FIXED | merge only when every `--json bucket` is `pass`; rerun a no-runner check | `SHIP/CIP/S01/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
+| BB-CIP-005 | FIXED | Clean up only when the state's value is MERGED; `-d`, no `--force` | `SHIP/CIP/S02/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
 | BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-GAT-002 | FIXED | Fixture folder per process (`OwnedTempDir`, `bb-dap-<pid>-<tag>`) | `SHIP/GAT/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
+| BB-GAT-003 | FIXED | `wait:tests` in place of a fixed sleep | `SHIP/GAT/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
 | BB-DAP-001 | FIXED | Headline from `details.fullTypeName` and `details.message`; else the id without its category | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | FIXED | `Loaded::restore_ended`; `bb open --restore` waits only when no end line came during the load | `APP/LSP/S02/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
 | BB-ENV-001 | FIXED | Adopt the login shell's PATH when there is no TERM; find installed tools in their own folders | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
@@ -36,8 +38,9 @@
 | BB-UIX-012 | FIXED | Heads are rows with a `Group` key, marker from state | `APP/UIX/S03/BB_UIX_012_A_FOLD_MARKER_WITH_NO_FOLD.md` |
 | BB-UIX-013 | FIXED | The starting control turns into its stop while running | `APP/UIX/S04/BB_UIX_013_THE_STOP_WAS_FAR_FROM_THE_RUN.md` |
 | BB-PRC-004 | FIXED | One owner per folder; sweep what a dead owner left | `SYS/PRC/S01/BB_PRC_004_TEMP_FOLDERS_OUTLIVE_THEIR_PROCESS.md` |
-| BB-PRF-003 | FIXED | `DOTNET_gcServer=0` for the Roslyn child unless the user set it | `SYS/PRF/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
-| BB-PRF-004 | FIXED | `RENDER_CAP` where a line is shaped and styled | `SYS/PRF/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-PRF-003 | FIXED | `DOTNET_gcServer=0` for the Roslyn child unless the user set it | `SYS/PRF/S01/BB_PRF_003_ROSLYN_RAN_THE_SERVER_GC.md` |
+| BB-PRF-004 | FIXED | `RENDER_CAP` where a line is shaped and styled | `SYS/PRF/S01/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
+| BB-PRF-005 | FIXED | Start the server behind the launcher when exactly one is installed | `SYS/PRF/S02/BB_PRF_005_THE_DOTNET_TOOL_LAUNCHER_STAYED_ALIVE_AS_ROSLYNS_PARENT.md` |
 | BB-UIX-015 | FIXED | Stamp at read and write; refuse once on a mismatch | `APP/UIX/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | FIXED | Re-read loaded folders on the disk check, merged by path | `APP/UIX/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | FIXED | A folder per worker (`create_with` + counter) | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
