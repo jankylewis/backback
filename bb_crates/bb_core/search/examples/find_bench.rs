@@ -23,6 +23,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(found, warm, "every run finds the same");
     }
     times.sort();
+    let walked: Instant = Instant::now();
+    let listed: usize = bb_search::files(&root).count();
+    println!(
+        "walk_ms={} files_listed={listed}",
+        walked.elapsed().as_millis()
+    );
     let ms: Vec<u128> = times.iter().map(Duration::as_millis).collect();
     let median: u128 = ms.get(ms.len() / 2).copied().unwrap_or_default();
     println!(
