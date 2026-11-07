@@ -12,6 +12,9 @@ pub enum SearchError {
     /// `/re/` is not a valid regex.
     #[error("bad regex: {0}")]
     BadPattern(#[from] regex::Error),
+    /// A files glob does not parse.
+    #[error("bad files glob: {0}")]
+    BadGlob(String),
 }
 
 /// A parsed query.

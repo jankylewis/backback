@@ -9,5 +9,5 @@ mod view;
 mod tests;
 
 pub(crate) use bb_model::QuickOpen;
-pub(crate) use find::FindInFiles;
+pub(crate) use find::{find_in, FindInFiles};
 pub(crate) use view::{actions, on_go_to_symbol, overlay, GoToFile, GoToSymbol};

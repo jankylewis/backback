@@ -3,11 +3,15 @@
 //! (Cmd+F12): the active file's outline in the same box, in source order.
 
 mod bb_line;
+mod places;
 mod rank;
 #[cfg(test)]
-mod window_tests;
+mod tests;
 
 use std::path::{Path, PathBuf};
+
+pub(crate) use bb_line::split_at;
+pub(crate) use places::{Field, FindAsk, FindFields};
 
 /// Enough for any solution; a huge folder stops listing here.
 const MAX_FILES: usize = 50_000;
@@ -21,8 +25,8 @@ pub(crate) enum Chosen {
     File(PathBuf),
     /// A 0-based line of the active file.
     Line(usize),
-    /// A Find in Files query.
-    Find(String),
+    /// A Find in Files query, where and which files.
+    Find(FindAsk),
     /// A typed name for a new entry or a rename (BB-BUG-050).
     Name(crate::files::NameAsk, String),
 }
@@ -40,8 +44,8 @@ pub(crate) struct QuickOpen {
     /// `Some` for Go to File (labels are paths under it), `None` for symbols.
     root: Option<PathBuf>,
     items: Vec<Item>,
-    /// Find in Files: a query box with no list.
-    find: bool,
+    /// Find in Files: its fields; the list is the places to search.
+    find: Option<FindFields>,
     /// Go to File before its background walk has filled the list.
     loading: bool,
     /// A name box for an Explorer change: no list, Enter gives the name.
@@ -61,13 +65,22 @@ impl QuickOpen {
     /// walk (`list_files`) has run off the UI thread (BB-PRF-002).
     pub(crate) fn listing(root: &Path) -> QuickOpen {
         QuickOpen {
+            root: Some(root.to_path_buf()),
+            loading: true,
+            ..QuickOpen::blank()
+        }
+    }
+
+    /// An empty box: no list, no title of its own.
+    fn blank() -> QuickOpen {
+        QuickOpen {
             query: String::new(),
             caret: 0,
             selected: 0,
-            root: Some(root.to_path_buf()),
+            root: None,
             items: Vec::new(),
-            find: false,
-            loading: true,
+            find: None,
+            loading: false,
             name: None,
         }
     }
@@ -99,10 +112,6 @@ impl QuickOpen {
     /// Go to Symbol over `outline`: (label, 0-based line), in source order.
     pub(crate) fn symbols(outline: Vec<(String, usize)>) -> QuickOpen {
         QuickOpen {
-            query: String::new(),
-            caret: 0,
-            selected: 0,
-            root: None,
             items: outline
                 .into_iter()
                 .map(|(label, line): (String, usize)| Item {
@@ -110,24 +119,13 @@ impl QuickOpen {
                     line,
                 })
                 .collect(),
-            find: false,
-            loading: false,
-            name: None,
+            ..QuickOpen::blank()
         }
     }
 
-    /// The Find in Files box: Enter gives the typed query.
-    pub(crate) fn find_box() -> QuickOpen {
-        QuickOpen {
-            query: String::new(),
-            caret: 0,
-            selected: 0,
-            root: None,
-            items: Vec::new(),
-            find: true,
-            loading: false,
-            name: None,
-        }
+    /// Find in Files' fields, for the view.
+    pub(crate) fn fields(&self) -> Option<&FindFields> {
+        self.find.as_ref()
     }
 
     /// A name box for `ask`, holding `typed` (a rename starts with the name).
@@ -136,7 +134,7 @@ impl QuickOpen {
             caret: typed.len(),
             query: typed,
             name: Some(ask),
-            ..QuickOpen::find_box()
+            ..QuickOpen::blank()
         }
     }
 
@@ -156,7 +154,7 @@ impl QuickOpen {
     pub(crate) fn title(&self) -> &'static str {
         if let Some(ask) = &self.name {
             ask.op.title()
-        } else if self.find {
+        } else if self.find.is_some() {
             "Find in Files"
         } else if self.loading {
             "Go to File (listing files...)"
@@ -169,7 +167,11 @@ impl QuickOpen {
 
     /// The best matches, relative to the root, best first.
     pub(crate) fn matches(&self) -> Vec<&Path> {
-        let query: String = self.query.to_lowercase();
+        let query: String = self
+            .find
+            .as_ref()
+            .map_or(&self.query, |f: &FindFields| &f.in_text)
+            .to_lowercase();
         let files: bool = self.root.is_some();
         let mut scored: Vec<(u8, usize, &Path)> = self
             .items
@@ -200,8 +202,8 @@ impl QuickOpen {
                 Some(self.query.trim().to_owned()).filter(|t: &String| !t.is_empty());
             return typed.map(|t: String| Chosen::Name(ask.clone(), t));
         }
-        if self.find {
-            return (!self.query.is_empty()).then(|| Chosen::Find(self.query.clone()));
+        if let Some(fields) = &self.find {
+            return self.find_ask(fields).map(Chosen::Find);
         }
         let matches: Vec<&Path> = self.matches();
         let label: &Path = matches.get(self.selected)?;

@@ -7,6 +7,8 @@ use gpui::{
     KeyDownEvent, WeakEntity, Window,
 };
 
+mod bb_lines;
+
 use super::bb_model::Chosen;
 use super::QuickOpen;
 use crate::{color, ExplorerView};
@@ -138,7 +140,7 @@ fn finish(
     match chosen {
         Some(Chosen::File(path)) => view.open_file(&path, window, cx),
         Some(Chosen::Line(line)) => super::find::go_to_line(view, line, window, cx),
-        Some(Chosen::Find(query)) => super::find::run(view, &query, window, cx),
+        Some(Chosen::Find(ask)) => super::find::run(view, &ask, window, cx),
         Some(Chosen::Name(ask, typed)) => crate::files::apply_name(view, &ask, &typed, window, cx),
         None => {}
     }
@@ -181,28 +183,11 @@ fn rows(
         .collect()
 }
 
-/// The title and query, with the caret drawn where it is (BB-BUG-057).
-fn query_line(quick: &QuickOpen, theme: bb_ui::bb_theme::Theme) -> gpui::Div {
-    let (before, after): (&str, &str) = quick.split();
-    div()
-        .flex()
-        .items_center()
-        .child(format!("{}: {before}", quick.title()))
-        .child(
-            div()
-                .w(px(2.0))
-                .h(px(16.0))
-                .bg(color(theme.text))
-                .debug_selector(|| "quick-open-caret".to_owned()),
-        )
-        .child(after.to_owned())
-}
-
 pub(crate) fn overlay(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
     let quick: &QuickOpen = view.quick_open.as_ref()?;
     let theme: bb_ui::bb_theme::Theme = view.theme;
     let rows: Vec<gpui::Stateful<gpui::Div>> = rows(quick, theme, cx);
-    let query: gpui::Div = query_line(quick, theme);
+    let query: gpui::Div = bb_lines::query_lines(quick, theme);
     let panel: gpui::Stateful<gpui::Div> = div()
         .id("quick-open")
         .track_focus(&view.quick_focus)

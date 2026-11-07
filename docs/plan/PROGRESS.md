@@ -1,5 +1,11 @@
 # Backback progress
 
+- FIND-SCOPE (2026-11-07, `find-in-files-scope`): Find in Files gets
+  Wu / VS Code / Rider fields. Tab moves text -> in -> files. "in" picks
+  the workspace, the file's C# project or folder, or any project (typed
+  text narrows); "files" takes globs (`*.cs, !*.md`, `!Tests`), with
+  .gitignore still applied. Explorer right-click: Find in Folder....
+
 - CI-WORKERS (2026-11-06, `ci-nextest-workers`): CI tests run with
   `cargo nextest` in parallel workers on the one macOS runner, sized to its
   RAM (2 GB kept free, 1.2 GB a worker); the peak is printed each run.
