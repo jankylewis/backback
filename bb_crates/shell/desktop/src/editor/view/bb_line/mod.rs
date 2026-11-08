@@ -6,8 +6,10 @@ use gpui::{div, prelude::*, px, Context, IntoElement, StyledText, TextRun, Windo
 mod bb_runs;
 mod caret;
 mod gutter;
-pub(super) use bb_runs::{styled_line, Run};
-pub(crate) use caret::Columns;
+#[cfg(test)]
+use bb_runs::styled_line;
+pub(super) use bb_runs::{styled_part, Run};
+pub(crate) use caret::{rendered, Columns, CARET_W};
 use gutter::gutter_cell;
 pub(super) use gutter::TestGutter;
 #[cfg(test)]
@@ -16,6 +18,9 @@ mod tests;
 /// What a line row needs besides its text.
 pub(super) struct LineRow {
     pub(super) index: usize,
+    /// The screen row (the line unless word wrap is on) and, on a wrapped
+    /// line's later row (no gutter), its indent in px.
+    pub(super) at: (usize, Option<f32>),
     pub(super) current: bool,
     /// The worst diagnostic on the line, for the gutter dot.
     pub(super) gutter: Option<Ink>,
@@ -37,6 +42,7 @@ impl LineRow {
     pub(super) fn blank(index: usize) -> LineRow {
         LineRow {
             index,
+            at: (index, None),
             current: false,
             gutter: None,
             breakpoint: false,
@@ -65,6 +71,7 @@ pub(super) fn line_row(
 ) -> impl IntoElement {
     let LineRow {
         index,
+        at: (row, continued),
         current,
         gutter,
         breakpoint,
@@ -75,17 +82,15 @@ pub(super) fn line_row(
         scroll_x,
     }: LineRow = row;
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
-    row_frame(index, (current, stopped), (theme, fonts.line_height()), cx)
-        .child(gutter_cell(
-            index,
-            (gutter, breakpoint, stopped),
-            test,
-            theme,
-            cx,
-        ))
+    let gutter: gpui::Div = match continued {
+        None => gutter_cell(index, (gutter, breakpoint, stopped), test, theme, cx),
+        Some(_) => div().w(px(fonts.gutter_width())).flex_none(),
+    };
+    row_frame(row, (current, stopped), (theme, fonts.line_height()), cx)
+        .child(gutter)
         .child(super::pane::bb_hscroll::text_viewport(
             scroll_x,
-            line_text(index, runs, (theme, &fonts)),
+            line_text(index, runs, (theme, &fonts)).pl(px(continued.unwrap_or(0.0))),
         ))
         .when_some(
             caret.map(|x: f32| x - scroll_x).filter(|x: &f32| *x >= 0.0),
@@ -142,11 +147,7 @@ fn row_frame(
 
 /// The file's chars as ONE shaped line, so the glyphs sit exactly where
 /// `Columns` measures them; colour, selection and squiggles are run styles.
-fn line_text(
-    index: usize,
-    runs: &[Run],
-    (theme, fonts): (Theme, &bb_ui::Typography),
-) -> impl IntoElement {
+fn line_text(index: usize, runs: &[Run], (theme, fonts): (Theme, &bb_ui::Typography)) -> gpui::Div {
     let text: String = runs.iter().map(|run: &Run| run.text.as_str()).collect();
     let styles: Vec<TextRun> = runs
         .iter()

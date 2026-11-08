@@ -70,6 +70,11 @@ impl Tabs {
             .and_then(|index: usize| self.items.get(index))
     }
 
+    pub(crate) fn active_tab_mut_of(&mut self, group: Group) -> Option<&mut Tab> {
+        self.active_of(group)
+            .and_then(|index: usize| self.items.get_mut(index))
+    }
+
     /// The focused pane's line list.
     pub(crate) fn scroll(&self) -> &UniformListScrollHandle {
         self.scroll_of(self.focused)

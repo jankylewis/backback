@@ -26,6 +26,7 @@ Bugs a user met in the app have their own table: `bugs/TRIAGE.md`.
 | BB-GAT-001 | `incremental_parse_equals_a_fresh_parse ... FAILED` | FIXED | Is the text broken? Then only the extent must match |
 | BB-GAT-002 | `fixture build failed` ... `being used by another process` | FIXED | Do parallel test processes share a fixture folder? Use `OwnedTempDir` |
 | BB-GAT-003 | `discovered=0 loading=1` in a native window test | FIXED | Does the test sleep a fixed time? Use `wait:tests` |
+| BB-GAT-004 | a menu test counts one item too few | FIXED | Did a menu or key change skip the launch tests? Update the count and name the item |
 | BB-DAP-001 | `CLR/System.InvalidOperationException: Exception thrown:` | FIXED | Is the headline read from `details`, not the top-level id and description? |
 | BB-LSP-006 | `restored  : false after 120` | FIXED | Is `Restore complete` above the last `Successfully completed load` in the run log? |
 | BB-ENV-001 | `PATH=/usr/bin:/bin:/usr/sbin:/sbin` in `ps eww` of the app | FIXED | Started by launchd? The login shell's PATH must be adopted and installed tools found in their own folders |

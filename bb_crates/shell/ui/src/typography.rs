@@ -23,6 +23,8 @@ pub struct Typography {
     pub zoom: i8,
     /// The tool window (Explorer / Tests) docks on the right, not the left.
     pub panel_right: bool,
+    /// Long lines wrap onto more rows to fit the pane (off by default).
+    pub wrap: bool,
 }
 
 /// A settings file this version cannot read.
@@ -43,6 +45,7 @@ impl Default for Typography {
             base: DEFAULT_SIZE,
             zoom: 0,
             panel_right: false,
+            wrap: false,
         }
     }
 }
@@ -108,11 +111,12 @@ impl Typography {
     #[must_use]
     pub fn encode(&self) -> String {
         format!(
-            "{HEADER}\nfont={}\nsize={}\nzoom={}\nside={}\n",
+            "{HEADER}\nfont={}\nsize={}\nzoom={}\nside={}\nwrap={}\n",
             self.family,
             self.base,
             self.zoom,
-            if self.panel_right { "right" } else { "left" }
+            if self.panel_right { "right" } else { "left" },
+            if self.wrap { "on" } else { "off" }
         )
     }
 
@@ -144,6 +148,7 @@ impl Typography {
                         .map_err(|_: std::num::ParseIntError| bad(line))?;
                 }
                 "side" if value == "left" || value == "right" => out.panel_right = value == "right",
+                "wrap" if value == "on" || value == "off" => out.wrap = value == "on",
                 _ => return Err(bad(line)),
             }
         }
@@ -199,8 +204,15 @@ mod tests {
             base: 15.0,
             zoom: -2,
             panel_right: true,
+            wrap: true,
         };
         assert_eq!(Typography::decode(&t.encode()), Ok(t));
+        let old: Typography = Typography::decode("backback settings v1\nside=left\n").unwrap();
+        assert!(!old.wrap, "a file from before word wrap keeps it off");
+        assert!(matches!(
+            Typography::decode("backback settings v1\nwrap=maybe\n"),
+            Err(SettingsError::BadLine(_))
+        ));
         assert!(matches!(
             Typography::decode("backback settings v9\n"),
             Err(SettingsError::UnknownFormat(_))
