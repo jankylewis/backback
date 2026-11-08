@@ -79,9 +79,7 @@ pub(crate) fn apply(view: &mut ExplorerView, cx: &mut Context<ExplorerView>) {
     let target: Option<bb_text::CharIdx> = tab.document.line_start(*line);
     if let (Some(at), Some(doc)) = (target, view.tabs.active_mut()) {
         if doc.set_cursor(at).is_ok() {
-            view.tabs
-                .scroll()
-                .scroll_to_item(*line, ScrollStrategy::Center);
+            crate::editor::wrap::reveal(&view.tabs, *line, ScrollStrategy::Center);
             view.tests.pending_jump = None;
             cx.notify();
         }

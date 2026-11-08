@@ -45,8 +45,9 @@ pub(crate) fn area(view: &ExplorerView, window: &Window, fonts: &bb_ui::Typograp
 
 /// Size this frame's panes from each one's share of the editor area, as the
 /// lines between them were dragged (BB-BUG-044); a change in the number of
-/// panes shares the area evenly again. Click and scroll maths read them.
-pub(crate) fn layout(view: &mut ExplorerView, window: &Window, cx: &gpui::App) {
+/// panes shares the area evenly again. Click and scroll maths read them;
+/// word wrap then fits each pane's rows to its width.
+pub(crate) fn layout(view: &mut ExplorerView, window: &Window, cx: &mut gpui::App) {
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
     let count: usize = view.tabs.groups();
     let gaps: f32 = f32::from(u16::try_from(count.saturating_sub(1)).unwrap_or(0));
@@ -59,6 +60,7 @@ pub(crate) fn layout(view: &mut ExplorerView, window: &Window, cx: &gpui::App) {
             0.0
         }
     });
+    super::wrap::refresh(view, window, cx);
 }
 
 pub(crate) fn panes(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl IntoElement {
@@ -123,7 +125,7 @@ fn other_body(
     let lines: usize = view
         .tabs
         .active_tab_of(group)
-        .map_or(0, |tab: &crate::editor::Tab| tab.document.len_lines());
+        .map_or(0, super::wrap::row_count);
     div()
         .id(("pane-body", group.0))
         .debug_selector(move || format!("pane-body-{}", group.0))

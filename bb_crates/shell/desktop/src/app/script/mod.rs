@@ -176,9 +176,7 @@ fn goto(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, (line, col
                 });
             if let (Some(doc), Some(at)) = (v.tabs.active_mut(), target) {
                 if doc.set_cursor(at).is_ok() {
-                    v.tabs
-                        .scroll()
-                        .scroll_to_item(line, gpui::ScrollStrategy::Center);
+                    crate::editor::wrap::reveal(&v.tabs, line, gpui::ScrollStrategy::Center);
                 }
             }
             cx.notify();

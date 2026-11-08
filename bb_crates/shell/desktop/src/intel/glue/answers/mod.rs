@@ -240,8 +240,6 @@ pub(crate) fn move_cursor(view: &mut ExplorerView, path: &Path, at: LspPoint) {
     };
     if tab.document.set_cursor(target).is_ok() {
         let line: usize = usize::try_from(at.line).unwrap_or(0);
-        view.tabs
-            .scroll()
-            .scroll_to_item(line, ScrollStrategy::Center);
+        crate::editor::wrap::reveal(&view.tabs, line, ScrollStrategy::Center);
     }
 }

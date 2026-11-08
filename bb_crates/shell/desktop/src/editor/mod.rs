@@ -14,6 +14,7 @@ pub(crate) use bb_tabs::{Group, MAX_GROUPS};
 pub(crate) use input::handle_key;
 pub(crate) use input::link;
 pub(crate) use prompt::{AfterClose, CloseWorkspace, Quit};
+pub(crate) use view::wrap;
 pub(crate) use view::{
     bottom_handle, build, editor_area, handle, layout_panes, panes, status_bar, Columns, Edge,
     Lines, HANDLE_PX,

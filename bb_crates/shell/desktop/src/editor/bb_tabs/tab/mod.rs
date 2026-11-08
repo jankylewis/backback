@@ -35,6 +35,8 @@ pub(crate) struct Tab {
     pub(crate) pinned: bool,
     /// The editor group it shows in (BB-BUG-040, BB-BUG-045).
     pub(crate) group: super::Group,
+    /// Its screen rows while word wrap is on.
+    pub(crate) wrap: Option<super::super::view::wrap::Wrapped>,
 }
 
 /// A tab opened or closed; the code intelligence link reads these.
@@ -93,6 +95,7 @@ impl Tab {
             widest_px: 0.0,
             pinned: false,
             group: super::Group(0),
+            wrap: None,
         })
     }
 

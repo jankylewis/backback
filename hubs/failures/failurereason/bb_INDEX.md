@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 49 — FIXED 45, OBSERVED 3, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 50 — FIXED 46, OBSERVED 3, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -27,6 +27,7 @@ One file per failure mechanism. This hub owns the id. Entries: 49 — FIXED 45, 
 | BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-GAT-002 | A fixture folder shared by parallel test processes | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
 | BB-GAT-003 | A fixed sleep was too short on a loaded runner | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
+| BB-GAT-004 | A menu item added without the full suite | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_004_A_MENU_ITEM_ADDED_WITHOUT_THE_FULL_SUITE.md` |
 | BB-DAP-001 | netcoredbg's `exceptionInfo` names the CLR category and the module, not the type and message | FIXED | yes | yes | none | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | A restore that ends during the load is waited for again, 120 s, then `restored : false` | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
 | BB-ENV-001 | An app launched by launchd has no shell PATH, so dotnet and netcoredbg are not found | FIXED | yes | yes | BB-TG-012 | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |

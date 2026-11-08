@@ -1,9 +1,9 @@
-use bb_text::Document;
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, uniform_list, Context, FocusHandle, IntoElement, Window};
 
 mod bb_line;
 mod pane;
+pub(crate) mod wrap;
 #[cfg(test)]
 pub(crate) use pane::lines_tests as pane_tests;
 mod chrome;
@@ -12,7 +12,7 @@ use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
 use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
-use bb_line::{line_row, styled_line, LineRow, TestGutter};
+use bb_line::{line_row, styled_part, LineRow, TestGutter};
 pub(crate) use chrome::bb_scrollbar;
 use chrome::{status, test_marks};
 pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines, HANDLE_PX};
@@ -71,7 +71,7 @@ pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
 /// The focused pane's lines; each frame first follows the view and the
 /// sideways scroll.
 fn focused_lines(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> gpui::UniformList {
-    let lines: usize = view.tabs.active().map_or(0, Document::len_lines);
+    let lines: usize = view.tabs.active_tab().map_or(0, wrap::row_count);
     uniform_list(
         "editor-lines",
         lines,
@@ -81,7 +81,13 @@ fn focused_lines(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> gpui::U
              window: &mut Window,
              row_cx: &mut Context<ExplorerView>| {
                 follow_view(view, &range, window, row_cx);
-                pane::bb_hscroll::before_rows(view, &range, window, row_cx);
+                if view
+                    .tabs
+                    .active_tab()
+                    .is_none_or(|tab: &Tab| tab.wrap.is_none())
+                {
+                    pane::bb_hscroll::before_rows(view, &range, window, row_cx);
+                }
                 range
                     .map(|index: usize| focused_line(view, index, window, row_cx))
                     .collect::<Vec<_>>()
@@ -99,10 +105,10 @@ fn follow_view(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let moved: Option<std::path::PathBuf> = view
-        .tabs
-        .active_tab_mut()
-        .and_then(|tab: &mut Tab| tab.show_lines(visible).then(|| tab.path.clone()));
+    let moved: Option<std::path::PathBuf> = view.tabs.active_tab_mut().and_then(|tab: &mut Tab| {
+        let lines: std::ops::Range<usize> = wrap::lines_of(tab, visible);
+        tab.show_lines(&lines).then(|| tab.path.clone())
+    });
     if let Some(path) = moved {
         super::input::schedule_parse(view, path, window, cx);
     }
@@ -129,36 +135,61 @@ pub(super) fn editor_line(
     let Some(tab): Option<&Tab> = view.tabs.active_tab_of(side) else {
         return line_row(LineRow::blank(index), &[], view.theme, cx);
     };
-    let current: bool = side == view.tabs.focused() && tab.document.cursor_line() == index;
-    let marks: Vec<Mark> = line_marks(&tab.document, view.intel.diagnostics_of(&tab.path), index);
+    let part: wrap::Part = wrap::part(tab, index);
+    let line: usize = part.line;
+    let current: bool = side == view.tabs.focused() && tab.document.cursor_line() == line;
+    let marks: Vec<Mark> = line_marks(&tab.document, view.intel.diagnostics_of(&tab.path), line);
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
-    let caret: Option<f32> = current.then(|| caret_x(tab, index, window, &fonts));
+    let caret: Option<f32> = (current && wrap::row_at(tab, line) == index)
+        .then(|| part.indent + caret_x_in(tab, &part, window, &fonts));
+    let scroll_x: f32 = if tab.wrap.is_some() {
+        0.0
+    } else {
+        tab.scroll_x
+    };
     let overlay: Option<gpui::AnyElement> = caret.and_then(|x: f32| {
         crate::intel::view::bb_popups::at_cursor(
             &view.intel,
-            fonts.gutter_width() + x - tab.scroll_x,
+            fonts.gutter_width() + x - scroll_x,
             view.theme,
         )
     });
     let row: LineRow = LineRow {
-        index,
+        index: line,
+        at: (index, (!part.first).then_some(part.indent)),
         current,
         gutter: crate::intel::view::marks::worst(&marks),
-        breakpoint: view.debug.breakpoints.has(&tab.path, index),
-        stopped: crate::run::bb_debug::stopped_line(view, &tab.path) == Some(index),
-        test: tab
-            .test_methods
-            .iter()
-            .any(|method: &bb_syntax::TestMethod| method.line == index)
-            .then(|| TestGutter {
-                target: test_marks::target(view, tab, index),
-            }),
+        breakpoint: view.debug.breakpoints.has(&tab.path, line),
+        stopped: crate::run::bb_debug::stopped_line(view, &tab.path) == Some(line),
+        test: test_gutter(view, tab, line),
         overlay,
         caret,
-        scroll_x: tab.scroll_x,
+        scroll_x,
     };
-    let link: Option<(bb_text::CharIdx, bb_text::CharIdx)> = super::link::shown(view, &tab.path);
-    line_row(row, &styled_line(tab, index, &marks, link), view.theme, cx)
+    let shown: Option<(bb_text::CharIdx, bb_text::CharIdx)> = super::link::shown(view, &tab.path);
+    let runs: Vec<bb_line::Run> = styled_part(tab, line, part.columns.clone(), &marks, shown);
+    line_row(row, &runs, view.theme, cx)
+}
+
+/// The ▶ of a test method declared on `line`.
+fn test_gutter(view: &ExplorerView, tab: &Tab, line: usize) -> Option<TestGutter> {
+    tab.test_methods
+        .iter()
+        .any(|method: &bb_syntax::TestMethod| method.line == line)
+        .then(|| TestGutter {
+            target: test_marks::target(view, tab, line),
+        })
+}
+
+/// The cursor's x in `part` of its line, from the part's left edge.
+fn caret_x_in(tab: &Tab, part: &wrap::Part, window: &Window, fonts: &bb_ui::Typography) -> f32 {
+    let start: usize = tab
+        .document
+        .line_start(part.line)
+        .map_or(0, bb_text::CharIdx::raw);
+    let column: usize = tab.document.cursor().raw().saturating_sub(start);
+    let text: String = wrap::part_text(tab, part);
+    bb_line::Columns::shape(window, &text, fonts).x_of(column.saturating_sub(part.columns.start))
 }
 
 /// The cursor's x on its line, measured on the shaped line the row paints.

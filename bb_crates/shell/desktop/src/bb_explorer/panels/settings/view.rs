@@ -1,5 +1,5 @@
-//! The Settings window (Cmd+,): font family, size, tool window side and
-//! Reset. Every change applies live to every window and is saved.
+//! The Settings window (Cmd+,): font family, size, tool window side, word
+//! wrap and Reset. Every change applies live to every window and is saved.
 
 use bb_ui::Typography;
 use gpui::{
@@ -38,7 +38,7 @@ pub(crate) fn open(cx: &mut App) {
         .filter(|name: &&&str| **name == "Menlo" || installed.iter().any(|f: &String| f == **name))
         .map(|name: &&str| SharedString::from(*name))
         .collect();
-    let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, gpui::size(px(440.0), px(520.0)), cx);
+    let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, gpui::size(px(440.0), px(600.0)), cx);
     let opened: gpui::Result<gpui::WindowHandle<SettingsWindow>> = cx.open_window(
         WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(bounds)),
@@ -143,6 +143,21 @@ fn side_row(fonts: &Typography, theme: bb_ui::Theme) -> gpui::Div {
         )
 }
 
+/// Word wrap: Off (the default) or On, as Zed's soft wrap.
+fn wrap_row(fonts: &Typography, theme: bb_ui::Theme) -> gpui::Div {
+    let off: Click = |_: &gpui::ClickEvent, _: &mut Window, cx: &mut App| {
+        change(cx, |t: &mut Typography| t.wrap = false);
+    };
+    let on: Click = |_: &gpui::ClickEvent, _: &mut Window, cx: &mut App| {
+        change(cx, |t: &mut Typography| t.wrap = true);
+    };
+    div()
+        .flex()
+        .gap(px(6.0))
+        .child(button("wrap-off".into(), "Off".into(), !fonts.wrap, theme).on_click(off))
+        .child(button("wrap-on".into(), "On".into(), fonts.wrap, theme).on_click(on))
+}
+
 impl Render for SettingsWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme: bb_ui::Theme = crate::theme::resolved_theme(None, Some(window.appearance()));
@@ -164,6 +179,8 @@ impl Render for SettingsWindow {
             .child(size_row(&fonts, theme))
             .child(heading("Tool window", theme))
             .child(side_row(&fonts, theme))
+            .child(heading("Word wrap", theme))
+            .child(wrap_row(&fonts, theme))
             .child(div().pt(px(12.0)).child(
                 button("reset".into(), "Reset to default".into(), false, theme).on_click(reset),
             ))

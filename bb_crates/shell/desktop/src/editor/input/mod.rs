@@ -9,36 +9,38 @@ mod clip;
 
 /// The char under window position `window_x` on `line` of the active tab.
 /// Measured on the same shaped line the row paints (BB-UIX-001).
+/// The char under `window_x` on screen row `row` (a file line unless word
+/// wrap is on; a wrapped row's right edge stays on that row).
 pub(crate) fn char_at(
     view: &ExplorerView,
-    line: usize,
+    row: usize,
     window_x: f32,
     (window, fonts): (&Window, &bb_ui::Typography),
 ) -> Option<bb_text::CharIdx> {
     let left: f32 = view.editor_left(fonts) + fonts.gutter_width();
-    let scroll_x: f32 = view
-        .tabs
-        .active_tab()
-        .map_or(0.0, |tab: &crate::editor::Tab| tab.scroll_x);
-    let document: &bb_text::Document = view.tabs.active()?;
-    let start: usize = document.line_start(line)?.raw();
-    let content: String = document.line(line).unwrap_or_default();
-    let visible: &str = content.trim_end_matches(['\r', '\n']);
-    let column: usize =
-        crate::editor::Columns::shape(window, visible, fonts).column_at(window_x - left + scroll_x);
+    let tab: &crate::editor::Tab = view.tabs.active_tab()?;
+    let part: crate::editor::wrap::Part = crate::editor::wrap::part(tab, row);
+    let start: usize = tab.document.line_start(part.line)?.raw();
+    let visible: String = crate::editor::wrap::part_text(tab, &part);
+    let x: f32 = window_x - left + tab.scroll_x - part.indent;
+    let mut column: usize = crate::editor::Columns::shape(window, &visible, fonts).column_at(x);
+    if !part.last {
+        column = column.min(visible.chars().count().saturating_sub(1));
+    }
+    let column: usize = column.saturating_add(part.columns.start);
     Some(bb_text::CharIdx::new(start.saturating_add(column)))
 }
 
 pub(crate) fn pointer_at(
     view: &mut ExplorerView,
-    line: usize,
+    row: usize,
     window_x: f32,
     extend: bool,
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
-    let target: Option<bb_text::CharIdx> = char_at(view, line, window_x, (window, &fonts));
+    let target: Option<bb_text::CharIdx> = char_at(view, row, window_x, (window, &fonts));
     view.intel.dismiss();
     if let (Some(document), Some(target)) = (view.tabs.active_mut(), target) {
         if let Err(error) = document.move_to(target, extend) {
@@ -119,9 +121,7 @@ fn after_key(
     }
     if let Some(after) = after.filter(|after: &Mark| before.as_ref() != Some(after)) {
         // BB-BUG-055: as VS Code, scroll just enough to show the cursor's line.
-        view.tabs
-            .scroll()
-            .scroll_to_item(after.2, gpui::ScrollStrategy::Nearest);
+        super::wrap::reveal(&view.tabs, after.2, gpui::ScrollStrategy::Nearest);
     }
     if let Some(tab) = view.tabs.active_tab_mut() {
         tab.sync_edits();
