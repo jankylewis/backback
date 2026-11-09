@@ -57,7 +57,7 @@ pub(super) fn execute(
 ) -> Result<RunReport, String> {
     let project: ProjectPath = ProjectPath::from_path(path.to_path_buf());
     let rt: tokio::runtime::Runtime = super::runtime()?;
-    if super::super::uses_apex(path) {
+    if super::super::uses_apex(&root, path) {
         let mut settings: ApexSettings = super::super::apex_settings(&root)?;
         if let Some(chosen) = settings_override {
             settings.run_settings = Some(chosen);

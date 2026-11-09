@@ -200,7 +200,7 @@ fn list_once(
     path: &std::path::Path,
 ) -> Result<SpecList, ListError> {
     let project: ProjectPath = ProjectPath::from_path(path.to_path_buf());
-    if super::uses_apex(path) {
+    if super::uses_apex(&root, path) {
         let settings: ApexSettings = super::apex_settings(&root).map_err(ListError::Other)?;
         let backend: ApexBackend =
             ApexBackend::new(Workspace::at(root), settings).map_err(ListError::of)?;

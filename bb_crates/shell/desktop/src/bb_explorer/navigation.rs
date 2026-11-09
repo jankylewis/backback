@@ -105,8 +105,10 @@ pub(crate) fn reveal_again(view: &mut crate::ExplorerView) {
 }
 
 /// Once per newly active file: open the folders down to it, select its row
-/// and scroll it into view. A folder the user closes after that stays closed
-/// until the file is shown again ([`reveal_again`]).
+/// and scroll it to the middle of the Explorer, so the folders around it
+/// show too, even when it is already in sight at an edge (headmate
+/// 2026-11-09; the tree's ends clamp). A folder the user closes after that
+/// stays closed until the file is shown again ([`reveal_again`]).
 pub(crate) fn follow_active(view: &mut crate::ExplorerView) {
     let Some(path): Option<PathBuf> = view
         .tabs
@@ -122,7 +124,7 @@ pub(crate) fn follow_active(view: &mut crate::ExplorerView) {
         Ok(Some(row)) => {
             view.selected = row;
             view.explorer_scroll
-                .scroll_to_item(row, gpui::ScrollStrategy::Nearest);
+                .scroll_to_item_strict(row, gpui::ScrollStrategy::Center);
         }
         Ok(None) => {}
         Err(error) => view.report(&error),

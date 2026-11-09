@@ -161,7 +161,72 @@ pub(crate) fn apex_settings(root: &Path) -> Result<ApexSettings, String> {
     ApexSettings::load(root).map_err(|error: bb_testkit::SettingsError| error.to_string())
 }
 
-pub(crate) fn uses_apex(path: &Path) -> bool {
+/// The Apex CLI runs `path` only when it references Apex and the workspace
+/// `root` opts in with `apexTestkit.*` keys, as `bb test` decides. Released
+/// Apex CLIs ignore `--list` and `--specs`, so an Apex project without the
+/// keys lists and runs through `dotnet test` (BB-BUG-061). A settings file
+/// that cannot be read still picks Apex, so its error is shown.
+pub(crate) fn uses_apex(root: &Path, path: &Path) -> bool {
     let project: ProjectPath = ProjectPath::from_path(path.to_path_buf());
-    ProjectInfo::load(&project).is_ok_and(|info: ProjectInfo| info.has(Capability::Apex))
+    let apex: bool =
+        ProjectInfo::load(&project).is_ok_and(|info: ProjectInfo| info.has(Capability::Apex));
+    apex && match ApexSettings::load(root) {
+        Ok(settings) => settings.declared,
+        Err(_) => true,
+    }
+}
+
+#[cfg(test)]
+mod apex_tests {
+    use std::path::{Path, PathBuf};
+
+    const APEX_PROJECT: &str = "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>\
+        <PackageReference Include=\"Apex\" Version=\"1.0.0\" />\
+        <PackageReference Include=\"NUnit\" Version=\"4.0.0\" />\
+        </ItemGroup></Project>";
+
+    fn workspace(name: &str) -> PathBuf {
+        let root: PathBuf =
+            std::env::temp_dir().join(format!("bb-apexpick-{name}-{}", std::process::id()));
+        let _old: std::io::Result<()> = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("Specs")).unwrap();
+        std::fs::write(root.join("Specs/Specs.csproj"), APEX_PROJECT).unwrap();
+        root
+    }
+
+    #[test]
+    fn an_apex_project_runs_through_dotnet_test_until_the_workspace_opts_in() {
+        let root: PathBuf = workspace("optin");
+        let project: PathBuf = root.join("Specs/Specs.csproj");
+        assert!(!super::uses_apex(&root, &project));
+        std::fs::create_dir_all(root.join(".vscode")).unwrap();
+        std::fs::write(
+            root.join(".vscode/settings.json"),
+            "{ \"apexTestkit.command\": \"dotnet apex\" }",
+        )
+        .unwrap();
+        assert!(super::uses_apex(&root, &project));
+        std::fs::write(
+            root.join(".vscode/settings.json"),
+            "{ \"editor.tabSize\": 4 }",
+        )
+        .unwrap();
+        assert!(!super::uses_apex(&root, &project));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn a_project_without_apex_never_uses_the_apex_cli() {
+        let root: PathBuf = workspace("plain");
+        let plain: PathBuf = root.join("Specs/Plain.csproj");
+        std::fs::write(&plain, "<Project Sdk=\"Microsoft.NET.Sdk\" />").unwrap();
+        std::fs::create_dir_all(root.join(".vscode")).unwrap();
+        std::fs::write(
+            root.join(".vscode/settings.json"),
+            "{ \"apexTestkit.command\": \"dotnet apex\" }",
+        )
+        .unwrap();
+        assert!(!super::uses_apex(Path::new(&root), &plain));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
 }
