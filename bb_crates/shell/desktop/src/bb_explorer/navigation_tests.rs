@@ -99,6 +99,49 @@ fn the_active_files_row_is_scrolled_into_the_explorers_view(cx: &mut TestAppCont
     }
 }
 
+/// A file made active lands in the middle of the Explorer, not at its edge,
+/// so the folders around it show too (headmate 2026-11-09, as Zed reveals).
+#[gpui::test]
+fn the_active_files_row_is_centred_in_the_explorer(cx: &mut TestAppContext) {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let root: PathBuf = dir.path().canonicalize().unwrap();
+    for n in 0..120 {
+        std::fs::create_dir_all(root.join(format!("f{n:03}"))).unwrap();
+    }
+    let middle: PathBuf = root.join("f060/Mid.cs");
+    let early: PathBuf = root.join("f030/Early.cs");
+    std::fs::write(&middle, "class Mid {}\n").unwrap();
+    std::fs::write(&early, "class Early {}\n").unwrap();
+    let tree: bb_explorer::Explorer = bb_explorer::Explorer::open(&root).unwrap();
+    let start: PathBuf = root.clone();
+    let (view, vcx): (Entity<ExplorerView>, &mut VisualTestContext) =
+        cx.add_window_view(|_: &mut Window, cx: &mut gpui::Context<ExplorerView>| {
+            crate::launch::fresh_view(tree, (start, false), WindowAppearance::Dark, cx)
+        });
+    for file in [&middle, &early, &middle] {
+        let target: PathBuf = file.clone();
+        scroll_the_tree_away(&view, vcx);
+        view.update_in(
+            vcx,
+            |v: &mut ExplorerView, window: &mut Window, cx: &mut gpui::Context<ExplorerView>| {
+                v.open_file(&target, window, cx);
+            },
+        );
+        vcx.run_until_parked();
+        let row: usize = view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| v.selected);
+        let list: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("explorer-rows").unwrap();
+        let shown: gpui::Bounds<gpui::Pixels> = vcx
+            .debug_bounds(Box::leak(format!("explorer-row-{row}").into_boxed_str()))
+            .unwrap();
+        let off: gpui::Pixels = (shown.center().y - list.center().y).abs();
+        assert!(
+            off <= shown.size.height,
+            "{} is {off:?} from the middle: {shown:?} in {list:?}",
+            target.display()
+        );
+    }
+}
+
 /// The tree scrolled to its top and focused, as a user browsing it.
 fn scroll_the_tree_away(view: &Entity<ExplorerView>, vcx: &mut VisualTestContext) {
     view.update_in(

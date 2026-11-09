@@ -47,6 +47,7 @@ pub(crate) fn explorer_panel(
                 ),
             )
             .track_scroll(&view.explorer_scroll)
+            .debug_selector(|| "explorer-rows".to_owned())
             .flex_1(),
         )
         .children(crate::files::menu(view, cx))

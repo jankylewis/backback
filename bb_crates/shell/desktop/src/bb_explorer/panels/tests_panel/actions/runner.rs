@@ -85,7 +85,7 @@ pub(crate) fn run_category(
         .model
         .projects()
         .keys()
-        .filter(|path: &&PathBuf| !super::super::uses_apex(path))
+        .filter(|path: &&PathBuf| !super::super::uses_apex(&view.root, path))
         .map(|path: &PathBuf| {
             (
                 path.clone(),

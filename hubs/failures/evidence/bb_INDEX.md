@@ -33,9 +33,9 @@ Capture next time: the build time of the binary that was read back.
 | BB-PRC-007 | OBSERVED | PR #93 CI run: nextest `LEAK` on `the_server_thread_counts_projects_then_syncs_edits_and_answers` |
 | BB-PRF-005 | FIXED | MbTx process tree at idle (launcher 49 MB); 3+3 runs; `bb probe` hover x10 A/B |
 | BB-PRF-006 | FIXED | MbTx `find_bench` A/B, 3 rounds x 7 runs, 4 queries; `tests/parallel.rs` |
-| BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/D1/S03/BB_BUG_010_*.md` |
-| BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_011_*.md` |
-| BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/D1/S03/BB_BUG_012_*.md` |
+| BB-BUG-010 | FIXED | Byte dumps before/after in `hubs/bugs/bugfix/C1/D1/S03/BB_BUG_010_*.md` |
+| BB-BUG-011 | FIXED | Sweep bytes before the fix in `hubs/bugs/bugfacing/C1/D1/S03/BB_BUG_011_*.md` |
+| BB-BUG-012 | FIXED | Sweep states before the fix in `hubs/bugs/bugfacing/C1/D1/S03/BB_BUG_012_*.md` |
 | BB-DAP-001 | FIXED | The raw `exceptionInfo` reply in `docs/plan/readback/V2/BBEOD19/bb_READBACK.md` |
 | BB-LSP-006 | FIXED | Gate log 2026-11-03 (`bb_gate.cHCf6V358z`, local temp): `restored : false after 120.0s` with `Restore complete` in the run log; mechanism quoted in the reason page |
 | BB-BUG-008 | FIXED | `docs/plan/readback/FIXES/S04/BB_BUG_008/bb_READBACK.md` |
@@ -54,3 +54,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-018 | FIXED | Sweep 3 H6 bytes before (`HalfHalve`) and after, in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md` |
 | BB-BUG-019 | OPEN | Sweep 3 H6 states in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md`: `problems=11` three times after the rename, `0` on a fresh load; `dotnet build` clean |
 | BB-UIX-009 | FIXED | The BB-BUG-018 sweep above |
+| BB-BUG-061 | FIXED | Reproduced outside the app: the pinned `apex` tool on a listing stub printed `dotnet test <stub> ... --no-build` then MSB4057; `apex --help` lists no `--list`, `--json` or `--specs` (bugfacing entry) |

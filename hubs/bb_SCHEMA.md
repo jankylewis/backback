@@ -41,7 +41,7 @@ readback (`BB-<FAM>-nnn`). A bug links to its cause with `cause:`.
 
 Every folder holds one `bb_INDEX.md` (its `bb_` marker) and at most 4 entries
 (HD law: 5 per folder). The hub's own `bb_INDEX.md` has the full table.
-Shelves: `S01` = ids 001-004, `S02` = 005-008, and so on. Drawers hold the shelves: `D1/` `S01` to `S03`, `D2/` `S04` to `S07`, `D3/` `S08` to `S11`, `D4/` `S12` to `S15`, and so on, so no folder passes five entries. Bugs are always
+Shelves: `S01` = ids 001-004, `S02` = 005-008, and so on. Drawers hold the shelves: `D1/` `S01` to `S03`, `D2/` `S04` to `S07`, `D3/` `S08` to `S11`, `D4/` `S12` to `S15`, and so on. Cabinets hold the drawers: `C1/` `D1` to `D4`, `C2/` `D5` to `D8`, and so on, so no folder passes five entries (a bug path is `C<n>/D<n>/S<nn>/`). Bugs are always
 shelved; a family folder or `toolgap/` is shelved once it passes 4 ids.
 Folders are made only when an entry needs them.
 
