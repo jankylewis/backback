@@ -35,7 +35,10 @@ This grant does not extend to any other repository.
 ## Conventions (enforced by `bb-audit`; `cargo test` fails on a violation)
 
 - HD taxonomy: at most 5 visible entries per folder (dotfiles and the agent
-  files `AGENTS.md`/`CLAUDE.md` excepted).
+  files `AGENTS.md`/`CLAUDE.md` excepted). The skill trees `.claude/` and
+  `.agents/` keep their tool's layout (no folder rules) but keep the line caps.
+- Skills: the backback family lives in `.claude/skills/cca-backback-*` and
+  `.agents/skills/cda-backback-*`; start every task with `*-backback-bootstrap`.
 - Caps: `.md` ≤ 100 lines; `.rs`/`.cs` ≤ 250; function ≤ 50; Rust `impl`/type
   and C# class ≤ 200; parameters ≤ 5.
 - Backbone marker: C# trees use `_` for the one most critical entry per folder;

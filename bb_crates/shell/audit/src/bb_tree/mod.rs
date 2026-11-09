@@ -11,6 +11,9 @@ use bb_marker::{Dialect, Dialects};
 const SKIP_DIRS: [&str; 6] = [".git", ".target", "target", "bin", "obj", "node_modules"];
 /// Agent instruction files: present by law, so outside the HD count.
 const AGENT_FILES: [&str; 2] = ["AGENTS.md", "CLAUDE.md"];
+/// Root folders whose layout an agent tool fixes (`.claude/skills/<name>/SKILL.md`):
+/// outside the folder rules, inside the line caps.
+const AGENT_TREES: [&str; 2] = [".claude", ".agents"];
 /// Generated or legal files that are exempt from line caps.
 const SKIP_FILES: [&str; 2] = ["Cargo.lock", "LICENSE"];
 
@@ -21,7 +24,9 @@ pub(crate) fn walk(root: &Path) -> Result<Vec<Violation>, AuditError> {
     while let Some(dir) = stack.pop() {
         let entries: Vec<PathBuf> = read_dir(&dir)?;
         let dialect: Dialect = dialects.of(&dir);
-        check_folder(root, &dir, &entries, dialect, &mut out);
+        if !in_agent_tree(root, &dir) {
+            check_folder(root, &dir, &entries, dialect, &mut out);
+        }
         for entry in entries {
             let name: String = file_name(&entry);
             if entry.is_dir() {
@@ -47,6 +52,15 @@ fn read_dir(dir: &Path) -> Result<Vec<PathBuf>, AuditError> {
     }
     entries.sort();
     Ok(entries)
+}
+
+fn in_agent_tree(root: &Path, dir: &Path) -> bool {
+    dir.strip_prefix(root)
+        .ok()
+        .and_then(|rel: &Path| rel.components().next())
+        .is_some_and(|top: std::path::Component<'_>| {
+            AGENT_TREES.contains(&top.as_os_str().to_string_lossy().as_ref())
+        })
 }
 
 fn read_error(path: &Path, source: std::io::Error) -> AuditError {

@@ -73,3 +73,28 @@ fn vacuous_tool_skip_is_reported_in_test_files_only() {
         "{rules:?}"
     );
 }
+
+#[test]
+fn agent_skill_trees_keep_their_tool_layout_but_not_their_line_cap() {
+    let s: Scratch = Scratch::new("skills");
+    s.file("bb_a.md", "x\n");
+    for tree in [".claude/skills/cca", ".agents/skills/cda"] {
+        for n in 1..=7 {
+            s.file(&format!("{tree}-{n}/SKILL.md"), "x\n");
+        }
+    }
+    assert!(s.rules().is_empty(), "{:?}", s.rules());
+    s.file(".claude/skills/cca-1/SKILL.md", &"line\n".repeat(101));
+    assert_eq!(
+        s.rules(),
+        only(".claude/skills/cca-1/SKILL.md", Rule::FileLines)
+    );
+    for n in 1..=6 {
+        s.file(&format!("docs/skills/s{n}.md"), "x\n");
+    }
+    assert!(
+        s.rules()
+            .contains(&("docs/skills".to_owned(), Rule::FolderEntries)),
+        "only the root agent trees are exempt"
+    );
+}
