@@ -43,6 +43,8 @@ pub(crate) struct Tabs {
     pub(crate) line_clip: Option<String>,
     /// The file the Explorer last opened its folders to (BB-BUG-029).
     pub(crate) revealed: Option<PathBuf>,
+    /// Each group's tab bar scroll (BB-BUG-062).
+    pub(crate) bars: bar::bb_view::Bars,
 }
 
 impl Tabs {

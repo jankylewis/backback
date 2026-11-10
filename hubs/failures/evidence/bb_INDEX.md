@@ -55,3 +55,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-019 | OPEN | Sweep 3 H6 states in `docs/plan/readback/V2/SWEEP01/bb_READBACK.md`: `problems=11` three times after the rename, `0` on a fresh load; `dotnet build` clean |
 | BB-UIX-009 | FIXED | The BB-BUG-018 sweep above |
 | BB-BUG-061 | FIXED | Reproduced outside the app: the pinned `apex` tool on a listing stub printed `dotnet test <stub> ... --no-build` then MSB4057; `apex --help` lists no `--list`, `--json` or `--specs` (bugfacing entry) |
+| BB-BUG-062 | FIXED | Window test `the_active_tab_scrolls_into_sight_and_the_wheel_brings_the_first_back`: red on master (active last tab out of sight), green after; headmate screenshot 2026-11-10 |

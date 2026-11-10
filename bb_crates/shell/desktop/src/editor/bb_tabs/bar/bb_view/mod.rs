@@ -1,13 +1,39 @@
 //! A group's tab bar: one item per tab, pinned ones first with a pin in
 //! place of the close cross; a right-click opens the tab's menu
-//! (BB-BUG-039); a tab drags to the other group (BB-BUG-040).
+//! (BB-BUG-039); a tab drags to the other group (BB-BUG-040). Tabs keep
+//! their width and the bar scrolls sideways; the active tab scrolls into
+//! sight (BB-BUG-062).
+
+#[cfg(test)]
+mod bb_window_tests;
 
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, Context, IntoElement, MouseButton, Render, Window};
 
-use super::super::{Group, Tab, Tabs};
+use super::super::{Group, Tab, Tabs, MAX_GROUPS};
 use super::{menu, TabMenu};
 use crate::{color, ExplorerView};
+
+/// Each group's bar scroll, and the tab it last brought into sight.
+#[derive(Default)]
+pub(crate) struct Bars {
+    scrolls: [gpui::ScrollHandle; MAX_GROUPS],
+    shown: [std::cell::Cell<Option<usize>>; MAX_GROUPS],
+}
+
+impl Bars {
+    /// `side`'s bar scroll; a new active tab at `active` (its place in the
+    /// group) scrolls into sight once, so the wheel can move away after.
+    fn scroll(&self, side: Group, active: Option<usize>) -> gpui::ScrollHandle {
+        let handle: gpui::ScrollHandle = self.scrolls.get(side.0).cloned().unwrap_or_default();
+        if let (Some(at), Some(shown)) = (active, self.shown.get(side.0)) {
+            if shown.replace(Some(at)) != Some(at) {
+                handle.scroll_to_item(at);
+            }
+        }
+        handle
+    }
+}
 
 /// A tab being dragged: its index and the name its ghost shows.
 #[derive(Clone, Debug)]
@@ -48,10 +74,16 @@ pub(crate) fn tab_bar(
             .get(open.index)
             .is_some_and(|tab: &Tab| tab.group == side)
     });
+    let active: Option<usize> = tabs
+        .group(side)
+        .position(|(index, _): (usize, &Tab)| tabs.active_of(side) == Some(index));
     div()
+        .id(("tab-bar", side.0))
+        .debug_selector(move || format!("tab-bar-{}", side.0))
         .h(px(36.0))
         .flex()
-        .overflow_hidden()
+        .overflow_x_scroll()
+        .track_scroll(&tabs.bars.scroll(side, active))
         .bg(color(theme.surface))
         .children(tabs.group(side).map(|(index, tab): (usize, &Tab)| {
             tab_item(index, tab, tabs.active_of(side) == Some(index), theme, cx)
