@@ -50,3 +50,4 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-059 | `only 3 recent workspaces show` | FIXED | Is the saved list full of deleted folders? `recent::add` drops them |
 | BB-BUG-060 | `the tree does not show the file I am in` | FIXED | Did the click call `reveal_again` (tab, or editor taking focus back)? |
 | BB-BUG-061 | `error MSB4057: The target "VSTest" does not exist` under an Apex project | FIXED | Does the workspace set `apexTestkit.*`? Does `<command> test --list --json` print JSON? |
+| BB-BUG-062 | A tab is cut at the bar edge and cannot be reached | FIXED | Is the bar `overflow_x_scroll` with a tracked handle? Does the active tab change reveal it? |
