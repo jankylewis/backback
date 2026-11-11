@@ -31,7 +31,7 @@ Fleet: `backback` — matemaster `backback_mm`, mates `backback_1` (cca),
 Peaker granted self-merge on github.com/jankylewis/backback (2026-10-31).
 Mates work on a branch per BBEOD (`bbeod-NN-<topic>`) and commit there as
 `jankylewis <jankylewis.se@gmail.com>`; never push to `master`. Only
-`backback_mm` opens and merges the PR, after the full gate is green.
+`backback_mm` opens and merges the PR, after the gate and CI are green.
 This grant does not extend to any other repository.
 
 ## Conventions (enforced by `bb-audit`; `cargo test` fails on a violation)
@@ -59,11 +59,13 @@ it is never stale; nothing to regenerate.
 
 ## Gate (all must pass, quote real counts)
 
-One command: `docs/release/scripts/gate.sh` (sets PATH and netcoredbg). The
-steps, run from `bb_crates/`:
-
-`cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings &&
-cargo test --workspace && cargo deny check && cargo run -p bb -- audit ..`
+One command: `docs/release/scripts/gate.sh` (sets PATH, netcoredbg, one
+worker). By default it checks what the branch changed: `cargo fmt --check`
+and `bb audit` always; clippy (`-D warnings`) and tests for each changed
+crate and every crate that uses it; the whole workspace and `cargo deny`
+when `Cargo.toml`, `Cargo.lock` or `.cargo/` changed (BB-TG-023).
+`gate.sh --plan` shows the scope; `gate.sh --full` checks everything; use it
+when unsure. CI runs the full suite on every PR, so a merge is never less.
 
 ## Loops (every BBEOD)
 
