@@ -89,4 +89,4 @@
 
 BBEOD05 (debugger, Set Next, exit code), BBEOD05-FIX and BBEOD07-FIX: see
 `HISTORY.md`, the goals board `bb_roadmap/GOALS.md`, the readbacks under
-`readback/V1/` and `git log`. Bugs and failures: `hubs/TRIAGE.md`.
+`readback/V1/` and `git log`. Bugs and failures: `hubs/failures/TRIAGE.md`.

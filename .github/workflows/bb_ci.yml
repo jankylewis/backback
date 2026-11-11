@@ -10,6 +10,10 @@ permissions:
 jobs:
   gate:
     runs-on: macos-latest
+    env:
+      # bb_crates/.cargo/config.toml keeps local builds at one job (the
+      # headmate's Mac overheated); the runner has 3 cores to use.
+      CARGO_BUILD_JOBS: "3"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4

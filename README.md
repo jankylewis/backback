@@ -10,7 +10,7 @@ up to three editor panes, tree-sitter highlighting, Roslyn code intelligence
 (completion, diagnostics, definition, references, rename, fixes), Go to File /
 Symbol, Find in Files, Build, a netcoredbg debugger (breakpoints, step, locals,
 Set Next Statement), a Test Explorer, and a terminal. Live state:
-[goals board](docs/plan/bb_roadmap/GOALS.md); bugs: [hubs/TRIAGE.md](hubs/TRIAGE.md).
+[goals board](docs/plan/bb_roadmap/GOALS.md); bugs: [hubs/failures/TRIAGE.md](hubs/failures/TRIAGE.md).
 
 The [mascot](docs/release/bb_assets/bb_mascot/bb_mascot.svg) is an original
 chibi scientist. Its [dark contact sheet](docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)

@@ -6,6 +6,9 @@ set -uo pipefail
 
 repo_dir="$(cd "$(dirname "$0")/../../.." && pwd)"
 export PATH="$HOME/.cargo/bin:$PATH"
+# One build job and one test thread: more overheated the headmate's Mac
+# (2026-11-11). CI sets its own workers in ci_tests.sh.
+export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-1}"
 # The debugger tests need netcoredbg (README: BACKBACK_NETCOREDBG or PATH).
 default_dbg="$HOME/.local/share/backback/netcoredbg/netcoredbg"
 if [ -z "${BACKBACK_NETCOREDBG:-}" ] && ! command -v netcoredbg >/dev/null; then
@@ -31,7 +34,7 @@ step() {
 
 step fmt cargo fmt --check
 step clippy cargo clippy --all-targets --all-features -- -D warnings
-step test cargo test --workspace --all-features --no-fail-fast -- --test-threads=2
+step test cargo test --workspace --all-features --no-fail-fast -- --test-threads=1
 # The tests' processes have exited: remove the temp folders they left
 # (BB-PRC-004). Live folders, another gate's too, are kept.
 step sweep cargo run -q -p bb -- sweep
