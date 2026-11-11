@@ -1,6 +1,7 @@
 //! The real netcoredbg on the `Debuggee` fixture: stop at a breakpoint with
 //! the call stack and locals, step over, continue to the next hit, stop;
-//! the `all` exception filter pauses on the fixture's caught throw.
+//! the `all` exception filter pauses on the fixture's caught throw; Debug on
+//! a test stops on a breakpoint inside it.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -72,6 +73,7 @@ fn a_real_session_stops_steps_continues_and_ends() {
     let (dir, program): (tempfile::TempDir, PathBuf) = fixture();
     let (commands, mut notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
         target: dir.path().join("Debuggee.csproj"),
+        test: None,
         breakpoints: vec![(program.clone(), vec![BREAK])],
         exceptions: Vec::new(),
     });
@@ -137,6 +139,7 @@ fn the_all_filter_pauses_on_a_caught_throw_and_names_the_exception() {
     let (dir, program): (tempfile::TempDir, PathBuf) = fixture();
     let (commands, mut notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
         target: dir.path().join("Debuggee.csproj"),
+        test: None,
         breakpoints: Vec::new(),
         exceptions: vec![String::from("all")],
     });
@@ -169,4 +172,39 @@ fn the_all_filter_pauses_on_a_caught_throw_and_names_the_exception() {
             | Note::Refused(_)) => panic!("expected the end, got {other:?}"),
         }
     }
+}
+
+const SPEC: &str = "using NUnit.Framework;\nnamespace Sample;\npublic class Spec\n{\n    [Test]\n    public void Hits()\n    {\n        int n = 41;\n        n += 1;\n        Assert.That(n, Is.EqualTo(42));\n    }\n}\n";
+/// `n += 1;` in `Hits`, 0-based.
+const IN_TEST: usize = 8;
+
+/// Debug on a test (headmate 2026-11-11: "can't debug this test while set
+/// the breakpoints"): the test starts paused, the debugger attaches, and
+/// the test stops on the breakpoint inside it with its locals.
+#[test]
+fn debugging_a_test_stops_on_a_breakpoint_inside_it() {
+    bb_dap::locate().expect("netcoredbg must be installed for this gate");
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let root: PathBuf = dir.path().canonicalize().unwrap();
+    std::fs::write(root.join("Tests.csproj"), r#"<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" /><PackageReference Include="NUnit" Version="4.6.1" /><PackageReference Include="NUnit3TestAdapter" Version="5.0.0" /></ItemGroup></Project>"#).unwrap();
+    let spec: PathBuf = root.join("Spec.cs");
+    std::fs::write(&spec, SPEC).unwrap();
+    let (commands, mut notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
+        target: root.join("Tests.csproj"),
+        test: Some((
+            root.clone(),
+            bb_testkit::Fqn::new("Sample.Spec.Hits").unwrap(),
+        )),
+        breakpoints: vec![(spec.clone(), vec![IN_TEST])],
+        exceptions: Vec::new(),
+    });
+    let (frames, vars): (Vec<Frame>, Vec<Var>) = stop(&mut notes, Duration::from_secs(300));
+    let top: &Frame = frames.first().unwrap();
+    assert!(top.name.contains("Hits"), "{frames:?}");
+    assert_eq!(
+        (top.path.as_deref(), top.line),
+        (Some(spec.as_path()), IN_TEST)
+    );
+    assert_eq!(value(&vars, "n"), Some("41"), "{vars:?}");
+    commands.send(Command::Stop).unwrap();
 }

@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 63 — FIXED 61, OBSERVED 2.
+Bugs a user met in the app. Entries: 64 — FIXED 62, OBSERVED 2.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -67,3 +67,4 @@ Bugs a user met in the app. Entries: 63 — FIXED 61, OBSERVED 2.
 | BB-BUG-061 | An Apex project listed through an Apex CLI that cannot list | FIXED | app picked Apex by package, not by `apexTestkit.*` keys | yes | `C2/D5/S16/BB_BUG_061_AN_APEX_PROJECT_LISTED_THROUGH_AN_APEX_CLI_THAT_CANNOT_LIST.md` |
 | BB-BUG-062 | The tab bar hid tabs past its edge | FIXED | bar was `overflow_hidden`, no scroll, no reveal | yes | `C2/D5/S16/BB_BUG_062_THE_TAB_BAR_HID_TABS_PAST_ITS_EDGE.md` |
 | BB-BUG-063 | Dragging the pane divider selected the text under it | FIXED | the line's drag handler never asked where the press began | yes | `C2/D5/S16/BB_BUG_063_DRAGGING_THE_PANE_DIVIDER_SELECTED_THE_TEXT_UNDER_IT.md` |
+| BB-BUG-064 | Debug on a test was a placeholder that never debugged | FIXED | Debug never wired to the debugger; no attach | yes | `C2/D5/S16/BB_BUG_064_DEBUG_ON_A_TEST_WAS_A_PLACEHOLDER_THAT_NEVER_DEBUGGED.md` |

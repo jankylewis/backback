@@ -52,3 +52,4 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-061 | `error MSB4057: The target "VSTest" does not exist` under an Apex project | FIXED | Does the workspace set `apexTestkit.*`? Does `<command> test --list --json` print JSON? |
 | BB-BUG-062 | A tab is cut at the bar edge and cannot be reached | FIXED | Is the bar `overflow_x_scroll` with a tracked handle? Does the active tab change reveal it? |
 | BB-BUG-063 | Text highlights while dragging a divider, scroll bar or tab | FIXED | Did the press begin on the text? `Lines::text_press` must be set |
+| BB-BUG-064 | Debug on a test does nothing, or "no test host id" | FIXED | Does the Apex CLI support `--debug`? Plain projects use `VSTEST_HOST_DEBUG=1` |

@@ -60,3 +60,5 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-006 | FIXED | Stale gate: `fmt rc=0`, `clippy rc=101` after mid-run edits; the rerun on the finished tree is in PR #103 |
 | BB-ENV-002 | FIXED | Headmate report 2026-11-11 mid-gate; 1-worker gates green at 578 and 581 passed |
 | BB-BUG-063 | FIXED | Headmate screen video 2026-11-11 (not kept: it shows credentials); window test red on master with a 37-char selection |
+| BB-BUG-064 | FIXED | Headmate screenshot 2026-11-11; `debugging_a_test_stops_on_a_breakpoint_inside_it` stopped in `Hits` with n = 41 |
+| BB-LSP-008 | OBSERVED | CI run 42966229802 (PR #107) failed at 10.98 s; alone on master 3 of 3 passed |

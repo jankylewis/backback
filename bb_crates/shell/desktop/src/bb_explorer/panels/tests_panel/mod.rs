@@ -14,12 +14,12 @@ use std::path::{Path, PathBuf};
 use bb_dotnet::{Capability, ProjectInfo, ProjectPath};
 use bb_testkit::{ApexSettings, Fqn, Selection, SpecResult, StopFlag};
 
-pub(crate) use actions::find;
 pub(crate) use actions::open;
 pub(crate) use actions::toggle_project;
+pub(crate) use actions::{debug_host, find};
 pub(crate) use actions::{run_category, run_class, run_failed, run_project, run_spec, stop};
 pub(crate) use model::TestModel;
-pub(crate) use view::{open_spec, panel};
+pub(crate) use view::{open_spec, panel, TestMenu};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Side {
@@ -74,6 +74,8 @@ pub(crate) struct TestsState {
     pub(crate) collapsed: BTreeSet<(PathBuf, Group)>,
     /// The filter's search over projects not listed yet.
     pub(crate) search: find::Search,
+    /// A test's open right-click menu (Run, Debug).
+    pub(crate) menu: Option<TestMenu>,
 }
 
 impl TestsState {
@@ -98,6 +100,7 @@ impl TestsState {
             scan: Scan::NotStarted,
             collapsed: BTreeSet::new(),
             search: find::Search::default(),
+            menu: None,
         }
     }
 }

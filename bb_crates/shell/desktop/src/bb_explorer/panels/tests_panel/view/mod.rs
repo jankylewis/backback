@@ -6,8 +6,8 @@ use crate::{color, ExplorerView};
 #[path = "bb_controls.rs"]
 mod controls;
 mod rows;
-pub(crate) use rows::open_spec;
 use rows::{any_running, project_row, spec_rows};
+pub(crate) use rows::{open_spec, TestMenu};
 mod detail;
 use controls::filter_key;
 use detail::{detail, label};
@@ -38,6 +38,7 @@ pub(crate) fn panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl
                 .children(rows),
         )
         .child(detail(view, theme, cx))
+        .children(rows::test_menu(view, theme, cx))
 }
 
 fn project_rows(

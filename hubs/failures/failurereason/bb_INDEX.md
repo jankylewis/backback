@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 53 — FIXED 49, OBSERVED 3, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 54 — FIXED 49, OBSERVED 4, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -57,3 +57,4 @@ One file per failure mechanism. This hub owns the id. Entries: 53 — FIXED 49, 
 | BB-GAT-005 | A test waited for a search it had not started | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
 | BB-GAT-006 | A worktree was edited while its gate ran | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
 | BB-ENV-002 | A gate on every core overheated the Mac | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
+| BB-LSP-008 | A killed server was reported stopped after one second under load | OBSERVED | no | no | none | `APP/LSP/S02/BB_LSP_008_A_KILLED_SERVER_WAS_REPORTED_STOPPED_AFTER_ONE_SECOND_UNDER_LOAD.md` |

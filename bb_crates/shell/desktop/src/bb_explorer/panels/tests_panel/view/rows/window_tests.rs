@@ -194,3 +194,55 @@ fn a_pasted_name_opens_the_listed_project_on_only_that_test(cx: &mut TestAppCont
     assert_eq!(filter_text(&view, vcx), "", "Cmd+Backspace clears it");
     assert!(shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Passes"));
 }
+
+fn status_of(view: &Entity<ExplorerView>, vcx: &mut VisualTestContext) -> Option<String> {
+    view.read_with(vcx, |s: &ExplorerView, _: &gpui::App| s.status.clone())
+}
+
+/// Headmate 2026-11-11: a right-click on a test opens Run and Debug; the
+/// row's Debug and the menu's Debug both start a debug session (refused
+/// here by --no-write, so no build runs); Run runs the test.
+#[gpui::test]
+fn a_right_click_on_a_test_offers_run_and_debug(cx: &mut TestAppContext) {
+    let (_dir, project, view, vcx): Rig<'_> = tree_window(cx);
+    view.update(
+        vcx,
+        |state: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
+            state.tabs.set_no_write();
+        },
+    );
+    let row: gpui::Bounds<gpui::Pixels> = vcx
+        .debug_bounds("test-spec-Sample.Auth.OutcomeSpec.Fails")
+        .unwrap();
+    vcx.simulate_mouse_down(row.center(), gpui::MouseButton::Right, Modifiers::default());
+    vcx.run_until_parked();
+    assert!(shown(vcx, "test-menu-run") && shown(vcx, "test-menu-debug"));
+    click(vcx, "test-menu-debug");
+    assert!(
+        status_of(&view, vcx).is_some_and(|s: String| s.starts_with("Debug refused")),
+        "the menu's Debug starts a debug session"
+    );
+    assert!(!shown(vcx, "test-menu"), "picking an item closes the menu");
+    view.update(
+        vcx,
+        |state: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
+            state.status = None;
+        },
+    );
+    click(vcx, "test-debug-Sample.Auth.OutcomeSpec.Passes");
+    assert!(status_of(&view, vcx).is_some_and(|s: String| s.starts_with("Debug refused")));
+    vcx.simulate_mouse_down(row.center(), gpui::MouseButton::Right, Modifiers::default());
+    vcx.run_until_parked();
+    view.update(
+        vcx,
+        |state: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
+            state.tests.message = None;
+        },
+    );
+    click(vcx, "test-menu-run");
+    // The fixture has no real project: the run ends at once with its error.
+    let said: Option<String> = view.read_with(vcx, |s: &ExplorerView, _: &gpui::App| {
+        s.tests.message.clone()
+    });
+    assert!(said.is_some(), "Run ran the test of {}", project.display());
+}

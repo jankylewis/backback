@@ -8,7 +8,9 @@ use std::path::{Path, PathBuf};
 
 #[path = "bb_groups.rs"]
 mod groups;
+mod menu;
 mod spec;
+pub(crate) use menu::{menu as test_menu, TestMenu};
 pub(crate) use spec::open_spec;
 #[cfg(test)]
 mod window_tests;

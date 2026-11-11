@@ -1,18 +1,14 @@
 //! The Apex CLI in IDE mode, as the Apex Testkit extension drives it.
 
-use std::num::NonZeroU32;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use bb_dotnet::{ProjectPath, Sdk};
-use bb_process::OwnedGroup;
-use tokio::io::{AsyncBufReadExt, BufReader, Lines};
-use tokio::process::{Child, ChildStdout};
 
-use super::{assembly_of, build, shadow, Call, Finished, StopFlag, TempDir, Workspace};
+use super::{assembly_of, build, shadow, Call, DebugHost, Finished, StopFlag, TempDir, Workspace};
 use crate::bb_engine::{Deadlines, Selection, TestBackend};
 use crate::model::{Fqn, SpecList};
-use crate::parse::{parse_apex_list, parse_host_pid, ApexList, ApexSettings, CommandLine, HostPid};
+use crate::parse::{parse_apex_list, ApexList, ApexSettings, CommandLine};
 use crate::TestkitError;
 
 #[path = "bb_hint.rs"]
@@ -26,16 +22,6 @@ pub struct ApexBackend {
     sdk: Sdk,
     deadlines: Deadlines,
     stop: Option<StopFlag>,
-}
-
-/// A debug run waiting for a debugger: the test host's process id. The
-/// run and its host are stopped by [`DebugHost::stop`] (or on drop, the run).
-#[derive(Debug)]
-pub struct DebugHost {
-    /// The test host to attach to (`coreclr`, `processId` as a string).
-    pub pid: HostPid,
-    child: Child,
-    group: Option<OwnedGroup>,
 }
 
 impl ApexBackend {
@@ -85,33 +71,7 @@ impl ApexBackend {
         deadline: Duration,
     ) -> Result<DebugHost, TestkitError> {
         let call: Call = self.run_call(project, specs, trx).args(["--debug"]);
-        let mut child: Child = call
-            .command()
-            .stdout(std::process::Stdio::piped())
-            .spawn()
-            .map_err(|source: std::io::Error| TestkitError::Spawn {
-                program: call.name(),
-                source,
-            })?;
-        let mut group: Option<OwnedGroup> = child
-            .id()
-            .and_then(NonZeroU32::new)
-            .map(OwnedGroup::register);
-        let stdout: Option<ChildStdout> = child.stdout.take();
-        let found: Option<HostPid> = match stdout {
-            Some(out) => tokio::time::timeout(deadline, first_pid(BufReader::new(out).lines()))
-                .await
-                .ok()
-                .flatten(),
-            None => None,
-        };
-        if let Some(pid) = found {
-            return Ok(DebugHost { pid, child, group });
-        }
-        drop(group.take());
-        let _reaped: Result<std::io::Result<std::process::ExitStatus>, _> =
-            tokio::time::timeout(Duration::from_secs(2), child.wait()).await;
-        Err(TestkitError::NoHostPid(deadline))
+        DebugHost::start(call.command(), call.name(), deadline).await
     }
 
     fn base(&self, project: &ProjectPath) -> Call {
@@ -144,24 +104,6 @@ impl ApexBackend {
             trx.as_os_str().to_owned(),
             "--no-build".into(),
         ])
-    }
-}
-
-async fn first_pid(mut lines: Lines<BufReader<ChildStdout>>) -> Option<HostPid> {
-    while let Ok(Some(line)) = lines.next_line().await {
-        if let Some(pid) = parse_host_pid(&line) {
-            return Some(pid);
-        }
-    }
-    None
-}
-
-impl DebugHost {
-    /// Stop the run and everything it started, the waiting host included.
-    pub async fn stop(mut self) {
-        drop(self.group.take());
-        let _reaped: Result<std::io::Result<std::process::ExitStatus>, _> =
-            tokio::time::timeout(Duration::from_secs(2), self.child.wait()).await;
     }
 }
 

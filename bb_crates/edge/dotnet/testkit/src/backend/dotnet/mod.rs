@@ -2,6 +2,7 @@
 //! Microsoft.Testing.Platform, read from the project file.
 
 mod bb_vstest;
+pub(super) use bb_vstest::filter as vstest_filter;
 mod mtp;
 pub(super) mod shadow;
 
