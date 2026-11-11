@@ -5,11 +5,10 @@
 
 use std::path::PathBuf;
 
-use bb_dotnet::{ProjectInfo, Solution, SolutionPath};
 use gpui::{AsyncWindowContext, Context, WeakEntity, Window};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-use super::{start, Command, Frame, Note, Start, StepKind, Var};
+use super::{start, startup_project, Command, Frame, Note, Start, StepKind, Var};
 use crate::ExplorerView;
 
 /// A running session.
@@ -74,8 +73,43 @@ pub(crate) fn start_or_continue(
         view.report(&"Debug: the solution has no console (Exe) project to start");
         return;
     };
+    begin(view, (target, None), label, window, cx);
+}
+
+/// Debug one test, as VS Code's Debug Test: its project builds, the test
+/// starts paused, the debugger attaches with every breakpoint, and the test
+/// runs on. Refused while a session runs.
+pub(crate) fn debug_test(
+    view: &mut ExplorerView,
+    project: PathBuf,
+    fqn: bb_testkit::Fqn,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    if let Some(live) = view.debug.live.as_ref() {
+        view.status = Some(format!("{} is already running", live.label));
+        return;
+    }
+    if view.tabs.no_write() {
+        view.report(&"Debug refused: --no-write keeps the solution unchanged (a debug build writes bin/ and obj/)");
+        return;
+    }
+    let label: String = fqn.method().to_owned();
+    let test: Option<(PathBuf, bb_testkit::Fqn)> = Some((view.root.clone(), fqn));
+    begin(view, (project, test), label, window, cx);
+}
+
+/// Start the session thread on `target` and show it in the Debug panel.
+fn begin(
+    view: &mut ExplorerView,
+    (target, test): (PathBuf, Option<(PathBuf, bb_testkit::Fqn)>),
+    label: String,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
     let (commands, notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
         target,
+        test,
         breakpoints: view.debug.breakpoints.all(),
         exceptions: view.debug.exceptions.filters(),
     });
@@ -189,35 +223,6 @@ pub(crate) fn stop(view: &mut ExplorerView) {
     if let Some(live) = view.debug.live.as_ref() {
         live.send(Command::Stop);
     }
-}
-
-/// The console project to debug: the one holding the active file, else the
-/// solution's first (test projects never).
-fn startup_project(view: &ExplorerView) -> Option<(PathBuf, String)> {
-    let solution: PathBuf = crate::intel::bb_worker::find_solution(&view.root)?;
-    let listing: Solution = SolutionPath::new(solution)
-        .and_then(|path: SolutionPath| Solution::load(&path))
-        .ok()?;
-    let apps: Vec<ProjectInfo> = listing
-        .projects
-        .iter()
-        .filter_map(|project: &bb_dotnet::ProjectPath| ProjectInfo::load(project).ok())
-        .filter(|info: &ProjectInfo| info.is_exe && !info.is_test)
-        .collect();
-    let active: Option<PathBuf> = view
-        .tabs
-        .active_tab()
-        .map(|tab: &crate::editor::Tab| tab.path.clone());
-    let pick: &ProjectInfo = apps
-        .iter()
-        .find(|info: &&ProjectInfo| holds(info, active.as_deref()))
-        .or_else(|| apps.first())?;
-    Some((pick.path.as_path().to_path_buf(), pick.name.clone()))
-}
-
-fn holds(info: &ProjectInfo, file: Option<&std::path::Path>) -> bool {
-    let dir: Option<&std::path::Path> = info.path.as_path().parent();
-    matches!((file, dir), (Some(file), Some(dir)) if file.starts_with(dir))
 }
 
 fn pump(mut notes: UnboundedReceiver<Note>, window: &mut Window, cx: &mut Context<ExplorerView>) {

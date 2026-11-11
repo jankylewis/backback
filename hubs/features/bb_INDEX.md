@@ -1,13 +1,13 @@
 # Features hub
 
 Every feature backback ships has one row here, in the same PR that ships it
-(law: `bb_SCHEMA.md`). Entries: 75. Bugs a user met are in `bugs/`; this hub
+(law: `bb_SCHEMA.md`). Entries: 78. Bugs a user met are in `bugs/`; this hub
 lists what the app can do and when it came.
 
 | Shelf | Ids |
 |---|---|
 | `S01.md` | BB-FEAT-001 to 040 |
-| `S02.md` | BB-FEAT-041 to 075 |
+| `S02.md` | BB-FEAT-041 to 078 |
 
 ## How to add a feature
 

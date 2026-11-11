@@ -1,9 +1,10 @@
 //! One spec's row: its verdict, name and time; a click shows its result
-//! and opens its source (BB-BUG-025); ▶ runs it, ■ stops it (BB-BUG-026).
+//! and opens its source (BB-BUG-025); ▶ runs it, ■ stops it (BB-BUG-026);
+//! Debug, or Debug in its right-click menu, debugs it.
 
 use super::super::button;
 use crate::tests_panel::model::ProjectTests;
-use crate::{color, tooltip, ExplorerView};
+use crate::{color, ExplorerView};
 use bb_testkit::{Fqn, Outcome, SpecResult};
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, AnyElement, AsyncWindowContext, Context, WeakEntity, Window};
@@ -68,8 +69,14 @@ pub(super) fn spec_row(
         .cursor_pointer()
         .child(div().text_color(color(ink)).child(icon))
         .child(label)
-        .child(play_or_stop(path, fqn, running, theme, cx))
-        .child(debug_disabled(debug_id, theme))
+        .child(play_or_stop(path.clone(), fqn.clone(), running, theme, cx))
+        .child(debug_button(
+            debug_id,
+            (path.clone(), fqn.clone()),
+            theme,
+            cx,
+        ))
+        .map(|row: gpui::Stateful<gpui::Div>| super::menu::on_right_click(row, (path, fqn), cx))
         .on_click(cx.listener(
             move |view: &mut ExplorerView,
                   _: &gpui::ClickEvent,
@@ -118,15 +125,31 @@ fn play_or_stop(
     ))
 }
 
-fn debug_disabled(id: String, theme: Theme) -> impl IntoElement {
-    div()
-        .id(id)
-        .text_color(color(theme.text_dim))
-        .child("Debug")
-        .tooltip(tooltip::path(
-            String::from("Available once the debugger lands"),
-            theme,
-        ))
+/// Debug: the test runs under the debugger and stops on its breakpoints.
+fn debug_button(
+    id: String,
+    (path, fqn): (PathBuf, Fqn),
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> impl IntoElement {
+    let selector: String = id.clone();
+    div().id(id).debug_selector(move || selector).child(button(
+        "Debug",
+        theme,
+        cx,
+        move |view: &mut ExplorerView,
+              _: &gpui::ClickEvent,
+              window: &mut Window,
+              cx: &mut Context<ExplorerView>| {
+            crate::run::bb_debug::session::control::debug_test(
+                view,
+                path.clone(),
+                fqn.clone(),
+                window,
+                cx,
+            );
+        },
+    ))
 }
 
 /// What a click on a spec's row does: show its result, open its source.

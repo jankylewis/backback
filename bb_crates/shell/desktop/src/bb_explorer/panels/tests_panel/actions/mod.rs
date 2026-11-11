@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 #[path = "bb_backend.rs"]
 mod backend;
+pub(crate) use backend::debug_host;
 mod runner;
 mod scan;
 pub(crate) use runner::{run_category, run_class, run_failed, run_project, run_spec, stop};

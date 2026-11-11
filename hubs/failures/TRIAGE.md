@@ -67,3 +67,4 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-CIP-005 | `OPEN` then the worktree is gone | FIXED | Is cleanup gated on the state value MERGED? |
 | BB-ENV-002 | the machine runs hot during a gate | FIXED | Is `CARGO_BUILD_JOBS` 1 and `--test-threads=1`? Nothing else heavy running? |
 | BB-TG-023 | a gate takes many minutes for a small change | FIXED | `gate.sh --plan`: is the scope right? `--full` only when unsure |
+| BB-LSP-008 | `stopped within one second: Elapsed(())` in the dead-server test | OBSERVED | Is the runner loaded? Rerun it alone; time kill to `Stopped` |

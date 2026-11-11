@@ -2,12 +2,14 @@
 //! assembly path, `dotnet build`, a TRX folder that removes itself.
 
 mod apex;
+mod debug;
 mod dotnet;
 #[path = "bb_process/mod.rs"]
 mod process;
 use dotnet::shadow;
 
-pub use apex::{ApexBackend, DebugHost};
+pub use apex::ApexBackend;
+pub use debug::DebugHost;
 pub use dotnet::DotnetBackend;
 pub use process::StopFlag;
 pub use process::{Call, Finished};

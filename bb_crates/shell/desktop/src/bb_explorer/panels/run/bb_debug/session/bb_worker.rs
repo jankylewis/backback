@@ -52,20 +52,38 @@ pub(super) fn send(notes: &UnboundedSender<Note>, note: Note) {
 async fn serve(start: &Start, commands: UnboundedReceiver<Command>, notes: &UnboundedSender<Note>) {
     send(notes, Note::Building);
     match open(start).await {
-        Ok((session, events)) => {
+        Ok((session, events, host)) => {
             send(notes, Note::CanSetNext(session.can_set_next_statement()));
             send(notes, Note::Running);
             run(&session, events, commands, notes).await;
+            if let Some((host, _folder)) = host {
+                host.stop().await;
+            }
         }
         Err(reason) => send(notes, Note::Failed(reason)),
     }
 }
 
-async fn open(start: &Start) -> Result<(DapSession, Receiver<Event>), String> {
-    let program: PathBuf = bb_dap::target::resolve(&start.target, BUILD)
-        .await
-        .map_err(|error: bb_dap::target::TargetError| error.to_string())?;
-    let cwd: &Path = program.parent().ok_or("the program has no folder")?;
+/// A test's paused host and the folder its run writes to.
+type Host = (bb_testkit::DebugHost, bb_process::OwnedTempDir);
+
+/// Start the adapter on the target: launch the program, or for a test
+/// attach to its paused test host (which then runs on by itself).
+async fn open(start: &Start) -> Result<(DapSession, Receiver<Event>, Option<Host>), String> {
+    let host: Option<Host> = match &start.test {
+        Some((root, fqn)) => {
+            Some(crate::tests_panel::debug_host(root.clone(), &start.target, fqn).await?)
+        }
+        None => None,
+    };
+    let program: Option<PathBuf> = match &host {
+        Some(_) => None,
+        None => Some(
+            bb_dap::target::resolve(&start.target, BUILD)
+                .await
+                .map_err(|error: bb_dap::target::TargetError| error.to_string())?,
+        ),
+    };
     let mut session: DapSession =
         DapSession::spawn(DEADLINE).map_err(|error: bb_dap::DapError| text(&error))?;
     let events: Receiver<Event> = session.take_events().ok_or("no adapter events")?;
@@ -73,10 +91,12 @@ async fn open(start: &Start) -> Result<(DapSession, Receiver<Event>), String> {
         .initialize()
         .await
         .map_err(|error: bb_dap::DapError| text(&error))?;
-    session
-        .launch(&program, &[], cwd, &BTreeMap::new(), true)
-        .await
-        .map_err(|error: bb_dap::DapError| text(&error))?;
+    match (&host, &program) {
+        (Some((paused, _)), _) => session.attach(paused.pid.get()).await,
+        (None, Some(program)) => launch(&session, program).await,
+        (None, None) => Err(bb_dap::DapError::Closed),
+    }
+    .map_err(|error: bb_dap::DapError| text(&error))?;
     for (path, lines) in &start.breakpoints {
         set_breakpoints(&session, path, lines)
             .await
@@ -90,7 +110,15 @@ async fn open(start: &Start) -> Result<(DapSession, Receiver<Event>), String> {
         .configuration_done()
         .await
         .map_err(|error: bb_dap::DapError| text(&error))?;
-    Ok((session, events))
+    Ok((session, events, host))
+}
+
+/// Launch the built `program` under the adapter, in its own folder.
+async fn launch(session: &DapSession, program: &Path) -> Result<(), bb_dap::DapError> {
+    let cwd: &Path = program.parent().unwrap_or(program);
+    session
+        .launch(program, &[], cwd, &BTreeMap::new(), true)
+        .await
 }
 
 fn text(error: &bb_dap::DapError) -> String {

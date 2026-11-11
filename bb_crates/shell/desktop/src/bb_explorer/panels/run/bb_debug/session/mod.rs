@@ -9,6 +9,8 @@ mod tests;
 
 use std::path::PathBuf;
 
+use bb_dotnet::{ProjectInfo, Solution, SolutionPath};
+
 pub(crate) use bb_worker::start;
 
 /// UI to session.
@@ -94,6 +96,38 @@ pub(crate) enum Note {
 /// adapter's filter ids).
 pub(crate) struct Start {
     pub(crate) target: PathBuf,
+    /// Debug one test of the test project `target`: (workspace root, test).
+    /// The session then attaches to the paused test host.
+    pub(crate) test: Option<(PathBuf, bb_testkit::Fqn)>,
     pub(crate) breakpoints: Vec<(PathBuf, Vec<usize>)>,
     pub(crate) exceptions: Vec<String>,
+}
+
+/// The console project to debug: the one holding the active file, else the
+/// solution's first (test projects never).
+pub(super) fn startup_project(view: &crate::ExplorerView) -> Option<(PathBuf, String)> {
+    let solution: PathBuf = crate::intel::bb_worker::find_solution(&view.root)?;
+    let listing: Solution = SolutionPath::new(solution)
+        .and_then(|path: SolutionPath| Solution::load(&path))
+        .ok()?;
+    let apps: Vec<ProjectInfo> = listing
+        .projects
+        .iter()
+        .filter_map(|project: &bb_dotnet::ProjectPath| ProjectInfo::load(project).ok())
+        .filter(|info: &ProjectInfo| info.is_exe && !info.is_test)
+        .collect();
+    let active: Option<PathBuf> = view
+        .tabs
+        .active_tab()
+        .map(|tab: &crate::editor::Tab| tab.path.clone());
+    let pick: &ProjectInfo = apps
+        .iter()
+        .find(|info: &&ProjectInfo| holds(info, active.as_deref()))
+        .or_else(|| apps.first())?;
+    Some((pick.path.as_path().to_path_buf(), pick.name.clone()))
+}
+
+fn holds(info: &ProjectInfo, file: Option<&std::path::Path>) -> bool {
+    let dir: Option<&std::path::Path> = info.path.as_path().parent();
+    matches!((file, dir), (Some(file), Some(dir)) if file.starts_with(dir))
 }

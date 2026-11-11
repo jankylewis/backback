@@ -63,3 +63,4 @@
 | BB-BUG-061 | `uses_apex` needs the workspace's `apexTestkit.*` keys; failed list names IDE mode | FIXED | unit + testkit tests, red first | `C2/D5/S16/BB_BUG_061_AN_APEX_PROJECT_LISTED_THROUGH_AN_APEX_CLI_THAT_CANNOT_LIST.md` |
 | BB-BUG-062 | Tab bar scrolls sideways; the active tab scrolls into sight on change | FIXED | window test, red first; 3 mutations red | `C2/D5/S16/BB_BUG_062_THE_TAB_BAR_HID_TABS_PAST_ITS_EDGE.md` |
 | BB-BUG-063 | A drag selects only when its press began on the text (`Lines::text_press`) | FIXED | window test, red first; mutation red | `C2/D5/S16/BB_BUG_063_DRAGGING_THE_PANE_DIVIDER_SELECTED_THE_TEXT_UNDER_IT.md` |
+| BB-BUG-064 | Debug a test: paused test host, netcoredbg attaches with the breakpoints | FIXED | real session test + window test | `C2/D5/S16/BB_BUG_064_DEBUG_ON_A_TEST_WAS_A_PLACEHOLDER_THAT_NEVER_DEBUGGED.md` |
