@@ -15,6 +15,7 @@ pub(crate) fn press(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
+    view.lines.text_press = true;
     let x: f32 = f32::from(event.position.x);
     super::super::pointer_at(view, row, x, event.modifiers.shift, window, cx);
     if let Some(document) = view.tabs.active_mut() {

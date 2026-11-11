@@ -133,3 +133,68 @@ fn selected_text_is_plain_text_on_the_selection_colour() {
         }
     }
 }
+
+/// The selection of the tab on `name`.
+fn selection_of(rig: &Rig, vcx: &mut VisualTestContext, name: &str) -> Option<(usize, usize)> {
+    rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        let tab: &crate::editor::Tab = v
+            .tabs
+            .items()
+            .iter()
+            .find(|tab: &&crate::editor::Tab| tab.path.ends_with(name))
+            .unwrap();
+        tab.document
+            .selection()
+            .map(|(a, b): (bb_text::CharIdx, bb_text::CharIdx)| (a.raw(), b.raw()))
+    })
+}
+
+/// BB-BUG-063: dragging the line between two panes across the left pane's
+/// text moved the line AND selected that text (a key then replaced it).
+/// Only a press that began on the text may select by dragging.
+#[gpui::test]
+fn dragging_the_pane_divider_over_text_selects_nothing(cx: &mut TestAppContext) {
+    let line: String = format!("    <KEY>{}</KEY>\n", "value ".repeat(60));
+    let text: String = line.repeat(80);
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        crate::intel::glue::window_tests::bb_rig::rig_with(cx, false, true, &text);
+    vcx.update(|_: &mut gpui::Window, cx: &mut gpui::App| crate::launch::bind_keys(cx));
+    let path: std::path::PathBuf = rig.root.join("B.cs");
+    std::fs::write(&path, "class B {}\n").unwrap();
+    rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            v.tabs.open(&path).unwrap();
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    vcx.simulate_keystrokes("ctrl-cmd-right");
+    // As in the report: the left pane has the focus, its cursor on a line.
+    let left: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds("pane-0").unwrap();
+    let inside: gpui::Point<gpui::Pixels> = left.center();
+    vcx.simulate_click(inside, Modifiers::default());
+    assert_eq!(
+        selection_of(&rig, vcx, "A.cs"),
+        None,
+        "a click selects nothing"
+    );
+    for by in [-120.0, 80.0] {
+        drag(
+            vcx,
+            "pane-divider-0",
+            gpui::point(gpui::px(by), gpui::px(0.0)),
+        );
+        assert_eq!(selection_of(&rig, vcx, "A.cs"), None, "drag by {by}");
+    }
+    let start: gpui::Point<gpui::Pixels> = vcx.debug_bounds("editor-text-2").unwrap().origin;
+    let from: gpui::Point<gpui::Pixels> = start + gpui::point(gpui::px(4.0), gpui::px(4.0));
+    vcx.simulate_mouse_down(from, MouseButton::Left, Modifiers::default());
+    let to: gpui::Point<gpui::Pixels> = from + gpui::point(gpui::px(60.0), gpui::px(0.0));
+    vcx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    vcx.simulate_mouse_up(to, MouseButton::Left, Modifiers::default());
+    vcx.run_until_parked();
+    let shown: bool =
+        selection_of(&rig, vcx, "A.cs").is_some() || selection_of(&rig, vcx, "B.cs").is_some();
+    assert!(shown, "a drag that starts on the text still selects");
+}

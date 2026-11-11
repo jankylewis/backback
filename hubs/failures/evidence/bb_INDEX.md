@@ -59,3 +59,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-005 | FIXED | Local run: `the search did not end` after 60 s, then 4 passed in 0.55 s with the read moved before Enter |
 | BB-GAT-006 | FIXED | Stale gate: `fmt rc=0`, `clippy rc=101` after mid-run edits; the rerun on the finished tree is in PR #103 |
 | BB-ENV-002 | FIXED | Headmate report 2026-11-11 mid-gate; 1-worker gates green at 578 and 581 passed |
+| BB-BUG-063 | FIXED | Headmate screen video 2026-11-11 (not kept: it shows credentials); window test red on master with a 37-char selection |

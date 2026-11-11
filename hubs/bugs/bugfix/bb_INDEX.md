@@ -62,3 +62,4 @@
 | BB-BUG-060 | `reveal_again` on a tab click and on the editor taking focus back | FIXED | window test, red first | `C1/D4/S15/BB_BUG_060_THE_TREE_DID_NOT_COME_BACK_TO_THE_FILE.md` |
 | BB-BUG-061 | `uses_apex` needs the workspace's `apexTestkit.*` keys; failed list names IDE mode | FIXED | unit + testkit tests, red first | `C2/D5/S16/BB_BUG_061_AN_APEX_PROJECT_LISTED_THROUGH_AN_APEX_CLI_THAT_CANNOT_LIST.md` |
 | BB-BUG-062 | Tab bar scrolls sideways; the active tab scrolls into sight on change | FIXED | window test, red first; 3 mutations red | `C2/D5/S16/BB_BUG_062_THE_TAB_BAR_HID_TABS_PAST_ITS_EDGE.md` |
+| BB-BUG-063 | A drag selects only when its press began on the text (`Lines::text_press`) | FIXED | window test, red first; mutation red | `C2/D5/S16/BB_BUG_063_DRAGGING_THE_PANE_DIVIDER_SELECTED_THE_TEXT_UNDER_IT.md` |

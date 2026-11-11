@@ -47,6 +47,9 @@ pub(crate) struct Lines {
     pub(crate) terminal_px: f32,
     /// A scroll bar's thumb held (BB-BUG-051).
     pub(crate) bar: Option<super::super::bb_scrollbar::BarDrag>,
+    /// The held press began on the editor's text: only then does a drag
+    /// select (BB-BUG-063).
+    pub(crate) text_press: bool,
 }
 
 impl Default for Lines {
@@ -58,6 +61,7 @@ impl Default for Lines {
             widths: [0.0; MAX_GROUPS],
             bottom_px: 200.0,
             terminal_px: 240.0,
+            text_press: false,
             bar: None,
         }
     }
@@ -197,6 +201,7 @@ impl ExplorerView {
     ) {
         self.lines.dragging = None;
         self.lines.bar = None;
+        self.lines.text_press = false;
     }
 }
 
