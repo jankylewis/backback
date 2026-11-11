@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 52 — FIXED 48, OBSERVED 3, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 53 — FIXED 49, OBSERVED 3, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -56,3 +56,4 @@ One file per failure mechanism. This hub owns the id. Entries: 52 — FIXED 48, 
 | BB-BLD-003 | A merged fix was reported before it was installed | FIXED | yes | yes | BB-TG-019 | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |
 | BB-GAT-005 | A test waited for a search it had not started | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
 | BB-GAT-006 | A worktree was edited while its gate ran | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
+| BB-ENV-002 | A gate on every core overheated the Mac | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |

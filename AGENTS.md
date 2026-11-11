@@ -15,12 +15,14 @@ Fleet: `backback` — matemaster `backback_mm`, mates `backback_1` (cca),
 - Off limits (read-only at most): `MbTx/`, `Apex/`, `dna-nemocatalog-tx/`, `msi/`,
   `mm/`, `swqc/`. Readback on those solutions is READ-ONLY.
 - Claim before writing a shared tree: `agentfarm claim <label> <path>`.
-- One local browser runner at a time; at most 2 test workers per seat.
+- One local browser runner at a time; 1 build job and 1 test thread on the
+  headmate's Mac (`gate.sh` sets both): more overheated it (2026-11-11).
 - Scope: pure C# IDE, lightweight, minimal features; build only what the
   headmate asks for; propose extras, never build them unasked.
 - Hubs (critical): every bug report, red gate, CI failure, flake or false
   claim gets its entries in `hubs/` (schema `hubs/bb_SCHEMA.md`) in
-  the same PR as the fix. Read `hubs/TRIAGE.md` and `hubs/bugs/TRIAGE.md` before any diagnosis.
+  the same PR as the fix; every feature gets its `hubs/features/` row in
+  the PR that ships it. Read `hubs/failures/TRIAGE.md` and `hubs/bugs/TRIAGE.md` before any diagnosis.
 - Never write Claude/Codex auto-memory; handoff state goes to
   `docs/plan/PROGRESS.md` or the external ctx hub.
 

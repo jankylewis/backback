@@ -1,7 +1,7 @@
 # Triage — read first
 
 One row per failure reason and tool gap; grep the signature in your log.
-Bugs a user met in the app have their own table: `bugs/TRIAGE.md`.
+Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 
 | Id | Signature | Status | First check |
 |---|---|---|---|
@@ -27,6 +27,8 @@ Bugs a user met in the app have their own table: `bugs/TRIAGE.md`.
 | BB-GAT-002 | `fixture build failed` ... `being used by another process` | FIXED | Do parallel test processes share a fixture folder? Use `OwnedTempDir` |
 | BB-GAT-003 | `discovered=0 loading=1` in a native window test | FIXED | Does the test sleep a fixed time? Use `wait:tests` |
 | BB-GAT-004 | a menu test counts one item too few | FIXED | Did a menu or key change skip the launch tests? Update the count and name the item |
+| BB-GAT-005 | `the search did not end` in a window test | FIXED | Does the test wait for a state only a later step starts? Read it before that step |
+| BB-GAT-006 | `clippy rc=101` on a tree whose tests passed | FIXED | Was the worktree edited while its gate ran? Rerun on the still tree |
 | BB-DAP-001 | `CLR/System.InvalidOperationException: Exception thrown:` | FIXED | Is the headline read from `details`, not the top-level id and description? |
 | BB-LSP-006 | `restored  : false after 120` | FIXED | Is `Restore complete` above the last `Successfully completed load` in the run log? |
 | BB-ENV-001 | `PATH=/usr/bin:/bin:/usr/sbin:/sbin` in `ps eww` of the app | FIXED | Started by launchd? The login shell's PATH must be adopted and installed tools found in their own folders |
@@ -60,5 +62,7 @@ Bugs a user met in the app have their own table: `bugs/TRIAGE.md`.
 | BB-TG-019 | `a runner press outside a popup did nothing` | OBSERVED | Did the readback window draw a frame after the popup opened? |
 | BB-TG-020 | `where is X defined / what does this crate do` | FIXED | Run `bb map` / `bb map --find X` before opening files |
 | BB-TG-021 | `test memory peak above the runner's RAM` | FIXED | Is it a sum of RSS? Read `vm_stat` in-use pages and swap |
+| BB-TG-022 | `FolderEntries` or `Marker` on `.claude/skills` or `.agents/skills` | FIXED | Is the walk skipping folder rules for the root agent trees? |
 | BB-CIP-004 | `not acquired by Runner of type hosted` | FIXED | Rerun it; merge only when every `--json bucket` is `pass` |
 | BB-CIP-005 | `OPEN` then the worktree is gone | FIXED | Is cleanup gated on the state value MERGED? |
+| BB-ENV-002 | the machine runs hot during a gate | FIXED | Is `CARGO_BUILD_JOBS` 1 and `--test-threads=1`? Nothing else heavy running? |

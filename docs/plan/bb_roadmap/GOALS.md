@@ -1,7 +1,7 @@
 # Goals board: every BBEOD and its state
 
 The public copy of the fleet's goals board (TaskHub). Updated with each merge.
-Last update: 2026-11-03. Bugs and failures: `hubs/TRIAGE.md`. Scope law: pure C# IDE, minimal features (`AGENTS.md`).
+Last update: 2026-11-03. Bugs and failures: `hubs/failures/TRIAGE.md`. Scope law: pure C# IDE, minimal features (`AGENTS.md`).
 
 ## Status
 

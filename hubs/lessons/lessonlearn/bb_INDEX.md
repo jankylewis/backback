@@ -46,3 +46,4 @@
 | BB-BLD-003 | FIXED | Merged is not installed: name the running build | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |
 | BB-GAT-005 | FIXED | Wait only for what a step already started | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
 | BB-GAT-006 | FIXED | Never edit a worktree while its gate runs | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
+| BB-ENV-002 | FIXED | Heavy jobs on the headmate's Mac run with one worker | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
