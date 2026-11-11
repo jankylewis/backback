@@ -9,7 +9,7 @@ metadata:
 
 Take a backback change from a green worktree to merged, cleaned up and installed, with the version checked.
 
-- Audit, then the full gate in the background from the worktree: `bash docs/release/scripts/gate.sh`; quote its counts (suites, passed, failed). Red: fix, record the failure in hubs (cca-backback-hubs), gate again. Gate again after every rebase.
+- Audit, then the gate in the background from the worktree: `bash docs/release/scripts/gate.sh` (the changed crates and their users; `--plan` shows the scope, `--full` when unsure; CI runs the full suite); quote its counts (suites, passed, failed). Red: fix, record the failure in hubs (cca-backback-hubs), gate again. Gate again after every rebase.
 - Commit as `jankylewis <jankylewis.se@gmail.com>` with the attribution line; push; `gh pr create -R jankylewis/backback --base master --body-file <file>` with GH_TOKEN from `gh auth token --user jankylewis`.
 - Wait for CI in the background: merge only when `gh pr checks <n> --json bucket` is all `pass` with at least one check. A run 'not acquired by Runner' gets a rerun, never a merge over it.
 - Merge with `gh pr merge <n> --merge`, then clean up only after MERGED: `st=$(gh pr view N --json state -q .state); [ "$st" = MERGED ] && git worktree remove <path> && git branch -d <branch>`, delete the remote branch, `git pull --ff-only` the primary, empty the scratch files and remove `$TMPDIR/bb_gate.*` (guard every rm path with `${VAR:?}`).

@@ -24,3 +24,4 @@
 | BB-TG-020 | Agents read whole files to find one item; no code map | FIXED | none | `bb map` (index, outline, `--find`), read from source each call | `D2/S05/BB_TG_020_AGENTS_READ_WHOLE_FILES_TO_FIND_ONE_ITEM.md` |
 | BB-TG-021 | A sum of RSS overstated CI memory | FIXED | none | `vm_stat` in-use pages + swap in `ci_tests.sh` | `D2/S06/BB_TG_021_A_SUM_OF_RSS_OVERSTATED_CI_MEMORY.md` |
 | BB-TG-022 | The audit failed the tool-fixed `.claude/skills` and `.agents/skills` layouts | FIXED | none | `AGENT_TREES` skips folder rules there; line caps stay | `D2/S06/BB_TG_022_THE_AUDIT_HAD_NO_RULE_FOR_AGENT_SKILL_TREES.md` |
+| BB-TG-023 | The gate ran the whole workspace for a one-crate change | FIXED | none | `gate.sh` checks the changed crates and their users; `--full` for all | `D2/S06/BB_TG_023_THE_GATE_RAN_THE_WHOLE_WORKSPACE_FOR_A_ONE_CRATE_CHANGE.md` |
