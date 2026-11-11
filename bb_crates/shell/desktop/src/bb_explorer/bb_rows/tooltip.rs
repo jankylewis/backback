@@ -11,6 +11,7 @@ struct PathTooltip {
 impl Render for PathTooltip {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
         div()
+            .debug_selector(|| String::from("path-tooltip"))
             .p_2()
             .bg(color(self.theme.overlay))
             .border_1()

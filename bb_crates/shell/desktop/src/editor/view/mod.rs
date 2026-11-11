@@ -6,7 +6,7 @@ mod pane;
 pub(crate) mod wrap;
 #[cfg(test)]
 pub(crate) use pane::lines_tests as pane_tests;
-mod chrome;
+pub(crate) mod chrome;
 use super::bb_tabs::Tab;
 use super::Tabs;
 use crate::intel::view::marks::{line_marks, Mark};
@@ -165,6 +165,7 @@ pub(super) fn editor_line(
         overlay,
         caret,
         scroll_x,
+        braces: chrome::braces::quads(tab, &part, (scroll_x, view.theme), window, &fonts),
     };
     let shown: Option<(bb_text::CharIdx, bb_text::CharIdx)> = super::link::shown(view, &tab.path);
     let runs: Vec<bb_line::Run> = styled_part(tab, line, part.columns.clone(), &marks, shown);

@@ -81,6 +81,25 @@ impl Document {
         Ok(())
     }
 
+    /// Save As: write the text to `path` and keep it as the document's file
+    /// (a new file from Cmd+N has none). On an error the old path stays.
+    ///
+    /// # Errors
+    /// As [`Document::save`].
+    pub fn save_as(&mut self, path: &Path) -> Result<(), DocumentError> {
+        if self.write_locked {
+            return Err(DocumentError::WriteLocked(path.to_path_buf()));
+        }
+        let old: Option<PathBuf> = self.path.replace(path.to_path_buf());
+        let seen: DiskGuard = std::mem::take(&mut self.disk);
+        let saved: Result<(), DocumentError> = self.save();
+        if saved.is_err() {
+            self.path = old;
+            self.disk = seen;
+        }
+        saved
+    }
+
     fn save_existing(&self, target: &Path, metadata: &fs::Metadata) -> Result<(), DocumentError> {
         let file: fs::File = fs::OpenOptions::new()
             .write(true)

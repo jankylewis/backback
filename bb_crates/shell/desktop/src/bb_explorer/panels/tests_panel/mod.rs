@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 use bb_dotnet::{Capability, ProjectInfo, ProjectPath};
 use bb_testkit::{ApexSettings, Fqn, Selection, SpecResult, StopFlag};
 
+pub(crate) use actions::find;
 pub(crate) use actions::open;
 pub(crate) use actions::toggle_project;
 pub(crate) use actions::{run_category, run_class, run_failed, run_project, run_spec, stop};
@@ -71,6 +72,8 @@ pub(crate) struct TestsState {
     pub(crate) scan: Scan,
     /// Folded groups, per project.
     pub(crate) collapsed: BTreeSet<(PathBuf, Group)>,
+    /// The filter's search over projects not listed yet.
+    pub(crate) search: find::Search,
 }
 
 impl TestsState {
@@ -94,6 +97,7 @@ impl TestsState {
             output_open: false,
             scan: Scan::NotStarted,
             collapsed: BTreeSet::new(),
+            search: find::Search::default(),
         }
     }
 }

@@ -5,7 +5,7 @@ mod backend;
 mod runner;
 mod scan;
 pub(crate) use runner::{run_category, run_class, run_failed, run_project, run_spec, stop};
-pub(crate) use scan::scan;
+pub(crate) use scan::{find, scan};
 
 use bb_dotnet::ProjectPath;
 use bb_testkit::{
@@ -90,7 +90,20 @@ pub(crate) fn toggle_project(
         cx.notify();
         return;
     }
-    project.loading = true;
+    start_list(view, path, window, cx);
+}
+
+/// List `path`'s tests in the background; when the list ends, the filter's
+/// search lists its next project.
+fn start_list(
+    view: &mut ExplorerView,
+    path: PathBuf,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    if let Some(project) = view.tests.model.project_mut(&path) {
+        project.loading = true;
+    }
     let root: PathBuf = view.root.clone();
     let request: PathBuf = path.clone();
     let may_build: bool = !view.tabs.no_write();
@@ -115,8 +128,9 @@ pub(crate) fn toggle_project(
                     });
             view.update_in(
                 cx,
-                |view: &mut ExplorerView, _: &mut Window, cx: &mut Context<ExplorerView>| {
+                |view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>| {
                     apply_list(view, &path, result, cx);
+                    find::list_next(view, window, cx);
                 },
             )
             .ok();

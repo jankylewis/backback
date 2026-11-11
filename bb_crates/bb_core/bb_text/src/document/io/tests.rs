@@ -69,3 +69,30 @@ fn a_clean_buffer_takes_an_outside_change_and_a_dirty_one_keeps_its_text() {
     );
     assert!(doc.text().starts_with('y'));
 }
+
+/// Cmd+N's new file: no path, so a plain save refuses; Save As writes it at
+/// the chosen path, which later saves keep. A locked document never writes.
+#[test]
+fn a_new_file_saves_only_as_a_chosen_path() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    let file: PathBuf = dir.path().join("New.cs");
+    let mut doc: Document = Document::from_text("", None);
+    doc.insert("class N {}").unwrap();
+    assert!(matches!(doc.save(), Err(DocumentError::NoPath)));
+    doc.save_as(&file).unwrap();
+    assert_eq!(fs::read_to_string(&file).unwrap(), "class N {}");
+    assert_eq!(doc.path(), Some(file.as_path()));
+    assert!(!doc.is_dirty());
+    doc.insert("x").unwrap();
+    doc.save().unwrap();
+    assert_eq!(fs::read_to_string(&file).unwrap(), "class N {}x");
+    let mut locked: Document = Document::from_text("y", None);
+    locked.lock_writes();
+    let other: PathBuf = dir.path().join("Other.cs");
+    assert!(matches!(
+        locked.save_as(&other),
+        Err(DocumentError::WriteLocked(_))
+    ));
+    assert!(!other.exists());
+    assert_eq!(locked.path(), None, "a refused Save As keeps no path");
+}

@@ -1,4 +1,4 @@
-mod bb_tabs;
+pub(crate) mod bb_tabs;
 mod input;
 mod prompt;
 mod view;
@@ -6,6 +6,7 @@ mod view;
 #[cfg(test)]
 pub(crate) use view::pane_tests;
 
+pub(crate) use bb_tabs::tab::untitled::{on_new_file, NewFile};
 pub(crate) use bb_tabs::{
     apply_tab_menu, on_tab_actions, tab_bindings, tab_menu_item, TabMenuItem,
 };

@@ -77,9 +77,9 @@ pub(super) fn spec_rows(
 ) -> Vec<AnyElement> {
     let mut rows: Vec<AnyElement> = Vec::new();
     let mut last: Last = Last::default();
-    let filter: String = view.tests.filter.to_ascii_lowercase();
+    let filter: String = crate::tests_panel::find::lowered(&view.tests.filter);
     for (fqn, result) in &project.specs {
-        if !filter.is_empty() && !fqn.as_str().to_ascii_lowercase().contains(&filter) {
+        if !crate::tests_panel::find::holds(fqn, &filter) {
             continue;
         }
         if !heads(view, (path, fqn), &mut last, (theme, cx), &mut rows) {

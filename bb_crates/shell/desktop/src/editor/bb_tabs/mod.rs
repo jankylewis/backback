@@ -4,7 +4,7 @@ use bb_text::{Document, DocumentError};
 
 mod bar;
 mod model;
-mod tab;
+pub(crate) mod tab;
 
 pub(crate) use bar::{
     apply as apply_tab_menu, bindings as tab_bindings, item as tab_menu_item, Item as TabMenuItem,

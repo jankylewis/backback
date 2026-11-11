@@ -1,3 +1,11 @@
+//! What the Tests panel knows before any list: the test projects and the
+//! run settings under the root, and the filter's search over their sources.
+
+#[path = "bb_search.rs"]
+pub(crate) mod find;
+#[cfg(test)]
+mod tests;
+
 use bb_dotnet::{
     Capability, ProjectError, ProjectInfo, ProjectPath, Solution, SolutionError, SolutionPath,
 };

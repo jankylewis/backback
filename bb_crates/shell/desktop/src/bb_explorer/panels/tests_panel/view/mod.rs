@@ -72,13 +72,29 @@ fn project_rows(
     rows
 }
 
+/// The filter row: its text (with a caret while keys go to it) and what the
+/// search over the projects not listed yet is doing.
 fn filter(view: &ExplorerView, theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {
+    let caret: &str = if view.tests.input == super::Input::Filter {
+        "▌"
+    } else {
+        ""
+    };
     div()
         .id("test-filter")
+        .debug_selector(|| String::from("test-filter"))
         .px_2()
         .min_h(px(28.0))
+        .flex()
+        .gap_2()
         .bg(color(theme.overlay))
-        .child(format!("Filter: {}", view.tests.filter))
+        .child(format!("Filter: {}{caret}", view.tests.filter))
+        .children(super::find::hint(view).map(|text: &str| {
+            div()
+                .debug_selector(|| String::from("test-filter-hint"))
+                .text_color(color(theme.text_dim))
+                .child(text)
+        }))
         .on_click(cx.listener(
             |view: &mut ExplorerView,
              _: &gpui::ClickEvent,

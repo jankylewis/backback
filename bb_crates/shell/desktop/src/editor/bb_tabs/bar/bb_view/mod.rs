@@ -12,7 +12,7 @@ use gpui::{div, prelude::*, px, Context, IntoElement, MouseButton, Render, Windo
 
 use super::super::{Group, Tab, Tabs, MAX_GROUPS};
 use super::{menu, TabMenu};
-use crate::{color, ExplorerView};
+use crate::{color, tooltip, ExplorerView};
 
 /// Each group's bar scroll, and the tab it last brought into sight.
 #[derive(Default)]
@@ -61,7 +61,7 @@ impl Render for DragGhost {
 pub(crate) fn tab_bar(
     tabs: &Tabs,
     side: Group,
-    theme: Theme,
+    (theme, root): (Theme, &std::path::Path),
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
     let loading: &[std::path::PathBuf] = if side == tabs.focused() {
@@ -86,7 +86,11 @@ pub(crate) fn tab_bar(
         .track_scroll(&tabs.bars.scroll(side, active))
         .bg(color(theme.surface))
         .children(tabs.group(side).map(|(index, tab): (usize, &Tab)| {
-            tab_item(index, tab, tabs.active_of(side) == Some(index), theme, cx)
+            let look: (bool, String) = (
+                tabs.active_of(side) == Some(index),
+                shown_path(root, &tab.path),
+            );
+            tab_item(index, tab, look, theme, cx)
         }))
         .children(loading.iter().map(|path: &std::path::PathBuf| {
             div()
@@ -107,10 +111,22 @@ pub(super) fn file_name(path: &std::path::Path) -> String {
     )
 }
 
+/// What a tab's hover shows: the file's path from the workspace folder
+/// down (`MbTx/Specs/A.cs`); the whole path for a file outside it.
+pub(crate) fn shown_path(root: &std::path::Path, path: &std::path::Path) -> String {
+    match (path.strip_prefix(root), root.file_name()) {
+        (Ok(inside), Some(name)) => std::path::Path::new(name)
+            .join(inside)
+            .display()
+            .to_string(),
+        (Ok(_), None) | (Err(_), _) => path.display().to_string(),
+    }
+}
+
 fn tab_item(
     index: usize,
     tab: &Tab,
-    active: bool,
+    (active, path): (bool, String),
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> impl IntoElement {
@@ -152,20 +168,21 @@ fn tab_item(
                 },
             ),
         )
-        .map(|item: gpui::Stateful<gpui::Div>| draggable(item, index, name.clone(), theme))
+        .map(|item: gpui::Stateful<gpui::Div>| draggable(item, index, (name.clone(), path), theme))
         .child(div().text_color(color(theme.icon_csharp)).child("C# "))
         .child(format!("{name}{dirty}"))
         .child(corner(index, tab.pinned, cx))
 }
 
 /// A tab drags to the other group; a ghost of its name follows the pointer.
+/// A hover shows `path`.
 fn draggable(
     item: gpui::Stateful<gpui::Div>,
     index: usize,
-    name: String,
+    (name, path): (String, String),
     theme: Theme,
 ) -> gpui::Stateful<gpui::Div> {
-    item.on_drag(
+    item.tooltip(tooltip::path(path, theme)).on_drag(
         DraggedTab { index, name, theme },
         |dragged: &DraggedTab, _: gpui::Point<gpui::Pixels>, _: &mut Window, cx: &mut gpui::App| {
             cx.new(|_: &mut Context<DragGhost>| DragGhost(dragged.clone()))

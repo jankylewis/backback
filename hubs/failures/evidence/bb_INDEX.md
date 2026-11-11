@@ -56,3 +56,5 @@ Capture next time: the build time of the binary that was read back.
 | BB-UIX-009 | FIXED | The BB-BUG-018 sweep above |
 | BB-BUG-061 | FIXED | Reproduced outside the app: the pinned `apex` tool on a listing stub printed `dotnet test <stub> ... --no-build` then MSB4057; `apex --help` lists no `--list`, `--json` or `--specs` (bugfacing entry) |
 | BB-BUG-062 | FIXED | Window test `the_active_tab_scrolls_into_sight_and_the_wheel_brings_the_first_back`: red on master (active last tab out of sight), green after; headmate screenshot 2026-11-10 |
+| BB-GAT-005 | FIXED | Local run: `the search did not end` after 60 s, then 4 passed in 0.55 s with the read moved before Enter |
+| BB-GAT-006 | FIXED | Stale gate: `fmt rc=0`, `clippy rc=101` after mid-run edits; the rerun on the finished tree is in PR #103 |
