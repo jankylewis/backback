@@ -217,9 +217,21 @@ fn mouse_move(
     cx: &mut Context<ExplorerView>,
 ) {
     if event.dragging() {
-        super::super::input::pointer_at(view, index, f32::from(event.position.x), true, window, cx);
+        // A drag that began on a divider, a scroll bar or a tab is not a
+        // text selection (BB-BUG-063).
+        if view.lines.text_press {
+            super::super::input::pointer_at(
+                view,
+                index,
+                f32::from(event.position.x),
+                true,
+                window,
+                cx,
+            );
+        }
         return;
     }
+    view.lines.text_press = false;
     let x: f32 = f32::from(event.position.x);
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
     let at: Option<bb_text::CharIdx> =
