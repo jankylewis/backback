@@ -10,6 +10,6 @@ mod walk;
 #[cfg(test)]
 mod tests;
 
-pub use bb_query::{Query, SearchError};
+pub use bb_query::{Options, Query, SearchError};
 pub use filter::Filter;
 pub use walk::{files, search, search_in, Found, Hit};

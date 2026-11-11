@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 
-use crate::{search, Found, Hit, Query, SearchError};
+use crate::{search, Found, Hit, Options, Query, SearchError};
 
 fn tree(files: &[(&str, &str)]) -> tempfile::TempDir {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
@@ -177,4 +177,42 @@ fn a_folder_and_files_globs_narrow_the_search() {
         crate::Filter::parse("Core/[a"),
         Err(SearchError::BadGlob(_))
     ));
+}
+
+fn run_with(root: &Path, query: &str, options: Options) -> Vec<String> {
+    let stop: AtomicBool = AtomicBool::new(false);
+    let parsed: Query = Query::with(query, options).unwrap();
+    names(&search(root, &parsed, 2_000, &stop), root)
+}
+
+/// Rider's Cc, W and .* toggles.
+#[test]
+fn the_case_word_and_regex_toggles_narrow_as_rider_does() {
+    let dir: tempfile::TempDir = tree(&[("A.cs", "greet\nGreet\ngreeter\na.b\naxb\n")]);
+    let root: &Path = dir.path();
+    let off: Options = Options::default();
+    assert_eq!(
+        run_with(root, "greet", off).len(),
+        3,
+        "smart case, parts too"
+    );
+    let case: Options = Options { case: true, ..off };
+    assert_eq!(run_with(root, "greet", case), ["A.cs:0", "A.cs:2"]);
+    let word: Options = Options { word: true, ..off };
+    assert_eq!(run_with(root, "greet", word), ["A.cs:0", "A.cs:1"]);
+    assert_eq!(run_with(root, "a.b", off), ["A.cs:3"], "a dot is a dot");
+    let regex: Options = Options { regex: true, ..off };
+    assert_eq!(run_with(root, "a.b", regex), ["A.cs:3", "A.cs:4"]);
+    assert_eq!(
+        run_with(
+            root,
+            "gr.*r",
+            Options {
+                word: true,
+                ..regex
+            }
+        ),
+        ["A.cs:2"],
+        "toggles combine"
+    );
 }

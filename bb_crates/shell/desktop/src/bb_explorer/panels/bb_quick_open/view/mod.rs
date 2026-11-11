@@ -187,7 +187,7 @@ pub(crate) fn overlay(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Op
     let quick: &QuickOpen = view.quick_open.as_ref()?;
     let theme: bb_ui::bb_theme::Theme = view.theme;
     let rows: Vec<gpui::Stateful<gpui::Div>> = rows(quick, theme, cx);
-    let query: gpui::Div = bb_lines::query_lines(quick, theme);
+    let query: gpui::Div = bb_lines::query_lines(quick, theme, cx);
     let panel: gpui::Stateful<gpui::Div> = div()
         .id("quick-open")
         .track_focus(&view.quick_focus)
