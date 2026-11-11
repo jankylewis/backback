@@ -57,7 +57,8 @@ pub(crate) fn handle_key(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    if intercepted(view, event) {
+    if super::bb_tabs::tab::untitled::save_key(view, event, window, cx) || intercepted(view, event)
+    {
         cx.stop_propagation();
         cx.notify();
         return;

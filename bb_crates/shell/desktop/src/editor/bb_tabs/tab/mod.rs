@@ -7,6 +7,7 @@ use bb_syntax::{test_methods, CSharpSyntax, LiveTree, SyntaxError, TestMethod, T
 use bb_text::{Document, DocumentError, TextChange};
 
 mod bb_window;
+pub(crate) mod untitled;
 use bb_window as window;
 
 #[cfg(test)]
@@ -37,7 +38,14 @@ pub(crate) struct Tab {
     pub(crate) group: super::Group,
     /// Its screen rows while word wrap is on.
     pub(crate) wrap: Option<super::super::view::wrap::Wrapped>,
+    /// The bracket pair at the cursor, kept per (revision, cursor).
+    pub(crate) braces: std::cell::Cell<Option<BraceMemo>>,
 }
+
+type BraceMemo = (
+    (u64, usize),
+    Option<super::super::view::chrome::braces::Pair>,
+);
 
 /// A tab opened or closed; the code intelligence link reads these.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -96,6 +104,7 @@ impl Tab {
             pinned: false,
             group: super::Group(0),
             wrap: None,
+            braces: std::cell::Cell::new(None),
         })
     }
 

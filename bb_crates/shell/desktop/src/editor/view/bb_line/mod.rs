@@ -35,6 +35,8 @@ pub(super) struct LineRow {
     pub(super) caret: Option<f32>,
     /// Pixels the text has moved left (BB-BUG-013).
     pub(super) scroll_x: f32,
+    /// The bracket match's boxes and guide on this row.
+    pub(super) braces: Vec<gpui::Div>,
 }
 
 impl LineRow {
@@ -51,6 +53,7 @@ impl LineRow {
             overlay: None,
             caret: None,
             scroll_x: 0.0,
+            braces: Vec::new(),
         }
     }
 }
@@ -80,6 +83,7 @@ pub(super) fn line_row(
         overlay,
         caret,
         scroll_x,
+        braces,
     }: LineRow = row;
     let fonts: bb_ui::Typography = crate::settings::typography(cx);
     let gutter: gpui::Div = match continued {
@@ -96,6 +100,7 @@ pub(super) fn line_row(
             caret.map(|x: f32| x - scroll_x).filter(|x: &f32| *x >= 0.0),
             |el: gpui::Stateful<gpui::Div>, x: f32| el.child(caret_quad(x, theme, &fonts)),
         )
+        .children(braces)
         .children(overlay)
 }
 
@@ -131,7 +136,7 @@ fn row_frame(
                       event: &gpui::MouseDownEvent,
                       window: &mut Window,
                       cx: &mut Context<ExplorerView>| {
-                    mouse_down(index, view, event, window, cx);
+                    crate::editor::link::press(index, view, event, window, cx);
                 },
             ),
         )
@@ -202,31 +207,6 @@ fn caret_quad(x: f32, theme: Theme, fonts: &bb_ui::Typography) -> impl IntoEleme
         .h(px(height))
         .bg(color(theme.text))
         .debug_selector(|| "editor-caret".to_owned())
-}
-
-fn mouse_down(
-    index: usize,
-    view: &mut ExplorerView,
-    event: &gpui::MouseDownEvent,
-    window: &mut Window,
-    cx: &mut Context<ExplorerView>,
-) {
-    super::super::input::pointer_at(
-        view,
-        index,
-        f32::from(event.position.x),
-        event.modifiers.shift,
-        window,
-        cx,
-    );
-    if event.modifiers.platform {
-        view.intel.link = None;
-        crate::intel::glue::ask_at_cursor(
-            view,
-            crate::intel::bb_worker::protocol::Ask::Definition,
-            None,
-        );
-    }
 }
 
 fn mouse_move(

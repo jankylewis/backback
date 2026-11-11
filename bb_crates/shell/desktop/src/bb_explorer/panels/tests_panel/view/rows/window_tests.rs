@@ -1,5 +1,6 @@
 //! The Tests panel's tree, with no dotnet: specs are merged straight into
-//! the model. BB-BUG-024 (fold), BB-BUG-025 (open), BB-BUG-026 (stop).
+//! the model. BB-BUG-024 (fold), BB-BUG-025 (open), BB-BUG-026 (stop), and
+//! the filter's paste and search over a listed project.
 
 use std::path::{Path, PathBuf};
 
@@ -158,4 +159,38 @@ fn a_running_spec_and_the_toolbar_show_a_stop_that_stops_the_run(cx: &mut TestAp
     );
     click(vcx, "test-stop-Sample.Auth.OutcomeSpec.Passes");
     assert!(flag.stopped(), "the row's stop set the run's stop flag");
+}
+
+fn filter_text(view: &Entity<ExplorerView>, vcx: &mut VisualTestContext) -> String {
+    view.read_with(vcx, |state: &ExplorerView, _: &gpui::App| {
+        state.tests.filter.clone()
+    })
+}
+
+/// A test's name copied in the editor and pasted in the filter: the listed
+/// project that holds it opens and shows only that test, in any letter case.
+#[gpui::test]
+fn a_pasted_name_opens_the_listed_project_on_only_that_test(cx: &mut TestAppContext) {
+    let (_dir, project, view, vcx): Rig<'_> = tree_window(cx);
+    view.update(
+        vcx,
+        |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            state.tests.model.project_mut(&project).unwrap().expanded = false;
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    assert!(!shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Fails"));
+    click(vcx, "test-filter");
+    vcx.write_to_clipboard(gpui::ClipboardItem::new_string(
+        "  outcomespec.FAILS \nsecond line".to_owned(),
+    ));
+    vcx.simulate_keystrokes("cmd-v");
+    vcx.run_until_parked();
+    assert_eq!(filter_text(&view, vcx), "outcomespec.FAILS");
+    assert!(shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Fails"));
+    assert!(!shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Passes"));
+    vcx.simulate_keystrokes("cmd-backspace");
+    assert_eq!(filter_text(&view, vcx), "", "Cmd+Backspace clears it");
+    assert!(shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Passes"));
 }

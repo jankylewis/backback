@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 50 — FIXED 46, OBSERVED 3, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 52 — FIXED 48, OBSERVED 3, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -24,10 +24,10 @@ One file per failure mechanism. This hub owns the id. Entries: 50 — FIXED 46, 
 | BB-CIP-003 | A yanked transitive crate fails `cargo deny` on CI | FIXED | yes | yes | none | `SHIP/CIP/S01/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | A check no runner took was merged over | FIXED | yes | yes | none | `SHIP/CIP/S01/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-CIP-005 | Cleanup ran on an open PR | FIXED | yes | yes | none | `SHIP/CIP/S02/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
-| BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
-| BB-GAT-002 | A fixture folder shared by parallel test processes | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
-| BB-GAT-003 | A fixed sleep was too short on a loaded runner | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
-| BB-GAT-004 | A menu item added without the full suite | FIXED | yes | yes | none | `SHIP/GAT/BB_GAT_004_A_MENU_ITEM_ADDED_WITHOUT_THE_FULL_SUITE.md` |
+| BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/S01/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
+| BB-GAT-002 | A fixture folder shared by parallel test processes | FIXED | yes | yes | none | `SHIP/GAT/S01/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
+| BB-GAT-003 | A fixed sleep was too short on a loaded runner | FIXED | yes | yes | none | `SHIP/GAT/S01/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
+| BB-GAT-004 | A menu item added without the full suite | FIXED | yes | yes | none | `SHIP/GAT/S01/BB_GAT_004_A_MENU_ITEM_ADDED_WITHOUT_THE_FULL_SUITE.md` |
 | BB-DAP-001 | netcoredbg's `exceptionInfo` names the CLR category and the module, not the type and message | FIXED | yes | yes | none | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | A restore that ends during the load is waited for again, 120 s, then `restored : false` | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
 | BB-ENV-001 | An app launched by launchd has no shell PATH, so dotnet and netcoredbg are not found | FIXED | yes | yes | BB-TG-012 | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
@@ -54,3 +54,5 @@ One file per failure mechanism. This hub owns the id. Entries: 50 — FIXED 46, 
 | BB-PRC-006 | Dev-tool logs and scratch folders grew; a reused pid kept a dead owner's folder | FIXED | yes | no | none | `SYS/PRC/S02/BB_PRC_006_DEV_TOOL_TEMP_FILES_GREW_AND_A_REUSED_PID_KEPT_A_FOLDER.md` |
 | BB-PRC-007 | A Roslyn worker test left a child running | OBSERVED | no | no | none | `SYS/PRC/S02/BB_PRC_007_A_ROSLYN_WORKER_TEST_LEFT_A_CHILD_RUNNING.md` |
 | BB-BLD-003 | A merged fix was reported before it was installed | FIXED | yes | yes | BB-TG-019 | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |
+| BB-GAT-005 | A test waited for a search it had not started | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
+| BB-GAT-006 | A worktree was edited while its gate ran | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |

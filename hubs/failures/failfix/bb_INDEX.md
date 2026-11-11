@@ -20,10 +20,10 @@
 | BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/S01/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | FIXED | merge only when every `--json bucket` is `pass`; rerun a no-runner check | `SHIP/CIP/S01/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-CIP-005 | FIXED | Clean up only when the state's value is MERGED; `-d`, no `--force` | `SHIP/CIP/S02/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
-| BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
-| BB-GAT-002 | FIXED | Fixture folder per process (`OwnedTempDir`, `bb-dap-<pid>-<tag>`) | `SHIP/GAT/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
-| BB-GAT-003 | FIXED | `wait:tests` in place of a fixed sleep | `SHIP/GAT/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
-| BB-GAT-004 | FIXED | The menu test names Word Wrap and counts 8 | `SHIP/GAT/BB_GAT_004_A_MENU_ITEM_ADDED_WITHOUT_THE_FULL_SUITE.md` |
+| BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/S01/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
+| BB-GAT-002 | FIXED | Fixture folder per process (`OwnedTempDir`, `bb-dap-<pid>-<tag>`) | `SHIP/GAT/S01/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
+| BB-GAT-003 | FIXED | `wait:tests` in place of a fixed sleep | `SHIP/GAT/S01/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
+| BB-GAT-004 | FIXED | The menu test names Word Wrap and counts 8 | `SHIP/GAT/S01/BB_GAT_004_A_MENU_ITEM_ADDED_WITHOUT_THE_FULL_SUITE.md` |
 | BB-DAP-001 | FIXED | Headline from `details.fullTypeName` and `details.message`; else the id without its category | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | FIXED | `Loaded::restore_ended`; `bb open --restore` waits only when no end line came during the load | `APP/LSP/S02/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
 | BB-ENV-001 | FIXED | Adopt the login shell's PATH when there is no TERM; find installed tools in their own folders | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
@@ -48,3 +48,5 @@
 | BB-PRC-005 | FIXED | A folder per worker (`create_with` + counter) | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
 | BB-PRC-006 | FIXED | Owned scratch folder, newest 50 logs, owner must predate its folder | `SYS/PRC/S02/BB_PRC_006_DEV_TOOL_TEMP_FILES_GREW_AND_A_REUSED_PID_KEPT_A_FOLDER.md` |
 | BB-BLD-003 | FIXED | The status bar names the build; check `BBCommit` before saying fixed | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |
+| BB-GAT-005 | FIXED | Read the state before the step; wait only after it | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
+| BB-GAT-006 | FIXED | Stop the stale run; one gate on the finished tree | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |

@@ -17,10 +17,22 @@ pub(crate) fn close_prompt(theme: Theme, cx: &mut Context<ExplorerView>) -> impl
         .child(prompt_button("Cancel", cx, cancel_prompt))
 }
 
+/// Save: a new file first asks where it goes (Cmd+N).
 fn save_prompt(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
-    match view.tabs.save_close() {
-        Ok(()) => view.finish_close(window, cx),
-        Err(error) => view.report(&error),
+    let untitled: Option<std::path::PathBuf> = view
+        .tabs
+        .asking()
+        .and_then(|path: &std::path::Path| {
+            view.tabs
+                .items()
+                .iter()
+                .find(|tab: &&crate::editor::Tab| tab.path == path)
+        })
+        .filter(|tab: &&crate::editor::Tab| tab.is_untitled())
+        .map(|tab: &crate::editor::Tab| tab.path.clone());
+    match untitled {
+        Some(path) => crate::editor::bb_tabs::tab::untitled::save_as(view, path, true, window, cx),
+        None => view.save_pending_close(window, cx),
     }
 }
 
@@ -30,10 +42,7 @@ fn discard_prompt(view: &mut ExplorerView, window: &mut Window, cx: &mut Context
 }
 
 fn cancel_prompt(view: &mut ExplorerView, _: &mut Window, cx: &mut Context<ExplorerView>) {
-    view.tabs.cancel_close();
-    view.closing_window = false;
-    view.after_close = AfterClose::Window;
-    cx.notify();
+    view.cancel_close(cx);
 }
 
 fn prompt_button(
@@ -105,6 +114,22 @@ impl ExplorerView {
         let ready: bool = self.tabs.request_window_close();
         cx.notify();
         ready
+    }
+
+    /// Save the file the close asks about, then go on closing.
+    pub(crate) fn save_pending_close(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        match self.tabs.save_close() {
+            Ok(()) => self.finish_close(window, cx),
+            Err(error) => self.report(&error),
+        }
+    }
+
+    /// Stop the close: every tab stays, the window too.
+    pub(crate) fn cancel_close(&mut self, cx: &mut Context<Self>) {
+        self.tabs.cancel_close();
+        self.closing_window = false;
+        self.after_close = AfterClose::Window;
+        cx.notify();
     }
 
     fn finish_close(&mut self, window: &mut Window, cx: &mut Context<Self>) {

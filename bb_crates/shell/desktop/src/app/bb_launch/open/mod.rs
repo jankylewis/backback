@@ -69,7 +69,7 @@ where
     answer.await.ok()?.ok()??.into_iter().next()
 }
 
-pub(crate) fn bindings() -> [KeyBinding; 9] {
+pub(crate) fn bindings() -> [KeyBinding; 10] {
     [
         KeyBinding::new("cmd-o", OpenWorkspace, None),
         KeyBinding::new("cmd-shift-o", crate::quick_open::GoToFile, None),
@@ -84,6 +84,8 @@ pub(crate) fn bindings() -> [KeyBinding; 9] {
         KeyBinding::new("cmd-shift-n", NewWindow, None),
         // VS Code's Close Folder chord.
         KeyBinding::new("cmd-k f", crate::editor::CloseWorkspace, None),
+        // VS Code's New Text File.
+        KeyBinding::new("cmd-n", crate::editor::NewFile, None),
     ]
 }
 

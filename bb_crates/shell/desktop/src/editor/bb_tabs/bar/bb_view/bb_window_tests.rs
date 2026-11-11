@@ -61,3 +61,27 @@ fn the_active_tab_scrolls_into_sight_and_the_wheel_brings_the_first_back(cx: &mu
     vcx.run_until_parked();
     assert!(whole_in_bar(vcx, 0), "a mouse wheel scrolls the bar back");
 }
+
+#[test]
+fn a_tabs_hover_path_starts_at_the_workspace_folder() {
+    let root: &std::path::Path = std::path::Path::new("/work/MbTx");
+    let inside: &std::path::Path = std::path::Path::new("/work/MbTx/Specs/Hv/A.cs");
+    assert_eq!(super::shown_path(root, inside), "MbTx/Specs/Hv/A.cs");
+    let outside: &std::path::Path = std::path::Path::new("/else/B.cs");
+    assert_eq!(super::shown_path(root, outside), "/else/B.cs");
+}
+
+#[gpui::test]
+fn hovering_a_tab_shows_its_path(cx: &mut TestAppContext) {
+    let (_rig, vcx): (Rig, &mut VisualTestContext) = many_tabs(cx, 1);
+    assert!(vcx.debug_bounds("path-tooltip").is_none());
+    let tab: Bounds<Pixels> = bounds(vcx, String::from("tab-0"));
+    vcx.simulate_mouse_move(tab.center(), None, gpui::Modifiers::default());
+    vcx.executor()
+        .advance_clock(std::time::Duration::from_secs(2));
+    vcx.run_until_parked();
+    assert!(
+        vcx.debug_bounds("path-tooltip").is_some(),
+        "the hover shows"
+    );
+}

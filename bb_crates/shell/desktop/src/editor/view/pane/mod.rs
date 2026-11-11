@@ -110,7 +110,7 @@ fn pane(
             Some(w) => d.w(px(w)).flex_none(),
             None => d.flex_1(),
         })
-        .child(tab_bar(&view.tabs, group, view.theme, cx))
+        .child(tab_bar(&view.tabs, group, (view.theme, &view.root), cx))
         .child(body)
         .children(drop_zone(view, group, cx))
 }
