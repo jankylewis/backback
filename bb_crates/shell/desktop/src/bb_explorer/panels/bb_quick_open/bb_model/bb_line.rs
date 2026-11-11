@@ -3,6 +3,8 @@
 //! the VS Code input boxes do. The caret is a byte offset on a char
 //! boundary of the text.
 
+use super::Toggle;
+
 impl super::QuickOpen {
     /// One key press in the box; see [`press`].
     pub(crate) fn press(&mut self, stroke: &gpui::Keystroke, paste: Option<String>) {
@@ -73,6 +75,9 @@ pub(crate) fn press(quick: &mut super::QuickOpen, stroke: &gpui::Keystroke, past
         ("left", false, true) => quick.caret_to(Move::WordLeft),
         ("right", false, true) => quick.caret_to(Move::WordRight),
         ("left", false, false) => quick.caret_to(Move::Left),
+        ("c", false, true) => quick.toggle(Toggle::Case),
+        ("w", false, true) => quick.toggle(Toggle::Word),
+        ("x" | "r", false, true) => quick.toggle(Toggle::Regex),
         ("right", false, false) => quick.caret_to(Move::Right),
         (_, true, _) => {
             if let Some(text) = paste {

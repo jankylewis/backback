@@ -11,7 +11,7 @@ mod tests;
 use std::path::{Path, PathBuf};
 
 pub(crate) use bb_line::split_at;
-pub(crate) use places::{Field, FindAsk, FindFields};
+pub(crate) use places::{Field, FindAsk, FindFields, Scope, Toggle};
 
 /// Enough for any solution; a huge folder stops listing here.
 const MAX_FILES: usize = 50_000;
@@ -173,9 +173,16 @@ impl QuickOpen {
             .map_or(&self.query, |f: &FindFields| &f.in_text)
             .to_lowercase();
         let files: bool = self.root.is_some();
+        let kind: Option<&str> = self
+            .find
+            .as_ref()
+            .and_then(|f: &FindFields| f.scope.prefix());
         let mut scored: Vec<(u8, usize, &Path)> = self
             .items
             .iter()
+            .filter(|item: &&Item| {
+                kind.is_none_or(|start: &str| item.label.to_string_lossy().starts_with(start))
+            })
             .filter_map(|item: &Item| {
                 let order: usize = if files {
                     item.label.as_os_str().len()

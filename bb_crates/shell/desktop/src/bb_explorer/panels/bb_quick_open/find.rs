@@ -102,7 +102,8 @@ pub(crate) fn run(
     cx: &mut Context<ExplorerView>,
 ) {
     let parsed: Result<(Query, Filter), bb_search::SearchError> =
-        Query::parse(&ask.text).and_then(|q: Query| Ok((q, Filter::parse(&ask.files)?)));
+        Query::with(&ask.text, ask.options)
+            .and_then(|q: Query| Ok((q, Filter::parse(&ask.files)?)));
     let (query, filter): (Query, Filter) = match parsed {
         Ok(parsed) => parsed,
         Err(error) => {

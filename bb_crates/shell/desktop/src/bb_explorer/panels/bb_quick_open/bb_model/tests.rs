@@ -146,3 +146,56 @@ fn tab_moves_between_the_find_fields_in_the_window(cx: &mut gpui::TestAppContext
         "the in field is drawn"
     );
 }
+
+/// Rider's scope buttons keep one kind of place (Project is the project
+/// dropdown); its toggles go into the search Enter asks for.
+#[test]
+fn scope_buttons_keep_one_kind_of_place_and_toggles_reach_the_search() {
+    let (_dir, root, mut quick): (tempfile::TempDir, PathBuf, QuickOpen) = setup();
+    quick.add_projects(&root, &[root.join("Core/Core.csproj")]);
+    quick.set_scope(super::Scope::Project);
+    assert_eq!(
+        labels(&quick),
+        ["Project · Specs · Specs", "Project · Core · Core"]
+    );
+    quick.set_scope(super::Scope::Solution);
+    assert_eq!(labels(&quick).len(), 1, "only the workspace");
+    quick.set_scope(super::Scope::Directory);
+    assert_eq!(labels(&quick), ["Folder · Specs/Deep"]);
+    quick.set_scope(super::Scope::Directory);
+    assert_eq!(labels(&quick).len(), 4, "pressed again: every place");
+    quick.toggle(super::Toggle::Case);
+    quick.toggle(super::Toggle::Regex);
+    quick.type_text("a.b");
+    let Some(Chosen::Find(ask)): Option<Chosen> = quick.chosen() else {
+        panic!("a search");
+    };
+    let expected: bb_search::Options = bb_search::Options {
+        case: true,
+        word: false,
+        regex: true,
+    };
+    assert_eq!(ask.options, expected);
+}
+
+/// In the window: a click on Project and the Alt keys.
+#[gpui::test]
+fn the_scope_buttons_and_alt_keys_work_in_the_window(cx: &mut gpui::TestAppContext) {
+    let (rig, vcx): (Rig, &mut gpui::VisualTestContext) = rig(cx, false);
+    vcx.dispatch_action(crate::quick_open::FindInFiles);
+    vcx.run_until_parked();
+    let at: gpui::Point<gpui::Pixels> = vcx.debug_bounds("find-button-Project").unwrap().center();
+    vcx.simulate_click(at, gpui::Modifiers::default());
+    vcx.simulate_keystrokes("alt-w alt-x alt-x alt-c");
+    let (scope, options): (super::Scope, bb_search::Options) =
+        rig.view
+            .read_with(vcx, |v: &crate::ExplorerView, _: &gpui::App| {
+                let fields: &super::FindFields = v.quick_open.as_ref().unwrap().fields().unwrap();
+                (fields.scope, fields.options)
+            });
+    assert_eq!(scope, super::Scope::Project);
+    assert_eq!(
+        (options.case, options.word, options.regex),
+        (true, true, false)
+    );
+}

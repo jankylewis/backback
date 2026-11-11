@@ -1,5 +1,6 @@
 //! What a Find in Files query means: `/re/` is a regex, anything else is
 //! plain text. Smart case: a query with no capital letter ignores case.
+//! [`Options`] are Rider's Cc, W and .* toggles on top of that.
 
 use regex::{Regex, RegexBuilder};
 
@@ -17,6 +18,18 @@ pub enum SearchError {
     BadGlob(String),
 }
 
+/// Find in Files' toggles: match case (else smart case), whole words only,
+/// and the whole text as a regex (else only `/re/` is one).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Options {
+    /// Cc: case always matters.
+    pub case: bool,
+    /// W: the match starts and ends at word edges.
+    pub word: bool,
+    /// .*: the text is a regex.
+    pub regex: bool,
+}
+
 /// A parsed query.
 #[derive(Debug, Clone)]
 pub struct Query {
@@ -30,17 +43,31 @@ impl Query {
     /// [`SearchError::EmptyQuery`] for an empty query or `//`, and
     /// [`SearchError::BadPattern`] for an invalid regex.
     pub fn parse(text: &str) -> Result<Query, SearchError> {
-        let regex: Option<&str> = text
+        Query::with(text, Options::default())
+    }
+
+    /// Parses `text` under the toggles in `options`.
+    ///
+    /// # Errors
+    /// As [`Query::parse`].
+    pub fn with(text: &str, options: Options) -> Result<Query, SearchError> {
+        let slashed: Option<&str> = text
             .strip_prefix('/')
             .and_then(|rest: &str| rest.strip_suffix('/'));
-        let pattern: String = match regex {
-            Some(body) => body.to_owned(),
-            None => regex::escape(text),
+        let body: String = match (options.regex, slashed) {
+            (true, _) => text.to_owned(),
+            (false, Some(body)) => body.to_owned(),
+            (false, None) => regex::escape(text),
         };
-        if pattern.is_empty() {
+        if body.is_empty() {
             return Err(SearchError::EmptyQuery);
         }
-        let ignore_case: bool = !text.chars().any(char::is_uppercase);
+        let pattern: String = if options.word {
+            format!(r"\b(?:{body})\b")
+        } else {
+            body
+        };
+        let ignore_case: bool = !options.case && !text.chars().any(char::is_uppercase);
         let matcher: Regex = RegexBuilder::new(&pattern)
             .case_insensitive(ignore_case)
             .multi_line(true)

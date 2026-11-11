@@ -1,9 +1,12 @@
 //! Find in Files' fields, as Wu, VS Code and Rider: the text, "in" (the
 //! workspace, a C# project or a folder, picked from a list its typed name
 //! narrows) and "files" (globs; `!` excludes). Tab moves between them.
+//! Rider's scope buttons (Solution, Project, Directory) keep one kind of
+//! place in the list, and its Cc, W and .* toggles set the search options.
 
 use std::path::{Path, PathBuf};
 
+use super::rank::{name_of, project_label, shown};
 use super::{Item, QuickOpen};
 
 /// The field keys go to.
@@ -39,6 +42,45 @@ pub(crate) struct FindAsk {
     pub(crate) place: String,
     /// The files field, as typed.
     pub(crate) files: String,
+    /// The Cc, W and .* toggles.
+    pub(crate) options: bb_search::Options,
+}
+
+/// Rider's scope buttons: which kind of place the list keeps.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) enum Scope {
+    /// Every place.
+    #[default]
+    All,
+    /// The workspace (Rider's Solution).
+    Solution,
+    /// The C# projects: the list is Rider's project dropdown.
+    Project,
+    /// Folders.
+    Directory,
+}
+
+impl Scope {
+    /// The label start of this scope's places; `None` keeps every place.
+    pub(crate) fn prefix(self) -> Option<&'static str> {
+        match self {
+            Scope::All => None,
+            Scope::Solution => Some("Workspace · "),
+            Scope::Project => Some("Project · "),
+            Scope::Directory => Some("Folder · "),
+        }
+    }
+}
+
+/// One of Rider's search toggles.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Toggle {
+    /// Cc (Alt+C).
+    Case,
+    /// W (Alt+W).
+    Word,
+    /// .* (Alt+X, or Alt+R as VS Code).
+    Regex,
 }
 
 /// The "in" and "files" fields; the text is the box's query.
@@ -49,6 +91,8 @@ pub(crate) struct FindFields {
     pub(crate) in_caret: usize,
     pub(crate) files: String,
     pub(crate) files_caret: usize,
+    pub(crate) options: bb_search::Options,
+    pub(crate) scope: Scope,
     /// Each place's folder, by its item's `line`.
     dirs: Vec<PathBuf>,
 }
@@ -100,6 +144,31 @@ impl QuickOpen {
         });
     }
 
+    /// Flip a search toggle.
+    pub(crate) fn toggle(&mut self, which: Toggle) {
+        if let Some(fields) = self.find.as_mut() {
+            let on: &mut bool = match which {
+                Toggle::Case => &mut fields.options.case,
+                Toggle::Word => &mut fields.options.word,
+                Toggle::Regex => &mut fields.options.regex,
+            };
+            *on = !*on;
+        }
+    }
+
+    /// A scope button: the list keeps that kind of place; a second press
+    /// on the same button shows every place again.
+    pub(crate) fn set_scope(&mut self, scope: Scope) {
+        if let Some(fields) = self.find.as_mut() {
+            fields.scope = if fields.scope == scope {
+                Scope::All
+            } else {
+                scope
+            };
+            self.selected = 0;
+        }
+    }
+
     /// Tab / Shift+Tab: the next or previous field.
     pub(crate) fn next_field(&mut self, back: bool) {
         if let Some(fields) = self.find.as_mut() {
@@ -145,6 +214,7 @@ impl QuickOpen {
             dir: fields.dirs.get(item.line)?.clone(),
             place: label.display().to_string(),
             files: fields.files.clone(),
+            options: fields.options,
         })
     }
 }
@@ -165,24 +235,4 @@ fn project_of(file: &Path, root: &Path) -> Option<PathBuf> {
             })
         })
         .map(Path::to_path_buf)
-}
-
-fn project_label(dir: &Path, root: &Path) -> String {
-    format!("Project · {} · {}", name_of(dir), shown(dir, root))
-}
-
-fn name_of(dir: &Path) -> String {
-    dir.file_name().map_or_else(
-        || dir.display().to_string(),
-        |n: &std::ffi::OsStr| n.to_string_lossy().into_owned(),
-    )
-}
-
-/// `dir` under `root`, or `.` for the root itself.
-fn shown(dir: &Path, root: &Path) -> String {
-    match dir.strip_prefix(root) {
-        Ok(rest) if rest.as_os_str().is_empty() => String::from("."),
-        Ok(rest) => rest.display().to_string(),
-        Err(_) => dir.display().to_string(),
-    }
 }
