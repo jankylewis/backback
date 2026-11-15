@@ -147,8 +147,7 @@ fn copy_path_puts_the_full_path_on_the_clipboard(cx: &mut TestAppContext) {
 fn shell_has(rig: &Rig, vcx: &mut VisualTestContext, needle: &str) -> bool {
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
         v.terminal
-            .session
-            .as_ref()
+            .session()
             .is_some_and(|s: &crate::terminal::Session| screen_has(s, needle))
     })
 }
@@ -156,8 +155,7 @@ fn shell_has(rig: &Rig, vcx: &mut VisualTestContext, needle: &str) -> bool {
 fn type_in(rig: &Rig, vcx: &mut VisualTestContext, text: &str) {
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
         v.terminal
-            .session
-            .as_ref()
+            .session()
             .unwrap()
             .input(text.as_bytes().to_vec());
     });

@@ -1,19 +1,21 @@
-//! The terminal (BBEOD11, Ctrl+backtick): the user's shell in the solution folder,
-//! under the editor. Minimal on purpose: text, a cursor, keys and paste.
-//! Open Terminal Here (BB-BUG-052) starts it in a folder, or moves the
-//! running shell there with `cd`.
+//! The terminal (BBEOD11, Ctrl+backtick): the user's shells in the solution
+//! folder, under the editor. Minimal on purpose: text, a cursor, keys and
+//! paste. Open Terminal Here (BB-BUG-052) starts it in a folder, or moves
+//! the active shell there with `cd`. Split (BB-FEAT-079: Cmd+\ in the
+//! terminal, Ctrl+Shift+backtick, or `+`) adds a shell beside the others,
+//! as VS Code does; each pane's ✕ or `exit` ends only that shell.
 
 mod bb_session;
-
+mod panes;
 mod view;
 
 use std::path::Path;
 
-use gpui::{AsyncWindowContext, Context, FocusHandle, WeakEntity, Window};
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+use gpui::{Context, FocusHandle, InteractiveElement, Window};
 
 use crate::ExplorerView;
 pub(crate) use bb_session::{Cell, Session};
+pub(crate) use panes::{on_split, Pane, SplitTerminal};
 pub(crate) use view::panel;
 
 #[derive(Clone, Debug, PartialEq, Default, gpui::Action)]
@@ -21,37 +23,48 @@ pub(crate) use view::panel;
 pub(crate) struct ToggleTerminal;
 
 pub(crate) struct Terminal {
-    pub(crate) session: Option<Session>,
+    /// Left to right; each one shell.
+    pub(crate) panes: Vec<Pane>,
+    /// The pane that takes keys, Open Terminal Here and the next split.
+    pub(crate) active: usize,
     pub(crate) open: bool,
-    pub(crate) focus: FocusHandle,
-    /// The grid's place on screen last frame, for mouse cells.
-    pub(crate) grid: gpui::ScrollHandle,
-    /// A mouse press began a selection and the button is still down.
-    pub(crate) selecting: bool,
-    /// Wheel pixels not yet a whole line (a trackpad sends small steps).
-    pub(crate) scroll_rest: f32,
+    /// The number the next pane shows ("zsh 3"); never reused.
+    pub(crate) next: u32,
 }
 
 impl Terminal {
-    pub(crate) fn new(focus: FocusHandle) -> Self {
+    pub(crate) fn new() -> Self {
         Self {
-            session: None,
+            panes: Vec::new(),
+            active: 0,
             open: false,
-            focus,
-            grid: gpui::ScrollHandle::new(),
-            selecting: false,
-            scroll_rest: 0.0,
+            next: 1,
         }
+    }
+
+    /// The active pane's shell, if any.
+    pub(crate) fn session(&self) -> Option<&Session> {
+        self.panes.get(self.active).map(|pane: &Pane| &pane.session)
+    }
+
+    fn focus(&self) -> Option<&FocusHandle> {
+        self.panes.get(self.active).map(|pane: &Pane| &pane.focus)
     }
 }
 
-/// Hide the panel and give the editor the keys; the shell keeps running.
+/// The terminal's window actions: show/hide and split.
+pub(crate) fn actions(root: gpui::Div, cx: &mut Context<ExplorerView>) -> gpui::Div {
+    root.on_action(cx.listener(on_toggle))
+        .on_action(cx.listener(on_split))
+}
+
+/// Hide the panel and give the editor the keys; the shells keep running.
 pub(crate) fn hide(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
     view.terminal.open = false;
     window.focus(&view.editor_focus, cx);
 }
 
-/// Ctrl+backtick: open (starting the shell once) and focus, or hide.
+/// Ctrl+backtick: open (starting a shell once) and focus, or hide.
 pub(crate) fn on_toggle(
     view: &mut ExplorerView,
     _: &ToggleTerminal,
@@ -64,25 +77,25 @@ pub(crate) fn on_toggle(
         return;
     }
     let root: std::path::PathBuf = view.root.clone();
-    if view.terminal.session.is_some() || start(view, &root, window, cx) {
+    if !view.terminal.panes.is_empty() || panes::start(view, &root, window, cx) {
         show(view, window, cx);
     }
 }
 
-/// Open Terminal Here: the shell in `folder`. A running shell gets a
-/// cleared line and `cd` (the panel keeps one shell, as before).
+/// Open Terminal Here: the shell in `folder`. The active shell gets a
+/// cleared line and `cd`.
 pub(crate) fn open_in(
     view: &mut ExplorerView,
     folder: &Path,
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let started: bool = match &view.terminal.session {
+    let started: bool = match view.terminal.session() {
         Some(session) => {
             session.input(cd_line(folder));
             true
         }
-        None => start(view, folder, window, cx),
+        None => panes::start(view, folder, window, cx),
     };
     if started {
         show(view, window, cx);
@@ -95,60 +108,13 @@ pub(crate) fn cd_line(folder: &Path) -> Vec<u8> {
     format!("\u{15}cd -- '{quoted}'\r").into_bytes()
 }
 
-/// Start the shell in `cwd`; false (and a status) when it cannot start.
-fn start(
-    view: &mut ExplorerView,
-    cwd: &Path,
-    window: &mut Window,
-    cx: &mut Context<ExplorerView>,
-) -> bool {
-    let (wake, woken): (UnboundedSender<()>, UnboundedReceiver<()>) = unbounded_channel();
-    match Session::start(cwd, 80, 12, wake) {
-        Ok(session) => view.terminal.session = Some(session),
-        Err(error) => {
-            view.report(&format!("Terminal could not start: {error}"));
-            cx.notify();
-            return false;
-        }
-    }
-    // Seam: gpui's test scheduler refuses wake-ups from the PTY thread;
-    // unit tests read the screen themselves.
-    if !cfg!(test) {
-        redraw_on_output(woken, window, cx);
-    }
-    true
-}
-
+/// Show the panel with the active pane focused.
 fn show(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
     view.terminal.open = true;
-    window.focus(&view.terminal.focus, cx);
+    if let Some(focus) = view.terminal.focus() {
+        window.focus(focus, cx);
+    }
     cx.notify();
-}
-
-/// One redraw per burst of output, however much the shell prints.
-fn redraw_on_output(
-    mut woken: UnboundedReceiver<()>,
-    window: &mut Window,
-    cx: &mut Context<ExplorerView>,
-) {
-    cx.spawn_in(
-        window,
-        async move |view: WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext| {
-            while woken.recv().await.is_some() {
-                while woken.try_recv().is_ok() {}
-                if view
-                    .update(
-                        cx,
-                        |_: &mut ExplorerView, cx: &mut Context<ExplorerView>| cx.notify(),
-                    )
-                    .is_err()
-                {
-                    return;
-                }
-            }
-        },
-    )
-    .detach();
 }
 
 #[cfg(test)]

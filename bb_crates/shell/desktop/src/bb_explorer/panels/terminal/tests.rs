@@ -38,8 +38,7 @@ fn terminal_text_has_readable_contrast_in_both_themes() {
 fn lines(rig: &Rig, vcx: &mut VisualTestContext) -> usize {
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
         v.terminal
-            .session
-            .as_ref()
+            .session()
             .map_or(0, |s: &super::Session| s.screen().rows.len())
     })
 }

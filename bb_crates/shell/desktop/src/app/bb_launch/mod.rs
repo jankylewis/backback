@@ -126,6 +126,7 @@ fn menus() -> Vec<Menu> {
                 MenuItem::separator(),
                 // Ctrl+` shows it, a second time hides it (BB-BUG-047).
                 MenuItem::action("Terminal", crate::terminal::ToggleTerminal),
+                MenuItem::action("Split Terminal", crate::terminal::SplitTerminal),
                 MenuItem::separator(),
             ]
             .into_iter()
@@ -189,7 +190,7 @@ pub(crate) fn fresh_view(
         quick_open: None,
         quick_focus: cx.focus_handle(),
         file_menu: crate::files::Menus::default(),
-        terminal: crate::terminal::Terminal::new(cx.focus_handle()),
+        terminal: crate::terminal::Terminal::new(),
     }
 }
 
@@ -229,6 +230,8 @@ pub(crate) fn bind_keys(cx: &mut App) {
         KeyBinding::new("f11", crate::run::bb_debug::StepInto, None),
         KeyBinding::new("shift-f11", crate::run::bb_debug::StepOut, None),
         KeyBinding::new("ctrl-`", crate::terminal::ToggleTerminal, None),
+        KeyBinding::new("ctrl-shift-`", crate::terminal::SplitTerminal, None),
+        KeyBinding::new("cmd-\\", crate::terminal::SplitTerminal, Some("Terminal")),
     ]);
     cx.bind_keys(bb_window::bindings());
     cx.bind_keys(open::bindings());

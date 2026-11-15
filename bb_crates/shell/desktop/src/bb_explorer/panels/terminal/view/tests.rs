@@ -7,8 +7,7 @@ use gpui::{TestAppContext, VisualTestContext};
 fn rows(rig: &Rig, vcx: &mut VisualTestContext) -> Vec<String> {
     rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
         v.terminal
-            .session
-            .as_ref()
+            .session()
             .map(|s: &super::super::Session| s.screen().rows)
             .unwrap_or_default()
     })

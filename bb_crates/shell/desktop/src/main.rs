@@ -218,7 +218,7 @@ impl Render for ExplorerView {
             .on_action(cx.listener(ExplorerView::quit))
             .on_action(cx.listener(ExplorerView::close_workspace))
             .on_action(cx.listener(ExplorerView::restart_server))
-            .on_action(cx.listener(terminal::on_toggle))
+            .map(|root: gpui::Div| terminal::actions(root, cx))
             .map(|root: gpui::Div| run::root_actions(root, self, cx))
             .child(navigation::side_panel(self, cx))
             .child(panel::resize_edge(self.theme, cx))

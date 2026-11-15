@@ -58,6 +58,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-062 | FIXED | Window test `the_active_tab_scrolls_into_sight_and_the_wheel_brings_the_first_back`: red on master (active last tab out of sight), green after; headmate screenshot 2026-11-10 |
 | BB-GAT-005 | FIXED | Local run: `the search did not end` after 60 s, then 4 passed in 0.55 s with the read moved before Enter |
 | BB-GAT-006 | FIXED | Stale gate: `fmt rc=0`, `clippy rc=101` after mid-run edits; the rerun on the finished tree is in PR #103 |
+| BB-GAT-007 | FIXED | Unbuilt audit fixes: `clippy rc=101`, `tests: none run`; then the View menu count (BB-GAT-004); third gate green in PR #109 |
 | BB-ENV-002 | FIXED | Headmate report 2026-11-11 mid-gate; 1-worker gates green at 578 and 581 passed |
 | BB-BUG-063 | FIXED | Headmate screen video 2026-11-11 (not kept: it shows credentials); window test red on master with a 37-char selection |
 | BB-BUG-064 | FIXED | Headmate screenshot 2026-11-11; `debugging_a_test_stops_on_a_breakpoint_inside_it` stopped in `Hits` with n = 41 |
