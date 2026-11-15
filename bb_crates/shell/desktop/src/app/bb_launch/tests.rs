@@ -29,7 +29,12 @@ fn menus_go_app_then_file_then_view_as_on_every_mac() {
     assert_eq!(configured[1].name.as_ref(), "File");
     assert_eq!(configured[2].name.as_ref(), "View");
     let view: Vec<String> = names(&configured[2]);
-    assert_eq!(view.len(), 8, "{view:?}");
+    assert_eq!(view.len(), 9, "{view:?}");
+    // BB-FEAT-079: View -> Split Terminal.
+    assert!(
+        view.iter().any(|name: &String| name == "Split Terminal"),
+        "{view:?}"
+    );
     assert!(
         view.iter().any(|name: &String| name == "Word Wrap"),
         "{view:?}"

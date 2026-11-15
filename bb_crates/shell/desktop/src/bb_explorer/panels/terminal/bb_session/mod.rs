@@ -7,6 +7,7 @@
 use std::collections::HashMap;
 use std::num::NonZeroU32;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
 
 use alacritty_terminal::event::{Event, EventListener, WindowSize};
@@ -18,8 +19,7 @@ use alacritty_terminal::term::{Config, Term, TermMode};
 use alacritty_terminal::tty;
 use tokio::sync::mpsc::UnboundedSender;
 
-#[path = "selection.rs"]
-mod selection;
+mod bb_selection;
 
 /// Lines kept above the screen; small, so a terminal stays light.
 const SCROLLBACK: usize = 2_000;
@@ -29,6 +29,8 @@ const SCROLLBACK: usize = 2_000;
 pub(crate) struct Proxy {
     wake: UnboundedSender<()>,
     pty: Arc<OnceLock<EventLoopSender>>,
+    /// The shell has exited (`exit`, or killed): its pane closes.
+    exited: Arc<AtomicBool>,
 }
 
 impl EventListener for Proxy {
@@ -38,6 +40,9 @@ impl EventListener for Proxy {
                 let _sent: Result<(), _> = pty.send(Msg::Input(text.into_bytes().into()));
             }
             return;
+        }
+        if matches!(event, Event::Exit | Event::ChildExit(_)) {
+            self.exited.store(true, Ordering::Relaxed);
         }
         let _woken: Result<(), _> = self.wake.send(());
     }
@@ -92,6 +97,7 @@ pub(crate) struct Session {
     term: Arc<FairMutex<Term<Proxy>>>,
     pty: EventLoopSender,
     size: Size,
+    exited: Arc<AtomicBool>,
     _group: Option<bb_process::OwnedGroup>,
 }
 
@@ -110,6 +116,7 @@ impl Session {
         let proxy: Proxy = Proxy {
             wake,
             pty: Arc::new(OnceLock::new()),
+            exited: Arc::new(AtomicBool::new(false)),
         };
         let config: Config = Config {
             scrolling_history: SCROLLBACK,
@@ -135,6 +142,7 @@ impl Session {
             term,
             pty: sender,
             size,
+            exited: Arc::clone(&proxy.exited),
             _group: group,
         })
     }
@@ -182,6 +190,11 @@ impl Session {
         let _sent: Result<(), _> = self.pty.send(Msg::Resize(window_size(size)));
     }
 
+    /// True once the shell has exited.
+    pub(crate) fn exited(&self) -> bool {
+        self.exited.load(Ordering::Relaxed)
+    }
+
     /// The visible rows and the cursor, as plain text.
     pub(crate) fn screen(&self) -> Screen {
         read(&self.term.lock(), self.size)
@@ -216,7 +229,7 @@ fn read(term: &Term<Proxy>, size: Size) -> Screen {
         cursor,
         app_cursor: content.mode.contains(TermMode::APP_CURSOR),
         bracketed_paste: content.mode.contains(TermMode::BRACKETED_PASTE),
-        selected: selection::selected_rows(content.selection, offset, size),
+        selected: bb_selection::selected_rows(content.selection, offset, size),
     }
 }
 

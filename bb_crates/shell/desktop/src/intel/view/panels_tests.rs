@@ -109,7 +109,7 @@ fn the_terminal_closes_on_its_cross_and_the_shell_goes_on(cx: &mut TestAppContex
     click(vcx, "terminal-close");
     assert!(vcx.debug_bounds("terminal").is_none(), "terminal hidden");
     let shell: bool = rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
-        v.terminal.session.is_some()
+        v.terminal.session().is_some()
     });
     assert!(shell, "the shell still runs");
     vcx.dispatch_action(crate::terminal::ToggleTerminal);

@@ -29,6 +29,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-GAT-004 | a menu test counts one item too few | FIXED | Did a menu or key change skip the launch tests? Update the count and name the item |
 | BB-GAT-005 | `the search did not end` in a window test | FIXED | Does the test wait for a state only a later step starts? Read it before that step |
 | BB-GAT-006 | `clippy rc=101` on a tree whose tests passed | FIXED | Was the worktree edited while its gate ran? Rerun on the still tree |
+| BB-GAT-007 | `no method named` ... `tests: none run` after audit fixes | FIXED | Was the tree built after the last edit? Build the tests before the gate |
 | BB-DAP-001 | `CLR/System.InvalidOperationException: Exception thrown:` | FIXED | Is the headline read from `details`, not the top-level id and description? |
 | BB-LSP-006 | `restored  : false after 120` | FIXED | Is `Restore complete` above the last `Successfully completed load` in the run log? |
 | BB-ENV-001 | `PATH=/usr/bin:/bin:/usr/sbin:/sbin` in `ps eww` of the app | FIXED | Started by launchd? The login shell's PATH must be adopted and installed tools found in their own folders |

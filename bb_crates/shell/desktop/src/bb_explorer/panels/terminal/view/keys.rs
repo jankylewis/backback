@@ -1,17 +1,90 @@
-//! A keystroke as the bytes a shell expects (xterm sequences).
+//! A keystroke as the bytes a shell expects (xterm sequences), and the
+//! pane's key handler: Cmd+C copies, Cmd+V pastes.
+
+use gpui::{Context, KeyDownEvent};
+
+use super::super::bb_session::Screen;
+use crate::ExplorerView;
+
+/// A key in pane `index`: to its shell, or a Cmd shortcut.
+pub(super) fn key(
+    view: &mut ExplorerView,
+    index: usize,
+    event: &KeyDownEvent,
+    cx: &mut Context<ExplorerView>,
+) {
+    view.terminal.active = index;
+    let stroke: &gpui::Keystroke = &event.keystroke;
+    let Some(session): Option<&super::super::Session> = view.terminal.session() else {
+        return;
+    };
+    if stroke.modifiers.platform && stroke.key == "c" {
+        copy(session, cx);
+        return;
+    }
+    let screen_modes: Screen = session.screen();
+    if stroke.modifiers.platform && stroke.key == "v" {
+        paste(session, screen_modes.bracketed_paste, cx);
+        return;
+    }
+    let mods: Mods = Mods {
+        ctrl: stroke.modifiers.control,
+        alt: stroke.modifiers.alt,
+        cmd: stroke.modifiers.platform,
+    };
+    if let Some(out) = bytes(
+        &stroke.key,
+        stroke.key_char.as_deref(),
+        mods,
+        screen_modes.app_cursor,
+    ) {
+        session.clear_selection();
+        session.input(out);
+        cx.stop_propagation();
+        cx.notify();
+    }
+}
+
+/// Cmd+V: the clipboard's text, bracketed when the shell asked for it.
+fn paste(session: &super::super::Session, bracketed: bool, cx: &mut Context<ExplorerView>) {
+    let Some(text): Option<String> = cx
+        .read_from_clipboard()
+        .and_then(|item: gpui::ClipboardItem| item.text())
+    else {
+        return;
+    };
+    let mut out: Vec<u8> = Vec::new();
+    if bracketed {
+        out.extend_from_slice(b"\x1b[200~");
+    }
+    out.extend_from_slice(text.replace('\n', "\r").as_bytes());
+    if bracketed {
+        out.extend_from_slice(b"\x1b[201~");
+    }
+    session.input(out);
+    cx.stop_propagation();
+}
+
+/// Cmd+C: the selection to the clipboard (nothing selected: nothing).
+fn copy(session: &super::super::Session, cx: &mut Context<ExplorerView>) {
+    if let Some(text) = session.selected_text() {
+        cx.write_to_clipboard(gpui::ClipboardItem::new_string(text));
+        cx.stop_propagation();
+    }
+}
 
 /// The modifiers that change what a key sends.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub(crate) struct Mods {
-    pub(crate) ctrl: bool,
-    pub(crate) alt: bool,
-    pub(crate) cmd: bool,
+pub(super) struct Mods {
+    pub(super) ctrl: bool,
+    pub(super) alt: bool,
+    pub(super) cmd: bool,
 }
 
 /// Bytes for `key` (gpui key name) and its typed text; `app_cursor` is the
 /// terminal's DECCKM mode (arrows send `ESC O x` instead of `ESC [ x`).
 /// `None` for keys the terminal leaves to the app (Cmd shortcuts).
-pub(crate) fn bytes(
+pub(super) fn bytes(
     key: &str,
     text: Option<&str>,
     mods: Mods,
