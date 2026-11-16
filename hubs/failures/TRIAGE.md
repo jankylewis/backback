@@ -60,6 +60,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-PRC-006 | `a temp folder kept although its owner is gone` | FIXED | Is the pid's process younger than the folder (`ps -o etime=`)? |
 | BB-PRC-007 | `LEAK [ ... ] intel::bb_worker::tests` | OBSERVED | Which child holds the test's pipe: Roslyn, a dotnet build server? |
 | BB-BLD-003 | `still broken after the fix merged` | FIXED | `BBCommit` of the running app (status bar) holds the fix? |
+| BB-BLD-004 | `a dark tile behind the Dock icon` | FIXED | Is the icon set at launch (`bb_dock::set_icon`)? Is `dock.png` transparent? |
 | BB-TG-019 | `a runner press outside a popup did nothing` | OBSERVED | Did the readback window draw a frame after the popup opened? |
 | BB-TG-020 | `where is X defined / what does this crate do` | FIXED | Run `bb map` / `bb map --find X` before opening files |
 | BB-TG-021 | `test memory peak above the runner's RAM` | FIXED | Is it a sum of RSS? Read `vm_stat` in-use pages and swap |

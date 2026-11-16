@@ -7,3 +7,4 @@ Index of this folder; the hub-level `bb_INDEX.md` has the full table.
 | `BB_BLD_002_BUNDLE_OPENED_NO_WINDOW.md` | BB-BLD-002 — fix |
 | `BB_BLD_001_INSTALL_FROM_MASTER.md` | BB-BLD-001 — fix |
 | `BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` | BB-BLD-003 — fix |
+| `BB_BLD_004_THE_DOCK_DRAWS_A_TILE_BEHIND_A_BUNDLE_ICON.md` | BB-BLD-004 — The Dock draws a tile behind a bundle icon |

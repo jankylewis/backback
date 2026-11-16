@@ -14,6 +14,7 @@ members = [
   "edge/intel",
   "shell/bb_cli",
   "shell/ui",
+  "shell/ui/bb_dock",
   "shell/desktop",
   "shell/audit",
   "shell/kmap",
@@ -38,6 +39,7 @@ bb-explorer = { path = "bb_core/explorer", version = "0.0.1" }
 bb-search = { path = "bb_core/search", version = "0.0.1" }
 bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
 bb-framing = { path = "edge/framing", version = "0.0.1" }
+bb-dock = { path = "shell/ui/bb_dock", version = "0.0.1" }
 bb-dap = { path = "edge/dap", version = "0.0.1" }
 bb-dotnet = { path = "edge/dotnet/bb_sdk", version = "0.0.1" }
 bb-testkit = { path = "edge/dotnet/testkit", version = "0.0.1" }

@@ -451,6 +451,7 @@ version = "0.0.1"
 dependencies = [
  "alacritty_terminal",
  "bb-dap",
+ "bb-dock",
  "bb-dotnet",
  "bb-explorer",
  "bb-intel",
@@ -533,6 +534,16 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+]
+
+[[package]]
+name = "bb-dock"
+version = "0.0.1"
+dependencies = [
+ "objc2 0.6.5",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
