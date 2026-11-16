@@ -10,6 +10,8 @@ use super::super::super::Group;
 #[path = "bb_input.rs"]
 mod input;
 #[cfg(test)]
+mod panel_tests;
+#[cfg(test)]
 mod tests;
 use crate::ExplorerView;
 pub(crate) use input::drag;
@@ -20,11 +22,53 @@ pub(crate) const BAR_PX: f32 = 10.0;
 /// The shortest thumb, so a huge file still has one to grab.
 const MIN_THUMB_PX: f32 = 24.0;
 
-/// Which way a bar scrolls: a pane's lines down, or the focused text across.
+/// Which way a bar scrolls: a pane's lines down, the focused text across,
+/// or a side or bottom panel's rows across (BB-FEAT-085).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Axis {
     Down(Group),
     Across,
+    Panel(PanelBar),
+}
+
+/// The panels whose rows scroll across under a bar of their own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum PanelBar {
+    Stack,
+    Vars,
+    Tests,
+    Explorer,
+}
+
+impl PanelBar {
+    /// The rows' scroll, as their list measured it last frame.
+    pub(crate) fn scroll(self, view: &ExplorerView) -> ScrollHandle {
+        match self {
+            Self::Stack => view.debug.stack_scroll.clone(),
+            Self::Vars => view.debug.vars_scroll.clone(),
+            Self::Tests => view.tests.rows_scroll.clone(),
+            Self::Explorer => view.explorer_scroll.0.borrow().base_handle.clone(),
+        }
+    }
+
+    /// The selector of the rows' box.
+    pub(crate) fn rows_id(self) -> &'static str {
+        match self {
+            Self::Stack => "debug-stack-rows",
+            Self::Vars => "debug-vars-rows",
+            Self::Tests => "test-rows",
+            Self::Explorer => "explorer-rows",
+        }
+    }
+
+    fn names(self) -> (&'static str, &'static str) {
+        match self {
+            Self::Stack => ("hbar-stack", "hbar-thumb-stack"),
+            Self::Vars => ("hbar-vars", "hbar-thumb-vars"),
+            Self::Tests => ("hbar-tests", "hbar-thumb-tests"),
+            Self::Explorer => ("hbar-explorer", "hbar-thumb-explorer"),
+        }
+    }
 }
 
 /// A thumb on its track: length and start in px, how far the content
@@ -89,6 +133,16 @@ fn measure(view: &ExplorerView, axis: Axis, cx: &gpui::App) -> Option<(f32, Thum
             let found: Thumb = thumb(text - BAR_PX, tab.widest_px - text, tab.scroll_x)?;
             Some((f32::from(bounds.origin.x) + gutter, found))
         }
+        Axis::Panel(which) => {
+            let scroll: ScrollHandle = which.scroll(view);
+            let bounds: gpui::Bounds<gpui::Pixels> = scroll.bounds();
+            let found: Thumb = thumb(
+                f32::from(bounds.size.width),
+                f32::from(scroll.max_offset().x),
+                -f32::from(scroll.offset().x),
+            )?;
+            Some((f32::from(bounds.origin.x), found))
+        }
     }
 }
 
@@ -105,7 +159,22 @@ fn scroll_to(view: &mut ExplorerView, axis: Axis, to: f32, max: f32) {
                 tab.scroll_x = to;
             }
         }
+        Axis::Panel(which) => {
+            let scroll: ScrollHandle = which.scroll(view);
+            scroll.set_offset(point(px(-to), scroll.offset().y));
+        }
     }
+}
+
+/// A panel's bar along the bottom of its rows (BB-FEAT-085): shown while a
+/// row is wider than the panel. The rows' box must be `relative`.
+pub(crate) fn panel_bar(
+    view: &ExplorerView,
+    which: PanelBar,
+    cx: &mut Context<ExplorerView>,
+) -> Option<AnyElement> {
+    let (_, found): (f32, Thumb) = measure(view, Axis::Panel(which), cx)?;
+    Some(bar(view, Axis::Panel(which), found, cx))
 }
 
 /// A pane's bars, over its lines: right edge, and bottom for the focused one.
@@ -131,6 +200,7 @@ fn names(axis: Axis) -> (&'static str, &'static str) {
         Axis::Down(Group(1)) => ("vbar-1", "vbar-thumb-1"),
         Axis::Down(_) => ("vbar-2", "vbar-thumb-2"),
         Axis::Across => ("hbar", "hbar-thumb"),
+        Axis::Panel(which) => which.names(),
     }
 }
 
@@ -154,9 +224,12 @@ fn bar(
                     .top(px(found.start))
                     .h(px(found.length)),
             ),
-        Axis::Across => rail(track, axis, cx)
+        Axis::Across | Axis::Panel(_) => rail(track, axis, cx)
             .bottom_0()
-            .left(px(crate::settings::typography(cx).gutter_width()))
+            .left(px(match axis {
+                Axis::Across => crate::settings::typography(cx).gutter_width(),
+                Axis::Down(_) | Axis::Panel(_) => 0.0,
+            }))
             .right(px(BAR_PX))
             .h(px(BAR_PX))
             .child(

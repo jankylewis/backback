@@ -129,13 +129,14 @@ fn activate(
     cx.notify();
 }
 
+/// The name at its full width: the panel scrolls across to a long one
+/// (BB-FEAT-085); at least the room the panel has.
 fn name_box(name: String, width: f32) -> impl IntoElement {
     div()
         .ml_1()
-        .w(px(width))
-        .overflow_hidden()
+        .min_w(px(width))
+        .flex_none()
         .whitespace_nowrap()
-        .text_ellipsis()
         .child(name)
 }
 

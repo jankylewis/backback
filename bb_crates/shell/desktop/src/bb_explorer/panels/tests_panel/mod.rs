@@ -77,6 +77,8 @@ pub(crate) struct TestsState {
     pub(crate) search: find::Search,
     /// A test's open right-click menu (Run, Debug).
     pub(crate) menu: Option<TestMenu>,
+    /// The rows scroll both ways (BB-FEAT-085).
+    pub(crate) rows_scroll: gpui::ScrollHandle,
 }
 
 impl TestsState {
@@ -102,6 +104,7 @@ impl TestsState {
             opened: BTreeSet::new(),
             search: find::Search::default(),
             menu: None,
+            rows_scroll: gpui::ScrollHandle::new(),
         }
     }
 }

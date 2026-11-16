@@ -12,20 +12,18 @@ use gpui::{div, prelude::*, px, AnyElement, ClickEvent, Context, Window};
 
 use super::notes::select_frame;
 use super::ticks::title_row;
+use crate::editor::PanelBar;
 use crate::intel::view::one_line;
 use crate::run::bb_debug::session::control::{Live, Phase};
 use crate::run::bb_debug::session::{Frame, Var};
 use crate::{color, ExplorerView};
-
-/// Output lines shown while the program runs.
-const TAIL: usize = 12;
 
 /// The panel, if a session lives.
 pub(crate) fn panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
     let live: &Live = view.debug.live.as_ref().filter(|l: &&Live| !l.hidden)?;
     let theme: Theme = view.theme;
     let body: AnyElement = match &live.phase {
-        Phase::Building | Phase::Running => output(live, theme),
+        Phase::Building | Phase::Running => super::notes::output(live, theme),
         Phase::Stopped {
             frames,
             selected,
@@ -89,30 +87,22 @@ fn paused(
                 .flex()
                 .flex_1()
                 .min_h(px(0.0))
-                .child(stack(frames, selected, &view.root, theme, cx))
-                .child(variables(vars, theme)),
+                .child(stack(view, (frames, selected), theme, cx))
+                .child(variables(view, vars, theme, cx)),
         )
         .into_any_element()
 }
 
-fn output(live: &Live, theme: Theme) -> AnyElement {
-    let lines: Vec<&str> = live.output.lines().collect();
-    let tail: &[&str] = lines
-        .get(lines.len().saturating_sub(TAIL)..)
-        .unwrap_or_default();
-    div()
-        .px_2()
-        .flex()
-        .flex_col()
-        .text_color(color(theme.text_dim))
-        .children(
-            tail.iter()
-                .map(|line: &&str| one_line(18.0).child((*line).to_owned())),
-        )
-        .into_any_element()
-}
-
-fn column(heading: &str, theme: Theme) -> gpui::Div {
+/// A heading over its rows; the rows keep their full width and scroll both
+/// ways, with a bar along the bottom while one is wider (BB-FEAT-085).
+fn column(
+    view: &ExplorerView,
+    (heading, which): (&str, PanelBar),
+    rows: Vec<AnyElement>,
+    cx: &mut Context<ExplorerView>,
+) -> gpui::Div {
+    let scroll: gpui::ScrollHandle = which.scroll(view);
+    let id: &'static str = which.rows_id();
     div()
         .flex_1()
         .min_w(px(0.0))
@@ -121,15 +111,44 @@ fn column(heading: &str, theme: Theme) -> gpui::Div {
         .px_2()
         .child(
             one_line(20.0)
-                .text_color(color(theme.text_dim))
+                .text_color(color(view.theme.text_dim))
                 .child(heading.to_owned()),
+        )
+        .child(
+            div()
+                .relative()
+                .flex_1()
+                .min_h(px(0.0))
+                .child(
+                    div()
+                        .id(id)
+                        .debug_selector(move || id.to_owned())
+                        .size_full()
+                        .overflow_scroll()
+                        .track_scroll(&scroll)
+                        .flex()
+                        .flex_col()
+                        .items_start()
+                        .children(rows),
+                )
+                .children(crate::editor::panel_bar(view, which, cx)),
         )
 }
 
+/// A row at its full width: no ellipsis, at least the column's width.
+fn wide_row() -> gpui::Div {
+    div()
+        .min_h(px(20.0))
+        .min_w_full()
+        .flex_none()
+        .flex()
+        .items_center()
+        .whitespace_nowrap()
+}
+
 fn stack(
-    frames: &[Frame],
-    selected: usize,
-    root: &Path,
+    view: &ExplorerView,
+    (frames, selected): (&[Frame], usize),
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Div {
@@ -137,10 +156,10 @@ fn stack(
         .iter()
         .enumerate()
         .map(|(index, frame): (usize, &Frame)| {
-            frame_row(index, frame, (index == selected, root), theme, cx)
+            frame_row(index, frame, (index == selected, &view.root), theme, cx)
         })
         .collect();
-    column("CALL STACK", theme).children(rows)
+    column(view, ("CALL STACK", PanelBar::Stack), rows, cx)
 }
 
 fn frame_row(
@@ -157,7 +176,7 @@ fn frame_row(
             format!("{}:{}", short.display(), frame.line.saturating_add(1))
         },
     );
-    let row: gpui::Stateful<gpui::Div> = one_line(20.0)
+    let row: gpui::Stateful<gpui::Div> = wide_row()
         .id(("frame", index))
         .debug_selector(move || format!("debug-frame-{index}"))
         .gap_2()
@@ -183,14 +202,27 @@ fn frame_row(
         .into_any_element()
 }
 
-fn variables(vars: &[Var], theme: Theme) -> gpui::Div {
-    column("VARIABLES", theme).children(vars.iter().map(|var: &Var| {
-        one_line(20.0).gap_2().child(var.name.clone()).child(
-            div()
-                .text_color(color(theme.string))
-                .child(var.value.clone()),
-        )
-    }))
+fn variables(
+    view: &ExplorerView,
+    vars: &[Var],
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> gpui::Div {
+    let rows: Vec<AnyElement> = vars
+        .iter()
+        .map(|var: &Var| {
+            wide_row()
+                .gap_2()
+                .child(var.name.clone())
+                .child(
+                    div()
+                        .text_color(color(theme.string))
+                        .child(var.value.clone()),
+                )
+                .into_any_element()
+        })
+        .collect();
+    column(view, ("VARIABLES", PanelBar::Vars), rows, cx)
 }
 
 /// The exception paused on, above the stack, in the error colour.

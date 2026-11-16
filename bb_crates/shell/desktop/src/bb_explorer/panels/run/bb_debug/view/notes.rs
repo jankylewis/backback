@@ -4,7 +4,11 @@
 
 use std::path::PathBuf;
 
-use gpui::{Context, Window};
+use bb_ui::bb_theme::Theme;
+use gpui::{div, prelude::*, AnyElement, Context, Window};
+
+use crate::color;
+use crate::intel::view::one_line;
 
 use crate::run::bb_debug::session::control::{Live, Phase};
 use crate::run::bb_debug::session::{Command, Frame, Note, Var};
@@ -185,4 +189,25 @@ pub(crate) fn describe(view: &ExplorerView) -> String {
             )
         }
     }
+}
+
+/// Output lines shown while the program runs.
+const TAIL: usize = 12;
+
+/// The program's last output lines, while it builds or runs.
+pub(super) fn output(live: &Live, theme: Theme) -> AnyElement {
+    let lines: Vec<&str> = live.output.lines().collect();
+    let tail: &[&str] = lines
+        .get(lines.len().saturating_sub(TAIL)..)
+        .unwrap_or_default();
+    div()
+        .px_2()
+        .flex()
+        .flex_col()
+        .text_color(color(theme.text_dim))
+        .children(
+            tail.iter()
+                .map(|line: &&str| one_line(18.0).child((*line).to_owned())),
+        )
+        .into_any_element()
 }

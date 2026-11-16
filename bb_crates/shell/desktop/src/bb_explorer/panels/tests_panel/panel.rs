@@ -34,23 +34,56 @@ pub(crate) fn explorer_panel(
         .on_action(cx.listener(ExplorerView::open))
         .child(explorer_header(view.theme, cx))
         .child(
-            uniform_list(
-                "explorer-rows",
-                count,
-                cx.processor(
-                    |view: &mut ExplorerView,
-                     range: Range<usize>,
-                     _: &mut Window,
-                     row_cx: &mut Context<ExplorerView>| {
-                        rows_in(view, range, row_cx)
-                    },
-                ),
-            )
-            .track_scroll(&view.explorer_scroll)
-            .debug_selector(|| "explorer-rows".to_owned())
-            .flex_1(),
+            div()
+                .relative()
+                .flex_1()
+                .min_h(px(0.0))
+                .child(rows_list(view, count, cx))
+                .children(crate::editor::panel_bar(
+                    view,
+                    crate::editor::PanelBar::Explorer,
+                    cx,
+                )),
         )
         .children(crate::files::menu(view, cx))
+}
+
+/// The rows at their full width, the list as wide as the longest, so it
+/// scrolls across (BB-FEAT-085); only the rows in view are built.
+fn rows_list(
+    view: &ExplorerView,
+    count: usize,
+    cx: &mut Context<ExplorerView>,
+) -> impl IntoElement {
+    uniform_list(
+        "explorer-rows",
+        count,
+        cx.processor(
+            |view: &mut ExplorerView,
+             range: Range<usize>,
+             _: &mut Window,
+             row_cx: &mut Context<ExplorerView>| { rows_in(view, range, row_cx) },
+        ),
+    )
+    .track_scroll(&view.explorer_scroll)
+    .debug_selector(|| "explorer-rows".to_owned())
+    .with_horizontal_sizing_behavior(gpui::ListHorizontalSizingBehavior::Unconstrained)
+    .with_width_from_item(longest(view))
+    .size_full()
+}
+
+/// The visible row that needs the most width: its depth and name.
+fn longest(view: &ExplorerView) -> Option<usize> {
+    view.tree
+        .visible()
+        .iter()
+        .enumerate()
+        .max_by_key(|(_, (depth, entry)): &(usize, &(usize, &Entry))| {
+            depth
+                .saturating_mul(2)
+                .saturating_add(entry.name().chars().count())
+        })
+        .map(|(index, _): (usize, &(usize, &Entry))| index)
 }
 
 fn explorer_header(theme: Theme, cx: &mut Context<ExplorerView>) -> impl IntoElement {

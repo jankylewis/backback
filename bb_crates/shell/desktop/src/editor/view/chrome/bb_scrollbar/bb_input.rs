@@ -77,7 +77,7 @@ fn jump(
 fn along(axis: Axis, at: gpui::Point<gpui::Pixels>) -> f32 {
     match axis {
         Axis::Down(_) => f32::from(at.y),
-        Axis::Across => f32::from(at.x),
+        Axis::Across | Axis::Panel(_) => f32::from(at.x),
     }
 }
 
