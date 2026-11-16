@@ -13,7 +13,9 @@ Set Next Statement), a Test Explorer, and a terminal. Live state:
 [goals board](docs/plan/bb_roadmap/GOALS.md); bugs: [hubs/failures/TRIAGE.md](hubs/failures/TRIAGE.md).
 
 The [mascot](docs/release/bb_assets/bb_mascot/bb_mascot.svg) is an original
-chibi scientist. Its [dark contact sheet](docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
+chibi scientist, shipped as pixel art with no background
+([`icon_tools/bb_make.sh`](docs/release/bb_assets/icon_tools/bb_make.sh) builds it).
+Its [contact sheet](docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png)
 shows all 10 sizes; the [main PNG](docs/release/bb_assets/bb_mascot/icon.png) is 1024 px.
 
 ## Why

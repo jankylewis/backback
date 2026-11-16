@@ -1,0 +1,33 @@
+[package]
+name = "bb-dock"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "backback's Dock icon, set at launch so macOS draws no tile (BB-FEAT-080)"
+
+[dependencies]
+thiserror.workspace = true
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSData"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSImage", "NSResponder"] }
+
+# The workspace lints, except one: Peaker 2026-11-16 allows `unsafe` in this
+# crate for the one setApplicationIconImage call (deny, allowed at that call).
+# Every other crate keeps unsafe_code = "forbid".
+[lints.rust]
+unsafe_code = "deny"
+unused_must_use = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+indexing_slicing = "deny"
+as_conversions = "deny"
+wildcard_enum_match_arm = "deny"
+dbg_macro = "deny"

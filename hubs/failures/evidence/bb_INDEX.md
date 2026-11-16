@@ -63,3 +63,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-063 | FIXED | Headmate screen video 2026-11-11 (not kept: it shows credentials); window test red on master with a 37-char selection |
 | BB-BUG-064 | FIXED | Headmate screenshot 2026-11-11; `debugging_a_test_stops_on_a_breakpoint_inside_it` stopped in `Hits` with n = 41 |
 | BB-LSP-008 | OBSERVED | CI run 42966229802 (PR #107) failed at 10.98 s; alone on master 3 of 3 passed |
+| BB-BLD-004 | FIXED | Dock capture of the PR #110 bundle; contact sheet `docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png` |
