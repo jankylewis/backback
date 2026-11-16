@@ -73,6 +73,7 @@ pub(crate) fn start_or_continue(
         view.report(&"Debug: the solution has no console (Exe) project to start");
         return;
     };
+    view.debug.test = None;
     begin(view, (target, None), label, window, cx);
 }
 
@@ -95,6 +96,7 @@ pub(crate) fn debug_test(
         return;
     }
     let label: String = fqn.method().to_owned();
+    view.debug.test = Some(fqn.clone());
     let test: Option<(PathBuf, bb_testkit::Fqn)> = Some((view.root.clone(), fqn));
     begin(view, (project, test), label, window, cx);
 }

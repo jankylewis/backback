@@ -27,6 +27,7 @@ fn fixture(root: &Path) -> PathBuf {
 fn click(vcx: &mut VisualTestContext, selector: &'static str) {
     let bounds: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds(selector).unwrap();
     vcx.simulate_click(bounds.center(), Modifiers::default());
+    vcx.run_until_parked();
 }
 
 fn wait_for(
@@ -83,11 +84,13 @@ fn test_panel_lists_runs_a_class_and_opens_a_failure(cx: &mut TestAppContext) {
             state.tests.model.projects().keys().collect::<Vec<_>>()
         );
     });
+    click(vcx, "test-ns-Sample"); // BB-FEAT-083: groups start folded
     click(vcx, "test-class-run");
     wait_for(&view, vcx, |state: &ExplorerView| {
         state.tests.busy.is_none()
     });
     assert_outcomes(&view, vcx, &project);
+    click(vcx, "test-class-Sample.OutcomeSpec");
     click(vcx, "test-spec-Sample.OutcomeSpec.Fails");
     click(vcx, "test-detail");
     vcx.run_until_parked();
@@ -105,11 +108,8 @@ fn assert_outcomes(view: &Entity<ExplorerView>, vcx: &mut VisualTestContext, pro
         let outcomes: Vec<Outcome> = tests
             .specs
             .values()
-            .filter_map(|result: &Option<bb_testkit::SpecResult>| {
-                result
-                    .as_ref()
-                    .map(|result: &bb_testkit::SpecResult| result.outcome)
-            })
+            .filter_map(Option::as_ref)
+            .map(|result: &bb_testkit::SpecResult| result.outcome)
             .collect();
         assert!(outcomes.contains(&Outcome::Passed));
         assert!(outcomes.contains(&Outcome::Failed));

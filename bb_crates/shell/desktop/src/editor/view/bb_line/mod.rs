@@ -91,6 +91,9 @@ pub(super) fn line_row(
         Some(_) => div().w(px(fonts.gutter_width())).flex_none(),
     };
     row_frame(row, (current, stopped), (theme, fonts.line_height()), cx)
+        .map(|el: gpui::Stateful<gpui::Div>| {
+            crate::editor::view::test_marks::on_right_click(el, index, cx)
+        })
         .child(gutter)
         .child(super::pane::bb_hscroll::text_viewport(
             scroll_x,

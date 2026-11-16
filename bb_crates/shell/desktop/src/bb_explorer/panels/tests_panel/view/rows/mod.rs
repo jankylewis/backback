@@ -87,11 +87,11 @@ pub(super) fn spec_rows(
         if !heads(view, (path, fqn), &mut last, (theme, cx), &mut rows) {
             continue;
         }
-        let running: bool = is_running(view, path, fqn);
+        let run: menu::Run = menu::Run::of(view, is_running(view, path, fqn), fqn);
         rows.push(spec::spec_row(
             path.to_path_buf(),
             fqn.clone(),
-            (result.as_ref(), running),
+            (result.as_ref(), run),
             theme,
             cx,
         ));

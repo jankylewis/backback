@@ -5,3 +5,4 @@ Drawer of shelves S16 to S19 (ids 061 to 076); the hub-level `bb_INDEX.md` has t
 | Entry | What |
 |---|---|
 | `S16/` | BB-BUG-061 to 064 |
+| `S17/` | BB-BUG-065 |

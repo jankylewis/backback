@@ -11,14 +11,14 @@ use gpui::{Entity, Modifiers, TestAppContext, VisualTestContext, Window, WindowA
 use crate::ExplorerView;
 
 const SPEC: &str = "using NUnit.Framework;\nnamespace Sample.Auth;\npublic class OutcomeSpec\n{\n    [Test] public void Passes() => Assert.Pass();\n    [Test] public void Fails() => Assert.Fail();\n    [TestCase(1)][TestCase(2)] public void Counts(int n) { }\n}\n";
-const NAMES: [&str; 4] = [
+pub(super) const NAMES: [&str; 4] = [
     "Sample.Auth.OutcomeSpec.Passes",
     "Sample.Auth.OutcomeSpec.Fails",
     "Sample.Auth.OutcomeSpec.Counts(1)",
     "Sample.Auth.OutcomeSpec.Counts(2)",
 ];
 
-type Rig<'a> = (
+pub(super) type Rig<'a> = (
     tempfile::TempDir,
     PathBuf,
     Entity<ExplorerView>,
@@ -26,7 +26,7 @@ type Rig<'a> = (
 );
 
 /// A window on the Tests side with one open project of four specs.
-fn tree_window(cx: &mut TestAppContext) -> Rig<'_> {
+pub(super) fn tree_window(cx: &mut TestAppContext) -> Rig<'_> {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let root: PathBuf = dir.path().canonicalize().unwrap();
     std::fs::write(root.join("OutcomeSpec.cs"), SPEC).unwrap();
@@ -48,6 +48,7 @@ fn tree_window(cx: &mut TestAppContext) -> Rig<'_> {
             if let Some(tests) = state.tests.model.project_mut(&listed) {
                 tests.expanded = true;
             }
+            fold::open_all(state, &listed);
             cx.notify();
         },
     );
@@ -67,49 +68,14 @@ fn listing(names: &[&str]) -> SpecList {
     }
 }
 
-fn click(vcx: &mut VisualTestContext, selector: &'static str) {
+pub(super) fn click(vcx: &mut VisualTestContext, selector: &'static str) {
     let bounds: gpui::Bounds<gpui::Pixels> = vcx.debug_bounds(selector).unwrap();
     vcx.simulate_click(bounds.center(), Modifiers::default());
     vcx.run_until_parked();
 }
 
-fn shown(vcx: &mut VisualTestContext, selector: &'static str) -> bool {
+pub(super) fn shown(vcx: &mut VisualTestContext, selector: &'static str) -> bool {
     vcx.debug_bounds(selector).is_some()
-}
-
-#[gpui::test]
-fn namespace_class_and_method_heads_fold_and_open(cx: &mut TestAppContext) {
-    let (_dir, _project, _view, vcx): Rig<'_> = tree_window(cx);
-    assert!(shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Passes"));
-    click(vcx, "test-class-Sample.Auth.OutcomeSpec");
-    assert!(
-        !shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Passes"),
-        "class folded"
-    );
-    assert!(!shown(vcx, "test-method-Sample.Auth.OutcomeSpec.Counts"));
-    assert!(shown(vcx, "test-ns-Sample.Auth"));
-    click(vcx, "test-class-Sample.Auth.OutcomeSpec");
-    assert!(
-        shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Passes"),
-        "class open"
-    );
-    click(vcx, "test-ns-Sample.Auth");
-    assert!(
-        !shown(vcx, "test-class-Sample.Auth.OutcomeSpec"),
-        "namespace folded"
-    );
-    assert!(!shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Fails"));
-    click(vcx, "test-ns-Sample.Auth");
-    assert!(
-        shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Fails"),
-        "namespace open"
-    );
-    click(vcx, "test-method-Sample.Auth.OutcomeSpec.Counts");
-    assert!(
-        !shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Counts(1)"),
-        "method folded"
-    );
-    assert!(shown(vcx, "test-spec-Sample.Auth.OutcomeSpec.Passes"));
 }
 
 #[gpui::test]
@@ -246,3 +212,6 @@ fn a_right_click_on_a_test_offers_run_and_debug(cx: &mut TestAppContext) {
     });
     assert!(said.is_some(), "Run ran the test of {}", project.display());
 }
+
+mod bb_debug;
+mod fold;

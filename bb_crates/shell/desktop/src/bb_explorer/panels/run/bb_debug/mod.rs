@@ -28,6 +28,8 @@ pub(crate) struct DebugState {
     pub(crate) exceptions: ExceptionBreaks,
     /// The running session, if any.
     pub(crate) live: Option<session::control::Live>,
+    /// The test the session debugs (its row shows ■, BB-FEAT-081).
+    pub(crate) test: Option<bb_testkit::Fqn>,
 }
 
 impl DebugState {
@@ -38,6 +40,7 @@ impl DebugState {
             breakpoints: Breakpoints::default(),
             exceptions: ExceptionBreaks::load(root),
             live: None,
+            test: None,
         }
     }
 }

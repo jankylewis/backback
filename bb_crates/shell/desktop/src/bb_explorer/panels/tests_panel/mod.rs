@@ -19,7 +19,7 @@ pub(crate) use actions::toggle_project;
 pub(crate) use actions::{debug_host, find};
 pub(crate) use actions::{run_category, run_class, run_failed, run_project, run_spec, stop};
 pub(crate) use model::TestModel;
-pub(crate) use view::{open_spec, panel, TestMenu};
+pub(crate) use view::{open_spec, panel, test_menu, TestMenu};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Side {
@@ -70,8 +70,9 @@ pub(crate) struct TestsState {
     pub(crate) pending_jump: Option<(PathBuf, usize)>,
     pub(crate) output_open: bool,
     pub(crate) scan: Scan,
-    /// Folded groups, per project.
-    pub(crate) collapsed: BTreeSet<(PathBuf, Group)>,
+    /// Opened groups, per project: a group is folded until opened, so
+    /// opening one shows its children folded, as Rider (BB-FEAT-083).
+    pub(crate) opened: BTreeSet<(PathBuf, Group)>,
     /// The filter's search over projects not listed yet.
     pub(crate) search: find::Search,
     /// A test's open right-click menu (Run, Debug).
@@ -98,7 +99,7 @@ impl TestsState {
             pending_jump: None,
             output_open: false,
             scan: Scan::NotStarted,
-            collapsed: BTreeSet::new(),
+            opened: BTreeSet::new(),
             search: find::Search::default(),
             menu: None,
         }
@@ -134,17 +135,18 @@ impl TestsState {
         stop
     }
 
-    /// Fold `group` if open, open it if folded.
+    /// Open `group` if folded, fold it if open.
     pub(crate) fn toggle(&mut self, path: &Path, group: Group) {
         let key: (PathBuf, Group) = (path.to_path_buf(), group);
-        if !self.collapsed.remove(&key) {
-            self.collapsed.insert(key);
+        if !self.opened.remove(&key) {
+            self.opened.insert(key);
         }
     }
 
+    /// Folded unless opened; while a filter is typed every group is open,
+    /// so each match shows.
     pub(crate) fn is_collapsed(&self, path: &Path, group: &Group) -> bool {
-        self.collapsed
-            .contains(&(path.to_path_buf(), group.clone()))
+        self.filter.trim().is_empty() && !self.opened.contains(&(path.to_path_buf(), group.clone()))
     }
 
     pub(crate) fn chosen_settings(&self) -> Option<PathBuf> {

@@ -1,5 +1,6 @@
 //! A test's right-click menu, as Rider's: Run and Debug. A press outside
-//! closes it; picking an item closes it and does it.
+//! closes it; picking an item closes it and does it. While the debugger runs
+//! a test, its row's red ■ stops it (BB-FEAT-081).
 
 use std::path::PathBuf;
 
@@ -113,4 +114,56 @@ fn item(
                 cx.notify();
             },
         ))
+}
+
+/// Whether a spec runs now, and how.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Run {
+    Idle,
+    Running,
+    /// The debugger runs it: its row shows a red ■ that stops (BB-FEAT-081).
+    Debugging,
+}
+
+impl Run {
+    pub(super) fn of(view: &ExplorerView, running: bool, fqn: &Fqn) -> Self {
+        let debugged: bool = view.debug.live.is_some() && view.debug.test.as_ref() == Some(fqn);
+        match (debugged, running) {
+            (true, _) => Self::Debugging,
+            (false, true) => Self::Running,
+            (false, false) => Self::Idle,
+        }
+    }
+}
+
+/// The verdict mark, or while the debugger runs this spec a red ■ that
+/// stops it, as Shift+F5 does (BB-FEAT-081).
+pub(super) fn verdict(
+    run: Run,
+    (icon, ink): (&'static str, bb_ui::Rgb),
+    fqn: &Fqn,
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> AnyElement {
+    if run != Run::Debugging {
+        return div().text_color(color(ink)).child(icon).into_any_element();
+    }
+    let selector: String = format!("test-debug-stop-{}", fqn.as_str());
+    div()
+        .id("test-debug-stop")
+        .debug_selector(move || selector)
+        .cursor_pointer()
+        .text_color(color(theme.error))
+        .child("■")
+        .on_click(cx.listener(
+            |view: &mut ExplorerView,
+             _: &gpui::ClickEvent,
+             _: &mut Window,
+             cx: &mut Context<ExplorerView>| {
+                cx.stop_propagation();
+                crate::run::bb_debug::session::control::stop(view);
+                cx.notify();
+            },
+        ))
+        .into_any_element()
 }
