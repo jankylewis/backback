@@ -82,7 +82,8 @@ pub(crate) fn panes(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl
         let width: Option<f32> = (!last).then(|| view.lines.widths.get(g).copied().unwrap_or(0.0));
         root = root.child(pane(view, Group(g), width, cx));
     }
-    root
+    // A test's Run / Debug menu, from the TESTS tree or the editor (BB-FEAT-084).
+    root.children(crate::tests_panel::test_menu(view, view.theme, cx))
 }
 
 /// The selector of the line right of each pane but the last.

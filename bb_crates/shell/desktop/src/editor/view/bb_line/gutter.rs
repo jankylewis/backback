@@ -30,6 +30,7 @@ pub(super) fn gutter_cell(
             cell.child(
                 div()
                     .id(format!("test-gutter-{index}"))
+                    .debug_selector(move || format!("test-gutter-{index}"))
                     .cursor_pointer()
                     .text_color(color(theme.accent))
                     .child("▶")

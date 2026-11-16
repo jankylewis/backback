@@ -1,10 +1,11 @@
 //! One spec's row: its verdict, name and time; a click shows its result
 //! and opens its source (BB-BUG-025); ▶ runs it, ■ stops it (BB-BUG-026);
-//! Debug, or Debug in its right-click menu, debugs it.
+//! Debug, or Debug in its right-click menu, debugs it; while debugged, a
+//! red ■ in place of its verdict stops it (BB-FEAT-081).
 
 use super::super::button;
 use crate::tests_panel::model::ProjectTests;
-use crate::{color, ExplorerView};
+use crate::ExplorerView;
 use bb_testkit::{Fqn, Outcome, SpecResult};
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, AnyElement, AsyncWindowContext, Context, WeakEntity, Window};
@@ -50,10 +51,11 @@ fn spec_display(
 pub(super) fn spec_row(
     path: PathBuf,
     fqn: Fqn,
-    (result, running): (Option<&SpecResult>, bool),
+    (result, run): (Option<&SpecResult>, super::menu::Run),
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> AnyElement {
+    let running: bool = run == super::menu::Run::Running;
     let (icon, label, ink): (&str, String, bb_ui::Rgb) = spec_display(&fqn, result, running, theme);
     let select_path: PathBuf = path.clone();
     let select_fqn: Fqn = fqn.clone();
@@ -67,7 +69,7 @@ pub(super) fn spec_row(
         .flex()
         .justify_between()
         .cursor_pointer()
-        .child(div().text_color(color(ink)).child(icon))
+        .child(super::menu::verdict(run, (icon, ink), &fqn, theme, cx))
         .child(label)
         .child(play_or_stop(path.clone(), fqn.clone(), running, theme, cx))
         .child(debug_button(

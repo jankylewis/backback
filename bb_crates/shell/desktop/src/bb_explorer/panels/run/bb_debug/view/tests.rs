@@ -150,3 +150,44 @@ fn ctrl_shift_f10_sets_the_next_statement_only_where_the_adapter_can(cx: &mut Te
         other => panic!("expected Set Next on the cursor line, got {other:?}"),
     }
 }
+
+/// Click `selector`; the command it sent, as text.
+fn next(
+    vcx: &mut VisualTestContext,
+    sent: &mut UnboundedReceiver<Command>,
+    selector: &'static str,
+) -> String {
+    let at: Bounds<Pixels> = vcx.debug_bounds(selector).expect(selector);
+    vcx.simulate_click(at.center(), Modifiers::default());
+    vcx.run_until_parked();
+    format!("{:?}", sent.try_recv())
+}
+
+/// BB-FEAT-082, as Rider's debug toolbar: while paused, Resume, Step Over,
+/// Into and Out send what F5, F10, F11 and Shift+F11 send; Stop ends it.
+#[gpui::test]
+fn the_debug_toolbar_resumes_steps_and_stops(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "class A\n{\n    void M() { }\n}\n");
+    let mut sent: UnboundedReceiver<Command> = paused(&rig, vcx, 2);
+    assert_eq!(next(vcx, &mut sent, "debug-resume"), "Ok(Continue)");
+    assert_eq!(next(vcx, &mut sent, "debug-step-over"), "Ok(Step(Over))");
+    assert_eq!(next(vcx, &mut sent, "debug-step-into"), "Ok(Step(Into))");
+    assert_eq!(next(vcx, &mut sent, "debug-step-out"), "Ok(Step(Out))");
+    assert_eq!(next(vcx, &mut sent, "debug-stop"), "Ok(Stop)");
+    rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            if let Some(live) = v.debug.live.as_mut() {
+                live.phase = crate::run::bb_debug::session::control::Phase::Running;
+            }
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    assert_eq!(
+        next(vcx, &mut sent, "debug-step-over"),
+        "Err(Empty)",
+        "running: the steps are greyed and do nothing"
+    );
+}
