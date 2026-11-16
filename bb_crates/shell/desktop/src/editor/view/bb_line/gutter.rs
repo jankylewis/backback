@@ -99,15 +99,76 @@ fn number(
 
 /// The slot after the number: the paused line's arrow, else a diagnostic
 /// dot in its ink.
-fn mark(index: usize, gutter: Option<Ink>, stopped: bool, theme: Theme) -> gpui::Div {
+fn mark(index: usize, gutter: Option<Ink>, stopped: bool, theme: Theme) -> gpui::AnyElement {
     let slot: gpui::Div = div().w(px(10.0));
     if stopped {
+        // BB-FEAT-086: drag the arrow to a line to run that line next, as Rider.
         return slot
+            .id(("stopped-arrow", index))
             .text_color(color(theme.warn))
             .debug_selector(move || format!("stopped-line-{index}"))
-            .child("➜");
+            .cursor_grab()
+            .child("➜")
+            .on_drag(
+                DraggedArrow(theme),
+                |arrow: &DraggedArrow,
+                 _: gpui::Point<gpui::Pixels>,
+                 _: &mut Window,
+                 cx: &mut gpui::App| {
+                    cx.new(|_: &mut Context<DraggedArrow>| *arrow)
+                },
+            )
+            .into_any_element();
     }
     slot.when_some(gutter, |dot: gpui::Div, s: Ink| {
         dot.text_color(color(severity_ink(s, theme))).child("●")
     })
+    .into_any_element()
+}
+
+/// The execution arrow while it is dragged; it follows the pointer.
+#[derive(Clone, Copy)]
+pub(crate) struct DraggedArrow(Theme);
+
+impl gpui::Render for DraggedArrow {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        div().text_color(color(self.0.warn)).child("➜")
+    }
+}
+
+/// Line `line` takes the dragged arrow: the caret goes there and Set Next
+/// Statement runs that line next (Ctrl+Shift+F10, BBEOD05).
+pub(super) fn arrow_drop(
+    row: gpui::Stateful<gpui::Div>,
+    line: usize,
+    theme: Theme,
+    cx: &mut Context<ExplorerView>,
+) -> gpui::Stateful<gpui::Div> {
+    row.drag_over::<DraggedArrow>(
+        move |style: gpui::StyleRefinement, _: &DraggedArrow, _: &mut Window, _: &mut gpui::App| {
+            style.bg(gpui::Rgba {
+                a: 0.28,
+                ..color(theme.warn)
+            })
+        },
+    )
+    .on_drop(cx.listener(
+        move |view: &mut ExplorerView,
+              _: &DraggedArrow,
+              _: &mut Window,
+              cx: &mut Context<ExplorerView>| {
+            use crate::run::bb_debug::session::control;
+            if !control::can_set_next(view) {
+                view.report(&"Set Next Statement: this debugger cannot move the next statement");
+                return;
+            }
+            if let Some(doc) = view.tabs.active_mut() {
+                if let Some(start) = doc.line_start(line) {
+                    let _moved: Result<(), _> = doc.set_cursor(start);
+                }
+            }
+            control::set_next(view);
+            cx.notify();
+        },
+    ))
 }

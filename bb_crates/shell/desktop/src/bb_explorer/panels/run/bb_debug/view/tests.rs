@@ -191,3 +191,43 @@ fn the_debug_toolbar_resumes_steps_and_stops(cx: &mut TestAppContext) {
         "running: the steps are greyed and do nothing"
     );
 }
+
+/// Drag the arrow on line 2 to line 0.
+fn drag_arrow(vcx: &mut VisualTestContext) {
+    let from: gpui::Point<Pixels> = vcx.debug_bounds("stopped-line-2").unwrap().center();
+    let to: gpui::Point<Pixels> = vcx.debug_bounds("editor-line-0").unwrap().center();
+    vcx.simulate_mouse_down(from, gpui::MouseButton::Left, Modifiers::default());
+    vcx.simulate_mouse_move(to, Some(gpui::MouseButton::Left), Modifiers::default());
+    vcx.simulate_mouse_up(to, gpui::MouseButton::Left, Modifiers::default());
+    vcx.run_until_parked();
+}
+
+/// BB-FEAT-086, as Rider: the paused line's arrow drags to another line,
+/// which then runs next; a debugger that cannot move it says so.
+#[gpui::test]
+fn dragging_the_arrow_to_a_line_sets_the_next_statement(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) =
+        rig_with(cx, false, true, "class A\n{\n    void M() { }\n}\n");
+    let mut sent: UnboundedReceiver<Command> = paused(&rig, vcx, 2);
+    drag_arrow(vcx);
+    assert!(sent.try_recv().is_err(), "stock netcoredbg: nothing sent");
+    assert!(status(&rig, vcx).is_some_and(|s: String| s.starts_with("Set Next Statement")));
+    rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            if let Some(live) = v.debug.live.as_mut() {
+                live.can_set_next = true;
+            }
+            cx.notify();
+        },
+    );
+    vcx.run_until_parked();
+    drag_arrow(vcx);
+    match sent.try_recv() {
+        Ok(Command::SetNext(path, line)) => {
+            assert_eq!(path, rig.file);
+            assert_eq!(line, 0, "the line the arrow was dropped on");
+        }
+        other => panic!("expected Set Next on line 0, got {other:?}"),
+    }
+}

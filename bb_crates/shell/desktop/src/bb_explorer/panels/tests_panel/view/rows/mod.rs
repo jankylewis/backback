@@ -161,3 +161,44 @@ pub(super) fn any_running(view: &ExplorerView, path: &Path, prefix: &str) -> boo
                 .any(|name: &Fqn| name.as_str().starts_with(prefix))
         })
 }
+
+/// The rows at their full width, scrolled both ways, with a bar along the
+/// bottom while one is wider than the panel (BB-FEAT-085).
+pub(super) fn rows_box(
+    view: &ExplorerView,
+    rows: Vec<AnyElement>,
+    cx: &mut Context<ExplorerView>,
+) -> AnyElement {
+    let wide: Vec<gpui::Div> = rows
+        .into_iter()
+        .map(|row: AnyElement| {
+            div()
+                .min_w_full()
+                .flex_none()
+                .whitespace_nowrap()
+                .child(row)
+        })
+        .collect();
+    div()
+        .relative()
+        .flex_1()
+        .min_h(px(0.0))
+        .child(
+            div()
+                .id("test-rows")
+                .debug_selector(|| "test-rows".to_owned())
+                .size_full()
+                .overflow_scroll()
+                .track_scroll(&view.tests.rows_scroll)
+                .flex()
+                .flex_col()
+                .items_start()
+                .children(wide),
+        )
+        .children(crate::editor::panel_bar(
+            view,
+            crate::editor::PanelBar::Tests,
+            cx,
+        ))
+        .into_any_element()
+}

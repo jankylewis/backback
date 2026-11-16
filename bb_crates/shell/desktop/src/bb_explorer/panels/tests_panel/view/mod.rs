@@ -30,13 +30,7 @@ pub(crate) fn panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> impl
         .child(toolbar(view, theme, cx))
         .child(filter(view, theme, cx))
         .child(settings_picker(view, cx))
-        .child(
-            div()
-                .id("test-rows")
-                .flex_1()
-                .overflow_y_scroll()
-                .children(rows),
-        )
+        .child(rows::rows_box(view, rows, cx))
         .child(detail(view, theme, cx))
 }
 
