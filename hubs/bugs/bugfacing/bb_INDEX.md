@@ -69,3 +69,7 @@ Bugs a user met in the app. Entries: 64 — FIXED 62, OBSERVED 2.
 | BB-BUG-063 | Dragging the pane divider selected the text under it | FIXED | the line's drag handler never asked where the press began | yes | `C2/D5/S16/BB_BUG_063_DRAGGING_THE_PANE_DIVIDER_SELECTED_THE_TEXT_UNDER_IT.md` |
 | BB-BUG-064 | Debug on a test was a placeholder that never debugged | FIXED | Debug never wired to the debugger; no attach | yes | `C2/D5/S16/BB_BUG_064_DEBUG_ON_A_TEST_WAS_A_PLACEHOLDER_THAT_NEVER_DEBUGGED.md` |
 | BB-BUG-065 | The gutter's ▶ never ran its test | FIXED | full name compared with the declared name | yes | `C2/D5/S17/BB_BUG_065_THE_GUTTER_RUN_MARK_NEVER_RAN_ITS_TEST.md` |
+| BB-BUG-066 | A debugged test never got its ✓ or ✕ | FIXED | the session stopped the run without reading its results | yes | `C2/D5/S17/BB_BUG_066_A_DEBUGGED_TEST_NEVER_GOT_ITS_VERDICT.md` |
+| BB-BUG-067 | Back did not return from a debugger step into another file | FIXED | a stop's jump was not recorded; keys only in the editor | yes | `C2/D5/S17/BB_BUG_067_BACK_DID_NOT_RETURN_FROM_A_DEBUGGER_STEP.md` |
+| BB-BUG-068 | Dragging the execution arrow was refused | FIXED | stock netcoredbg installed; its real test was vacuous | yes | `C2/D5/S17/BB_BUG_068_DRAGGING_THE_EXECUTION_ARROW_WAS_REFUSED.md` |
+| BB-BUG-069 | A click in the Find box fell through to the editor | FIXED | overlays did not occlude the editor under them | yes | `C2/D5/S18/BB_BUG_069_A_CLICK_IN_THE_FIND_BOX_FELL_THROUGH_TO_THE_EDITOR.md` |

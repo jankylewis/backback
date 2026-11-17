@@ -125,7 +125,7 @@ pub(super) fn tab_menu(
             .children(ROWS.iter().chain(extra.iter()).map(
                 |&spec: &(&'static str, &'static str, Item)| row(open.index, spec, theme, cx),
             ));
-    deferred(anchored().position(open.at).child(body)).with_priority(2)
+    deferred(anchored().position(open.at).child(body.occlude())).with_priority(2)
 }
 
 fn row(

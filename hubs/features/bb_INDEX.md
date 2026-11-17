@@ -8,7 +8,7 @@ lists what the app can do and when it came.
 |---|---|
 | `S01.md` | BB-FEAT-001 to 040 |
 | `S02.md` | BB-FEAT-041 to 080 |
-| `S03.md` | BB-FEAT-081 to 086 |
+| `S03.md` | BB-FEAT-081 to 090 |
 
 ## How to add a feature
 

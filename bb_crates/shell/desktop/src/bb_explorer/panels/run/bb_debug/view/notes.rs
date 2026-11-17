@@ -24,6 +24,13 @@ pub(crate) fn apply(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
+    // It comes after the session ended (BB-BUG-066).
+    if let Note::TestResults { project, results } = note {
+        for result in results {
+            view.tests.model.record(&project, result);
+        }
+        return;
+    }
     let Some(live): Option<&mut Live> = view.debug.live.as_mut() else {
         return;
     };
@@ -32,6 +39,7 @@ pub(crate) fn apply(
         Note::Building => view.status = Some(format!("Building {label}...")),
         Note::Running => {
             live.phase = Phase::Running;
+            view.debug.tree.forget_children();
             view.status = Some(format!("Running {label}"));
         }
         Note::Stopped {
@@ -40,7 +48,12 @@ pub(crate) fn apply(
             frames,
             vars,
         } => stopped(view, (reason, exception), (frames, vars), window, cx),
-        Note::Variables { frame, vars } => variables(live, frame, vars),
+        Note::Variables { frame, vars } => {
+            variables(live, frame, vars);
+            super::inspect::ask_children(view);
+        }
+        Note::Children { reference, vars } => super::inspect::children(view, reference, vars),
+        Note::Evaluated { token, value } => super::inspect::evaluated(view, token, value),
         Note::Output(text) => keep_output(&mut live.output, &text),
         Note::CanSetNext(can) => live.can_set_next = can,
         Note::Refused(why) => view.status = Some(why),
@@ -48,6 +61,7 @@ pub(crate) fn apply(
             view.debug.live = None;
             view.status = Some(format!("Debugging ended: {why}"));
         }
+        Note::TestResults { .. } => {}
         Note::Failed(why) => {
             view.debug.live = None;
             view.report(&format!("Debug failed: {why}"));
@@ -85,6 +99,8 @@ fn stopped(
             exception,
         };
     }
+    view.debug.tree.forget_children();
+    super::inspect::ask_children(view);
     open_selected(view, window, cx);
 }
 
@@ -146,6 +162,14 @@ fn open_selected(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<
         line: u32::try_from(line).unwrap_or(u32::MAX),
         character: 0,
     };
+    // A stop in another file is a place Back returns from (BB-BUG-067).
+    if view
+        .tabs
+        .active_tab()
+        .is_some_and(|tab: &crate::editor::Tab| tab.path != path)
+    {
+        view.tabs.leave_here();
+    }
     crate::intel::glue::goto_point(view, &path, at, window, cx);
 }
 

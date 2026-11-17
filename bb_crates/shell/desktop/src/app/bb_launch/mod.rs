@@ -12,7 +12,7 @@ use std::{path::PathBuf, time::Instant};
 mod bb_window;
 mod open;
 pub(crate) mod recent;
-pub(crate) use bb_window::on_view as window_actions;
+pub(crate) use bb_window::{on_view as window_actions, title as window_title};
 pub(crate) use open::{show_start_page, start_state};
 
 pub(crate) fn launch() {
@@ -72,6 +72,7 @@ pub(crate) fn open_workspace(wanted: &Start, cx: &mut App) -> bool {
     let result: gpui::Result<gpui::WindowHandle<ExplorerView>> = cx.open_window(
         WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(bounds)),
+            titlebar: Some(bb_window::titlebar(&wanted.root)),
             ..Default::default()
         },
         |window: &mut Window, cx: &mut App| build_window(tree, wanted, start, window, cx),

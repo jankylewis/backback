@@ -82,6 +82,9 @@ const HOST_DEADLINE: std::time::Duration = std::time::Duration::from_secs(120);
 /// then run by the backend that runs it (Apex CLI `--debug`, or `dotnet
 /// test` with `VSTEST_HOST_DEBUG=1`). The folder holds the Apex run's TRX
 /// and must live as long as the host.
+/// The debugged test's results, in the run's folder (BB-BUG-066).
+pub(crate) const DEBUG_TRX: &str = "debug.trx";
+
 pub(crate) async fn debug_host(
     root: PathBuf,
     path: &Path,
@@ -92,6 +95,7 @@ pub(crate) async fn debug_host(
     let specs: [bb_testkit::Fqn; 1] = [fqn.clone()];
     let folder: bb_process::OwnedTempDir = bb_process::OwnedTempDir::create_with("bb-run", "debug")
         .map_err(|error: std::io::Error| error.to_string())?;
+    let trx: PathBuf = folder.path().join(DEBUG_TRX);
     let host: bb_testkit::DebugHost = if super::super::uses_apex(&root, path) {
         let settings: ApexSettings = super::super::apex_settings(&root)?;
         let backend: ApexBackend = ApexBackend::new(Workspace::at(root), settings)
@@ -102,7 +106,6 @@ pub(crate) async fn debug_host(
                 .await
                 .map_err(|error: bb_testkit::TestkitError| error.to_string())?;
         }
-        let trx: PathBuf = folder.path().join("debug.trx");
         backend
             .debug(&project, &specs, &trx, HOST_DEADLINE)
             .await
@@ -116,7 +119,7 @@ pub(crate) async fn debug_host(
             .await
             .map_err(|error: bb_testkit::TestkitError| error.to_string())?;
         backend
-            .debug(&project, &specs, HOST_DEADLINE)
+            .debug(&project, &specs, &trx, HOST_DEADLINE)
             .await
             .map_err(|error: bb_testkit::TestkitError| error.to_string())?
     };

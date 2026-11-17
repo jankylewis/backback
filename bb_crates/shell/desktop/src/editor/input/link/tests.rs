@@ -46,7 +46,7 @@ fn mouse_at(vcx: &mut VisualTestContext, line: usize, column: usize) -> gpui::Po
     let name: &'static str = ["editor-line-0", "editor-line-1", "editor-line-2"][line];
     let row: Bounds<Pixels> = vcx.debug_bounds(name).unwrap();
     let x: f32 =
-        f32::from(row.origin.x) + 50.0 + 7.8 * f32::from(u16::try_from(column).unwrap()) + 1.0;
+        f32::from(row.origin.x) + 56.0 + 7.8 * f32::from(u16::try_from(column).unwrap()) + 1.0;
     gpui::point(gpui::px(x), row.center().y)
 }
 

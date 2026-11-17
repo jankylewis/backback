@@ -55,9 +55,9 @@ async fn serve(start: &Start, commands: UnboundedReceiver<Command>, notes: &Unbo
         Ok((session, events, host)) => {
             send(notes, Note::CanSetNext(session.can_set_next_statement()));
             send(notes, Note::Running);
-            run(&session, events, commands, notes).await;
-            if let Some((host, _folder)) = host {
-                host.stop().await;
+            let ended: bool = run(&session, events, commands, notes).await;
+            if let Some((host, folder)) = host {
+                super::stops::test_results(start, (host, &folder), ended, notes).await;
             }
         }
         Err(reason) => send(notes, Note::Failed(reason)),
@@ -65,7 +65,7 @@ async fn serve(start: &Start, commands: UnboundedReceiver<Command>, notes: &Unbo
 }
 
 /// A test's paused host and the folder its run writes to.
-type Host = (bb_testkit::DebugHost, bb_process::OwnedTempDir);
+pub(super) type Host = (bb_testkit::DebugHost, bb_process::OwnedTempDir);
 
 /// Start the adapter on the target: launch the program, or for a test
 /// attach to its paused test host (which then runs on by itself).
@@ -145,11 +145,13 @@ async fn run(
     mut events: Receiver<Event>,
     mut commands: UnboundedReceiver<Command>,
     notes: &UnboundedSender<Note>,
-) {
+) -> bool {
     let mut thread: Option<i64> = None;
     loop {
+        let mut by_program: bool = false;
         let going: bool = tokio::select! {
             event = events.recv() => {
+                by_program = true;
                 if let Some(event) = event {
                     super::stops::on_event(session, event, &mut thread, notes).await
                 } else {
@@ -164,7 +166,7 @@ async fn run(
         };
         if !going {
             let _gone: Result<(), bb_dap::DapError> = session.disconnect(true).await;
-            return;
+            return by_program;
         }
     }
 }
@@ -188,6 +190,9 @@ async fn on_command(
         (Command::Frame(frame), _) => super::stops::frame_vars(session, frame)
             .await
             .map(|vars: Vec<Var>| send(notes, Note::Variables { frame, vars })),
+        (command @ (Command::Expand(_) | Command::Evaluate { .. }), _) => {
+            super::stops::inspect(session, command, notes).await
+        }
         (Command::Continue, Some(id)) => session.continue_thread(id).await,
         (Command::Step(kind), Some(id)) => session.step(step(kind), id).await,
         (Command::SetNext(path, line), Some(id)) => {

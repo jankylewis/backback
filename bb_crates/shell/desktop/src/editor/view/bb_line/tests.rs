@@ -83,7 +83,7 @@ fn the_caret_sits_at_the_shaped_x_of_its_column_and_the_text_never_moves(cx: &mu
         put_cursor(&rig, vcx, 0, column);
         let row: Bounds<Pixels> = vcx.debug_bounds("editor-line-0").expect("line row");
         let caret: Bounds<Pixels> = vcx.debug_bounds("editor-caret").expect("caret quad");
-        let want: f32 = f32::from(row.origin.x) + 50.0 + shaped_x(column);
+        let want: f32 = f32::from(row.origin.x) + 56.0 + shaped_x(column);
         // Layout snaps an element to whole device pixels (scale 1 here); glyphs
         // keep fractional x. So the caret is within half a device pixel.
         assert!(
@@ -110,7 +110,7 @@ fn the_caret_sits_at_the_shaped_x_of_its_column_and_the_text_never_moves(cx: &mu
     let caret: Bounds<Pixels> = vcx
         .debug_bounds("editor-caret")
         .expect("caret on empty line");
-    assert!((f32::from(caret.origin.x) - (f32::from(row.origin.x) + 50.0)).abs() <= 0.5);
+    assert!((f32::from(caret.origin.x) - (f32::from(row.origin.x) + 56.0)).abs() <= 0.5);
 }
 
 #[gpui::test]
@@ -119,7 +119,7 @@ fn a_click_lands_on_the_column_drawn_under_the_mouse(cx: &mut TestAppContext) {
     put_cursor(&rig, vcx, 2, 0);
     let row: Bounds<Pixels> = vcx.debug_bounds("editor-line-0").expect("line row");
     for column in [0, 10, 11, 14, LINE.chars().count() - 1] {
-        let x: f32 = f32::from(row.origin.x) + 50.0 + shaped_x(column) + 1.0;
+        let x: f32 = f32::from(row.origin.x) + 56.0 + shaped_x(column) + 1.0;
         let at: gpui::Point<Pixels> = gpui::point(gpui::px(x), row.center().y);
         vcx.simulate_click(at, Modifiers::default());
         let got: usize = rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {

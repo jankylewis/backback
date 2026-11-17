@@ -30,7 +30,7 @@ pub(crate) fn at_cursor(model: &IntelModel, left: f32, theme: Theme) -> Option<A
             .absolute()
             .top(px(22.0))
             .left(px(left))
-            .child(deferred(anchored().child(body)).with_priority(1))
+            .child(deferred(anchored().child(div().occlude().child(body))).with_priority(1))
             .into_any_element(),
     )
 }
@@ -157,7 +157,7 @@ pub(crate) fn hover(popup: Option<&HoverPopup>, theme: Theme) -> Option<AnyEleme
         deferred(
             anchored()
                 .position(point(px(popup.x), px(popup.y + 16.0)))
-                .child(body),
+                .child(body.occlude()),
         )
         .with_priority(2)
         .into_any_element(),

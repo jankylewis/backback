@@ -65,3 +65,7 @@
 | BB-BUG-063 | A drag selects only when its press began on the text (`Lines::text_press`) | FIXED | window test, red first; mutation red | `C2/D5/S16/BB_BUG_063_DRAGGING_THE_PANE_DIVIDER_SELECTED_THE_TEXT_UNDER_IT.md` |
 | BB-BUG-064 | Debug a test: paused test host, netcoredbg attaches with the breakpoints | FIXED | real session test + window test | `C2/D5/S16/BB_BUG_064_DEBUG_ON_A_TEST_WAS_A_PLACEHOLDER_THAT_NEVER_DEBUGGED.md` |
 | BB-BUG-065 | Compare the method's own name in `test_marks::target` | FIXED | window test (▶ runs, right-click menu) | `C2/D5/S17/BB_BUG_065_THE_GUTTER_RUN_MARK_NEVER_RAN_ITS_TEST.md` |
+| BB-BUG-066 | After a debugged test ends, read its TRX and record the results as a run's | FIXED | window test, red by mutation | `C2/D5/S17/BB_BUG_066_A_DEBUGGED_TEST_NEVER_GOT_ITS_VERDICT.md` |
+| BB-BUG-067 | A stop in another file records the place it leaves; Back / Forward work from any focus | FIXED | window test, red by mutation | `C2/D5/S17/BB_BUG_067_BACK_DID_NOT_RETURN_FROM_A_DEBUGGER_STEP.md` |
+| BB-BUG-068 | Install the patched netcoredbg; the Set Next test keeps its fixture folder alive | FIXED | real adapter test, was Elapsed, now green | `C2/D5/S17/BB_BUG_068_DRAGGING_THE_EXECUTION_ARROW_WAS_REFUSED.md` |
+| BB-BUG-069 | The Find box, popups and menus occlude what is under them | FIXED | window test, red with the title bar | `C2/D5/S18/BB_BUG_069_A_CLICK_IN_THE_FIND_BOX_FELL_THROUGH_TO_THE_EDITOR.md` |

@@ -16,4 +16,7 @@ pub(crate) fn root_actions(
     let set_next: bool = bb_debug::session::control::can_set_next(view);
     crate::quick_open::actions(bb_debug::actions(root, set_next, cx), cx)
         .on_action(cx.listener(crate::editor::on_new_file))
+        // Back / Forward from any focus, the Debug panel's too (BB-BUG-067).
+        .on_action(cx.listener(crate::editor::go_back))
+        .on_action(cx.listener(crate::editor::go_forward))
 }

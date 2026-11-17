@@ -3,11 +3,13 @@
 //! removed above them, as in VS Code and Rider.
 
 mod bb_exceptions;
+mod toggle;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 pub(crate) use bb_exceptions::{ExceptionBreaks, ExceptionKind};
+pub(crate) use toggle::{after_edit, on_toggle, toggle_line, ToggleBreakpoint};
 
 /// Every breakpoint, by file.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

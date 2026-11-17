@@ -14,7 +14,9 @@ use crate::{color, ExplorerView};
 pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_part, LineRow, TestGutter};
 pub(crate) use chrome::bb_scrollbar;
-use chrome::{status, test_marks};
+use chrome::edges::status;
+pub(crate) use chrome::edges::title_bar;
+use chrome::test_marks;
 pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines, HANDLE_PX};
 pub(crate) use pane::{area as editor_area, layout as layout_panes, panes};
 pub(crate) use status::{build, status_bar};
@@ -48,10 +50,8 @@ pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .on_key_down(cx.listener(ExplorerView::editor_key_down))
         .capture_any_mouse_down(cx.listener(back_in_the_file))
         .map(|area: gpui::Stateful<gpui::Div>| super::link::on_editor(area, view, cx))
-        .on_action(cx.listener(super::go_back))
         .on_action(cx.listener(crate::run::build::on_build))
         .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
-        .on_action(cx.listener(super::go_forward))
         .map(|area: gpui::Stateful<gpui::Div>| crate::editor::on_tab_actions(area, cx))
         .on_scroll(cx.listener(pane::bb_hscroll::on_wheel))
         .child(focused_lines(view, cx))

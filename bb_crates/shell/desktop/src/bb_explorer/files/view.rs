@@ -61,7 +61,7 @@ pub(crate) fn menu(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Optio
                 .map(|&spec: &(&'static str, &'static str, Item)| row(spec, theme, cx)),
         );
     Some(
-        deferred(anchored().position(open.at).child(body))
+        deferred(anchored().position(open.at).child(body.occlude()))
             .with_priority(2)
             .into_any_element(),
     )

@@ -27,11 +27,13 @@ fn fixture_line(source: &str, statement: &str) -> usize {
         + 1
 }
 
-async fn build_fixture() -> (PathBuf, PathBuf, String) {
+/// The built fixture, its source and text. The `Built` must live as long
+/// as the session: dropping it deletes the folder (BB-BUG-068).
+async fn build_fixture() -> (fixture::Built, PathBuf, String) {
     let built: fixture::Built = fixture::build("setnext").await;
     let source: PathBuf = built.dir.join("_Program.cs");
     let content: String = std::fs::read_to_string(&source).unwrap();
-    (built.dir, source, content)
+    (built, source, content)
 }
 
 async fn first_stop(session: &mut Session, source: &Path, content: &str) -> i64 {
@@ -177,11 +179,11 @@ async fn setnext_reexecutes_and_refuses_unsafe_targets() {
     }
     eprintln!("adapter_variant=patched; goto readback required");
     let binary: String = binary.to_string_lossy().into_owned();
-    let (scratch, source, content): (PathBuf, PathBuf, String) = build_fixture().await;
+    let (built, source, content): (fixture::Built, PathBuf, String) = build_fixture().await;
     let mut session: Session = Session::start(&binary);
     let thread: i64 = first_stop(&mut session, &source, &content).await;
     rewind_and_reexecute(&mut session, &source, &content, thread).await;
     exception_exits_fail(&mut session, &source, &content, thread).await;
     drop(session);
-    std::fs::remove_dir_all(scratch).unwrap();
+    drop(built);
 }
