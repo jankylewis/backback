@@ -10,13 +10,20 @@ use std::path::Path;
 use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, AnyElement, ClickEvent, Context, Window};
 
+mod bb_vars;
+#[cfg(test)]
+mod tests;
+mod ticks;
+
+pub(crate) use bb_vars::VarTree;
+
 use super::notes::select_frame;
-use super::ticks::title_row;
 use crate::editor::PanelBar;
 use crate::intel::view::one_line;
 use crate::run::bb_debug::session::control::{Live, Phase};
 use crate::run::bb_debug::session::{Frame, Var};
 use crate::{color, ExplorerView};
+use ticks::title_row;
 
 /// The panel, if a session lives.
 pub(crate) fn panel(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Option<AnyElement> {
@@ -208,19 +215,13 @@ fn variables(
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Div {
-    let rows: Vec<AnyElement> = vars
-        .iter()
-        .map(|var: &Var| {
-            wide_row()
-                .gap_2()
-                .child(var.name.clone())
-                .child(
-                    div()
-                        .text_color(color(theme.string))
-                        .child(var.value.clone()),
-                )
-                .into_any_element()
-        })
+    let rows: Vec<AnyElement> = view
+        .debug
+        .tree
+        .rows(vars)
+        .into_iter()
+        .enumerate()
+        .map(|(index, row): (usize, bb_vars::Row)| bb_vars::row(index, row, theme, cx))
         .collect();
     column(view, ("VARIABLES", PanelBar::Vars), rows, cx)
 }

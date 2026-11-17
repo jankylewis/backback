@@ -59,6 +59,14 @@ impl DebugHost {
         Err(TestkitError::NoHostPid(deadline))
     }
 
+    /// The debugged test ran to its end: let the run write its results for
+    /// up to `grace`, then stop whatever is left.
+    pub async fn finish(mut self, grace: Duration) {
+        let _ended: Result<std::io::Result<std::process::ExitStatus>, _> =
+            tokio::time::timeout(grace, self.child.wait()).await;
+        self.stop().await;
+    }
+
     /// Stop the run and everything it started, the waiting host included.
     pub async fn stop(mut self) {
         drop(self.group.take());
@@ -78,7 +86,8 @@ async fn first_pid(mut lines: Lines<BufReader<ChildStdout>>) -> Option<HostPid> 
 
 impl DotnetBackend {
     /// Start `specs` under `dotnet test` with `VSTEST_HOST_DEBUG=1` and wait
-    /// for the test host id. The project must be built (`--no-build`).
+    /// for the test host id. The project must be built (`--no-build`). The
+    /// results go to `trx`.
     ///
     /// # Errors
     /// The run cannot start, or prints no id within `deadline`.
@@ -86,6 +95,7 @@ impl DotnetBackend {
         &self,
         project: &ProjectPath,
         specs: &[Fqn],
+        trx: &std::path::Path,
         deadline: Duration,
     ) -> Result<DebugHost, TestkitError> {
         let selection: Selection = Selection {
@@ -101,6 +111,10 @@ impl DotnetBackend {
         if let Some(settings) = &self.settings {
             call = call.args(["--settings".into(), settings.as_os_str().to_owned()]);
         }
+        call = call.args([
+            "--logger".to_owned(),
+            format!("trx;LogFileName={}", trx.display()),
+        ]);
         let mut command: Command = call.command();
         command.env("VSTEST_HOST_DEBUG", "1");
         DebugHost::start(command, call.name(), deadline).await

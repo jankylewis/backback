@@ -190,6 +190,8 @@ pub(crate) fn overlay(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Op
     let query: gpui::Div = bb_lines::query_lines(quick, theme, cx);
     let panel: gpui::Stateful<gpui::Div> = div()
         .id("quick-open")
+        // A press never reaches the editor under it (BB-BUG-069).
+        .occlude()
         .track_focus(&view.quick_focus)
         .on_key_down(cx.listener(key))
         .on_mouse_down_out(cx.listener(

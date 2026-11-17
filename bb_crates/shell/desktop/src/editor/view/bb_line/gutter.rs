@@ -25,7 +25,12 @@ pub(super) fn gutter_cell(
         .flex()
         .text_color(color(theme.text_dim))
         .child(number(index, breakpoint, theme, cx))
-        .child(mark(index, gutter, stopped, theme))
+        .child(mark(
+            index,
+            (gutter, stopped),
+            crate::settings::typography(cx).size(),
+            theme,
+        ))
         .when_some(test, |cell: gpui::Div, test: TestGutter| {
             cell.child(
                 div()
@@ -98,9 +103,15 @@ fn number(
 }
 
 /// The slot after the number: the paused line's arrow, else a diagnostic
-/// dot in its ink.
-fn mark(index: usize, gutter: Option<Ink>, stopped: bool, theme: Theme) -> gpui::AnyElement {
-    let slot: gpui::Div = div().w(px(10.0));
+/// dot in its ink. The arrow is drawn larger and bold, as Rider's
+/// (BB-FEAT-089).
+fn mark(
+    index: usize,
+    (gutter, stopped): (Option<Ink>, bool),
+    size: f32,
+    theme: Theme,
+) -> gpui::AnyElement {
+    let slot: gpui::Div = div().w(px(size)).flex().justify_center();
     if stopped {
         // BB-FEAT-086: drag the arrow to a line to run that line next, as Rider.
         return slot
@@ -108,6 +119,9 @@ fn mark(index: usize, gutter: Option<Ink>, stopped: bool, theme: Theme) -> gpui:
             .text_color(color(theme.warn))
             .debug_selector(move || format!("stopped-line-{index}"))
             .cursor_grab()
+            // Scaled from the settings' size, never a size of its own.
+            .text_size(arrow_size(size))
+            .font_weight(gpui::FontWeight::BOLD)
             .child("➜")
             .on_drag(
                 DraggedArrow(theme),
@@ -126,13 +140,24 @@ fn mark(index: usize, gutter: Option<Ink>, stopped: bool, theme: Theme) -> gpui:
     .into_any_element()
 }
 
+/// The execution arrow's size against the text's.
+const ARROW_SCALE: f32 = 1.3;
+
+/// The arrow's size for text of `size` pt.
+fn arrow_size(size: f32) -> gpui::Pixels {
+    px(size * ARROW_SCALE)
+}
+
 /// The execution arrow while it is dragged; it follows the pointer.
 #[derive(Clone, Copy)]
 pub(crate) struct DraggedArrow(Theme);
 
 impl gpui::Render for DraggedArrow {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-        div().text_color(color(self.0.warn)).child("➜")
+        div()
+            .text_color(color(self.0.warn))
+            .font_weight(gpui::FontWeight::BOLD)
+            .child("➜")
     }
 }
 

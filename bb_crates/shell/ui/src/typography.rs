@@ -63,11 +63,12 @@ impl Typography {
         (self.size() * 1.7).round()
     }
 
-    /// The editor's line-number gutter: 50 px at 13 pt, scaled with the size,
+    /// The editor's line-number gutter: 56 px at 13 pt (room for the larger
+    /// execution arrow, BB-FEAT-089), scaled with the size,
     /// so numbers never run into the code when zoomed.
     #[must_use]
     pub fn gutter_width(&self) -> f32 {
-        (self.size() * 50.0 / DEFAULT_SIZE).round()
+        (self.size() * 56.0 / DEFAULT_SIZE).round()
     }
 
     /// Where the editor's text starts in the window: after the tool window
@@ -171,12 +172,12 @@ mod tests {
             (t.family.as_str(), t.size(), t.line_height()),
             ("Menlo", 13.0, 22.0)
         );
-        assert_eq!(t.gutter_width(), 50.0);
+        assert_eq!(t.gutter_width(), 56.0);
         let big: Typography = Typography {
             zoom: 13,
             ..Typography::default()
         };
-        assert_eq!(big.gutter_width(), 100.0, "the gutter grows with the text");
+        assert_eq!(big.gutter_width(), 112.0, "the gutter grows with the text");
     }
 
     #[test]

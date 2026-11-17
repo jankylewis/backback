@@ -76,7 +76,7 @@ pub(crate) fn menu(
         .child(item("run", "▶ Run", Pick::Run, theme, cx))
         .child(item("debug", "Debug", Pick::Debug, theme, cx));
     Some(
-        deferred(anchored().position(open.at).child(body))
+        deferred(anchored().position(open.at).child(body.occlude()))
             .with_priority(2)
             .into_any_element(),
     )

@@ -31,6 +31,15 @@ pub(crate) enum Command {
     /// Ctrl+Shift+F10 while paused: run this file's 0-based line next
     /// (Set Next Statement, BBEOD05).
     SetNext(PathBuf, usize),
+    /// A variable row was opened: its children (BB-FEAT-087).
+    Expand(i64),
+    /// The mouse rests on a name while paused: its value in `frame`
+    /// (BB-FEAT-088); `token` is the hover's.
+    Evaluate {
+        expression: String,
+        frame: i64,
+        token: u64,
+    },
 }
 
 /// A step command.
@@ -55,11 +64,13 @@ pub(crate) struct Frame {
     pub(crate) line: usize,
 }
 
-/// One variable: name and value as the adapter shows them.
+/// One variable: name and value as the adapter shows them; `reference`
+/// names its children (0: none).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Var {
     pub(crate) name: String,
     pub(crate) value: String,
+    pub(crate) reference: i64,
 }
 
 /// Session to UI.
@@ -79,6 +90,18 @@ pub(crate) enum Note {
     },
     /// The variables of a picked frame.
     Variables { frame: i64, vars: Vec<Var> },
+    /// An opened variable's children.
+    Children { reference: i64, vars: Vec<Var> },
+    /// A hovered name's value, or why it has none.
+    Evaluated {
+        token: u64,
+        value: Result<Var, String>,
+    },
+    /// A debugged test ran to its end: its results, for its project's rows.
+    TestResults {
+        project: PathBuf,
+        results: Vec<bb_testkit::SpecResult>,
+    },
     /// Program or debugger output.
     Output(String),
     /// The adapter can move the next statement (`supportsGotoTargetsRequest`).

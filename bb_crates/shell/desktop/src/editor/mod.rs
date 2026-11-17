@@ -10,7 +10,9 @@ pub(crate) use bb_tabs::tab::untitled::{on_new_file, NewFile};
 pub(crate) use bb_tabs::{
     apply_tab_menu, on_tab_actions, tab_bindings, tab_menu_item, TabMenuItem,
 };
-pub(crate) use bb_tabs::{go_back, go_forward, GoBack, GoForward, Tab, TabError, TabEvent, Tabs};
+pub(crate) use bb_tabs::{
+    go, go_back, go_forward, GoBack, GoForward, Tab, TabError, TabEvent, Tabs,
+};
 pub(crate) use bb_tabs::{Group, MAX_GROUPS};
 pub(crate) use input::handle_key;
 pub(crate) use input::link;
@@ -18,9 +20,37 @@ pub(crate) use prompt::{AfterClose, CloseWorkspace, Quit};
 pub(crate) use view::bb_scrollbar::{panel_bar, PanelBar};
 pub(crate) use view::wrap;
 pub(crate) use view::{
-    bottom_handle, build, editor_area, handle, layout_panes, panes, status_bar, Columns, Edge,
-    Lines, HANDLE_PX,
+    bottom_handle, build, editor_area, handle, layout_panes, panes, status_bar, title_bar, Columns,
+    Edge, Lines, HANDLE_PX,
 };
+
+/// The editor column: the panes, the bottom panel and terminal under them,
+/// then the status bar.
+pub(crate) fn column(
+    view: &mut crate::ExplorerView,
+    (panel, shell): (Option<gpui::AnyElement>, Option<gpui::AnyElement>),
+    status: &str,
+    cx: &mut gpui::Context<crate::ExplorerView>,
+) -> gpui::Div {
+    use gpui::{ParentElement, Styled};
+    gpui::div()
+        .flex_1()
+        .min_w(gpui::px(0.0))
+        .overflow_hidden()
+        .h_full()
+        .flex()
+        .flex_col()
+        .child(panes(view, cx))
+        .children(panel)
+        .children(shell)
+        .child(status_bar(
+            view.status.as_deref(),
+            status,
+            view.intel.status == crate::intel::model::LoadStatus::Stopped,
+            view.theme,
+            cx,
+        ))
+}
 
 /// How often open files are checked against the disk (BB-BUG-035).
 const DISK_CHECK: std::time::Duration = std::time::Duration::from_secs(2);

@@ -54,3 +54,7 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-063 | Text highlights while dragging a divider, scroll bar or tab | FIXED | Did the press begin on the text? `Lines::text_press` must be set |
 | BB-BUG-064 | Debug on a test does nothing, or "no test host id" | FIXED | Does the Apex CLI support `--debug`? Plain projects use `VSTEST_HOST_DEBUG=1` |
 | BB-BUG-065 | the gutter ▶ opens TESTS, runs nothing | FIXED | Does `target` compare the method's own name, not the full name? |
+| BB-BUG-066 | a debugged test keeps · | FIXED | Did the session read the run's TRX after the program ended (`test_results`)? |
+| BB-BUG-067 | Cmd+[ does not return from a step | FIXED | Did the stop record the place it left (`leave_here`)? Is the key handled at the root? |
+| BB-BUG-068 | drag the ➜: "cannot move the next statement" | FIXED | Is the installed netcoredbg the patched build (`strings … \| grep supportsGotoTargetsRequest`)? |
+| BB-BUG-069 | a click in a box or menu moves the editor's caret or focus | FIXED | Does the overlay `.occlude()`? |

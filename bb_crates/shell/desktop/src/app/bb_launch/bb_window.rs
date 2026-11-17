@@ -65,6 +65,16 @@ pub(crate) fn window_menu() -> Menu {
     ])
 }
 
+/// The system bar is hidden: backback draws its own, with Back / Forward
+/// (BB-FEAT-090); the window buttons sit inside it.
+pub(crate) fn titlebar(root: &std::path::Path) -> gpui::TitlebarOptions {
+    gpui::TitlebarOptions {
+        title: Some(title(root).into()),
+        appears_transparent: true,
+        traffic_light_position: Some(gpui::point(gpui::px(12.0), gpui::px(10.0))),
+    }
+}
+
 /// A workspace window's title, the folder's name as VS Code shows it:
 /// macOS lists only titled windows in the Window menu (BB-BUG-048).
 pub(crate) fn title(root: &std::path::Path) -> String {

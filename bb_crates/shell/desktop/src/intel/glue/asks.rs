@@ -212,12 +212,21 @@ fn hover_rested(view: &mut ExplorerView, path: PathBuf, at: CharIdx, token: u64)
         .hover_target
         .as_ref()
         .is_some_and(|target: &(PathBuf, CharIdx, u64)| target.2 == token);
+    // Paused: the name's value from the debugger first (BB-FEAT-088).
+    if !still || crate::run::bb_debug::view::inspect::hover_value(view, &path, at, token) {
+        return;
+    }
+    hover_ask(view, path, at);
+}
+
+/// Ask the server for hover text at `at`, once it is ready.
+pub(crate) fn hover_ask(view: &mut ExplorerView, path: PathBuf, at: CharIdx) {
     let point: Option<LspPoint> = view
         .tabs
         .tab_mut(&path)
         .and_then(|tab: &mut Tab| tab.document.lsp_point(at).ok());
     let ready: bool = view.link.is_some() && view.intel.status == LoadStatus::Ready;
-    if let (true, true, Some(point)) = (still, ready, point) {
+    if let (true, Some(point)) = (ready, point) {
         ask(view, path, Ask::Hover(point), at);
     }
 }

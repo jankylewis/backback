@@ -16,7 +16,7 @@ use bb_testkit::{ApexSettings, Fqn, Selection, SpecResult, StopFlag};
 
 pub(crate) use actions::open;
 pub(crate) use actions::toggle_project;
-pub(crate) use actions::{debug_host, find};
+pub(crate) use actions::{debug_host, find, DEBUG_TRX};
 pub(crate) use actions::{run_category, run_class, run_failed, run_project, run_spec, stop};
 pub(crate) use model::TestModel;
 pub(crate) use view::{open_spec, panel, test_menu, TestMenu};

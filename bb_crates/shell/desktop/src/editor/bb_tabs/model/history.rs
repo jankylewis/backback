@@ -34,7 +34,13 @@ pub(crate) fn go_forward(
     go(view, false, window, cx);
 }
 
-fn go(view: &mut ExplorerView, back: bool, window: &mut Window, cx: &mut Context<ExplorerView>) {
+/// Back (`back`) or Forward, from the keys or the title bar's arrows.
+pub(crate) fn go(
+    view: &mut ExplorerView,
+    back: bool,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
     let Some(here): Option<Place> = view.tabs.here() else {
         return;
     };
@@ -74,6 +80,16 @@ impl History {
             }
         }
         self.forward.clear();
+    }
+
+    /// Back has a place to go (the title bar's ← is live).
+    pub(crate) fn can_back(&self) -> bool {
+        !self.back.is_empty()
+    }
+
+    /// Forward has a place to go.
+    pub(crate) fn can_forward(&self) -> bool {
+        !self.forward.is_empty()
     }
 
     /// Where Back goes from `here`; `here` becomes Forward.

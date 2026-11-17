@@ -206,10 +206,7 @@ impl Render for ExplorerView {
         launch::window_actions(settings::root(cx))
             .size_full()
             .flex()
-            .when(
-                settings::typography(cx).panel_right,
-                gpui::Styled::flex_row_reverse,
-            )
+            .flex_col()
             .bg(color(self.theme.bg))
             .on_action(cx.listener(ExplorerView::toggle_theme))
             .on_action(cx.listener(ExplorerView::follow_appearance))
@@ -220,26 +217,19 @@ impl Render for ExplorerView {
             .on_action(cx.listener(ExplorerView::restart_server))
             .map(|root: gpui::Div| terminal::actions(root, cx))
             .map(|root: gpui::Div| run::root_actions(root, self, cx))
-            .child(navigation::side_panel(self, cx))
-            .child(panel::resize_edge(self.theme, cx))
+            .child(editor::title_bar(self, cx))
             .child(
                 div()
                     .flex_1()
-                    .min_w(gpui::px(0.0))
-                    .overflow_hidden()
-                    .h_full()
+                    .min_h(gpui::px(0.0))
                     .flex()
-                    .flex_col()
-                    .child(editor::panes(self, cx))
-                    .children(panel)
-                    .children(shell)
-                    .child(editor::status_bar(
-                        self.status.as_deref(),
-                        &status,
-                        self.intel.status == intel::model::LoadStatus::Stopped,
-                        self.theme,
-                        cx,
-                    )),
+                    .when(
+                        settings::typography(cx).panel_right,
+                        gpui::Styled::flex_row_reverse,
+                    )
+                    .child(navigation::side_panel(self, cx))
+                    .child(panel::resize_edge(self.theme, cx))
+                    .child(editor::column(self, (panel, shell), &status, cx)),
             )
             .children(quick_open::overlay(self, cx))
     }
