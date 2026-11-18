@@ -70,3 +70,6 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-ENV-002 | the machine runs hot during a gate | FIXED | Is `CARGO_BUILD_JOBS` 1 and `--test-threads=1`? Nothing else heavy running? |
 | BB-TG-023 | a gate takes many minutes for a small change | FIXED | `gate.sh --plan`: is the scope right? `--full` only when unsure |
 | BB-LSP-008 | `stopped within one second: Elapsed(())` in the dead-server test | OBSERVED | Is the runner loaded? Rerun it alone; time kill to `Stopped` |
+| BB-PRC-008 | `dotnet test` on a temp `Tests.csproj` with ppid 1 | FIXED | Did the session test drop its `Debugged` guard? Is the thread drained? |
+| BB-GAT-008 | `wildcard match will also match any future added variants` in a test | FIXED | Did clippy run on the touched crates before the gate? |
+| BB-GAT-009 | `got Refused("Set Next Statement refused: adapter does not support` in CI only | FIXED | Is CI on the stock adapter? Run the test with `BACKBACK_NETCOREDBG` on the stock copy |

@@ -11,6 +11,7 @@ use bb_ui::bb_theme::Theme;
 use gpui::{div, prelude::*, px, AnyElement, ClickEvent, Context, Window};
 
 mod bb_vars;
+pub(crate) mod stale;
 #[cfg(test)]
 mod tests;
 mod ticks;
@@ -215,14 +216,15 @@ fn variables(
     theme: Theme,
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Div {
-    let rows: Vec<AnyElement> = view
-        .debug
-        .tree
-        .rows(vars)
-        .into_iter()
-        .enumerate()
-        .map(|(index, row): (usize, bb_vars::Row)| bb_vars::row(index, row, theme, cx))
-        .collect();
+    let mut rows: Vec<AnyElement> = stale::notice_row(view, theme).into_iter().collect();
+    rows.extend(
+        view.debug
+            .tree
+            .rows(vars)
+            .into_iter()
+            .enumerate()
+            .map(|(index, row): (usize, bb_vars::Row)| bb_vars::row(index, row, theme, cx)),
+    );
     column(view, ("VARIABLES", PanelBar::Vars), rows, cx)
 }
 

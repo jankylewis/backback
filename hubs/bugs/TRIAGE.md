@@ -58,3 +58,8 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-067 | Cmd+[ does not return from a step | FIXED | Did the stop record the place it left (`leave_here`)? Is the key handled at the root? |
 | BB-BUG-068 | drag the ➜: "cannot move the next statement" | FIXED | Is the installed netcoredbg the patched build (`strings … \| grep supportsGotoTargetsRequest`)? |
 | BB-BUG-069 | a click in a box or menu moves the editor's caret or focus | FIXED | Does the overlay `.occlude()`? |
+| BB-BUG-070 | double-click the title bar: zoom then flip back | FIXED | Does a press call `start_window_move`? Only a held move may (`TitleDrag`) |
+| BB-BUG-071 | drag the ➜ inside an async spec: nothing moves | OBSERVED | Which line? A statement's later line or a lambda body has no target; read the Debug output |
+| BB-BUG-072 | hover shows `(local variable) int x` while paused | FIXED | Is the tab ● or saved after the debug started? Restart to rebuild |
+| BB-BUG-073 | VARIABLES has no x that the editor shows | FIXED | Same as BB-BUG-072: was `x` typed after the build? |
+| BB-BUG-074 | Run / Debug menu outside a test method | FIXED | Does `holding` use the method's span (`TestMethod::end_line`)? |

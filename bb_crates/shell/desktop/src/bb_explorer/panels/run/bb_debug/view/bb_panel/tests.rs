@@ -19,7 +19,7 @@ fn var(name: &str, value: &str, reference: i64) -> Var {
     }
 }
 
-fn frame(rig: &Rig) -> Frame {
+pub(super) fn frame(rig: &Rig) -> Frame {
     Frame {
         id: 1,
         name: String::from("A.M()"),
@@ -28,7 +28,7 @@ fn frame(rig: &Rig) -> Frame {
     }
 }
 
-fn note(rig: &Rig, vcx: &mut VisualTestContext, note: Note) {
+pub(super) fn note(rig: &Rig, vcx: &mut VisualTestContext, note: Note) {
     vcx.update(|window: &mut gpui::Window, cx: &mut gpui::App| {
         rig.view.update(
             cx,
@@ -42,7 +42,11 @@ fn note(rig: &Rig, vcx: &mut VisualTestContext, note: Note) {
 }
 
 /// Paused with `vars` as the top frame's; the commands the window sends.
-fn paused(rig: &Rig, vcx: &mut VisualTestContext, vars: Vec<Var>) -> UnboundedReceiver<Command> {
+pub(super) fn paused(
+    rig: &Rig,
+    vcx: &mut VisualTestContext,
+    vars: Vec<Var>,
+) -> UnboundedReceiver<Command> {
     let top: Frame = frame(rig);
     let sent: UnboundedReceiver<Command> = rig.view.update(
         vcx,

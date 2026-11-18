@@ -115,6 +115,24 @@ impl Tab {
         self.live.edit(&changes);
     }
 
+    /// The line Set Next Statement means by `line`: the first line of the
+    /// statement that covers it, else `line` (BB-BUG-071).
+    pub(crate) fn statement_line(&self, line: usize) -> usize {
+        let indent: usize = self.document.line(line).map_or(0, |text: String| {
+            text.len().saturating_sub(text.trim_start().len())
+        });
+        bb_syntax::statement_line(self.live.tree(), line, indent).unwrap_or(line)
+    }
+
+    /// Where Set Next Statement goes from the cursor: this file and the
+    /// cursor line's statement.
+    pub(crate) fn set_next_place(&self) -> (PathBuf, usize) {
+        (
+            self.path.clone(),
+            self.statement_line(self.document.cursor_line()),
+        )
+    }
+
     pub(crate) fn refresh_test_methods(&mut self) {
         self.test_methods = test_methods(self.live.tree(), self.document.rope());
     }

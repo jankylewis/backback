@@ -84,3 +84,31 @@ fn back_returns_from_a_step_into_another_file_by_the_title_bar_or_the_key(cx: &m
     vcx.run_until_parked();
     assert_eq!(active(&rig, vcx), Some(other), "Cmd+] went forward again");
 }
+
+/// BB-BUG-070: a double click on the bar zooms once and never starts the
+/// system drag, which zoomed a second time; a press drags only on a move.
+#[test]
+fn a_double_click_zooms_once_and_only_a_moved_press_drags() {
+    use super::TitleDrag;
+    let mut drag: TitleDrag = TitleDrag::default();
+    drag.press(1);
+    assert!(!drag.release(1), "one click is not a zoom");
+    assert!(!drag.moved(true), "a released press no longer drags");
+    drag.press(2);
+    assert!(
+        !drag.moved(true),
+        "the second press of a double click never drags"
+    );
+    assert!(drag.release(2), "the double click zooms on release");
+    drag.press(1);
+    assert!(drag.moved(true), "a moved press drags the window");
+    assert!(!drag.moved(true), "the drag starts once per press");
+    drag.press(1);
+    assert!(
+        !drag.moved(false),
+        "a move after a release outside the bar does not drag"
+    );
+    assert!(!drag.moved(true), "and the press stays disarmed");
+    drag.press(3);
+    assert!(!drag.release(3), "a triple click does not zoom again");
+}

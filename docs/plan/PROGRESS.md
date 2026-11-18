@@ -1,5 +1,11 @@
 # Backback progress
 
+- BBEOD25 (`fix/five-debug-window`, backback_1, in progress 2026-11-18):
+  title zoom once (BB-BUG-070); Set Next in async specs maps a later line
+  of a statement to its start, refusals said twice (BB-BUG-071); session
+  tests reap their `dotnet test` run (BB-PRC-008). Next: stale-build
+  notice (BB-BUG-072), editor Run/Debug menu in a spec (BB-BUG-073).
+
 - FIND-SCOPE (2026-11-07, `find-in-files-scope`): Find in Files gets
   Wu / VS Code / Rider fields. Tab moves text -> in -> files. "in" picks
   the workspace, the file's C# project or folder, or any project (typed

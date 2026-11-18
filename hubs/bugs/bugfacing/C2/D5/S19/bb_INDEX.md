@@ -1,0 +1,8 @@
+# bugs/bugfacing/C2/D5/S19
+
+Index of this shelf; the hub-level `bb_INDEX.md` has the full table.
+
+| Entry | What |
+|---|---|
+| `BB_BUG_073_VARIABLES_DID_NOT_SAY_THE_FILE_CHANGED_SINCE_THE_BUILD.md` | BB-BUG-073 — VARIABLES did not say the file changed since the build |
+| `BB_BUG_074_THE_EDITORS_TEST_MENU_OPENED_BELOW_THE_TEST.md` | BB-BUG-074 — The editor's test menu opened below the test |

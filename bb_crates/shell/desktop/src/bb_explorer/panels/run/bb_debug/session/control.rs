@@ -115,6 +115,7 @@ fn begin(
         breakpoints: view.debug.breakpoints.all(),
         exceptions: view.debug.exceptions.filters(),
     });
+    view.debug.started = Some(std::time::SystemTime::now());
     view.debug.live = Some(Live {
         commands,
         label,
@@ -194,13 +195,13 @@ pub(crate) fn step(view: &mut ExplorerView, kind: StepKind) {
     }
 }
 
-/// Ctrl+Shift+F10 while paused: the active tab's cursor line runs next (Set
-/// Next Statement, BBEOD05), on an adapter that advertises it.
+/// Ctrl+Shift+F10 while paused: the cursor line's statement runs next (Set
+/// Next Statement, BBEOD05, BB-BUG-071), on an adapter that advertises it.
 pub(crate) fn set_next(view: &mut ExplorerView) {
     let Some((path, line)): Option<(PathBuf, usize)> = view
         .tabs
         .active_tab()
-        .map(|tab: &crate::editor::Tab| (tab.path.clone(), tab.document.cursor_line()))
+        .map(crate::editor::Tab::set_next_place)
     else {
         return;
     };

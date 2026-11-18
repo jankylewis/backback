@@ -38,6 +38,8 @@ pub(crate) struct DebugState {
     pub(crate) vars_scroll: gpui::ScrollHandle,
     /// The Variables tree's opened rows and loaded children (BB-FEAT-087).
     pub(crate) tree: view::VarTree,
+    /// When the running session began: its build starts then (BB-BUG-072).
+    pub(crate) started: Option<std::time::SystemTime>,
 }
 
 impl DebugState {
@@ -52,6 +54,7 @@ impl DebugState {
             stack_scroll: gpui::ScrollHandle::new(),
             vars_scroll: gpui::ScrollHandle::new(),
             tree: view::VarTree::default(),
+            started: None,
         }
     }
 }

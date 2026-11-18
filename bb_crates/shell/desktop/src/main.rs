@@ -71,6 +71,7 @@ struct ExplorerView {
     quick_focus: FocusHandle,
     terminal: terminal::Terminal,
     file_menu: files::Menus,
+    title_drag: editor::TitleDrag,
 }
 impl ExplorerView {
     fn editor_key_down(
