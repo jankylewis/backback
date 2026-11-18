@@ -3,7 +3,7 @@
 id: BB-BUG-037
 family: UIX
 status: FIXED
-source: `bb_crates/bb_core/explorer/src/tree/children.rs` (`refresh_entry`), `bb_crates/bb_core/explorer/src/tree/bb_model.rs` (`Explorer::refresh`), `bb_crates/shell/desktop/src/editor/mod.rs` (`refresh_tree`)
+source: `bb_crates/bb_core/workspace/bb_explorer/src/tree/children.rs` (`refresh_entry`), `bb_crates/bb_core/workspace/bb_explorer/src/tree/bb_model.rs` (`Explorer::refresh`), `bb_crates/shell/desktop/src/editor/mod.rs` (`refresh_tree`)
 
 ## The change
 

@@ -120,7 +120,7 @@ impl Tabs {
     #[cfg(test)]
     pub(crate) fn open(&mut self, path: &Path) -> Result<(), TabError> {
         match self.begin_open(path)? {
-            Some(file) => self.finish_open(&file.clone(), Tab::load(file)),
+            Some(file) => self.finish_open(&file.clone(), Tab::load(file, tab::CSHARP)),
             None => Ok(()),
         }
     }

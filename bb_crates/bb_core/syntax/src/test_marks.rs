@@ -70,12 +70,12 @@ fn node_text(node: Node<'_>, source: &Rope) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::CSharpSyntax;
+    use crate::Syntax;
 
     #[test]
     fn finds_test_methods_but_not_comment_text() {
         let source: &str = "class C { // [Test] void Fake() {}\n[Test] void Pass() {}\n[TestCase(1)] void Case(int n) {}\nvoid Plain() {} }";
-        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let mut syntax: Syntax = Syntax::new().unwrap();
         let tree: Tree = syntax.parse(source, None).unwrap();
         assert_eq!(
             test_methods(&tree, &Rope::from_str(source)),
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn a_test_spans_its_attribute_through_its_closing_brace() {
         let source: &str = "class C\n{\n    [Test]\n    public async Task Spec()\n    {\n        await Task.Yield();\n    }\n\n    void Helper() { }\n}\n";
-        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let mut syntax: Syntax = Syntax::new().unwrap();
         let tree: Tree = syntax.parse(source, None).unwrap();
         let found: Vec<TestMethod> = test_methods(&tree, &Rope::from_str(source));
         let spans: Vec<(usize, usize)> = found

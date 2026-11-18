@@ -1,4 +1,4 @@
-//! Visible-range C# captures and incremental tree updates, read from the
+//! Visible-range captures and incremental tree updates, read from the
 //! editor's rope in chunks: no keystroke copies or rescans the whole text.
 
 use bb_text::{BytePoint, Rope, TextChange};
@@ -6,7 +6,9 @@ use tree_sitter::{
     InputEdit, Node, Point, QueryCapture, QueryCursor, StreamingIterator, TextProvider, Tree,
 };
 
-use crate::{CSharpSyntax, SyntaxError};
+use bb_lang::Lang;
+
+use crate::{Syntax, SyntaxError};
 
 /// Colour role for a syntax capture.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -34,7 +36,7 @@ pub struct HighlightSpan {
     pub kind: HighlightKind,
 }
 
-impl CSharpSyntax {
+impl Syntax {
     /// Parse the rope. Pass the edited previous tree for an incremental parse.
     ///
     /// # Errors
@@ -94,18 +96,20 @@ impl CSharpSyntax {
         rope: &Rope,
         visible: std::ops::Range<usize>,
     ) -> Vec<HighlightSpan> {
+        let Some(query): Option<&tree_sitter::Query> = self.query.as_ref() else {
+            return Vec::new();
+        };
         let mut cursor: QueryCursor = QueryCursor::new();
         cursor.set_byte_range(visible.clone());
         let mut captures: tree_sitter::QueryCaptures<'_, '_, RopeText<'_>, &[u8]> =
-            cursor.captures(&self.query, tree.root_node(), RopeText(rope));
+            cursor.captures(query, tree.root_node(), RopeText(rope));
         let mut spans: Vec<HighlightSpan> = Vec::new();
         while let Some((found, capture_index)) = captures.next() {
             let Some(capture): Option<&QueryCapture<'_>> = found.captures.get(*capture_index)
             else {
                 continue;
             };
-            let name: &str = self
-                .query
+            let name: &str = query
                 .capture_names()
                 .get(usize::try_from(capture.index).unwrap_or(usize::MAX))
                 .copied()
@@ -149,6 +153,24 @@ fn chunk_from(rope: &Rope, byte: usize) -> &[u8] {
             chunk.as_bytes().get(byte.checked_sub(start)?..)
         })
         .unwrap_or(&[])
+}
+
+/// A language's grammar and its highlight query.
+pub(crate) fn grammar(lang: Lang) -> (tree_sitter::Language, &'static str) {
+    match lang {
+        Lang::CSharp => (
+            tree_sitter_c_sharp::LANGUAGE.into(),
+            tree_sitter_c_sharp::HIGHLIGHTS_QUERY,
+        ),
+        Lang::Rust => (
+            tree_sitter_rust::LANGUAGE.into(),
+            tree_sitter_rust::HIGHLIGHTS_QUERY,
+        ),
+        Lang::Python => (
+            tree_sitter_python::LANGUAGE.into(),
+            tree_sitter_python::HIGHLIGHTS_QUERY,
+        ),
+    }
 }
 
 fn point(at: BytePoint) -> Point {

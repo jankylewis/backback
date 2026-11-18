@@ -116,11 +116,12 @@ fn stage(
     if preview.revisions.contains_key(&path) {
         return Err(RenameError::Stale(path));
     }
-    let tab: Tab =
-        Tab::load(path.clone()).map_err(|e: crate::editor::TabError| RenameError::Open {
+    let tab: Tab = Tab::load(path.clone(), crate::editor::bb_tabs::tab::CSHARP).map_err(
+        |e: crate::editor::TabError| RenameError::Open {
             path: path.clone(),
             reason: e.to_string(),
-        })?;
+        },
+    )?;
     if tab.read_only || outside {
         return Err(RenameError::ReadOnly(path));
     }

@@ -5,7 +5,7 @@ family: UIX
 status: FIXED
 date: 2026-11-04
 signature: tree rows differ from `ls -A` after an outside change
-source: `bb_crates/bb_core/explorer/src/tree/bb_model.rs` (`toggle` reads a folder only while `children` is `None`)
+source: `bb_crates/bb_core/workspace/bb_explorer/src/tree/bb_model.rs` (`toggle` reads a folder only while `children` is `None`)
 observed: BB-BUG-037
 links: fix=yes lesson=yes evidence=yes toolgap=none
 

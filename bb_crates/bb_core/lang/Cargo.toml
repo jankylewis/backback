@@ -1,0 +1,24 @@
+[package]
+name = "bb-lang"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The languages a window serves: C#, Rust, Python; detection, ticks and what may start"
+
+[dependencies]
+# the same git-ignore aware walk as Find in Files.
+ignore = "0.4"
+thiserror.workspace = true
+
+[features]
+# The seven BBEOD26 fixture folders, for tests of this crate and the app.
+fixtures = []
+
+[dev-dependencies]
+# its own tests use the fixtures.
+bb-lang = { path = ".", features = ["fixtures"] }
+tempfile = "3"
+
+[lints]
+workspace = true

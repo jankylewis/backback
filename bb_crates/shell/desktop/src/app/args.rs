@@ -7,6 +7,9 @@ pub(crate) struct Start {
     pub(crate) root: PathBuf,
     pub(crate) file: Option<PathBuf>,
     pub(crate) no_write: bool,
+    /// The start page's language ticks; None: the saved choice, else what
+    /// the folder holds (BBEOD26).
+    pub(crate) ticked: Option<bb_lang::LangSet>,
 }
 
 /// What a launch opens: a workspace, or the start page (BBEOD23).
@@ -57,6 +60,7 @@ pub(crate) fn start_for(argument: PathBuf, no_write: bool) -> Start {
         root,
         file,
         no_write,
+        ticked: None,
     }
 }
 

@@ -154,11 +154,11 @@ async fn doctor() -> Result<(), CommandError> {
 
 fn outline(file: &Path) -> Result<(), CommandError> {
     let text: String = read(file)?;
-    let mut syntax: bb_syntax::CSharpSyntax = bb_syntax::CSharpSyntax::new()?;
+    let mut syntax: bb_syntax::Syntax = bb_syntax::Syntax::new()?;
     let started: Instant = Instant::now();
     let tree: bb_syntax::Tree = syntax.parse(&text, None)?;
     let parsed_in: Duration = started.elapsed();
-    for item in bb_syntax::CSharpSyntax::outline(&tree, &text) {
+    for item in bb_syntax::Syntax::outline(&tree, &text) {
         let indent: String = "  ".repeat(item.depth);
         println!(
             "{indent}{:?} {} (line {})",

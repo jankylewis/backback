@@ -8,19 +8,19 @@
 use bb_text::{BytePoint, Rope, TextChange};
 use tree_sitter::Tree;
 
-use crate::{CSharpSyntax, SyntaxError};
+use crate::{Syntax, SyntaxError};
 
 /// The shown tree plus the state of the background parse.
 pub struct LiveTree {
     tree: Tree,
-    parser: Option<CSharpSyntax>,
+    parser: Option<Syntax>,
     during_parse: Vec<TextChange>,
     stale: bool,
 }
 
 /// Everything one background parse needs. Send it to a worker and call [`ParseJob::run`].
 pub struct ParseJob {
-    syntax: CSharpSyntax,
+    syntax: Syntax,
     rope: Rope,
     old: Tree,
     window: Option<(BytePoint, BytePoint)>,
@@ -28,14 +28,14 @@ pub struct ParseJob {
 
 /// A finished parse, to hand back with [`LiveTree::finish_parse`].
 pub struct Parsed {
-    syntax: CSharpSyntax,
+    syntax: Syntax,
     tree: Result<Tree, SyntaxError>,
 }
 
 impl LiveTree {
     /// Start from a full parse of the current text.
     #[must_use]
-    pub fn new(syntax: CSharpSyntax, tree: Tree) -> Self {
+    pub fn new(syntax: Syntax, tree: Tree) -> Self {
         Self {
             tree,
             parser: Some(syntax),
@@ -59,7 +59,7 @@ impl LiveTree {
     /// Record edits, oldest first. O(depth) each; never parses.
     pub fn edit(&mut self, changes: &[TextChange]) {
         for change in changes {
-            CSharpSyntax::edit(&mut self.tree, change);
+            Syntax::edit(&mut self.tree, change);
         }
         if self.parser.is_none() {
             self.during_parse.extend_from_slice(changes);
@@ -83,7 +83,7 @@ impl LiveTree {
         if !self.stale {
             return None;
         }
-        let syntax: CSharpSyntax = self.parser.take()?;
+        let syntax: Syntax = self.parser.take()?;
         self.stale = false;
         Some(ParseJob {
             syntax,
@@ -103,7 +103,7 @@ impl LiveTree {
         let replay: Vec<TextChange> = std::mem::take(&mut self.during_parse);
         let mut tree: Tree = done.tree?;
         for change in &replay {
-            CSharpSyntax::edit(&mut tree, change);
+            Syntax::edit(&mut tree, change);
         }
         self.tree = tree;
         Ok(())
@@ -163,7 +163,7 @@ mod tests {
             steps in proptest::collection::vec((0usize..300, 0u8..3, any::<bool>()), 1..20),
         ) {
             let source: &str = "class A\n{\n    int F() => 1;\n    string S = \"x\";\n}\n";
-            let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+            let mut syntax: Syntax = Syntax::new().unwrap();
             let mut doc: Document = Document::from_text(source, None);
             let tree: Tree = syntax.parse_rope(doc.rope(), None).unwrap();
             let mut live: LiveTree = LiveTree::new(syntax, tree);
@@ -183,7 +183,7 @@ mod tests {
             }
             live.parse_now(doc.rope(), None).unwrap();
             prop_assert!(!live.is_stale());
-            let fresh: Tree = CSharpSyntax::new().unwrap().parse(&doc.text(), None).unwrap();
+            let fresh: Tree = Syntax::new().unwrap().parse(&doc.text(), None).unwrap();
             prop_assert_eq!(live.tree().root_node().to_sexp(), fresh.root_node().to_sexp());
         }
     }

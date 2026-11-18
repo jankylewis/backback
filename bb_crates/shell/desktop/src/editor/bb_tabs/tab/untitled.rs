@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-use bb_syntax::{CSharpSyntax, LiveTree, Tree};
+use bb_syntax::{LiveTree, Syntax, Tree};
 use bb_text::Document;
 use gpui::{AsyncWindowContext, Context, WeakEntity, Window};
 
@@ -24,12 +24,13 @@ impl Tab {
     /// An empty tab whose (not yet real) path is `dir/name`.
     pub(crate) fn untitled(dir: &Path, name: &str) -> Result<Tab, TabError> {
         let document: Document = Document::from_text("", None);
-        let mut syntax: CSharpSyntax = CSharpSyntax::new()?;
+        let mut syntax: Syntax = Syntax::new()?;
         let tree: Tree = syntax.parse_rope_in(document.rope(), None, None)?;
         Ok(Tab {
             path: dir.join(name),
             document,
-            highlighter: CSharpSyntax::new()?,
+            highlighter: Syntax::new()?,
+            mode: bb_lang::FileMode::Colours(bb_lang::Lang::CSharp),
             live: LiveTree::new(syntax, tree),
             test_methods: Vec::new(),
             window_lines: None,

@@ -1,6 +1,5 @@
-//! Between the window and the server thread. [`flush`] is the one place
-//! buffer changes reach the server; [`on_event`] the one place answers
-//! reach the window.
+//! Between the window and the server thread: [`flush`] is the one place buffer
+//! changes reach the server; [`on_event`] the one place answers reach the window.
 
 mod answers;
 mod asks;
@@ -25,14 +24,16 @@ pub(crate) use answers::{goto_point, jump, opened};
 pub(crate) use asks::{ask, ask_at_cursor, hover_ask, hover_move, word_start};
 pub(crate) use bb_keys::RestartServer;
 
-/// Start the server for the workspace's solution, if it has one, and pump
-/// its events into the window.
+/// Start Roslyn for the workspace's solution while C# is active (BBEOD26;
+/// window tests record the start, spawn nothing) and pump its events.
 pub(crate) fn connect(
     view: &mut ExplorerView,
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let Some(solution): Option<PathBuf> = bb_worker::find_solution(&view.root) else {
+    let started: Option<PathBuf> = bb_worker::find_solution(&view.root)
+        .filter(|_: &PathBuf| view.langs.start(bb_lang::Tool::Roslyn) && !cfg!(test));
+    let Some(solution): Option<PathBuf> = started else {
         view.intel.status = LoadStatus::NoSolution;
         return;
     };

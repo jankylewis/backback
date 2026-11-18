@@ -65,8 +65,7 @@ pub(crate) fn start_or_continue(
         view.status = Some(format!("{} is already running", live.label));
         return;
     }
-    if view.tabs.no_write() {
-        view.report(&"Debug refused: --no-write keeps the solution unchanged (a debug build writes bin/ and obj/)");
+    if !crate::launch::langs::may_debug(view) {
         return;
     }
     let Some((target, label)): Option<(PathBuf, String)> = startup_project(view) else {
@@ -77,9 +76,8 @@ pub(crate) fn start_or_continue(
     begin(view, (target, None), label, window, cx);
 }
 
-/// Debug one test, as VS Code's Debug Test: its project builds, the test
-/// starts paused, the debugger attaches with every breakpoint, and the test
-/// runs on. Refused while a session runs.
+/// Debug one test, as VS Code's Debug Test: its project builds, the test starts
+/// paused, the debugger attaches, and the test runs on (one session at a time).
 pub(crate) fn debug_test(
     view: &mut ExplorerView,
     project: PathBuf,
@@ -91,8 +89,7 @@ pub(crate) fn debug_test(
         view.status = Some(format!("{} is already running", live.label));
         return;
     }
-    if view.tabs.no_write() {
-        view.report(&"Debug refused: --no-write keeps the solution unchanged (a debug build writes bin/ and obj/)");
+    if !crate::launch::langs::may_debug(view) {
         return;
     }
     let label: String = fqn.method().to_owned();
@@ -109,6 +106,9 @@ fn begin(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
+    if !view.langs.start(bb_lang::Tool::Netcoredbg) {
+        return;
+    }
     let (commands, notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
         target,
         test,

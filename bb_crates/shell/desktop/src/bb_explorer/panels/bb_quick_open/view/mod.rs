@@ -79,7 +79,7 @@ pub(crate) fn on_go_to_symbol(
         return;
     };
     let text: String = tab.document.text();
-    let outline: Vec<(String, usize)> = bb_syntax::CSharpSyntax::outline(tab.live.tree(), &text)
+    let outline: Vec<(String, usize)> = bb_syntax::Syntax::outline(tab.live.tree(), &text)
         .into_iter()
         .map(|item: bb_syntax::OutlineItem| {
             let kind: &str = match item.kind {

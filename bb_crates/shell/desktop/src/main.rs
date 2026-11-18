@@ -72,6 +72,8 @@ struct ExplorerView {
     terminal: terminal::Terminal,
     file_menu: files::Menus,
     title_drag: editor::TitleDrag,
+    /// The window's languages and the tools it started (BBEOD26).
+    langs: launch::WindowLangs,
 }
 impl ExplorerView {
     fn editor_key_down(
@@ -149,9 +151,10 @@ impl ExplorerView {
         match self.tabs.begin_open(path) {
             Ok(Some(file)) => {
                 let job: PathBuf = file.clone();
+                let mode: bb_lang::FileMode = self.langs.langs.file_mode(&file);
                 let load: gpui::Task<Result<Tab, TabError>> = cx
                     .background_executor()
-                    .spawn(async move { Tab::load(job) });
+                    .spawn(async move { Tab::load(job, mode) });
                 cx.spawn_in(
                     window,
                     async move |view: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
@@ -201,7 +204,7 @@ impl Render for ExplorerView {
         intel::glue::flush(self);
         intel::view::note_frame(&mut self.intel);
         editor::layout_panes(self, window, cx);
-        let status: String = self.intel.status_label();
+        let status: String = launch::langs::status_line(self);
         let panel: Option<gpui::AnyElement> = intel::view::panels::bottom(self, cx);
         let shell: Option<gpui::AnyElement> = terminal::panel(self, window, cx);
         launch::window_actions(settings::root(cx))
@@ -216,6 +219,7 @@ impl Render for ExplorerView {
             .on_action(cx.listener(ExplorerView::quit))
             .on_action(cx.listener(ExplorerView::close_workspace))
             .on_action(cx.listener(ExplorerView::restart_server))
+            .on_action(cx.listener(launch::langs::change))
             .map(|root: gpui::Div| terminal::actions(root, cx))
             .map(|root: gpui::Div| run::root_actions(root, self, cx))
             .child(editor::title_bar(self, cx))

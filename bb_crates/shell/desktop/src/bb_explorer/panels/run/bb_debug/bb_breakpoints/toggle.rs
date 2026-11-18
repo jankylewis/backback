@@ -30,8 +30,15 @@ pub(crate) fn on_toggle(
     cx.notify();
 }
 
-/// Toggle `line` of `path` and say so in the status bar.
+/// Toggle `line` of `path` and say so in the status bar; only a C# file
+/// takes one (BBEOD26: Debug works only from C# targets).
 pub(crate) fn toggle_line(view: &mut ExplorerView, path: &std::path::Path, line: usize) {
+    if !view.langs.langs.can_debug_from(path) {
+        view.status = Some(String::from(
+            "Breakpoints are for C# files in a window with C# ticked",
+        ));
+        return;
+    }
     let set: bool = view.debug.breakpoints.toggle(path, line);
     if let Some(live) = view.debug.live.as_ref() {
         let lines: Vec<usize> = view.debug.breakpoints.lines(path);

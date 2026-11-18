@@ -1,4 +1,5 @@
-//! Local C# syntax via tree-sitter.
+//! Local syntax via tree-sitter: C#, and colours for Rust and Python
+//! (BBEOD26); a plain-text file parses with no colours.
 //!
 //! Roslyn is the source of truth for semantics, but it is a separate process and
 //! can be seconds away on a big solution. tree-sitter parses incrementally in
@@ -8,7 +9,9 @@ mod bb_highlight;
 mod live;
 mod test_marks;
 
+use bb_highlight::grammar;
 pub use bb_highlight::{HighlightKind, HighlightSpan};
+use bb_lang::Lang;
 pub use live::{LiveTree, ParseJob, Parsed};
 pub use test_marks::{test_methods, TestMethod};
 pub use tree_sitter::Tree;
@@ -18,7 +21,7 @@ use tree_sitter::{Language, Node, Parser, Query, TreeCursor};
 #[derive(Debug, thiserror::Error)]
 pub enum SyntaxError {
     /// The grammar could not be loaded into the parser (ABI mismatch).
-    #[error("cannot load the C# grammar: {0}")]
+    #[error("cannot load the grammar: {0}")]
     Language(#[from] tree_sitter::LanguageError),
     /// The parse was cancelled or hit the parser's limits.
     #[error("parse did not produce a tree")]
@@ -26,8 +29,8 @@ pub enum SyntaxError {
     /// The parse window was rejected (its bytes are out of order).
     #[error("cannot set the parse window: {0}")]
     Window(#[from] tree_sitter::IncludedRangesError),
-    /// The C# highlight query did not compile.
-    #[error("cannot load the C# highlight query: {0}")]
+    /// The highlight query did not compile.
+    #[error("cannot load the highlight query: {0}")]
     Query(#[from] tree_sitter::QueryError),
 }
 
@@ -55,23 +58,49 @@ pub struct OutlineItem {
     pub depth: usize,
 }
 
-/// A C# parser. Keep one per buffer and reuse it for incremental parses.
-pub struct CSharpSyntax {
+/// A parser for one language. Keep one per buffer and reuse it for
+/// incremental parses.
+pub struct Syntax {
     parser: Parser,
-    query: Query,
+    /// None: plain text, no colours.
+    query: Option<Query>,
+    lang: Option<Lang>,
 }
 
-impl CSharpSyntax {
+impl Syntax {
     /// Load the C# grammar.
     ///
     /// # Errors
     /// [`SyntaxError::Language`] when the grammar ABI does not match the runtime.
     pub fn new() -> Result<Self, SyntaxError> {
+        Self::for_lang(Some(Lang::CSharp))
+    }
+
+    /// The grammar and colours of `lang`; None is plain text: a C# parse
+    /// (the editor's folding and line math need a tree) with no colours.
+    ///
+    /// # Errors
+    /// [`SyntaxError::Language`] or [`SyntaxError::Query`] when a grammar
+    /// does not load.
+    pub fn for_lang(lang: Option<Lang>) -> Result<Self, SyntaxError> {
+        let (language, highlights): (Language, &str) = grammar(lang.unwrap_or(Lang::CSharp));
         let mut parser: Parser = Parser::new();
-        let language: Language = tree_sitter_c_sharp::LANGUAGE.into();
         parser.set_language(&language)?;
-        let query: Query = Query::new(&language, tree_sitter_c_sharp::HIGHLIGHTS_QUERY)?;
-        Ok(Self { parser, query })
+        let query: Option<Query> = match lang {
+            Some(_) => Some(Query::new(&language, highlights)?),
+            None => None,
+        };
+        Ok(Self {
+            parser,
+            query,
+            lang,
+        })
+    }
+
+    /// The language it colours; None for plain text.
+    #[must_use]
+    pub fn lang(&self) -> Option<Lang> {
+        self.lang
     }
 
     /// Parse `text`. Pass the previous tree for an incremental parse.
@@ -154,9 +183,9 @@ mod tests {
     #[test]
     fn outline_lists_namespace_type_and_member() {
         let src: &str = "namespace Demo;\n\npublic class Greeter\n{\n    public string Hello(string name) => $\"hi {name}\";\n}\n";
-        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let mut syntax: Syntax = Syntax::new().unwrap();
         let tree: Tree = syntax.parse(src, None).unwrap();
-        let items: Vec<OutlineItem> = CSharpSyntax::outline(&tree, src);
+        let items: Vec<OutlineItem> = Syntax::outline(&tree, src);
         let shown: Vec<(OutlineKind, &str, usize)> = items
             .iter()
             .map(|i: &OutlineItem| (i.kind, i.name.as_str(), i.line))
@@ -176,7 +205,7 @@ mod tests {
     #[test]
     fn a_line_inside_a_statement_means_that_statement() {
         let src: &str = "class S\n{\n    async Task M()\n    {\n        int count = 0;\n        string text = await Task.FromResult(\"a\")\n            .ContinueWith(t => t.Result + count);\n        Func<int, int> add = (int v) =>\n        {\n            return v + count;\n        };\n\n        await Task.Yield();\n    }\n}\n";
-        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let mut syntax: Syntax = Syntax::new().unwrap();
         let tree: Tree = syntax.parse(src, None).unwrap();
         let at: &dyn Fn(usize) -> Option<usize> = &|line: usize| -> Option<usize> {
             let text: &str = src.lines().nth(line).unwrap();
@@ -197,7 +226,7 @@ mod tests {
 
     #[test]
     fn incremental_reparse_accepts_old_tree() {
-        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let mut syntax: Syntax = Syntax::new().unwrap();
         let first: Tree = syntax.parse("class A {}", None).unwrap();
         let second: Tree = syntax
             .parse("class A { void M() {} }", Some(&first))

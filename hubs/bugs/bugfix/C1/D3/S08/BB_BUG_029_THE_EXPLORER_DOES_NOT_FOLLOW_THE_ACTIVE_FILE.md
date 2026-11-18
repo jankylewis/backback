@@ -3,7 +3,7 @@
 id: BB-BUG-029
 family: UIX
 status: FIXED
-source: `bb_crates/bb_core/explorer/src/tree/bb_model.rs` (`Explorer::reveal`), `bb_crates/shell/desktop/src/bb_explorer/navigation.rs` (`side_panel`, `follow_active`)
+source: `bb_crates/bb_core/workspace/bb_explorer/src/tree/bb_model.rs` (`Explorer::reveal`), `bb_crates/shell/desktop/src/bb_explorer/navigation.rs` (`side_panel`, `follow_active`)
 
 ## The change
 

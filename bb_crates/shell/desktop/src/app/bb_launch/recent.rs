@@ -1,6 +1,7 @@
 //! The workspaces opened lately, newest first (BBEOD13). A small versioned
 //! text file in `$BACKBACK_STATE_DIR`, else `~/Library/Application
-//! Support/backback`: a header line, then one path per line.
+//! Support/backback`: a header line, then one path per line. The language
+//! ticks of each workspace sit next to it, in `langs` (BBEOD26).
 
 use std::path::{Path, PathBuf};
 
@@ -8,6 +9,8 @@ const HEADER: &str = "backback recent v1";
 /// As many as VS Code's File > Open Recent shows first.
 const KEEP: usize = 10;
 const FILE: &str = "recent";
+/// The ticks per workspace, next to the recent list (BBEOD26).
+const LANGS: &str = "langs";
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub(crate) enum RecentError {
@@ -58,13 +61,58 @@ pub(crate) fn state_dir() -> Option<PathBuf> {
     Some(home.join("Library/Application Support/backback"))
 }
 
-/// The state folder of the recent list; unit tests never read or write the
-/// real one (the settings seam).
+/// The state folder of the recent list and the language ticks; unit tests
+/// never read or write the real one (the settings seam): only a folder a
+/// test sets with [`test_store`].
 fn store() -> Option<PathBuf> {
     if cfg!(test) {
-        return None;
+        return TEST_STORE.with(|dir: &std::cell::RefCell<Option<PathBuf>>| dir.borrow().clone());
     }
     state_dir()
+}
+
+thread_local! {
+    static TEST_STORE: std::cell::RefCell<Option<PathBuf>> = const { std::cell::RefCell::new(None) };
+}
+
+/// Window tests: keep the state files in `dir` on this thread (None: none).
+#[cfg(test)]
+pub(crate) fn test_store(dir: Option<PathBuf>) {
+    TEST_STORE.with(|cell: &std::cell::RefCell<Option<PathBuf>>| cell.replace(dir));
+}
+
+/// The language ticks saved for `workspace` (BBEOD26).
+pub(crate) fn langs_of(workspace: &Path) -> Option<bb_lang::LangSet> {
+    let dir: PathBuf = store()?;
+    bb_lang::choice_for(&read_langs(&dir), workspace)
+}
+
+/// Save `ticks` for `workspace`; an empty set is never saved.
+pub(crate) fn save_langs(workspace: &Path, ticks: bb_lang::LangSet) {
+    let Some(dir): Option<PathBuf> = store() else {
+        return;
+    };
+    let choices: bb_lang::Choices = bb_lang::with_choice(read_langs(&dir), workspace, ticks);
+    if let Err(error) = write_atomic(&dir, LANGS, &bb_lang::encode(&choices)) {
+        eprintln!("backback: cannot save the languages: {error}");
+    }
+}
+
+fn read_langs(dir: &Path) -> bb_lang::Choices {
+    match std::fs::read_to_string(dir.join(LANGS)) {
+        Ok(text) => bb_lang::decode(&text).unwrap_or_else(|error: bb_lang::StoreError| {
+            eprintln!("backback: {error}");
+            Vec::new()
+        }),
+        Err(_) => Vec::new(),
+    }
+}
+
+fn write_atomic(dir: &Path, name: &str, text: &str) -> std::io::Result<()> {
+    let tmp: PathBuf = dir.join(format!("{name}.tmp"));
+    std::fs::create_dir_all(dir)
+        .and_then(|(): ()| std::fs::write(&tmp, text))
+        .and_then(|(): ()| std::fs::rename(&tmp, dir.join(name)))
 }
 
 fn read(dir: &Path) -> Vec<PathBuf> {
@@ -89,11 +137,7 @@ pub(crate) fn remember(path: &Path) {
         return;
     };
     let paths: Vec<PathBuf> = add(read(&dir), path.to_path_buf());
-    let tmp: PathBuf = dir.join(format!("{FILE}.tmp"));
-    let written: std::io::Result<()> = std::fs::create_dir_all(&dir)
-        .and_then(|(): ()| std::fs::write(&tmp, encode(&paths)))
-        .and_then(|(): ()| std::fs::rename(&tmp, dir.join(FILE)));
-    if let Err(error) = written {
+    if let Err(error) = write_atomic(&dir, FILE, &encode(&paths)) {
         eprintln!("backback: cannot save recent workspaces: {error}");
     }
 }

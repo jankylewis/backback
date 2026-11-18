@@ -15,7 +15,7 @@ Date 2026-11-02, by backback_mm. Release `backback` from `bbeod-09-ignored`,
 
 Only names are shown; no `.env` file was opened or read.
 
-## Rules (tests in `bb_core/explorer/tests/git_ignored.rs`)
+## Rules (tests in `bb_core/workspace/bb_explorer/tests/git_ignored.rs`)
 
 Git decides: every `.gitignore` from the repo root down, `.git/info/exclude`
 and the global excludes file. An ignored folder makes its subtree pink.
