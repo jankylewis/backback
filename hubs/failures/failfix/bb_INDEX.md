@@ -54,3 +54,4 @@
 | BB-PRC-008 | FIXED | A guard stops the session and waits for its thread | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
 | BB-GAT-008 | FIXED | List the variants; clippy before the gate | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | FIXED | Ask the adapter; assert the stock refusal and the patched goto | `SHIP/GAT/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
+| BB-GAT-010 | FIXED | Watchdog on every blocking test wait | `SHIP/GAT/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |

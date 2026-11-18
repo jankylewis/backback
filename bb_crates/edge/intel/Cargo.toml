@@ -8,6 +8,7 @@ description = "Roslyn code intelligence behind a typed API: document sync and th
 
 [dependencies]
 bb-dotnet.workspace = true
+bb-cargo.workspace = true
 bb-lsp.workspace = true
 bb-text.workspace = true
 lsp-types.workspace = true
@@ -19,6 +20,8 @@ url.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
+bb-cargo = { workspace = true, features = ["fixtures"] }
+tempfile = "3"
 
 [lints]
 workspace = true

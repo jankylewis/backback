@@ -106,7 +106,7 @@ fn stopped_status_fails_questions_and_replays_unsaved_text(cx: &mut TestAppConte
                 window,
                 cx,
             );
-            super::super::resync_open(view);
+            crate::intel::glue::route::resync_open(view);
         },
     );
     let sent: Request = requests.try_recv().unwrap();

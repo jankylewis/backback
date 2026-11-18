@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 69 — FIXED 66, OBSERVED 3.
+Bugs a user met in the app. Entries: 70 — FIXED 67, OBSERVED 3.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -78,3 +78,4 @@ Bugs a user met in the app. Entries: 69 — FIXED 66, OBSERVED 3.
 | BB-BUG-072 | The hover showed a type for code that was not running | FIXED | the running code is the session's build | yes | `C2/D5/S18/BB_BUG_072_THE_HOVER_SHOWED_A_TYPE_FOR_CODE_THAT_WAS_NOT_RUNNING.md` |
 | BB-BUG-073 | VARIABLES did not say the file changed since the build | FIXED | same as BB-BUG-072: `x` was typed after the build | yes | `C2/D5/S19/BB_BUG_073_VARIABLES_DID_NOT_SAY_THE_FILE_CHANGED_SINCE_THE_BUILD.md` |
 | BB-BUG-074 | The editor's test menu opened below the test | FIXED | nearest test above, with no end | yes | `C2/D5/S19/BB_BUG_074_THE_EDITORS_TEST_MENU_OPENED_BELOW_THE_TEST.md` |
+| BB-BUG-075 | A Rust or Python tab was sent to Roslyn as C# | FIXED | one link for every file | yes | `C2/D5/S19/BB_BUG_075_A_RUST_OR_PYTHON_TAB_WAS_SENT_TO_ROSLYN_AS_CSHARP.md` |

@@ -22,11 +22,7 @@ pub(super) fn project_row(
     (theme, running): (Theme, bool),
     cx: &mut Context<ExplorerView>,
 ) -> AnyElement {
-    let name: String = path
-        .file_stem()
-        .map_or_else(String::new, |n: &std::ffi::OsStr| {
-            n.to_string_lossy().into_owned()
-        });
+    let name: String = project_name(&path);
     let marker: &str = if project.expanded { "▾" } else { "▸" };
     let run_path: PathBuf = path.clone();
     div()
@@ -37,10 +33,15 @@ pub(super) fn project_row(
         .flex()
         .gap_2()
         .cursor_pointer()
-        .child(format!(
-            "{marker} {name} ({} / {} / {} / {})",
-            counts.0, counts.1, counts.2, counts.3
-        ))
+        .child({
+            // One selector per row: every Cargo member's file is
+            // `Cargo.toml`, and a shared one hits whichever row drew last.
+            let selector: String = format!("test-project-{name}");
+            div().debug_selector(move || selector).child(format!(
+                "{marker} {name} ({} / {} / {} / {})",
+                counts.0, counts.1, counts.2, counts.3
+            ))
+        })
         .child(groups::run_or_stop(
             running,
             theme,
@@ -201,4 +202,16 @@ pub(super) fn rows_box(
             cx,
         ))
         .into_any_element()
+}
+
+/// The row's name: a .NET project's file stem; a Cargo member's folder,
+/// since every member's file is `Cargo.toml` (BBEOD27).
+pub(super) fn project_name(path: &Path) -> String {
+    let named: Option<&std::ffi::OsStr> = match crate::tests_panel::model::ProjectKind::of(path) {
+        crate::tests_panel::model::ProjectKind::Dotnet => path.file_stem(),
+        crate::tests_panel::model::ProjectKind::Cargo => path.parent().and_then(Path::file_name),
+    };
+    named.map_or_else(String::new, |n: &std::ffi::OsStr| {
+        n.to_string_lossy().into_owned()
+    })
 }

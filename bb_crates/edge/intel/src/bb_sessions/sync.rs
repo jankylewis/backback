@@ -50,7 +50,7 @@ impl Session {
         let params: DidOpenTextDocumentParams = DidOpenTextDocumentParams {
             text_document: TextDocumentItem {
                 uri: path.to_url()?,
-                language_id: "csharp".to_owned(),
+                language_id: self.server.language_id().to_owned(),
                 version: doc.version.raw(),
                 text: text.to_owned(),
             },

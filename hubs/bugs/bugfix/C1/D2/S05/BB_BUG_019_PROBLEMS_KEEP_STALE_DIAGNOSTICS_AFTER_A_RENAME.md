@@ -3,7 +3,7 @@
 id: BB-BUG-019
 family: LSP
 status: FIXED
-source: `bb_crates/shell/desktop/src/intel/bb_worker/bb_loop/mod.rs` (`mark_open`), `edge/intel/src/bb_session.rs` (`refresh_signal`), `edge/bb_lsp/src/roslyn/mod.rs` (`initialize_params`)
+source: `bb_crates/shell/desktop/src/intel/bb_worker/bb_loop/mod.rs` (`mark_open`), `edge/intel/src/bb_session.rs` (`refresh_signal`), `edge/bb_protocol/bb_lsp/src/roslyn/mod.rs` (`initialize_params`)
 
 ## The change
 

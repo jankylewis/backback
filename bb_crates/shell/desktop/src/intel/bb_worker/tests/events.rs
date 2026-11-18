@@ -28,6 +28,7 @@ pub(super) async fn first_diagnostics(events: &mut UnboundedReceiver<Event>) {
             other @ (Event::Stopped
             | Event::Ready { .. }
             | Event::Failed(_)
+            | Event::Unavailable(_)
             | Event::Answer { .. }
             | Event::SyncFailed(_)) => {
                 panic!("expected diagnostics after Open, got {other:?}")
@@ -81,6 +82,7 @@ pub(super) async fn wait_ready(
             Event::Ready { failed, .. } => return (progress, failed),
             Event::Stopped => panic!("server stopped before ready"),
             other @ (Event::Failed(_)
+            | Event::Unavailable(_)
             | Event::Diagnostics { .. }
             | Event::Answer { .. }
             | Event::SyncFailed(_)) => panic!("before ready: {other:?}"),

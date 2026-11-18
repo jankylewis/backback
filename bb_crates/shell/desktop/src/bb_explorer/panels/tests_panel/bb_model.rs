@@ -5,6 +5,32 @@ use std::path::{Path, PathBuf};
 use bb_testkit::Outcome;
 use bb_testkit::{Fqn, SpecList, SpecResult, Verdict};
 
+/// What kind of project a Tests panel row is: a .NET test project, or a
+/// Cargo workspace member (BBEOD27), told by its file.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ProjectKind {
+    Dotnet,
+    Cargo,
+}
+
+impl ProjectKind {
+    pub(crate) fn of(path: &Path) -> Self {
+        if path.file_name() == Some(std::ffi::OsStr::new("Cargo.toml")) {
+            Self::Cargo
+        } else {
+            Self::Dotnet
+        }
+    }
+
+    /// Whether its tests offer Debug: there is no Rust debugger, ever.
+    pub(crate) fn debuggable(self) -> bool {
+        match self {
+            Self::Dotnet => true,
+            Self::Cargo => false,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub(crate) struct TestModel {
     projects: BTreeMap<PathBuf, ProjectTests>,

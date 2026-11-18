@@ -51,6 +51,8 @@ pub(super) fn editor_body(view: &ExplorerView, cx: &mut Context<ExplorerView>) -
         .capture_any_mouse_down(cx.listener(back_in_the_file))
         .map(|area: gpui::Stateful<gpui::Div>| super::link::on_editor(area, view, cx))
         .on_action(cx.listener(crate::run::build::on_build))
+        .on_action(cx.listener(crate::run::build::on_cargo_build))
+        .on_action(cx.listener(crate::run::build::on_cargo_check))
         .on_action(cx.listener(crate::quick_open::on_go_to_symbol))
         .map(|area: gpui::Stateful<gpui::Div>| crate::editor::on_tab_actions(area, cx))
         .on_scroll(cx.listener(pane::bb_hscroll::on_wheel))

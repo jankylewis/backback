@@ -7,12 +7,24 @@ use std::path::PathBuf;
 use bb_lang::fixtures::{Fixture, FIXTURES};
 use bb_lang::{detect, FileMode, Lang, LangSet, Langs, Tool, DETECT_BUDGET};
 
+const SERVES: [(Tool, Lang); 5] = [
+    (Tool::Roslyn, Lang::CSharp),
+    (Tool::Netcoredbg, Lang::CSharp),
+    (Tool::TestDiscovery, Lang::CSharp),
+    (Tool::RustAnalyzer, Lang::Rust),
+    (Tool::Cargo, Lang::Rust),
+];
+
 fn expected_tools(active: LangSet) -> Vec<Tool> {
+    let mut tools: Vec<Tool> = Vec::new();
     if active.has(Lang::CSharp) {
-        vec![Tool::Roslyn]
-    } else {
-        Vec::new()
+        tools.push(Tool::Roslyn);
     }
+    if active.has(Lang::Rust) {
+        tools.push(Tool::RustAnalyzer);
+        tools.push(Tool::Cargo);
+    }
+    tools
 }
 
 fn expected_mode(file_lang: Lang, active: LangSet) -> FileMode {
@@ -35,8 +47,8 @@ fn check(fixture: &Fixture, root: &std::path::Path, ticked: LangSet) -> Vec<Stri
     if langs.tools_at_open() != expected_tools(active) {
         wrong.push(format!("{case}: tools {:?}", langs.tools_at_open()));
     }
-    for tool in Tool::ALL {
-        if langs.allows(tool) != active.has(Lang::CSharp) {
+    for (tool, lang) in SERVES {
+        if langs.allows(tool) != active.has(lang) {
             wrong.push(format!("{case}: {tool:?} allowed {}", langs.allows(tool)));
         }
     }
@@ -117,6 +129,18 @@ fn a_ticked_language_the_folder_lacks_starts_nothing_and_says_so() {
     assert_eq!(langs.status(), "No Rust project here");
     let both: Langs = Langs::new(csharp.with(Lang::Python), csharp);
     assert_eq!(both.status(), "C# · No Python project here");
+}
+
+#[test]
+fn every_tool_has_its_language_in_the_table() {
+    let listed: Vec<Tool> = SERVES
+        .iter()
+        .map(|(tool, _): &(Tool, Lang)| *tool)
+        .collect();
+    assert_eq!(listed, Tool::ALL.to_vec());
+    for (tool, lang) in SERVES {
+        assert_eq!(tool.lang(), lang, "{tool:?}");
+    }
 }
 
 #[test]

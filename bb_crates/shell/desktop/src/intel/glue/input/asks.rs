@@ -10,7 +10,7 @@ use gpui::{AsyncWindowContext, Context, WeakEntity, Window};
 use crate::editor::Tab;
 use crate::intel::bb_worker::protocol::{Ask, Request, Ticket};
 use crate::intel::model::popups::RenameInput;
-use crate::intel::model::{LoadStatus, Question};
+use crate::intel::model::Question;
 use crate::ExplorerView;
 
 /// How long the mouse rests on a char before hover asks the server.
@@ -43,11 +43,12 @@ pub(crate) fn ask_at_cursor(
 
 /// Send one question about `path`; flushes first.
 pub(crate) fn ask(view: &mut ExplorerView, path: PathBuf, ask: Ask, anchor: CharIdx) -> bool {
-    if view.link.is_none() || view.intel.status != LoadStatus::Ready {
-        view.report(&format!("C# server: {}", view.intel.status_label()));
+    if !crate::intel::glue::route::ready_for(view, &path) {
+        let said: String = crate::intel::glue::route::status_for(view, &path);
+        view.report(&said);
         return false;
     }
-    super::flush(view);
+    crate::intel::glue::flush(view);
     let revision: u64 = view
         .tabs
         .tab_mut(&path)
@@ -71,7 +72,7 @@ pub(crate) fn ask(view: &mut ExplorerView, path: PathBuf, ask: Ask, anchor: Char
         at,
         anchor,
     });
-    super::send(
+    crate::intel::glue::route::send(
         view,
         Request::Ask {
             ticket,
@@ -225,7 +226,7 @@ pub(crate) fn hover_ask(view: &mut ExplorerView, path: PathBuf, at: CharIdx) {
         .tabs
         .tab_mut(&path)
         .and_then(|tab: &mut Tab| tab.document.lsp_point(at).ok());
-    let ready: bool = view.link.is_some() && view.intel.status == LoadStatus::Ready;
+    let ready: bool = crate::intel::glue::route::ready_for(view, &path);
     if let (true, Some(point)) = (ready, point) {
         ask(view, path, Ask::Hover(point), at);
     }

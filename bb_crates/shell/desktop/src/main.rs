@@ -65,6 +65,8 @@ struct ExplorerView {
     root: PathBuf,
     intel: intel::model::IntelModel,
     link: Option<intel::bb_worker::Link>,
+    /// rust-analyzer's link and status (BBEOD27).
+    rust: intel::model::RustIntel,
     tests: tests_panel::TestsState,
     debug: run::bb_debug::DebugState,
     quick_open: Option<quick_open::QuickOpen>,

@@ -62,13 +62,19 @@ pub(crate) fn resolve(root: &Path, ticked: Option<LangSet>) -> Langs {
 }
 
 /// The status bar: the active languages and absent notes, then the C#
-/// server's state while C# is active.
+/// server's state while C# is active, then rust-analyzer's once started
+/// (its install hint when missing, BBEOD27).
 pub(crate) fn status_line(view: &ExplorerView) -> String {
-    let langs: String = view.langs.langs.status();
-    if !view.langs.langs.allows(Tool::Roslyn) {
-        return langs;
+    let mut parts: Vec<String> = vec![view.langs.langs.status()];
+    if view.langs.langs.allows(Tool::Roslyn) {
+        parts.push(view.intel.status_label());
     }
-    format!("{langs} · {}", view.intel.status_label())
+    let rust: String = view.rust.status.label();
+    if view.langs.langs.allows(Tool::RustAnalyzer) && !rust.is_empty() {
+        parts.push(rust);
+    }
+    parts.retain(|part: &String| !part.is_empty());
+    parts.join(" · ")
 }
 
 /// File > Languages...: the start page for this workspace; its Open

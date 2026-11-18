@@ -5,7 +5,7 @@ family: LSP
 status: FIXED
 date: 2026-11-03
 signature: restored  : false after 120
-source: `bb_crates/edge/bb_lsp/src/roslyn/bb_load.rs` (`wait_for_load`, `wait_for_restore`); `bb open --restore`
+source: `bb_crates/edge/bb_protocol/bb_lsp/src/roslyn/bb_load.rs` (`wait_for_load`, `wait_for_restore`); `bb open --restore`
 observed: local gate 2026-11-03 on branch `bb-dap-exception-breaks`: `open_with_restore_flag_lets_roslyn_restore` FAILED after 130 s; alone, the test passed in 5.6 s
 links: fix=yes lesson=yes evidence=yes toolgap=none
 

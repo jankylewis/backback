@@ -3,7 +3,7 @@
 id: BB-PRF-005
 family: PRF
 status: FIXED
-source: `bb_crates/edge/bb_lsp/src/roslyn/bb_direct.rs` (`command`, `server_behind`)
+source: `bb_crates/edge/bb_protocol/bb_lsp/src/roslyn/bb_direct.rs` (`command`, `server_behind`)
 
 ## The fix that holds
 

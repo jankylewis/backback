@@ -6,7 +6,7 @@ use gpui::{AnyView, AnyWindowHandle, App, KeyBinding, Menu, MenuItem, PathPrompt
 
 mod bb_start;
 #[cfg(test)]
-mod lang_tests;
+pub(crate) mod lang_tests;
 pub(crate) mod langs;
 #[cfg(test)]
 mod tests;

@@ -33,6 +33,7 @@ pub(crate) fn explorer_panel(
         .on_action(cx.listener(ExplorerView::move_right))
         .on_action(cx.listener(ExplorerView::open))
         .child(explorer_header(view.theme, cx))
+        .children(crate::rows::cargo::section(view, cx))
         .child(
             div()
                 .relative()

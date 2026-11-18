@@ -21,7 +21,7 @@ impl ExplorerView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        super::restart(self, window, cx);
+        crate::intel::glue::restart(self, window, cx);
     }
 }
 
@@ -184,7 +184,7 @@ fn rename_box(view: &mut ExplorerView, stroke: &Keystroke) {
 fn preview_key(view: &mut ExplorerView, key: &str) -> bool {
     match key {
         "enter" => {
-            match super::apply_rename(view) {
+            match crate::intel::glue::apply_rename(view) {
                 Ok((files, edits)) => {
                     view.report(&format!("Renamed: {edits} edits in {files} files"));
                 }
@@ -205,7 +205,7 @@ fn preview_key(view: &mut ExplorerView, key: &str) -> bool {
 pub(crate) fn after_edit(view: &mut ExplorerView, typed: Option<&str>) {
     if typed == Some(".") {
         view.intel.completion = None;
-        if view.intel.status == crate::intel::model::LoadStatus::Ready {
+        if crate::intel::glue::route::ready_active(view) {
             asks::completion(view);
         }
         return;
@@ -220,7 +220,7 @@ pub(crate) fn after_edit(view: &mut ExplorerView, typed: Option<&str>) {
     };
     let typed_word: Option<String> = view.tabs.active().and_then(|doc: &Document| {
         (asks::word_start(doc, doc.cursor()) == anchor)
-            .then(|| super::typed_since(doc, anchor))
+            .then(|| crate::intel::glue::typed_since(doc, anchor))
             .flatten()
     });
     match (typed_word, view.intel.completion.as_mut()) {
