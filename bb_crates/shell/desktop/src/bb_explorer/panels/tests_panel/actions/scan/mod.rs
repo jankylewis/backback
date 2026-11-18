@@ -4,6 +4,7 @@
 pub(crate) mod cargo;
 #[path = "bb_search.rs"]
 pub(crate) mod find;
+pub(crate) mod python;
 #[cfg(test)]
 mod tests;
 

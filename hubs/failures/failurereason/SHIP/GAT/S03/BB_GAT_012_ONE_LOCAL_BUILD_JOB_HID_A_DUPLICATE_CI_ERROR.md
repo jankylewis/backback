@@ -5,7 +5,7 @@ family: GAT
 status: OBSERVED
 date: 2026-11-19
 signature: `bb_workspace.rs:78` `left: 2` `right: 1`; `cmd_shift_b_in_a_rust_window_lists_the_compile_error_and_a_click_opens_its_line` (`panels.rs:75`)
-source: `bb_crates/edge/cargo/src/project/messages.rs` (`command`: `--all-targets`; `messages`)
+source: `bb_crates/edge/toolchains/bb_cargo/src/project/messages.rs` (`command`: `--all-targets`; `messages`)
 source: PR #116 CI: 2 tests red, both on the Broken fixture's one error listed twice
 observed: `cargo check --workspace --all-targets --message-format=json` on the fixture: `-j1` 1 error, `-j2` 2 errors with identical JSON (package, target `lib` `beta`, span `beta/src/lib.rs:4:5`)
 links: fix=yes lesson=yes evidence=yes toolgap=none

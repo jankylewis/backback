@@ -4,6 +4,7 @@
 
 mod bb_parse;
 mod cargo;
+mod python;
 mod run;
 
 use std::path::{Path, PathBuf};
@@ -14,6 +15,7 @@ use gpui::{AsyncWindowContext, Context, WeakEntity, Window};
 
 pub(crate) use bb_parse::{issues, Issue, Severity};
 pub(crate) use cargo::{on_cargo_build, on_cargo_check, CargoBuild, CargoCheck};
+pub(crate) use python::{on_python_check, PythonCheck};
 
 use crate::intel::bb_worker::protocol::Place;
 use crate::intel::model::popups::{Pick, PlacesPanel};
@@ -30,7 +32,13 @@ pub(crate) fn on_build(
     cx: &mut Context<ExplorerView>,
 ) {
     if !view.langs.langs.allows(bb_lang::Tool::Roslyn) {
-        cargo::cargo_build(view, bb_cargo::BuildKind::Build, window, cx);
+        let rust: bool = view.langs.langs.allows(bb_lang::Tool::Cargo)
+            && crate::intel::bb_worker::find_cargo(&view.root).is_some();
+        if !rust && view.langs.langs.allows(bb_lang::Tool::Pyright) {
+            python::python_check(view, window, cx);
+        } else {
+            cargo::cargo_build(view, bb_cargo::BuildKind::Build, window, cx);
+        }
         return;
     }
     if refused(view, cx) {

@@ -204,12 +204,13 @@ pub(super) fn rows_box(
         .into_any_element()
 }
 
-/// The row's name: a .NET project's file stem; a Cargo member's folder,
-/// since every member's file is `Cargo.toml` (BBEOD27).
+/// The row's name: a .NET project's file stem; a Cargo member's or pytest
+/// root's folder, since their files are `Cargo.toml` or `pyproject.toml`.
 pub(super) fn project_name(path: &Path) -> String {
     let named: Option<&std::ffi::OsStr> = match crate::tests_panel::model::ProjectKind::of(path) {
         crate::tests_panel::model::ProjectKind::Dotnet => path.file_stem(),
-        crate::tests_panel::model::ProjectKind::Cargo => path.parent().and_then(Path::file_name),
+        crate::tests_panel::model::ProjectKind::Cargo
+        | crate::tests_panel::model::ProjectKind::Pytest => path.parent().and_then(Path::file_name),
     };
     named.map_or_else(String::new, |n: &std::ffi::OsStr| {
         n.to_string_lossy().into_owned()

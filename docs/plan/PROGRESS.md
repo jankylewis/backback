@@ -1,11 +1,10 @@
 # Backback progress
 
-- BBEOD27 (`feat/rust`, backback_1, 2026-11-19, in progress): rust-analyzer
-  worker routed by Lang, `bb-cargo` (metadata, build/check, tests), window
-  tests on real cargo; BB-GAT-010 watchdog on window-test waits. No debugger.
+- BBEOD28 (`feat/python`, backback_1, 2026-11-19, in progress): pyright worker
+  routed by Lang, `bb-python` (interpreter, check, pytest). No debugger.
+- BBEOD27 (#116, `feat/rust`): rust-analyzer, `bb-cargo`, BB-GAT-010/011/012.
 - BBEOD26 (#115, `feat/lang-picker`): C#/Rust/Python ticks; active = ticked
-  and present gates every tool, colour and Debug. ADR-11.
-- BBEOD25 (#114, merged 52f2fd4): five debug/window bugs, BB-GAT-009.
+  and present gates every tool, colour and Debug. ADR-11. BBEOD25: #114.
 
 - FIND-SCOPE (2026-11-07, `find-in-files-scope`): Find in Files gets
   Wu / VS Code / Rider fields. Tab moves text -> in -> files. "in" picks

@@ -15,7 +15,8 @@ use bb_intel::Config;
 use bb_lsp::roslyn::{LoadState, Restore};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
-pub(crate) use bb_loop::rust::{find_cargo, scratch, start_rust};
+pub(crate) use bb_loop::python::{interpreter, start_python};
+pub(crate) use bb_loop::rust::{find_cargo, scratch, scratch_in, start_rust};
 use protocol::{Event, Request};
 
 /// The UI's end of the server thread.

@@ -62,16 +62,18 @@ pub(crate) fn resolve(root: &Path, ticked: Option<LangSet>) -> Langs {
 }
 
 /// The status bar: the active languages and absent notes, then the C#
-/// server's state while C# is active, then rust-analyzer's once started
-/// (its install hint when missing, BBEOD27).
+/// server's state while C# is active, then rust-analyzer's and pyright's
+/// once started (each one's install hint when missing, BBEOD27/28).
 pub(crate) fn status_line(view: &ExplorerView) -> String {
     let mut parts: Vec<String> = vec![view.langs.langs.status()];
     if view.langs.langs.allows(Tool::Roslyn) {
         parts.push(view.intel.status_label());
     }
-    let rust: String = view.rust.status.label();
-    if view.langs.langs.allows(Tool::RustAnalyzer) && !rust.is_empty() {
-        parts.push(rust);
+    if view.langs.langs.allows(Tool::RustAnalyzer) {
+        parts.push(view.rust.status.label(bb_intel::Server::RustAnalyzer));
+    }
+    if view.langs.langs.allows(Tool::Pyright) {
+        parts.push(view.python.status.label(bb_intel::Server::Pyright));
     }
     parts.retain(|part: &String| !part.is_empty());
     parts.join(" · ")

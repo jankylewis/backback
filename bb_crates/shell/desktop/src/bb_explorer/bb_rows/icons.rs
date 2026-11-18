@@ -86,6 +86,10 @@ pub(crate) fn file_type(name: &str) -> FileType {
     if matches!(lower.as_str(), "license" | "readme" | "authors" | "notice") {
         return FileType::Text;
     }
+    // Python project files are marked like build files (BBEOD28).
+    if bb_lang::Lang::of_project_file(std::path::Path::new(&lower)) == Some(bb_lang::Lang::Python) {
+        return FileType::Build;
+    }
     let ext: &str = lower
         .rsplit_once('.')
         .map_or("", |(_, ext): (&str, &str)| ext);
@@ -145,6 +149,16 @@ fn type_tint(kind: FileType, theme: &Theme) -> Rgb {
 #[cfg(test)]
 mod tests {
     use super::{file_type, FileType};
+
+    #[test]
+    fn python_project_files_are_marked_and_other_python_files_are_not() {
+        let names: [&str; 3] = ["pyproject.toml", "Setup.py", "requirements-dev.txt"];
+        assert_eq!(names.map(file_type), [FileType::Build; 3]);
+        assert_eq!(
+            [file_type("notes.txt"), file_type("Cargo.toml")],
+            [FileType::Text, FileType::Config]
+        );
+    }
 
     #[test]
     fn well_known_files_get_their_own_type() {

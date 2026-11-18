@@ -1,7 +1,8 @@
-//! Which server a file's requests go to (BBEOD27): the one place that
-//! decides, so a Rust file never reaches Roslyn and a C# file never reaches
-//! rust-analyzer. C# files (and files of no language, as before the picker)
-//! go to Roslyn, Rust files to rust-analyzer, Python files to none yet.
+//! Which server a file's requests go to (BBEOD27/28): the one place that
+//! decides, so a Rust or Python file never reaches Roslyn and a C# file
+//! never reaches another server. C# files (and files of no language, as
+//! before the picker) go to Roslyn, Rust files to rust-analyzer, Python
+//! files to pyright.
 
 use std::path::{Path, PathBuf};
 
@@ -15,26 +16,47 @@ use bb_text::CharEdit;
 use crate::editor::{Tab, TabEvent};
 use crate::intel::bb_worker::protocol::{Event, Request};
 use crate::intel::bb_worker::{self, Link};
-use crate::intel::model::{LoadStatus, RustStatus, Sent};
+use crate::intel::model::{LoadStatus, Sent, ServerStatus};
 use crate::ExplorerView;
 
-/// The server that serves `path`; `None` for a language with no server.
-pub(crate) fn server_for(path: &Path) -> Option<Server> {
+/// The server that serves `path`: every language has one (BBEOD28).
+pub(crate) fn server_for(path: &Path) -> Server {
     match Lang::of_source(path) {
-        Some(Lang::CSharp) | None => Some(Server::Roslyn),
-        Some(Lang::Rust) => Some(Server::RustAnalyzer),
-        Some(Lang::Python) => None,
+        Some(Lang::CSharp) | None => Server::Roslyn,
+        Some(Lang::Rust) => Server::RustAnalyzer,
+        Some(Lang::Python) => Server::Pyright,
+    }
+}
+
+/// The link and status of a server next to Roslyn; `None` for Roslyn.
+pub(crate) fn side(
+    view: &mut ExplorerView,
+    server: Server,
+) -> Option<(&mut Option<Link>, &mut ServerStatus)> {
+    match server {
+        Server::Roslyn => None,
+        Server::RustAnalyzer => Some((&mut view.rust.link, &mut view.rust.status)),
+        Server::Pyright => Some((&mut view.python.link, &mut view.python.status)),
+    }
+}
+
+/// The status of a server next to Roslyn (`Off` for Roslyn).
+fn side_status(view: &ExplorerView, server: Server) -> (bool, &ServerStatus) {
+    match server {
+        Server::Roslyn => (false, &ServerStatus::Off),
+        Server::RustAnalyzer => (view.rust.link.is_some(), &view.rust.status),
+        Server::Pyright => (view.python.link.is_some(), &view.python.status),
     }
 }
 
 /// Whether `path`'s server is connected and ready for questions.
 pub(crate) fn ready_for(view: &ExplorerView, path: &Path) -> bool {
     match server_for(path) {
-        Some(Server::Roslyn) => view.link.is_some() && view.intel.status == LoadStatus::Ready,
-        Some(Server::RustAnalyzer) => {
-            view.rust.link.is_some() && view.rust.status == RustStatus::Ready
+        Server::Roslyn => view.link.is_some() && view.intel.status == LoadStatus::Ready,
+        other @ (Server::RustAnalyzer | Server::Pyright) => {
+            let (linked, status): (bool, &ServerStatus) = side_status(view, other);
+            linked && *status == ServerStatus::Ready
         }
-        None => false,
     }
 }
 
@@ -48,20 +70,23 @@ pub(crate) fn ready_active(view: &ExplorerView) -> bool {
 /// What the status bar says when a question about `path` cannot be asked.
 pub(crate) fn status_for(view: &ExplorerView, path: &Path) -> String {
     match server_for(path) {
-        Some(Server::Roslyn) => format!("C# server: {}", view.intel.status_label()),
-        Some(Server::RustAnalyzer) => format!("Rust server: {}", view.rust.status.label()),
-        None => String::from("No language server for this file"),
+        Server::Roslyn => format!("C# server: {}", view.intel.status_label()),
+        other @ (Server::RustAnalyzer | Server::Pyright) => format!(
+            "{}: {}",
+            other.name(),
+            side_status(view, other).1.label(other)
+        ),
     }
 }
 
-/// Send `request` to the server of its file; a request about a file with
-/// no server (or no server running) is dropped here.
+/// Send `request` to the server of its file; a request whose server is
+/// not running is dropped here.
 pub(crate) fn send(view: &mut ExplorerView, request: Request) {
-    let server: Option<Server> = request.path().map_or(Some(Server::Roslyn), server_for);
+    let server: Server = request.path().map_or(Server::Roslyn, server_for);
     let link: Option<&Link> = match server {
-        Some(Server::Roslyn) => view.link.as_ref(),
-        Some(Server::RustAnalyzer) => view.rust.link.as_ref(),
-        None => None,
+        Server::Roslyn => view.link.as_ref(),
+        Server::RustAnalyzer => view.rust.link.as_ref(),
+        Server::Pyright => view.python.link.as_ref(),
     };
     let Some(link): Option<&Link> = link else {
         return;
@@ -71,16 +96,13 @@ pub(crate) fn send(view: &mut ExplorerView, request: Request) {
         view.intel.sent(sent);
         return;
     }
-    match server {
-        Some(Server::RustAnalyzer) => {
-            view.rust.link = None;
-            view.rust.status = RustStatus::Failed(String::from("server thread stopped"));
-        }
-        Some(Server::Roslyn) | None => {
-            view.link = None;
-            view.intel
-                .server_gone(LoadStatus::Failed(String::from("server thread stopped")));
-        }
+    if let Some((link, status)) = side(view, server) {
+        *link = None;
+        *status = ServerStatus::Failed(String::from("server thread stopped"));
+    } else {
+        view.link = None;
+        view.intel
+            .server_gone(LoadStatus::Failed(String::from("server thread stopped")));
     }
 }
 
@@ -96,7 +118,7 @@ pub(crate) fn connect_rust(
     let Some(root): Option<PathBuf> = root else {
         return;
     };
-    view.rust.status = RustStatus::Starting;
+    view.rust.status = ServerStatus::Starting;
     if cfg!(test) {
         return;
     }
@@ -104,24 +126,48 @@ pub(crate) fn connect_rust(
     super::attach_server(view, (Server::RustAnalyzer, link), events, window, cx);
 }
 
-/// Apply a lifecycle event of rust-analyzer's thread; `false` when the
-/// event is not one (diagnostics and answers are shared).
-pub(crate) fn rust_lifecycle(view: &mut ExplorerView, event: &Event) -> bool {
-    let status: RustStatus = match event {
-        Event::Stopped => RustStatus::Stopped,
-        Event::Ready { .. } => RustStatus::Ready,
-        Event::Failed(reason) => RustStatus::Failed(reason.clone()),
-        Event::Unavailable(hint) => RustStatus::Missing(hint.clone()),
+/// Start pyright for the window root while Python is active (window
+/// tests record the start, spawn nothing).
+pub(crate) fn connect_python(
+    view: &mut ExplorerView,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    if !view.langs.start(bb_lang::Tool::Pyright) {
+        return;
+    }
+    view.python.status = ServerStatus::Starting;
+    if cfg!(test) {
+        return;
+    }
+    let (link, events): (Link, UnboundedReceiver<Event>) = bb_worker::start_python(&view.root);
+    super::attach_server(view, (Server::Pyright, link), events, window, cx);
+}
+
+/// Apply a lifecycle event of a side server's thread; `false` when the
+/// event is not one (diagnostics and answers are shared) or `server` is
+/// Roslyn.
+pub(crate) fn side_lifecycle(view: &mut ExplorerView, server: Server, event: &Event) -> bool {
+    let status: ServerStatus = match event {
+        Event::Stopped => ServerStatus::Stopped,
+        Event::Ready { .. } => ServerStatus::Ready,
+        Event::Failed(reason) => ServerStatus::Failed(reason.clone()),
+        Event::Unavailable(hint) => ServerStatus::Missing(hint.clone()),
         Event::Progress { .. }
         | Event::Diagnostics { .. }
         | Event::Answer { .. }
         | Event::SyncFailed(_) => return false,
     };
-    if status != RustStatus::Ready {
-        view.rust.link = None;
+    let label: String = status.label(server);
+    let Some((link, shown)): Option<(&mut Option<Link>, &mut ServerStatus)> = side(view, server)
+    else {
+        return false;
+    };
+    if status != ServerStatus::Ready {
+        *link = None;
     }
-    eprintln!("rust_server_status={}", status.label());
-    view.rust.status = status;
+    eprintln!("{}_server_status={label}", server.language_id());
+    *shown = status;
     true
 }
 

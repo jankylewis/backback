@@ -21,19 +21,28 @@ pub(crate) fn members(root: &Path) -> Result<Vec<PathBuf>, String> {
         .collect())
 }
 
-/// The projects to show: the .NET test projects when `csharp`, then the
-/// Cargo members when `rust`, and the run settings found.
-pub(crate) fn scan_all(
-    root: &Path,
-    (csharp, rust): (bool, bool),
-) -> Result<(Vec<PathBuf>, Vec<PathBuf>), String> {
-    let (mut projects, settings): (Vec<PathBuf>, Vec<PathBuf>) = if csharp {
+/// Which languages' tests the panel lists (BBEOD26/27/28).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub(crate) struct Kinds {
+    pub(crate) csharp: bool,
+    pub(crate) rust: bool,
+    pub(crate) python: bool,
+}
+
+/// The projects to show: the .NET test projects with `csharp`, the Cargo
+/// members with `rust`, the pytest root with `python`, and the run
+/// settings found.
+pub(crate) fn scan_all(root: &Path, kinds: Kinds) -> Result<(Vec<PathBuf>, Vec<PathBuf>), String> {
+    let (mut projects, settings): (Vec<PathBuf>, Vec<PathBuf>) = if kinds.csharp {
         super::scan(root)?
     } else {
         (Vec::new(), Vec::new())
     };
-    if rust {
+    if kinds.rust {
         projects.extend(members(root)?);
+    }
+    if kinds.python {
+        projects.extend(super::python::root_file(root));
     }
     Ok((projects, settings))
 }
@@ -73,16 +82,23 @@ pub(crate) fn run(
 }
 
 /// Which languages' tests may be discovered: .NET with C# active
-/// (BBEOD26), Cargo with Rust active and a `Cargo.toml` (BBEOD27); with
-/// neither the panel says why.
-pub(crate) fn discovery(view: &mut ExplorerView) -> (bool, bool) {
-    let csharp: bool = view.langs.start(bb_lang::Tool::TestDiscovery);
-    let rust: bool = crate::intel::bb_worker::find_cargo(&view.root).is_some()
-        && view.langs.start(bb_lang::Tool::Cargo);
-    if !csharp && !rust {
-        view.tests.message = Some(String::from("Tests: neither C# nor Rust is active here"));
+/// (BBEOD26), Cargo with Rust active and a `Cargo.toml` (BBEOD27), pytest
+/// with Python active and a pytest root file (BBEOD28); with none the
+/// panel says why.
+pub(crate) fn discovery(view: &mut ExplorerView) -> Kinds {
+    let kinds: Kinds = Kinds {
+        csharp: view.langs.start(bb_lang::Tool::TestDiscovery),
+        rust: crate::intel::bb_worker::find_cargo(&view.root).is_some()
+            && view.langs.start(bb_lang::Tool::Cargo),
+        python: super::python::root_file(&view.root).is_some()
+            && view.langs.start(bb_lang::Tool::Pytest),
+    };
+    if kinds == Kinds::default() {
+        view.tests.message = Some(String::from(
+            "Tests: no active C#, Rust or Python (pytest root) here",
+        ));
     }
-    (csharp, rust)
+    kinds
 }
 
 /// Whether `path`'s tests may be listed: its language is active.
@@ -90,6 +106,7 @@ pub(crate) fn may_list(view: &mut ExplorerView, path: &std::path::Path) -> bool 
     let tool: bb_lang::Tool = match crate::tests_panel::model::ProjectKind::of(path) {
         crate::tests_panel::model::ProjectKind::Dotnet => bb_lang::Tool::TestDiscovery,
         crate::tests_panel::model::ProjectKind::Cargo => bb_lang::Tool::Cargo,
+        crate::tests_panel::model::ProjectKind::Pytest => bb_lang::Tool::Pytest,
     };
     view.langs.start(tool)
 }

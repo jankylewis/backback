@@ -459,6 +459,7 @@ dependencies = [
  "bb-lang",
  "bb-lsp",
  "bb-process",
+ "bb-python",
  "bb-search",
  "bb-syntax",
  "bb-testkit",
@@ -597,6 +598,7 @@ dependencies = [
  "bb-cargo",
  "bb-dotnet",
  "bb-lsp",
+ "bb-python",
  "bb-text",
  "lsp-types",
  "proptest",
@@ -648,6 +650,20 @@ name = "bb-process"
 version = "0.0.1"
 dependencies = [
  "tokio",
+]
+
+[[package]]
+name = "bb-python"
+version = "0.0.1"
+dependencies = [
+ "bb-cargo",
+ "bb-python",
+ "bb-testkit",
+ "roxmltree 0.20.0",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

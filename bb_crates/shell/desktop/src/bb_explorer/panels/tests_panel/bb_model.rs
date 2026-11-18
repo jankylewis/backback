@@ -5,28 +5,34 @@ use std::path::{Path, PathBuf};
 use bb_testkit::Outcome;
 use bb_testkit::{Fqn, SpecList, SpecResult, Verdict};
 
-/// What kind of project a Tests panel row is: a .NET test project, or a
-/// Cargo workspace member (BBEOD27), told by its file.
+/// What kind of project a Tests panel row is: a .NET test project, a
+/// Cargo workspace member (BBEOD27) or a pytest root (BBEOD28), told by
+/// its file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ProjectKind {
     Dotnet,
     Cargo,
+    Pytest,
 }
 
 impl ProjectKind {
     pub(crate) fn of(path: &Path) -> Self {
-        if path.file_name() == Some(std::ffi::OsStr::new("Cargo.toml")) {
+        let name: Option<&str> = path.file_name().and_then(std::ffi::OsStr::to_str);
+        if name == Some("Cargo.toml") {
             Self::Cargo
+        } else if name.is_some_and(|n: &str| bb_python::run::bb_pytest::ROOT_FILES.contains(&n)) {
+            Self::Pytest
         } else {
             Self::Dotnet
         }
     }
 
-    /// Whether its tests offer Debug: there is no Rust debugger, ever.
+    /// Whether its tests offer Debug: there is no Rust or Python
+    /// debugger, ever.
     pub(crate) fn debuggable(self) -> bool {
         match self {
             Self::Dotnet => true,
-            Self::Cargo => false,
+            Self::Cargo | Self::Pytest => false,
         }
     }
 }

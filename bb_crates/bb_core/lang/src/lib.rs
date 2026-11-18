@@ -24,7 +24,7 @@ pub enum Lang {
     CSharp,
     /// Rust: rust-analyzer and cargo (BBEOD27); no debugger, ever.
     Rust,
-    /// Python: colours only for now (BBEOD28 brings its server).
+    /// Python: pyright and pytest (BBEOD28); no debugger, ever.
     Python,
 }
 
@@ -71,10 +71,17 @@ impl Lang {
     }
 
     /// The language a file shows the folder holds: a source file, or a
-    /// project file (`.sln`, `.slnx`, `.csproj`, `Cargo.toml`,
-    /// `pyproject.toml`, `setup.py`, `requirements*.txt`).
+    /// project file ([`Lang::of_project_file`]).
     #[must_use]
     pub fn of_marker(path: &Path) -> Option<Self> {
+        Self::of_project_file(path).or_else(|| Self::of_source(path))
+    }
+
+    /// The language of a project file: `.sln`, `.slnx`, `.csproj`,
+    /// `Cargo.toml`, `pyproject.toml`, `setup.py`, `requirements*.txt` (the
+    /// Explorer marks them, BBEOD28).
+    #[must_use]
+    pub fn of_project_file(path: &Path) -> Option<Self> {
         let name: String = path.file_name()?.to_str()?.to_ascii_lowercase();
         let ext: Option<String> = path
             .extension()
@@ -87,10 +94,7 @@ impl Lang {
             return Some(Self::Rust);
         }
         let requirements: bool = name.starts_with("requirements") && ext.as_deref() == Some("txt");
-        if requirements || name == "pyproject.toml" || name == "setup.py" {
-            return Some(Self::Python);
-        }
-        Self::of_source(path)
+        (requirements || name == "pyproject.toml" || name == "setup.py").then_some(Self::Python)
     }
 }
 

@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use bb_intel::{Config, IntelError, RustConfig, Session};
+use bb_intel::{Config, IntelError, Session};
 use bb_lsp::roslyn::LoadState;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -16,26 +16,40 @@ use crate::intel::bb_worker::protocol::Event;
 pub(super) async fn load(boot: Boot, events: &UnboundedSender<Event>) -> Option<Session> {
     match boot {
         Boot::Roslyn(config, projects) => load_roslyn(&config, projects, events).await,
-        Boot::Rust(config, log_dir) => load_rust(&config, &log_dir, events).await,
+        Boot::Rust(config, log_dir) => {
+            let log: std::fs::File = side_log(&log_dir, "backback-rust-analyzer.log", events)?;
+            side_started(Session::start_rust(&config, log).await, events)
+        }
+        Boot::Python(config, log_dir) => {
+            let log: std::fs::File = side_log(&log_dir, "backback-pyright.log", events)?;
+            side_started(Session::start_python(&config, log).await, events)
+        }
     }
 }
 
-/// Start rust-analyzer: `Ready` once initialized, `Unavailable` with the
-/// install hint when it is not installed, else `Failed`.
-async fn load_rust(
-    config: &RustConfig,
+/// The run log of a side server, or `Failed` with why.
+fn side_log(
     log_dir: &std::path::Path,
+    name: &str,
     events: &UnboundedSender<Event>,
-) -> Option<Session> {
-    let log: std::fs::File = match std::fs::File::create(log_dir.join("backback-rust-analyzer.log"))
-    {
-        Ok(file) => file,
+) -> Option<std::fs::File> {
+    match std::fs::File::create(log_dir.join(name)) {
+        Ok(file) => Some(file),
         Err(error) => {
             send(events, Event::Failed(format!("run log: {error}")));
-            return None;
+            None
         }
-    };
-    match Session::start_rust(config, log).await {
+    }
+}
+
+/// Report a side server's start (rust-analyzer, pyright): `Ready` once
+/// initialized, `Unavailable` with the install hint when it is not
+/// installed, else `Failed`.
+fn side_started(
+    started: Result<Session, IntelError>,
+    events: &UnboundedSender<Event>,
+) -> Option<Session> {
+    match started {
         Ok(session) => {
             let took: Duration = session.loaded_in();
             send(
@@ -47,7 +61,10 @@ async fn load_rust(
             );
             Some(session)
         }
-        Err(IntelError::Cargo(missing @ bb_cargo::CargoError::AnalyzerMissing)) => {
+        Err(
+            missing @ (IntelError::Cargo(bb_cargo::CargoError::AnalyzerMissing)
+            | IntelError::Python(bb_python::PythonError::PyrightMissing)),
+        ) => {
             send(events, Event::Unavailable(missing.to_string()));
             None
         }

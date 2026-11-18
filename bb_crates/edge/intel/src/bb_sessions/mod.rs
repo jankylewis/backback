@@ -1,9 +1,9 @@
-//! A session with one language server: Roslyn (`bb_session`) or
-//! rust-analyzer (`rust`), the document sync both share (`sync`), and the
-//! pump that reads what the server sends on its own.
+//! A session with one language server: Roslyn (`bb_session`), or
+//! rust-analyzer or pyright (`servers`), the document sync all share
+//! (`sync`), and the pump that reads what the server sends on its own.
 
 pub(crate) mod bb_session;
-pub(crate) mod rust;
+pub(crate) mod servers;
 mod sync;
 
 use std::sync::Arc;
@@ -24,6 +24,8 @@ pub enum Server {
     Roslyn,
     /// rust-analyzer, for Rust (BBEOD27).
     RustAnalyzer,
+    /// pyright (or basedpyright), for Python (BBEOD28).
+    Pyright,
 }
 
 impl Server {
@@ -33,6 +35,7 @@ impl Server {
         match self {
             Self::Roslyn => "csharp",
             Self::RustAnalyzer => "rust",
+            Self::Pyright => "python",
         }
     }
 
@@ -42,16 +45,17 @@ impl Server {
         match self {
             Self::Roslyn => "C# server",
             Self::RustAnalyzer => "Rust server",
+            Self::Pyright => "Python server",
         }
     }
 
     /// Whether its diagnostics are pushed (`publishDiagnostics`), not
-    /// pulled: rust-analyzer pushes, Roslyn answers pulls.
+    /// pulled: rust-analyzer and pyright push, Roslyn answers pulls.
     #[must_use]
     pub fn pushes_diagnostics(self) -> bool {
         match self {
             Self::Roslyn => false,
-            Self::RustAnalyzer => true,
+            Self::RustAnalyzer | Self::Pyright => true,
         }
     }
 }

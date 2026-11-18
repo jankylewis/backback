@@ -55,8 +55,14 @@ pub(super) fn execute(
     settings_override: Option<PathBuf>,
     stop: StopFlag,
 ) -> Result<RunReport, String> {
-    if super::super::model::ProjectKind::of(path) == super::super::model::ProjectKind::Cargo {
-        return super::scan::cargo::run(&root, path, selection, &stop);
+    match super::super::model::ProjectKind::of(path) {
+        super::super::model::ProjectKind::Cargo => {
+            return super::scan::cargo::run(&root, path, selection, &stop);
+        }
+        super::super::model::ProjectKind::Pytest => {
+            return super::scan::python::run(&root, path, selection, &stop);
+        }
+        super::super::model::ProjectKind::Dotnet => {}
     }
     let project: ProjectPath = ProjectPath::from_path(path.to_path_buf());
     let rt: tokio::runtime::Runtime = super::runtime()?;

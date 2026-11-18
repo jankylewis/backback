@@ -45,8 +45,8 @@ pub(crate) fn open(view: &mut ExplorerView, window: &mut Window, cx: &mut Contex
         cx.notify();
         return;
     }
-    let langs: (bool, bool) = scan::cargo::discovery(view);
-    if langs == (false, false) {
+    let langs: scan::cargo::Kinds = scan::cargo::discovery(view);
+    if langs == scan::cargo::Kinds::default() {
         cx.notify();
         return;
     }
@@ -198,8 +198,10 @@ fn runtime() -> Result<tokio::runtime::Runtime, String> {
 /// `--no-write` keeps the solution unchanged, and a build writes bin/ and
 /// obj/.
 fn list(root: PathBuf, path: &std::path::Path, may_build: bool) -> ListResult {
-    if super::model::ProjectKind::of(path) == super::model::ProjectKind::Cargo {
-        return scan::cargo::list(&root, path);
+    match super::model::ProjectKind::of(path) {
+        super::model::ProjectKind::Cargo => return scan::cargo::list(&root, path),
+        super::model::ProjectKind::Pytest => return scan::python::list(&root, path),
+        super::model::ProjectKind::Dotnet => {}
     }
     let rt: tokio::runtime::Runtime = runtime()?;
     match list_once(&rt, root.clone(), path) {

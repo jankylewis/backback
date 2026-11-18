@@ -2,7 +2,8 @@
 //! window that starts only its active languages' tools, colours only their
 //! files and shows Debug only with C#; the start page's boxes work by mouse
 //! and keys, refuse to open with none ticked, and come back on reopen.
-//! BBEOD27: Rust requests, the Cargo explorer, Build and Tests (`rust`).
+//! BBEOD27/28: Rust and Python requests, explorers, Build and Tests
+//! (`tools`).
 
 use std::path::Path;
 
@@ -13,7 +14,7 @@ use crate::ExplorerView;
 
 mod bb_matrix;
 mod page;
-mod rust;
+mod tools;
 pub(crate) mod watchdog;
 
 fn opened(cx: &mut TestAppContext) -> Vec<WindowHandle<ExplorerView>> {

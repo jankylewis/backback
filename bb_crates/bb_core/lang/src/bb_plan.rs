@@ -19,16 +19,22 @@ pub enum Tool {
     /// `cargo metadata` at open (the Cargo explorer); `build`, `check` and
     /// `test` on a click.
     Cargo,
+    /// pyright, the Python language server; starts at open (BBEOD28).
+    Pyright,
+    /// pytest: the Tests panel's Python lists and runs, on a click.
+    Pytest,
 }
 
 impl Tool {
     /// Every tool.
-    pub const ALL: [Self; 5] = [
+    pub const ALL: [Self; 7] = [
         Self::Roslyn,
         Self::Netcoredbg,
         Self::TestDiscovery,
         Self::RustAnalyzer,
         Self::Cargo,
+        Self::Pyright,
+        Self::Pytest,
     ];
 
     /// The language the tool serves.
@@ -37,6 +43,7 @@ impl Tool {
         match self {
             Self::Roslyn | Self::Netcoredbg | Self::TestDiscovery => Lang::CSharp,
             Self::RustAnalyzer | Self::Cargo => Lang::Rust,
+            Self::Pyright | Self::Pytest => Lang::Python,
         }
     }
 
@@ -44,8 +51,8 @@ impl Tool {
     #[must_use]
     pub fn at_open(self) -> bool {
         match self {
-            Self::Roslyn | Self::RustAnalyzer | Self::Cargo => true,
-            Self::Netcoredbg | Self::TestDiscovery => false,
+            Self::Roslyn | Self::RustAnalyzer | Self::Cargo | Self::Pyright => true,
+            Self::Netcoredbg | Self::TestDiscovery | Self::Pytest => false,
         }
     }
 }

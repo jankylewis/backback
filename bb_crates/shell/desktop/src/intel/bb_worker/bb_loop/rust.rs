@@ -61,11 +61,17 @@ fn serve(root: &Path, requests: UnboundedReceiver<Request>, events: &UnboundedSe
 /// (headmate, BBEOD27). Two uses never share one, so neither waits on
 /// the other's lock.
 pub(crate) fn scratch(root: &Path, use_: &str) -> PathBuf {
+    scratch_in("backback-rust", root, use_)
+}
+
+/// A scratch folder for `root` and `use_` under `base` in the system temp
+/// folder (Rust builds, BBEOD27; pytest reports, BBEOD28).
+pub(crate) fn scratch_in(base: &str, root: &Path, use_: &str) -> PathBuf {
     let mut hasher: std::collections::hash_map::DefaultHasher =
         std::collections::hash_map::DefaultHasher::new();
     root.hash(&mut hasher);
     std::env::temp_dir()
-        .join("backback-rust")
+        .join(base)
         .join(format!("{:016x}", hasher.finish()))
         .join(use_)
 }

@@ -1,5 +1,6 @@
 //! Code intelligence for backback, behind a typed API: Roslyn for C#,
-//! rust-analyzer for Rust (BBEOD27), one [`Session`] type for both.
+//! rust-analyzer for Rust (BBEOD27), pyright for Python (BBEOD28), one
+//! [`Session`] type for all three.
 //!
 //! A [`Session`] starts `roslyn-language-server` and loads one solution (or
 //! starts rust-analyzer on a Cargo workspace) and
@@ -21,7 +22,8 @@ pub use model::results::{
 };
 pub use model::{DocPath, DocUri, Location, Span};
 pub use session::bb_session::{Config, Session};
-pub use session::rust::RustConfig;
+pub use session::servers::python::PythonConfig;
+pub use session::servers::rust::RustConfig;
 pub use session::Server;
 
 use std::path::PathBuf;
@@ -35,6 +37,9 @@ pub enum IntelError {
     /// rust-analyzer is missing, or cargo failed.
     #[error(transparent)]
     Cargo(#[from] bb_cargo::CargoError),
+    /// pyright is missing or does not run.
+    #[error(transparent)]
+    Python(#[from] bb_python::PythonError),
     /// A request failed (timeout, closed, server error, bad shape).
     #[error(transparent)]
     Lsp(#[from] bb_lsp::LspError),

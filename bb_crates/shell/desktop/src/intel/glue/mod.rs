@@ -27,7 +27,7 @@ pub(crate) use answers::{goto_point, jump, opened};
 pub(crate) use input::asks::{ask, ask_at_cursor, hover_ask, hover_move, word_start};
 pub(crate) use input::bb_keys;
 pub(crate) use input::bb_keys::RestartServer;
-pub(crate) use route::{connect_rust, restart};
+pub(crate) use route::{connect_python, connect_rust, restart};
 
 /// Start Roslyn for the workspace's solution while C# is active (BBEOD26;
 /// window tests record the start, spawn nothing) and pump its events.
@@ -75,6 +75,7 @@ pub(crate) fn attach_server(
             };
         }
         Server::RustAnalyzer => view.rust.link = Some(link),
+        Server::Pyright => view.python.link = Some(link),
     }
     cx.spawn_in(
         window,
@@ -149,7 +150,7 @@ pub(crate) fn on_event(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    if server == Server::RustAnalyzer && route::rust_lifecycle(view, &event) {
+    if route::side_lifecycle(view, server, &event) {
         cx.notify();
         return;
     }

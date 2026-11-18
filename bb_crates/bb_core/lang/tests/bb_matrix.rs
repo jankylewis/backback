@@ -7,12 +7,14 @@ use std::path::PathBuf;
 use bb_lang::fixtures::{Fixture, FIXTURES};
 use bb_lang::{detect, FileMode, Lang, LangSet, Langs, Tool, DETECT_BUDGET};
 
-const SERVES: [(Tool, Lang); 5] = [
+const SERVES: [(Tool, Lang); 7] = [
     (Tool::Roslyn, Lang::CSharp),
     (Tool::Netcoredbg, Lang::CSharp),
     (Tool::TestDiscovery, Lang::CSharp),
     (Tool::RustAnalyzer, Lang::Rust),
     (Tool::Cargo, Lang::Rust),
+    (Tool::Pyright, Lang::Python),
+    (Tool::Pytest, Lang::Python),
 ];
 
 fn expected_tools(active: LangSet) -> Vec<Tool> {
@@ -23,6 +25,9 @@ fn expected_tools(active: LangSet) -> Vec<Tool> {
     if active.has(Lang::Rust) {
         tools.push(Tool::RustAnalyzer);
         tools.push(Tool::Cargo);
+    }
+    if active.has(Lang::Python) {
+        tools.push(Tool::Pyright);
     }
     tools
 }
