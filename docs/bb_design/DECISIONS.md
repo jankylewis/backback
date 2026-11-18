@@ -94,4 +94,4 @@ Functions hold ≤ 50 lines; Rust `impl`/type and C# class ≤ 200; parameters �
 remote development, no non-.NET languages. Themes: dark and light only.
 **Consequences.** The binary stays small and the surface stays testable. Anything
 "pluggable" is a Rust crate behind a trait, compiled in.
-**Revisit when.** v1 ships and real users ask for F# or Razor.
+**Revisit when.** v1 ships. Superseded in part by ADR-11 (`DECISIONS_2.md`).
