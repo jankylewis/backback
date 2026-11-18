@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 64 — FIXED 62, OBSERVED 2.
+Bugs a user met in the app. Entries: 69 — FIXED 66, OBSERVED 3.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -73,3 +73,8 @@ Bugs a user met in the app. Entries: 64 — FIXED 62, OBSERVED 2.
 | BB-BUG-067 | Back did not return from a debugger step into another file | FIXED | a stop's jump was not recorded; keys only in the editor | yes | `C2/D5/S17/BB_BUG_067_BACK_DID_NOT_RETURN_FROM_A_DEBUGGER_STEP.md` |
 | BB-BUG-068 | Dragging the execution arrow was refused | FIXED | stock netcoredbg installed; its real test was vacuous | yes | `C2/D5/S17/BB_BUG_068_DRAGGING_THE_EXECUTION_ARROW_WAS_REFUSED.md` |
 | BB-BUG-069 | A click in the Find box fell through to the editor | FIXED | overlays did not occlude the editor under them | yes | `C2/D5/S18/BB_BUG_069_A_CLICK_IN_THE_FIND_BOX_FELL_THROUGH_TO_THE_EDITOR.md` |
+| BB-BUG-070 | The title bar zoomed twice on a double click | FIXED | every press started the system drag | yes | `C2/D5/S18/BB_BUG_070_THE_TITLE_BAR_ZOOMED_TWICE_ON_A_DOUBLE_CLICK.md` |
+| BB-BUG-071 | The arrow could not be dragged up in an async spec | OBSERVED | targets only on a statement's first line; one-line refusal | yes | `C2/D5/S18/BB_BUG_071_THE_ARROW_COULD_NOT_BE_DRAGGED_UP_IN_AN_ASYNC_SPEC.md` |
+| BB-BUG-072 | The hover showed a type for code that was not running | FIXED | the running code is the session's build | yes | `C2/D5/S18/BB_BUG_072_THE_HOVER_SHOWED_A_TYPE_FOR_CODE_THAT_WAS_NOT_RUNNING.md` |
+| BB-BUG-073 | VARIABLES did not say the file changed since the build | FIXED | same as BB-BUG-072: `x` was typed after the build | yes | `C2/D5/S19/BB_BUG_073_VARIABLES_DID_NOT_SAY_THE_FILE_CHANGED_SINCE_THE_BUILD.md` |
+| BB-BUG-074 | The editor's test menu opened below the test | FIXED | nearest test above, with no end | yes | `C2/D5/S19/BB_BUG_074_THE_EDITORS_TEST_MENU_OPENED_BELOW_THE_TEST.md` |

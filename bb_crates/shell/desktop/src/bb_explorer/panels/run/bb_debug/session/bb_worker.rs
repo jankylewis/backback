@@ -198,7 +198,10 @@ async fn on_command(
         (Command::SetNext(path, line), Some(id)) => {
             let line: u32 = u32::try_from(line.saturating_add(1)).unwrap_or(u32::MAX);
             if let Err(error) = session.set_next(id, &path, line).await {
-                send(notes, Note::Refused(format!("Set Next Statement: {error}")));
+                send(
+                    notes,
+                    Note::Refused(format!("Set Next Statement refused: {error}")),
+                );
             }
             Ok(())
         }

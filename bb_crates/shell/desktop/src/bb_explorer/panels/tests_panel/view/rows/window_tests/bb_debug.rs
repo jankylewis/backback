@@ -81,6 +81,53 @@ fn a_right_click_in_a_test_method_in_the_editor_offers_run_and_debug(cx: &mut Te
     );
 }
 
+/// BB-BUG-074: the menu opens only inside a test method (its attribute
+/// through its body): a right-click on the class's brace after the last
+/// test opens nothing, and nothing else opens instead.
+#[gpui::test]
+fn a_right_click_outside_a_test_method_opens_no_test_menu(cx: &mut TestAppContext) {
+    let (dir, _project, view, vcx): Rig<'_> = tree_window(cx);
+    let file: std::path::PathBuf = dir.path().canonicalize().unwrap().join("OutcomeSpec.cs");
+    vcx.update(|window: &mut Window, cx: &mut gpui::App| {
+        view.update(
+            cx,
+            |v: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+                v.open_file(&file, window, cx);
+            },
+        );
+    });
+    assert!(parsed(&view, vcx));
+    assert_eq!(menu(&view, vcx, 7), None, "the class's closing brace");
+    assert_eq!(menu(&view, vcx, 3), None, "the class's opening brace");
+    assert_eq!(
+        menu(&view, vcx, 4).as_deref(),
+        Some("Sample.Auth.OutcomeSpec.Passes")
+    );
+}
+
+/// Right-click line `line`; the test the menu opened for, closing it.
+fn menu(
+    view: &gpui::Entity<ExplorerView>,
+    vcx: &mut gpui::VisualTestContext,
+    line: usize,
+) -> Option<String> {
+    let at: gpui::Point<gpui::Pixels> = vcx
+        .debug_bounds(format!("editor-line-{line}").leak())
+        .unwrap()
+        .center();
+    vcx.simulate_mouse_down(at, MouseButton::Right, Modifiers::default());
+    vcx.run_until_parked();
+    view.update(
+        vcx,
+        |v: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
+            v.tests
+                .menu
+                .take()
+                .map(|m: crate::tests_panel::TestMenu| m.fqn.as_str().to_owned())
+        },
+    )
+}
+
 /// Whether the open spec file's test methods were found (the parse runs
 /// off the UI thread).
 fn parsed(view: &gpui::Entity<ExplorerView>, vcx: &mut gpui::VisualTestContext) -> bool {

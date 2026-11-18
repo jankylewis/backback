@@ -56,7 +56,7 @@ pub(crate) fn apply(
         Note::Evaluated { token, value } => super::inspect::evaluated(view, token, value),
         Note::Output(text) => keep_output(&mut live.output, &text),
         Note::CanSetNext(can) => live.can_set_next = can,
-        Note::Refused(why) => view.status = Some(why),
+        Note::Refused(why) => refused(view, why),
         Note::Ended(why) => {
             view.debug.live = None;
             view.status = Some(format!("Debugging ended: {why}"));
@@ -67,6 +67,14 @@ pub(crate) fn apply(
             view.report(&format!("Debug failed: {why}"));
         }
     }
+}
+
+/// A refusal (Set Next): said twice, so it is never missed (BB-BUG-071).
+fn refused(view: &mut ExplorerView, why: String) {
+    if let Some(live) = view.debug.live.as_mut() {
+        keep_output(&mut live.output, &format!("{why}\n"));
+    }
+    view.status = Some(why);
 }
 
 /// A stop: show the first frame with source and say why and where; on an
@@ -102,6 +110,9 @@ fn stopped(
     view.debug.tree.forget_children();
     super::inspect::ask_children(view);
     open_selected(view, window, cx);
+    if let Some(said) = super::bb_panel::stale::said_at_a_stop(view) {
+        view.status = Some(said);
+    }
 }
 
 /// A picked frame's variables, kept only if that frame is still picked.

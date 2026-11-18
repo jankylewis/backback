@@ -47,3 +47,5 @@
 | BB-GAT-005 | FIXED | Wait only for what a step already started | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
 | BB-GAT-006 | FIXED | Never edit a worktree while its gate runs | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
 | BB-ENV-002 | FIXED | Heavy jobs on the headmate's Mac run with one worker | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
+| BB-PRC-008 | FIXED | Join a detached owner before returning; pipe test runs to a file | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
+| BB-GAT-008 | FIXED | Clippy on touched crates before the gate; audit does not replace it | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |

@@ -6,9 +6,13 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::UnboundedReceiver;
 
-use super::{start, Command, Frame, Note, Start, StepKind, Var};
+use super::{Command, Frame, Note, Start, StepKind, Var};
+use guard::Debugged;
+
+mod bb_async;
+mod guard;
 
 /// `int result = n * n;` in `Square`, 0-based.
 const BREAK: usize = 17;
@@ -74,13 +78,13 @@ fn value<'a>(vars: &'a [Var], name: &str) -> Option<&'a str> {
 fn a_real_session_stops_steps_continues_and_ends() {
     bb_dap::locate().expect("netcoredbg must be installed for this gate");
     let (dir, program): (tempfile::TempDir, PathBuf) = fixture();
-    let (commands, mut notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
+    let mut run: Debugged = Debugged::start(Start {
         target: dir.path().join("Debuggee.csproj"),
         test: None,
         breakpoints: vec![(program.clone(), vec![BREAK])],
         exceptions: Vec::new(),
     });
-    let (frames, vars): (Vec<Frame>, Vec<Var>) = stop(&mut notes, Duration::from_secs(240));
+    let (frames, vars): (Vec<Frame>, Vec<Var>) = stop(&mut run.notes, Duration::from_secs(240));
     let top: &Frame = frames.first().unwrap();
     assert!(top.name.contains("Square"), "{frames:?}");
     assert_eq!(
@@ -92,18 +96,18 @@ fn a_real_session_stops_steps_continues_and_ends() {
     assert_eq!(caller.line, CALL, "the call site");
     assert_eq!(value(&vars, "n"), Some("1"), "{vars:?}");
 
-    commands.send(Command::Step(StepKind::Over)).unwrap();
-    let (frames, vars): (Vec<Frame>, Vec<Var>) = stop(&mut notes, Duration::from_secs(30));
+    run.commands.send(Command::Step(StepKind::Over)).unwrap();
+    let (frames, vars): (Vec<Frame>, Vec<Var>) = stop(&mut run.notes, Duration::from_secs(30));
     assert_eq!(frames.first().map(|f: &Frame| f.line), Some(BREAK + 1));
     assert_eq!(value(&vars, "result"), Some("1"), "{vars:?}");
 
-    commands.send(Command::Continue).unwrap();
-    let (_, vars): (Vec<Frame>, Vec<Var>) = stop(&mut notes, Duration::from_secs(30));
+    run.commands.send(Command::Continue).unwrap();
+    let (_, vars): (Vec<Frame>, Vec<Var>) = stop(&mut run.notes, Duration::from_secs(30));
     assert_eq!(value(&vars, "n"), Some("2"), "the second hit");
 
-    commands.send(Command::Stop).unwrap();
+    run.commands.send(Command::Stop).unwrap();
     assert_eq!(
-        next(&mut notes, Duration::from_secs(30)),
+        next(&mut run.notes, Duration::from_secs(30)),
         Note::Ended(String::from("stopped"))
     );
 }
@@ -143,14 +147,14 @@ fn stop_with_reason(
 fn the_all_filter_pauses_on_a_caught_throw_and_names_the_exception() {
     bb_dap::locate().expect("netcoredbg must be installed for this gate");
     let (dir, program): (tempfile::TempDir, PathBuf) = fixture();
-    let (commands, mut notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
+    let mut run: Debugged = Debugged::start(Start {
         target: dir.path().join("Debuggee.csproj"),
         test: None,
         breakpoints: Vec::new(),
         exceptions: vec![String::from("all")],
     });
     let (reason, exception, frames): (String, Option<String>, Vec<Frame>) =
-        stop_with_reason(&mut notes, Duration::from_secs(240));
+        stop_with_reason(&mut run.notes, Duration::from_secs(240));
     assert_eq!(reason, "exception");
     let what: String = exception.expect("the exception is named");
     assert!(
@@ -165,10 +169,10 @@ fn the_all_filter_pauses_on_a_caught_throw_and_names_the_exception() {
         (Some(program.as_path()), THROW)
     );
 
-    commands.send(Command::Exceptions(Vec::new())).unwrap();
-    commands.send(Command::Continue).unwrap();
+    run.commands.send(Command::Exceptions(Vec::new())).unwrap();
+    run.commands.send(Command::Continue).unwrap();
     loop {
-        match next(&mut notes, Duration::from_secs(30)) {
+        match next(&mut run.notes, Duration::from_secs(30)) {
             Note::Ended(_) => break,
             Note::Running | Note::Building | Note::CanSetNext(_) => {}
             other @ (Note::Stopped { .. }
@@ -195,10 +199,8 @@ fn debugging_a_test_stops_on_a_breakpoint_inside_it() {
     bb_dap::locate().expect("netcoredbg must be installed for this gate");
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let root: PathBuf = dir.path().canonicalize().unwrap();
-    std::fs::write(root.join("Tests.csproj"), r#"<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" /><PackageReference Include="NUnit" Version="4.6.1" /><PackageReference Include="NUnit3TestAdapter" Version="5.0.0" /></ItemGroup></Project>"#).unwrap();
-    let spec: PathBuf = root.join("Spec.cs");
-    std::fs::write(&spec, SPEC).unwrap();
-    let (commands, mut notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
+    let spec: PathBuf = spec_project(&root, SPEC);
+    let mut run: Debugged = Debugged::start(Start {
         target: root.join("Tests.csproj"),
         test: Some((
             root.clone(),
@@ -207,7 +209,7 @@ fn debugging_a_test_stops_on_a_breakpoint_inside_it() {
         breakpoints: vec![(spec.clone(), vec![IN_TEST])],
         exceptions: Vec::new(),
     });
-    let (frames, vars): (Vec<Frame>, Vec<Var>) = stop(&mut notes, Duration::from_secs(300));
+    let (frames, vars): (Vec<Frame>, Vec<Var>) = stop(&mut run.notes, Duration::from_secs(300));
     let top: &Frame = frames.first().unwrap();
     assert!(top.name.contains("Hits"), "{frames:?}");
     assert_eq!(
@@ -215,5 +217,13 @@ fn debugging_a_test_stops_on_a_breakpoint_inside_it() {
         (Some(spec.as_path()), IN_TEST)
     );
     assert_eq!(value(&vars, "n"), Some("41"), "{vars:?}");
-    commands.send(Command::Stop).unwrap();
+    run.commands.send(Command::Stop).unwrap();
+}
+
+/// A test project in `root` whose one file, `Spec.cs`, holds `text`; its path.
+fn spec_project(root: &Path, text: &str) -> PathBuf {
+    std::fs::write(root.join("Tests.csproj"), r#"<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" /><PackageReference Include="NUnit" Version="4.6.1" /><PackageReference Include="NUnit3TestAdapter" Version="5.0.0" /></ItemGroup></Project>"#).unwrap();
+    let spec: PathBuf = root.join("Spec.cs");
+    std::fs::write(&spec, text).unwrap();
+    spec
 }

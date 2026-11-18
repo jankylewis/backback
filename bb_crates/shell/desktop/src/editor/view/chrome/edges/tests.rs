@@ -93,16 +93,22 @@ fn a_double_click_zooms_once_and_only_a_moved_press_drags() {
     let mut drag: TitleDrag = TitleDrag::default();
     drag.press(1);
     assert!(!drag.release(1), "one click is not a zoom");
-    assert!(!drag.moved(), "a released press no longer drags");
+    assert!(!drag.moved(true), "a released press no longer drags");
     drag.press(2);
     assert!(
-        !drag.moved(),
+        !drag.moved(true),
         "the second press of a double click never drags"
     );
     assert!(drag.release(2), "the double click zooms on release");
     drag.press(1);
-    assert!(drag.moved(), "a moved press drags the window");
-    assert!(!drag.moved(), "the drag starts once per press");
+    assert!(drag.moved(true), "a moved press drags the window");
+    assert!(!drag.moved(true), "the drag starts once per press");
+    drag.press(1);
+    assert!(
+        !drag.moved(false),
+        "a move after a release outside the bar does not drag"
+    );
+    assert!(!drag.moved(true), "and the press stays disarmed");
     drag.press(3);
     assert!(!drag.release(3), "a triple click does not zoom again");
 }

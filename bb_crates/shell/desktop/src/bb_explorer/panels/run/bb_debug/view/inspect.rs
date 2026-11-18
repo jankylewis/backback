@@ -80,24 +80,27 @@ pub(crate) fn evaluated(view: &mut ExplorerView, token: u64, value: Result<Var, 
     else {
         return;
     };
-    match value {
-        Ok(var) => {
-            let line: u32 = view
-                .tabs
-                .tab_mut(&path)
-                .map_or(0, |tab: &mut crate::editor::Tab| {
-                    let line: usize = tab.document.rope().char_to_line(at.raw());
-                    u32::try_from(line).unwrap_or(0)
-                });
-            view.intel.hover = Some(HoverPopup {
-                text: format!("{} = {}", var.name, var.value),
-                line,
-                x: view.intel.hover_at.0,
-                y: view.intel.hover_at.1,
-            });
+    let text: String = match value {
+        Ok(var) => format!("{} = {}", var.name, var.value),
+        // Not in the running build: never the server's type (BB-BUG-072).
+        Err(_) if super::bb_panel::stale::file_changed(view, &path) => {
+            format!("no value: {}", super::bb_panel::stale::NOTICE)
         }
-        Err(_) => crate::intel::glue::hover_ask(view, path, at),
-    }
+        Err(_) => return crate::intel::glue::hover_ask(view, path, at),
+    };
+    let line: u32 = view
+        .tabs
+        .tab_mut(&path)
+        .map_or(0, |tab: &mut crate::editor::Tab| {
+            let line: usize = tab.document.rope().char_to_line(at.raw());
+            u32::try_from(line).unwrap_or(0)
+        });
+    view.intel.hover = Some(HoverPopup {
+        text,
+        line,
+        x: view.intel.hover_at.0,
+        y: view.intel.hover_at.1,
+    });
 }
 
 /// The name under `at`, with the `a.b.` before it: `in_body`, `x.Count`.

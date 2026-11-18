@@ -51,3 +51,5 @@
 | BB-GAT-005 | FIXED | Read the state before the step; wait only after it | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
 | BB-GAT-006 | FIXED | Stop the stale run; one gate on the finished tree | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
 | BB-ENV-002 | FIXED | One build job and one test thread locally; CI keeps 3 jobs | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
+| BB-PRC-008 | FIXED | A guard stops the session and waits for its thread | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
+| BB-GAT-008 | FIXED | List the variants; clippy before the gate | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |

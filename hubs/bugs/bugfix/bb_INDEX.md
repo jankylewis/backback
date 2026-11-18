@@ -69,3 +69,8 @@
 | BB-BUG-067 | A stop in another file records the place it leaves; Back / Forward work from any focus | FIXED | window test, red by mutation | `C2/D5/S17/BB_BUG_067_BACK_DID_NOT_RETURN_FROM_A_DEBUGGER_STEP.md` |
 | BB-BUG-068 | Install the patched netcoredbg; the Set Next test keeps its fixture folder alive | FIXED | real adapter test, was Elapsed, now green | `C2/D5/S17/BB_BUG_068_DRAGGING_THE_EXECUTION_ARROW_WAS_REFUSED.md` |
 | BB-BUG-069 | The Find box, popups and menus occlude what is under them | FIXED | window test, red with the title bar | `C2/D5/S18/BB_BUG_069_A_CLICK_IN_THE_FIND_BOX_FELL_THROUGH_TO_THE_EDITOR.md` |
+| BB-BUG-070 | Press once then move to drag; a double click zooms once | FIXED | `a_double_click_zooms_once_and_only_a_moved_press_drags` | `C2/D5/S18/BB_BUG_070_THE_TITLE_BAR_ZOOMED_TWICE_ON_A_DOUBLE_CLICK.md` |
+| BB-BUG-071 | A dropped line means its statement; refusals said twice | OBSERVED | `a_line_inside_a_statement_means_that_statement` | `C2/D5/S18/BB_BUG_071_THE_ARROW_COULD_NOT_BE_DRAGGED_UP_IN_AN_ASYNC_SPEC.md` |
+| BB-BUG-072 | Stale file: the hover says so, never the server's type | FIXED | `a_file_changed_since_the_debug_build_says_so` | `C2/D5/S18/BB_BUG_072_THE_HOVER_SHOWED_A_TYPE_FOR_CODE_THAT_WAS_NOT_RUNNING.md` |
+| BB-BUG-073 | Stale file: VARIABLES and the status say so | FIXED | `a_file_changed_since_the_debug_build_says_so` | `C2/D5/S19/BB_BUG_073_VARIABLES_DID_NOT_SAY_THE_FILE_CHANGED_SINCE_THE_BUILD.md` |
+| BB-BUG-074 | Menu only within the test method's span | FIXED | `a_right_click_outside_a_test_method_opens_no_test_menu` | `C2/D5/S19/BB_BUG_074_THE_EDITORS_TEST_MENU_OPENED_BELOW_THE_TEST.md` |

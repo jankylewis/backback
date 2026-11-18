@@ -4,8 +4,10 @@ use tree_sitter::{Node, Tree, TreeCursor};
 /// A C# method carrying an NUnit test attribute.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TestMethod {
-    /// Zero-based method declaration line.
+    /// Zero-based method declaration line (its first attribute's).
     pub line: usize,
+    /// Zero-based line of the method's end (its body's closing brace).
+    pub end_line: usize,
     /// Declared method name.
     pub name: String,
 }
@@ -26,6 +28,7 @@ fn visit(node: Node<'_>, source: &Rope, found: &mut Vec<TestMethod>) {
         {
             found.push(TestMethod {
                 line: node.start_position().row,
+                end_line: node.end_position().row,
                 name,
             });
         }
@@ -79,13 +82,30 @@ mod tests {
             vec![
                 TestMethod {
                     line: 1,
+                    end_line: 1,
                     name: String::from("Pass")
                 },
                 TestMethod {
                     line: 2,
+                    end_line: 2,
                     name: String::from("Case")
                 },
             ]
         );
+    }
+
+    /// BB-BUG-074: a test spans its attribute through its body's brace, so
+    /// a right-click in the method after it is not inside it.
+    #[test]
+    fn a_test_spans_its_attribute_through_its_closing_brace() {
+        let source: &str = "class C\n{\n    [Test]\n    public async Task Spec()\n    {\n        await Task.Yield();\n    }\n\n    void Helper() { }\n}\n";
+        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let tree: Tree = syntax.parse(source, None).unwrap();
+        let found: Vec<TestMethod> = test_methods(&tree, &Rope::from_str(source));
+        let spans: Vec<(usize, usize)> = found
+            .iter()
+            .map(|m: &TestMethod| (m.line, m.end_line))
+            .collect();
+        assert_eq!(spans, vec![(2, 6)]);
     }
 }

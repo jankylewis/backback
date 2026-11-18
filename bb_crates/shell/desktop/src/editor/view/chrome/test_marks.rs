@@ -38,13 +38,13 @@ fn short_name(fqn: &Fqn) -> &str {
     fqn.method().rsplit('.').next().unwrap_or_default()
 }
 
-/// The test method holding `line`: the nearest one declared on or above it.
+/// The test method holding `line`: the one whose attribute-to-brace span
+/// covers it (BB-BUG-074; the nearest one above also took the code after).
 fn holding(tab: &Tab, line: usize) -> Option<usize> {
     tab.test_methods
         .iter()
+        .find(|method: &&bb_syntax::TestMethod| (method.line..=method.end_line).contains(&line))
         .map(|method: &bb_syntax::TestMethod| method.line)
-        .filter(|declared: &usize| *declared <= line)
-        .max()
 }
 
 /// `row` (editor line `line`) opens its test's Run / Debug menu on a

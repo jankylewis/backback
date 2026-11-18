@@ -91,6 +91,25 @@ impl CSharpSyntax {
     }
 }
 
+/// The 0-based line of the statement that `line` belongs to, for Set Next
+/// Statement (BB-BUG-071): the debugger offers a target only where a
+/// statement starts, so a line inside a multi-line statement (an `await`
+/// chain, an argument list, a lambda's braces) means that statement.
+/// `indent` is the byte column of the line's first non-blank char. `None`
+/// when no statement covers the line (a blank line, a brace of the method).
+#[must_use]
+pub fn statement_line(tree: &Tree, line: usize, indent: usize) -> Option<usize> {
+    let at: tree_sitter::Point = tree_sitter::Point::new(line, indent);
+    let mut node: Option<Node<'_>> = tree.root_node().descendant_for_point_range(at, at);
+    while let Some(here) = node {
+        if here.kind().ends_with("_statement") {
+            return Some(here.start_position().row);
+        }
+        node = here.parent();
+    }
+    None
+}
+
 fn kind_of(node: &Node<'_>) -> Option<OutlineKind> {
     match node.kind() {
         "namespace_declaration" | "file_scoped_namespace_declaration" => {
@@ -150,6 +169,30 @@ mod tests {
                 (OutlineKind::Member, "Hello", 4),
             ]
         );
+    }
+
+    /// BB-BUG-071: an async spec as the headmate's, with an `await` chain
+    /// over two lines and a lambda with a block body.
+    #[test]
+    fn a_line_inside_a_statement_means_that_statement() {
+        let src: &str = "class S\n{\n    async Task M()\n    {\n        int count = 0;\n        string text = await Task.FromResult(\"a\")\n            .ContinueWith(t => t.Result + count);\n        Func<int, int> add = (int v) =>\n        {\n            return v + count;\n        };\n\n        await Task.Yield();\n    }\n}\n";
+        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let tree: Tree = syntax.parse(src, None).unwrap();
+        let at: &dyn Fn(usize) -> Option<usize> = &|line: usize| -> Option<usize> {
+            let text: &str = src.lines().nth(line).unwrap();
+            let indent: usize = text.len() - text.trim_start().len();
+            statement_line(&tree, line, indent)
+        };
+        assert_eq!(at(4), Some(4), "a statement's own line");
+        assert_eq!(at(5), Some(5), "the first line of the await chain");
+        assert_eq!(at(6), Some(5), "its continuation means the chain");
+        assert_eq!(at(7), Some(7), "the lambda's declaration");
+        assert_eq!(at(8), Some(7), "the lambda's brace is that declaration");
+        assert_eq!(at(9), Some(9), "a statement of the lambda stays its own");
+        assert_eq!(at(10), Some(7), "the closing brace and semicolon");
+        assert_eq!(at(11), None, "a blank line");
+        assert_eq!(at(12), Some(12));
+        assert_eq!(at(3), None, "the method's brace");
     }
 
     #[test]

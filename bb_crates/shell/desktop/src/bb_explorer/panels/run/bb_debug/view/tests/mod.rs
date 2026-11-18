@@ -12,6 +12,8 @@ use crate::run::bb_debug::session::{Command, Frame};
 use crate::run::bb_debug::{BreakOnAllExceptions, BreakOnUserUnhandledExceptions, ExceptionBreaks};
 use crate::ExplorerView;
 
+mod bb_set_next;
+
 fn ticks(rig: &Rig, vcx: &mut VisualTestContext) -> ExceptionBreaks {
     rig.view
         .read_with(vcx, |v: &ExplorerView, _: &gpui::App| v.debug.exceptions)

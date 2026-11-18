@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 54 — FIXED 49, OBSERVED 4, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 56 — FIXED 51, OBSERVED 4, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -58,3 +58,5 @@ One file per failure mechanism. This hub owns the id. Entries: 54 — FIXED 49, 
 | BB-GAT-006 | A worktree was edited while its gate ran | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
 | BB-ENV-002 | A gate on every core overheated the Mac | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
 | BB-LSP-008 | A killed server was reported stopped after one second under load | OBSERVED | no | no | none | `APP/LSP/S02/BB_LSP_008_A_KILLED_SERVER_WAS_REPORTED_STOPPED_AFTER_ONE_SECOND_UNDER_LOAD.md` |
+| BB-PRC-008 | A debug-test run outlived its test binary (session thread killed at exit) | FIXED | yes | yes | none | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
+| BB-GAT-008 | A test wildcard arm reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |

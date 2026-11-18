@@ -30,8 +30,9 @@ impl TitleDrag {
     }
 
     /// A move: true once, when the armed press turns into a window drag.
-    pub(crate) fn moved(&mut self) -> bool {
-        std::mem::take(&mut self.armed)
+    /// A move with the button up disarms: the release fell outside the bar.
+    pub(crate) fn moved(&mut self, pressed: bool) -> bool {
+        std::mem::take(&mut self.armed) && pressed
     }
 
     /// A release: zoom when it ends a double click.
@@ -49,7 +50,7 @@ pub(crate) fn title_bar(
     let theme: Theme = view.theme;
     let back: bool = view.tabs.history.can_back();
     let forward: bool = view.tabs.history.can_forward();
-    div()
+    let bar: gpui::Stateful<gpui::Div> = div()
         .id("title-bar")
         .debug_selector(|| "title-bar".to_owned())
         .h(px(TITLE_BAR_PX))
@@ -60,32 +61,8 @@ pub(crate) fn title_bar(
         .pl(px(BUTTONS_PX))
         .bg(color(theme.surface))
         .border_b_1()
-        .border_color(color(theme.overlay))
-        .on_mouse_down(
-            gpui::MouseButton::Left,
-            cx.listener(
-                |view: &mut ExplorerView, event: &MouseDownEvent, _: &mut Window, _| {
-                    view.title_drag.press(event.click_count);
-                },
-            ),
-        )
-        .on_mouse_move(cx.listener(
-            |view: &mut ExplorerView, _: &MouseMoveEvent, window: &mut Window, _| {
-                if view.title_drag.moved() {
-                    window.start_window_move();
-                }
-            },
-        ))
-        .on_mouse_up(
-            gpui::MouseButton::Left,
-            cx.listener(
-                |view: &mut ExplorerView, event: &MouseUpEvent, window: &mut Window, _| {
-                    if view.title_drag.release(event.click_count) {
-                        window.titlebar_double_click();
-                    }
-                },
-            ),
-        )
+        .border_color(color(theme.overlay));
+    drag_and_zoom(bar, cx)
         .child(
             div()
                 .pr_2()
@@ -94,6 +71,48 @@ pub(crate) fn title_bar(
         )
         .child(arrow(("nav-back", "←"), back, theme, cx))
         .child(arrow(("nav-forward", "→"), forward, theme, cx))
+}
+
+/// A press then a move drags the window; a double click zooms it once.
+fn drag_and_zoom(
+    bar: gpui::Stateful<gpui::Div>,
+    cx: &mut Context<ExplorerView>,
+) -> gpui::Stateful<gpui::Div> {
+    bar.on_mouse_down(
+        gpui::MouseButton::Left,
+        cx.listener(
+            |view: &mut ExplorerView,
+             event: &MouseDownEvent,
+             _: &mut Window,
+             _: &mut Context<ExplorerView>| {
+                view.title_drag.press(event.click_count);
+            },
+        ),
+    )
+    .on_mouse_move(cx.listener(
+        |view: &mut ExplorerView,
+         event: &MouseMoveEvent,
+         window: &mut Window,
+         _: &mut Context<ExplorerView>| {
+            let pressed: bool = event.pressed_button == Some(gpui::MouseButton::Left);
+            if view.title_drag.moved(pressed) {
+                window.start_window_move();
+            }
+        },
+    ))
+    .on_mouse_up(
+        gpui::MouseButton::Left,
+        cx.listener(
+            |view: &mut ExplorerView,
+             event: &MouseUpEvent,
+             window: &mut Window,
+             _: &mut Context<ExplorerView>| {
+                if view.title_drag.release(event.click_count) {
+                    window.titlebar_double_click();
+                }
+            },
+        ),
+    )
 }
 
 /// One arrow: live when there is a place to go, else grey and inert.
