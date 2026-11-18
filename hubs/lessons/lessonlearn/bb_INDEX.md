@@ -52,3 +52,4 @@
 | BB-GAT-009 | FIXED | Run a variant-dependent live test on the stock adapter too | `SHIP/GAT/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
 | BB-GAT-010 | FIXED | Arm the watchdog on every wait that can block; run new live tests under an alarm | `SHIP/GAT/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
 | BB-GAT-011 | FIXED | Test line-break counts for every literal form | `SHIP/GAT/S03/BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` |
+| BB-GAT-012 | OBSERVED | Count parallel-tool output with more than one job | `SHIP/GAT/S03/BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` |

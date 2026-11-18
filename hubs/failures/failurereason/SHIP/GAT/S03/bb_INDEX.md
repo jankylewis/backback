@@ -7,3 +7,4 @@ Index of this folder; the hub-level `bb_INDEX.md` has the full table.
 | `BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` | BB-GAT-009 — A patched local adapter hid a CI-only branch |
 | `BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` | BB-GAT-010 — A window test waited with no deadline that could fire |
 | `BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` | BB-GAT-011 — The lexer dropped an escaped line break |
+| `BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` | BB-GAT-012 — One local build job hid a duplicate CI error |

@@ -84,18 +84,28 @@ pub fn command(root: &Path, kind: BuildKind) -> Command {
     command
 }
 
-/// Every error and warning in `stdout`, in order. Relative file names are
-/// joined to `root`, the folder cargo ran in. Lines that are not JSON
-/// (a build script's output) and notes or help are skipped.
+/// Every error and warning in `stdout`, in order, each once. Relative file
+/// names are joined to `root`, the folder cargo ran in. Lines that are not
+/// JSON (a build script's output) and notes or help are skipped.
+///
+/// `--all-targets` compiles a lib twice (as the lib and as its unit-test
+/// build), and with more than one job both report the same error with
+/// identical JSON; only the first is kept (BB-GAT-012).
 #[must_use]
 pub fn messages(stdout: &str, root: &Path) -> Vec<Message> {
-    stdout
+    let mut found: Vec<Message> = Vec::new();
+    for message in stdout
         .lines()
         .filter_map(|text: &str| serde_json::from_str::<Line>(text).ok())
         .filter(|line: &Line| line.reason == "compiler-message")
         .filter_map(|line: Line| line.message)
         .filter_map(|compiler: Compiler| message(compiler, root))
-        .collect()
+    {
+        if !found.contains(&message) {
+            found.push(message);
+        }
+    }
+    found
 }
 
 fn message(compiler: Compiler, root: &Path) -> Option<Message> {
@@ -147,6 +157,16 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn the_same_error_from_the_lib_and_its_test_build_lists_once() {
+        let stdout: String = [ERROR, ERROR, WARNING, WARNING].join("\n");
+        let found: Vec<(u32, Level)> = messages(&stdout, Path::new("/w"))
+            .into_iter()
+            .map(|m: Message| (m.line, m.level))
+            .collect();
+        assert_eq!(found, vec![(3, Level::Error), (7, Level::Warning)]);
     }
 
     #[test]
