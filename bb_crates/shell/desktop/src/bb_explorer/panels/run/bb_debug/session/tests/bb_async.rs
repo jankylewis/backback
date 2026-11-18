@@ -2,6 +2,9 @@
 //! `async Task` with awaits, locals and a lambda that captures them. Set
 //! Next moves the arrow up inside it (BB-BUG-071), and a local declared
 //! after an await is listed and evaluates (BB-BUG-072's normal case).
+//! Variant-aware (BB-GAT): a stock netcoredbg (CI) has no
+//! `gotoTargets`, so Set Next is the visible refusal and the arrow stays;
+//! the patched local adapter must move it.
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -67,9 +70,33 @@ fn stop(notes: &mut UnboundedReceiver<Note>, limit: Duration) -> (String, usize,
     }
 }
 
+/// The adapter's own answer, asked apart from the session under test.
+fn adapter_can_set_next() -> bool {
+    let runtime: tokio::runtime::Runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    runtime.block_on(async {
+        let mut probe: bb_dap::DapSession =
+            bb_dap::DapSession::spawn(Duration::from_secs(15)).unwrap();
+        let supports: bool = probe
+            .initialize()
+            .await
+            .unwrap()
+            .supports_goto_targets_request;
+        probe.stop_adapter();
+        supports
+    })
+}
+
 #[test]
 fn set_next_moves_up_inside_an_async_spec_and_its_late_local_shows() {
     bb_dap::locate().expect("netcoredbg must be installed for this gate");
+    let patched: bool = adapter_can_set_next();
+    eprintln!(
+        "adapter_variant={}",
+        if patched { "patched" } else { "stock" }
+    );
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let root: PathBuf = dir.path().canonicalize().unwrap();
     let spec: PathBuf = spec_project(&root, ASYNC_SPEC);
@@ -93,16 +120,42 @@ fn set_next_moves_up_inside_an_async_spec_and_its_late_local_shows() {
     );
     assert_eq!(value(&vars, "count"), Some("1"), "{vars:?}");
     hover_value_is(&mut run, frame, "1");
-    for (target, then) in [
-        (
-            "int x = 1;",
-            "Func<int, int> add = (int v) => v + count + x;",
-        ),
-        ("count += 1;", "await Task.Delay(20);"),
-    ] {
-        set_next_then_step(&mut run, &spec, (target, then));
+    if patched {
+        for (target, then) in [
+            (
+                "int x = 1;",
+                "Func<int, int> add = (int v) => v + count + x;",
+            ),
+            ("count += 1;", "await Task.Delay(20);"),
+        ] {
+            set_next_then_step(&mut run, &spec, (target, then));
+        }
+    } else {
+        set_next_is_refused_and_the_arrow_stays(&mut run, &spec);
     }
     run.commands.send(Command::Stop).unwrap();
+}
+
+/// A stock adapter: Set Next is the visible refusal, nothing moves, and
+/// one step runs on from where the arrow was.
+fn set_next_is_refused_and_the_arrow_stays(run: &mut Debugged, spec: &std::path::Path) {
+    run.commands
+        .send(Command::SetNext(spec.to_path_buf(), line("int x = 1;")))
+        .unwrap();
+    let refusal: String = format!(
+        "Set Next Statement refused: {}",
+        bb_dap::DapError::Unsupported("Set Next Statement")
+    );
+    assert_eq!(refused(&mut run.notes), refusal);
+    run.commands.send(Command::Step(StepKind::Over)).unwrap();
+    let (_, at, _, vars): (String, usize, i64, Vec<Var>) =
+        stop(&mut run.notes, Duration::from_secs(30));
+    assert_eq!(at, line("await Task.Yield();"), "the arrow did not move");
+    assert_eq!(
+        value(&vars, "x"),
+        Some("1"),
+        "the late local still shows: {vars:?}"
+    );
 }
 
 /// The hover's question for `x` in `frame`: the debugger answers `want`.
@@ -149,4 +202,24 @@ fn set_next_then_step(run: &mut Debugged, spec: &std::path::Path, (target, then)
     let (_, at, _, _): (String, usize, i64, Vec<Var>) =
         stop(&mut run.notes, Duration::from_secs(30));
     assert_eq!(at, line(then), "the moved line ran next");
+}
+
+/// The next refusal's text; a `CanSetNext` on the way is skipped.
+fn refused(notes: &mut UnboundedReceiver<Note>) -> String {
+    loop {
+        match next(notes, Duration::from_secs(30)) {
+            Note::Refused(text) => return text,
+            Note::CanSetNext(_) => {}
+            other @ (Note::Building
+            | Note::Running
+            | Note::Stopped { .. }
+            | Note::Variables { .. }
+            | Note::Children { .. }
+            | Note::Evaluated { .. }
+            | Note::TestResults { .. }
+            | Note::Output(_)
+            | Note::Ended(_)
+            | Note::Failed(_)) => panic!("expected the visible refusal, got {other:?}"),
+        }
+    }
 }
