@@ -15,7 +15,7 @@ pub(crate) use bb_line::Columns;
 use bb_line::{line_row, styled_part, LineRow, TestGutter};
 pub(crate) use chrome::bb_scrollbar;
 use chrome::edges::status;
-pub(crate) use chrome::edges::title_bar;
+pub(crate) use chrome::edges::{title_bar, TitleDrag};
 use chrome::test_marks;
 pub(crate) use pane::drag::{bottom_handle, handle, Edge, Lines, HANDLE_PX};
 pub(crate) use pane::{area as editor_area, layout as layout_panes, panes};

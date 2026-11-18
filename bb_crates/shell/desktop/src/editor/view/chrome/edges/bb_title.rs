@@ -1,10 +1,12 @@
 //! The title bar, drawn by backback as Rider's (BB-FEAT-090): after the
 //! window buttons, the folder's name, then ← Back and → Forward (Cmd+[ /
-//! Cmd+]), each grey when there is no place to go. A press on the bar moves
-//! the window; a double click zooms it, as the system's bar does.
+//! Cmd+]), each grey when there is no place to go. A press then a move on
+//! the bar moves the window; a double click zooms it once (BB-BUG-070).
 
 use bb_ui::bb_theme::Theme;
-use gpui::{div, prelude::*, px, ClickEvent, Context, MouseDownEvent, Window};
+use gpui::{
+    div, prelude::*, px, ClickEvent, Context, MouseDownEvent, MouseMoveEvent, MouseUpEvent, Window,
+};
 
 use crate::{color, ExplorerView};
 
@@ -12,6 +14,32 @@ use crate::{color, ExplorerView};
 const TITLE_BAR_PX: f32 = 32.0;
 /// Room left for the window buttons.
 const BUTTONS_PX: f32 = 78.0;
+
+/// The bar's press state. The system drag starts only on a move while
+/// pressed: started on the press, it took the second click of a double click
+/// too and macOS zoomed again, so the window flipped back (BB-BUG-070).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) struct TitleDrag {
+    armed: bool,
+}
+
+impl TitleDrag {
+    /// A press: a first click arms the drag; a double click never does.
+    pub(crate) fn press(&mut self, clicks: usize) {
+        self.armed = clicks < 2;
+    }
+
+    /// A move: true once, when the armed press turns into a window drag.
+    pub(crate) fn moved(&mut self) -> bool {
+        std::mem::take(&mut self.armed)
+    }
+
+    /// A release: zoom when it ends a double click.
+    pub(crate) fn release(&mut self, clicks: usize) -> bool {
+        self.armed = false;
+        clicks == 2
+    }
+}
 
 /// The bar for `view`'s window.
 pub(crate) fn title_bar(
@@ -35,13 +63,28 @@ pub(crate) fn title_bar(
         .border_color(color(theme.overlay))
         .on_mouse_down(
             gpui::MouseButton::Left,
-            |event: &MouseDownEvent, window: &mut Window, _: &mut gpui::App| {
-                if event.click_count >= 2 {
-                    window.titlebar_double_click();
-                } else {
+            cx.listener(
+                |view: &mut ExplorerView, event: &MouseDownEvent, _: &mut Window, _| {
+                    view.title_drag.press(event.click_count);
+                },
+            ),
+        )
+        .on_mouse_move(cx.listener(
+            |view: &mut ExplorerView, _: &MouseMoveEvent, window: &mut Window, _| {
+                if view.title_drag.moved() {
                     window.start_window_move();
                 }
             },
+        ))
+        .on_mouse_up(
+            gpui::MouseButton::Left,
+            cx.listener(
+                |view: &mut ExplorerView, event: &MouseUpEvent, window: &mut Window, _| {
+                    if view.title_drag.release(event.click_count) {
+                        window.titlebar_double_click();
+                    }
+                },
+            ),
         )
         .child(
             div()
@@ -71,10 +114,16 @@ fn arrow(
         })
         .px_1()
         .rounded(px(4.0))
-        // A press on an arrow is not a window drag.
+        // A press or a double click on an arrow is not a drag or a zoom.
         .on_mouse_down(
             gpui::MouseButton::Left,
             |_: &MouseDownEvent, _: &mut Window, cx: &mut gpui::App| {
+                cx.stop_propagation();
+            },
+        )
+        .on_mouse_up(
+            gpui::MouseButton::Left,
+            |_: &MouseUpEvent, _: &mut Window, cx: &mut gpui::App| {
                 cx.stop_propagation();
             },
         )

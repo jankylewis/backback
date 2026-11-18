@@ -196,6 +196,7 @@ pub(crate) fn fresh_view(
         quick_focus: cx.focus_handle(),
         file_menu: crate::files::Menus::default(),
         terminal: crate::terminal::Terminal::new(),
+        title_drag: crate::editor::TitleDrag::default(),
     }
 }
 

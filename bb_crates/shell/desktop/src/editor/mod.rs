@@ -21,7 +21,7 @@ pub(crate) use view::bb_scrollbar::{panel_bar, PanelBar};
 pub(crate) use view::wrap;
 pub(crate) use view::{
     bottom_handle, build, editor_area, handle, layout_panes, panes, status_bar, title_bar, Columns,
-    Edge, Lines, HANDLE_PX,
+    Edge, Lines, TitleDrag, HANDLE_PX,
 };
 
 /// The editor column: the panes, the bottom panel and terminal under them,

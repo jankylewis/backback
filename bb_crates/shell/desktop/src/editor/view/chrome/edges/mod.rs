@@ -6,4 +6,4 @@ pub(crate) mod status;
 #[cfg(test)]
 mod tests;
 
-pub(crate) use bb_title::title_bar;
+pub(crate) use bb_title::{title_bar, TitleDrag};
