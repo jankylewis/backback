@@ -72,3 +72,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-074 | FIXED | `a_right_click_outside_a_test_method_opens_no_test_menu` red before the fix |
 | BB-BUG-075 | FIXED | `every_request_reaches_only_the_server_of_its_file_s_language` red under the old one-link `send` |
 | BB-GAT-010 | FIXED | `a_blocked_wait_ends_the_run_at_its_deadline_naming_what_it_waited_for` red on the stub, green with the watchdog |
+| BB-GAT-011 | FIXED | `every_literal_and_comment_keeps_its_line_breaks` red before, green after; gate log line `failed=1` |

@@ -74,3 +74,4 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-GAT-008 | `wildcard match will also match any future added variants` in a test | FIXED | Did clippy run on the touched crates before the gate? |
 | BB-GAT-009 | `got Refused("Set Next Statement refused: adapter does not support` in CI only | FIXED | Is CI on the stock adapter? Run the test with `BACKBACK_NETCOREDBG` on the stock copy |
 | BB-GAT-010 | a test run idle at 0 % CPU for minutes; or `waited <time> for <what>` | FIXED | Which wait? Does it arm the watchdog? Run the test alone under an alarm |
+| BB-GAT-011 | `bb map` item on the wrong line; `... is_on_the_map ... missing: pub fn` | FIXED | Does the file continue a string with `\\` + newline? Is `skip_escape` used? |
