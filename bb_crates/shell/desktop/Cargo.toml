@@ -16,6 +16,7 @@ bb-syntax.workspace = true
 bb-lang.workspace = true
 bb-intel.workspace = true
 bb-cargo.workspace = true
+bb-python.workspace = true
 bb-lsp.workspace = true
 bb-dotnet.workspace = true
 bb-testkit.workspace = true
@@ -36,6 +37,7 @@ tempfile = "3"
 bb-lang = { workspace = true, features = ["fixtures"] }
 # BBEOD27: the Rust fixture workspace.
 bb-cargo = { workspace = true, features = ["fixtures"] }
+bb-python = { workspace = true, features = ["fixtures"] }
 # In-process window tests: TestAppContext, dispatch_keystroke.
 gpui = { workspace = true, features = ["profiler", "test-support"] }
 

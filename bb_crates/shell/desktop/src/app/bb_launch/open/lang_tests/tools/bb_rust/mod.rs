@@ -2,7 +2,7 @@
 //! F12 / Cmd+click in Rust, the missing-server hint (`intel`, fake servers);
 //! the Cargo explorer, Build and the Tests panel on real cargo (`panels`).
 
-mod bb_rig;
+pub(super) mod bb_rig;
 mod intel;
-mod panel_kit;
+pub(super) mod panel_kit;
 mod panels;

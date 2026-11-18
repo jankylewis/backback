@@ -6,13 +6,15 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use bb_intel::{Config, DiagnosticsReport, DocPath, IntelError, RustConfig, Session, Span};
+use bb_intel::{Config, DiagnosticsReport, DocPath, IntelError, Session, Span};
+use bb_intel::{PythonConfig, RustConfig};
 use bb_lsp::roslyn::LoadState;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::Notify;
 
 mod bb_helpers;
 mod load;
+pub(crate) mod python;
 pub(crate) mod rust;
 
 use super::protocol::{Answer, Ask, Event, Request, Stages, Ticket};
@@ -24,10 +26,11 @@ use load::load;
 const PULL_AFTER: Duration = Duration::from_millis(250);
 
 /// What a server thread starts: Roslyn on a solution (with its projects to
-/// count), or rust-analyzer on a Cargo workspace (with its log folder).
+/// count), rust-analyzer or pyright on a folder (with its log folder).
 pub(crate) enum Boot {
     Roslyn(Config, LoadState),
     Rust(RustConfig, PathBuf),
+    Python(PythonConfig, PathBuf),
 }
 
 /// Run the server thread until the UI drops its sender.

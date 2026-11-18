@@ -11,7 +11,7 @@ use bb_lang::Tool;
 use bb_testkit::Outcome;
 use gpui::{App, Modifiers, TestAppContext, VisualTestContext, WindowHandle};
 
-use super::super::close_all;
+use super::super::super::close_all;
 use super::panel_kit::{
     click, members_read, outcome, right_click, rust_window, shown, wait_until, workspace, FAILS,
     IGNORED, PASSES,

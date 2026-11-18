@@ -57,7 +57,14 @@ fn project_rows(
             if project.loading {
                 rows.push(label("  Discovering tests…", theme));
             } else if let Some(error) = &project.error {
-                rows.push(label(format!("  {error}"), theme));
+                // A list error (a missing pytest's install hint) is read by tests.
+                let selector: String = format!("test-project-error-{}", rows::project_name(path));
+                rows.push(
+                    div()
+                        .debug_selector(move || selector)
+                        .child(label(format!("  {error}"), theme))
+                        .into_any_element(),
+                );
             } else {
                 rows.extend(spec_rows(view, path, project, theme, cx));
             }

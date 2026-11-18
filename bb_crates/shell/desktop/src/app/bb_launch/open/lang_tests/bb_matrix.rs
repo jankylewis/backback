@@ -1,5 +1,6 @@
 //! The 49 combinations in real windows: tools started (rust-analyzer and
-//! cargo with Rust active, BBEOD27), Debug, tab colours.
+//! cargo with Rust active, BBEOD27; pyright, and pytest on the Tests panel,
+//! with Python active, BBEOD28), Debug, tab colours.
 
 use std::path::{Path, PathBuf};
 
@@ -18,13 +19,21 @@ fn expected_started(active: LangSet, panel: bool) -> Vec<Tool> {
         Vec::new()
     };
     if active.has(Lang::Rust) {
-        at_open.extend([Tool::RustAnalyzer, Tool::Cargo]);
+        at_open.push(Tool::RustAnalyzer);
     }
-    let on_panel: Vec<Tool> = if csharp && panel {
-        vec![Tool::TestDiscovery]
-    } else {
-        Vec::new()
-    };
+    if active.has(Lang::Python) {
+        at_open.push(Tool::Pyright);
+    }
+    if active.has(Lang::Rust) {
+        at_open.push(Tool::Cargo);
+    }
+    let mut on_panel: Vec<Tool> = Vec::new();
+    if csharp && panel {
+        on_panel.push(Tool::TestDiscovery);
+    }
+    if active.has(Lang::Python) && panel {
+        on_panel.push(Tool::Pytest);
+    }
     at_open.into_iter().chain(on_panel).collect()
 }
 

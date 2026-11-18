@@ -1,5 +1,6 @@
-//! The rig for the BBEOD27 window tests: a window on the Rust fixture with
-//! two fake server threads, C# (Roslyn) and Rust (rust-analyzer).
+//! The rig for the BBEOD27/28 window tests: a window on the Rust fixture
+//! with fake server threads for C# (Roslyn) and Rust (rust-analyzer), and
+//! for Python (pyright) on the Python fixture written beside it.
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -15,32 +16,34 @@ use crate::intel::bb_worker::Link;
 use crate::launch::WindowLangs;
 use crate::ExplorerView;
 
-pub(super) const CS: &str = "Tool/Tool.cs";
-pub(super) const PY: &str = "tools/run.py";
-pub(super) const LIB: &str = "alpha/src/lib.rs";
-pub(super) const MATH: &str = "alpha/src/math.rs";
+pub(crate) const CS: &str = "Tool/Tool.cs";
+pub(crate) const PY: &str = "tools/run.py";
+pub(crate) const LIB: &str = "alpha/src/lib.rs";
+pub(crate) const MATH: &str = "alpha/src/math.rs";
 
-pub(super) struct RustRig {
+pub(crate) struct RustRig {
     _dir: tempfile::TempDir,
-    pub(super) root: PathBuf,
-    pub(super) view: Entity<ExplorerView>,
-    pub(super) csharp: UnboundedReceiver<Request>,
-    pub(super) rust: UnboundedReceiver<Request>,
-    pub(super) rust_events: UnboundedSender<Event>,
+    pub(crate) root: PathBuf,
+    pub(crate) view: Entity<ExplorerView>,
+    pub(crate) csharp: UnboundedReceiver<Request>,
+    pub(crate) rust: UnboundedReceiver<Request>,
+    pub(crate) rust_events: UnboundedSender<Event>,
+    pub(crate) python: UnboundedReceiver<Request>,
+    pub(crate) python_events: UnboundedSender<Event>,
 }
 
-pub(super) type Fake = (
+pub(crate) type Fake = (
     (Link, UnboundedReceiver<Request>),
     (UnboundedSender<Event>, UnboundedReceiver<Event>),
 );
 
-pub(super) fn channel_pair() -> Fake {
+pub(crate) fn channel_pair() -> Fake {
     let (request_tx, requests): (UnboundedSender<Request>, UnboundedReceiver<Request>) =
         unbounded_channel();
     ((Link::new(request_tx), requests), unbounded_channel())
 }
 
-pub(super) fn ready() -> Event {
+pub(crate) fn ready() -> Event {
     Event::Ready {
         took: Duration::ZERO,
         failed: Vec::new(),
@@ -48,11 +51,17 @@ pub(super) fn ready() -> Event {
 }
 
 /// A window on the Rust fixture plus a C# and a Python file, `ticked`
-/// languages active, both fake servers attached and ready.
-pub(super) fn rust_rig(
+/// languages active, the C# and Rust fake servers attached and ready.
+pub(crate) fn rust_rig(
     cx: &mut TestAppContext,
     ticked: LangSet,
 ) -> (RustRig, &mut VisualTestContext) {
+    rig_with(cx, ticked, false)
+}
+
+/// The Rust fixture with a C# and a Python file, and with `python` the
+/// Python fixture too, in a new temporary folder.
+fn write_root(python: bool) -> (tempfile::TempDir, PathBuf) {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
     let root: PathBuf = dir.path().canonicalize().unwrap().join("ws");
     fixtures::write(&root, Shape::Clean).unwrap();
@@ -60,6 +69,20 @@ pub(super) fn rust_rig(
         std::fs::create_dir_all(root.join(file).parent().unwrap()).unwrap();
         std::fs::write(root.join(file), text).unwrap();
     }
+    if python {
+        bb_python::fixtures::write(&root, bb_python::fixtures::Shape::Clean).unwrap();
+    }
+    (dir, root)
+}
+
+/// As [`rust_rig`]; with `python`, the Python fixture is written into the
+/// root too and a fake pyright is attached and ready (BBEOD28).
+pub(crate) fn rig_with(
+    cx: &mut TestAppContext,
+    ticked: LangSet,
+    python: bool,
+) -> (RustRig, &mut VisualTestContext) {
+    let (dir, root): (tempfile::TempDir, PathBuf) = write_root(python);
     let tree: bb_explorer::Explorer = bb_explorer::Explorer::open(&root).unwrap();
     let workspace: (PathBuf, bool) = (root.clone(), false);
     let (view, vcx): (Entity<ExplorerView>, &mut VisualTestContext) =
@@ -68,23 +91,25 @@ pub(super) fn rust_rig(
         });
     let ((cs_link, csharp), (cs_events, cs_rx)): Fake = channel_pair();
     let ((rs_link, rust), (rust_events, rs_rx)): Fake = channel_pair();
+    let ((py_link, python_rx), (python_events, py_rx)): Fake = channel_pair();
     let all: LangSet = LangSet::of(&Lang::ALL);
     view.update_in(
         vcx,
         |v: &mut ExplorerView, window: &mut Window, cx: &mut gpui::Context<ExplorerView>| {
             v.langs = WindowLangs::new(Langs::new(ticked, all));
             crate::intel::glue::attach(v, cs_link, cs_rx, window, cx);
-            crate::intel::glue::attach_server(
-                v,
-                (Server::RustAnalyzer, rs_link),
-                rs_rx,
-                window,
-                cx,
-            );
+            let rust_analyzer: (Server, Link) = (Server::RustAnalyzer, rs_link);
+            crate::intel::glue::attach_server(v, rust_analyzer, rs_rx, window, cx);
+            if python {
+                let pyright: (Server, Link) = (Server::Pyright, py_link);
+                crate::intel::glue::attach_server(v, pyright, py_rx, window, cx);
+            }
         },
     );
-    cs_events.send(ready()).unwrap();
-    rust_events.send(ready()).unwrap();
+    let pyright: Option<&UnboundedSender<Event>> = python.then_some(&python_events);
+    for events in [&cs_events, &rust_events].into_iter().chain(pyright) {
+        events.send(ready()).unwrap();
+    }
     vcx.run_until_parked();
     let rig: RustRig = RustRig {
         _dir: dir,
@@ -93,11 +118,49 @@ pub(super) fn rust_rig(
         csharp,
         rust,
         rust_events,
+        python: python_rx,
+        python_events,
     };
     (rig, vcx)
 }
 
-pub(super) fn drain(requests: &mut UnboundedReceiver<Request>) -> Vec<Request> {
+/// Answer `ticket` on the fake server thread whose events are `events`.
+pub(crate) fn reply_on(
+    events: &UnboundedSender<Event>,
+    vcx: &mut VisualTestContext,
+    (ticket, answer): (Ticket, Answer),
+) {
+    let now: Instant = Instant::now();
+    let stages: Stages = Stages {
+        sent: now,
+        started: now,
+        answered: now,
+    };
+    events
+        .send(Event::Answer {
+            ticket,
+            answer,
+            stages,
+        })
+        .unwrap();
+    vcx.run_until_parked();
+}
+
+fn last_ask(requests: &mut UnboundedReceiver<Request>) -> (Ticket, Ask) {
+    drain(requests)
+        .into_iter()
+        .rev()
+        .find_map(|r: Request| match r {
+            Request::Ask { ticket, ask, .. } => Some((ticket, ask)),
+            Request::KillForTest
+            | Request::Open { .. }
+            | Request::Change { .. }
+            | Request::Close { .. } => None,
+        })
+        .expect("the server was asked")
+}
+
+pub(crate) fn drain(requests: &mut UnboundedReceiver<Request>) -> Vec<Request> {
     let mut out: Vec<Request> = Vec::new();
     while let Ok(request) = requests.try_recv() {
         out.push(request);
@@ -105,7 +168,7 @@ pub(super) fn drain(requests: &mut UnboundedReceiver<Request>) -> Vec<Request> {
     out
 }
 
-pub(super) fn files(requests: &[Request]) -> Vec<(String, PathBuf)> {
+pub(crate) fn files(requests: &[Request]) -> Vec<(String, PathBuf)> {
     requests
         .iter()
         .filter_map(|r: &Request| {
@@ -122,7 +185,7 @@ pub(super) fn files(requests: &[Request]) -> Vec<(String, PathBuf)> {
 }
 
 impl RustRig {
-    pub(super) fn open(&self, vcx: &mut VisualTestContext, file: &str) {
+    pub(crate) fn open(&self, vcx: &mut VisualTestContext, file: &str) {
         let path: PathBuf = self.root.join(file);
         self.view.update_in(
             vcx,
@@ -133,7 +196,7 @@ impl RustRig {
         vcx.run_until_parked();
     }
 
-    pub(super) fn cursor_after(&self, vcx: &mut VisualTestContext, needle: &str) {
+    pub(crate) fn cursor_after(&self, vcx: &mut VisualTestContext, needle: &str) {
         self.view.update(
             vcx,
             |v: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
@@ -144,38 +207,19 @@ impl RustRig {
         );
     }
 
-    pub(super) fn last_rust_ask(&mut self) -> (Ticket, Ask) {
-        drain(&mut self.rust)
-            .into_iter()
-            .rev()
-            .find_map(|r: Request| match r {
-                Request::Ask { ticket, ask, .. } => Some((ticket, ask)),
-                Request::KillForTest
-                | Request::Open { .. }
-                | Request::Change { .. }
-                | Request::Close { .. } => None,
-            })
-            .expect("rust-analyzer was asked")
+    pub(crate) fn last_rust_ask(&mut self) -> (Ticket, Ask) {
+        last_ask(&mut self.rust)
     }
 
-    pub(super) fn reply(&self, vcx: &mut VisualTestContext, ticket: Ticket, answer: Answer) {
-        let now: Instant = Instant::now();
-        let stages: Stages = Stages {
-            sent: now,
-            started: now,
-            answered: now,
-        };
-        self.rust_events
-            .send(Event::Answer {
-                ticket,
-                answer,
-                stages,
-            })
-            .unwrap();
-        vcx.run_until_parked();
+    pub(crate) fn last_python_ask(&mut self) -> (Ticket, Ask) {
+        last_ask(&mut self.python)
     }
 
-    pub(super) fn active(&self, vcx: &mut VisualTestContext) -> (PathBuf, usize) {
+    pub(crate) fn reply(&self, vcx: &mut VisualTestContext, ticket: Ticket, answer: Answer) {
+        reply_on(&self.rust_events, vcx, (ticket, answer));
+    }
+
+    pub(crate) fn active(&self, vcx: &mut VisualTestContext) -> (PathBuf, usize) {
         self.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
             let tab: &crate::editor::Tab = v.tabs.active_tab().unwrap();
             (tab.path.clone(), tab.document.cursor_line())
@@ -183,7 +227,7 @@ impl RustRig {
     }
 }
 
-pub(super) fn kinds(sent: &[(String, PathBuf)], path: &PathBuf) -> Vec<String> {
+pub(crate) fn kinds(sent: &[(String, PathBuf)], path: &PathBuf) -> Vec<String> {
     sent.iter()
         .filter(|(_, p): &&(String, PathBuf)| p == path)
         .map(|(k, _): &(String, PathBuf)| k.clone())

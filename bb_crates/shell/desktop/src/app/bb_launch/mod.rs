@@ -105,6 +105,7 @@ fn build_window(
             state.langs = WindowLangs::new(langs::resolve(&wanted.root, wanted.ticked));
             crate::intel::glue::connect(state, window, cx);
             crate::intel::glue::connect_rust(state, window, cx);
+            crate::intel::glue::connect_python(state, window, cx);
             crate::rows::cargo::load(state, window, cx);
             crate::editor::watch_disk(window, cx);
             match &wanted.file {
@@ -145,6 +146,7 @@ fn menus() -> Vec<Menu> {
             MenuItem::action("Build Solution", crate::run::build::BuildSolution),
             MenuItem::action("Cargo Build", crate::run::build::CargoBuild),
             MenuItem::action("Cargo Check", crate::run::build::CargoCheck),
+            MenuItem::action("Python Check", crate::run::build::PythonCheck),
         ]),
         crate::run::bb_debug::debug_menu(),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
@@ -196,6 +198,7 @@ pub(crate) fn fresh_view(
         intel: crate::intel::model::IntelModel::new(crate::intel::model::LoadStatus::NoSolution),
         link: None,
         rust: crate::intel::model::RustIntel::off(),
+        python: crate::intel::model::PythonIntel::off(),
         tests: crate::tests_panel::TestsState::new(),
         debug: crate::run::bb_debug::DebugState::load(&root),
         quick_open: None,

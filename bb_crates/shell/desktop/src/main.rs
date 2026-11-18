@@ -67,6 +67,8 @@ struct ExplorerView {
     link: Option<intel::bb_worker::Link>,
     /// rust-analyzer's link and status (BBEOD27).
     rust: intel::model::RustIntel,
+    /// pyright's link and status (BBEOD28).
+    python: intel::model::PythonIntel,
     tests: tests_panel::TestsState,
     debug: run::bb_debug::DebugState,
     quick_open: Option<quick_open::QuickOpen>,
