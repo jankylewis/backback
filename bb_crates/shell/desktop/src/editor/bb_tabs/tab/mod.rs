@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::time::Instant;
 
-use bb_syntax::{test_methods, CSharpSyntax, LiveTree, SyntaxError, TestMethod, Tree};
+use bb_syntax::{test_methods, LiveTree, Syntax, SyntaxError, TestMethod, Tree};
 use bb_text::{Document, DocumentError, TextChange};
 
 mod bb_window;
@@ -17,7 +17,9 @@ pub(crate) struct Tab {
     pub(crate) path: PathBuf,
     pub(crate) document: Document,
     /// Highlight queries; parsing uses the parser inside `live`.
-    pub(crate) highlighter: CSharpSyntax,
+    pub(crate) highlighter: Syntax,
+    /// Colours of an active language, or plain text (BBEOD26).
+    pub(crate) mode: bb_lang::FileMode,
     pub(crate) live: LiveTree,
     pub(crate) test_methods: Vec<TestMethod>,
     /// Lines the tree covers; `None` for a file parsed whole.
@@ -67,18 +69,19 @@ pub(crate) enum TabError {
 }
 
 impl Tab {
-    /// Read and parse a file. Slow on a big file: call it off the UI thread.
-    pub(crate) fn load(path: PathBuf) -> Result<Self, TabError> {
+    /// Read and parse a file shown as `mode` (the window's languages pick
+    /// it). Slow on a big file: call it off the UI thread.
+    pub(crate) fn load(path: PathBuf, mode: bb_lang::FileMode) -> Result<Self, TabError> {
         let started: Instant = Instant::now();
         let document: Document = Document::open(&path)?;
         let window_lines: Option<std::ops::Range<usize>> = window::first_window(&document);
-        let mut syntax: CSharpSyntax = CSharpSyntax::new()?;
+        let mut syntax: Syntax = Syntax::for_lang(lang_of(mode))?;
         let tree: Tree = syntax.parse_rope_in(
             document.rope(),
             None,
             window::points(&document, window_lines.as_ref()),
         )?;
-        let highlighter: CSharpSyntax = CSharpSyntax::new()?;
+        let highlighter: Syntax = Syntax::for_lang(lang_of(mode))?;
         let read_only: bool = std::fs::metadata(&path)
             .is_ok_and(|meta: std::fs::Metadata| meta.permissions().readonly());
         eprintln!(
@@ -89,11 +92,12 @@ impl Tab {
         if read_only {
             document.lock_writes();
         }
-        let test_methods: Vec<TestMethod> = test_methods(&tree, document.rope());
+        let test_methods: Vec<TestMethod> = csharp_tests(mode, &tree, document.rope());
         Ok(Self {
             path,
             document,
             highlighter,
+            mode,
             live: LiveTree::new(syntax, tree),
             test_methods,
             window_lines,
@@ -134,7 +138,7 @@ impl Tab {
     }
 
     pub(crate) fn refresh_test_methods(&mut self) {
-        self.test_methods = test_methods(self.live.tree(), self.document.rope());
+        self.test_methods = csharp_tests(self.mode, self.live.tree(), self.document.rope());
     }
 
     /// Make the tab read-only: no edit, and no save from any path.
@@ -151,5 +155,26 @@ impl Tab {
             .parse_now(self.document.rope(), self.parse_window())?;
         self.refresh_test_methods();
         Ok(())
+    }
+}
+
+/// A C# file's mode: the rename's loads (Roslyn renames C# only) and tests.
+pub(crate) const CSHARP: bb_lang::FileMode = bb_lang::FileMode::Colours(bb_lang::Lang::CSharp);
+
+/// The grammar of `mode`; None is plain text.
+pub(crate) fn lang_of(mode: bb_lang::FileMode) -> Option<bb_lang::Lang> {
+    match mode {
+        bb_lang::FileMode::Colours(lang) => Some(lang),
+        bb_lang::FileMode::Plain => None,
+    }
+}
+
+/// A file's test methods: only a C#-coloured file has any, so Run / Debug
+/// never appear in a Rust, Python or plain-text tab (BBEOD26).
+fn csharp_tests(mode: bb_lang::FileMode, tree: &Tree, rope: &bb_text::Rope) -> Vec<TestMethod> {
+    match mode {
+        bb_lang::FileMode::Colours(bb_lang::Lang::CSharp) => test_methods(tree, rope),
+        bb_lang::FileMode::Colours(bb_lang::Lang::Rust | bb_lang::Lang::Python)
+        | bb_lang::FileMode::Plain => Vec::new(),
     }
 }

@@ -5,7 +5,7 @@ family: UIX
 status: OBSERVED
 date: 2026-11-04
 signature: a source folder in the Explorer shows `__pycache__` and subfolders, no source files
-source: `bb_crates/bb_core/explorer/src/tree/children.rs` (`read_folder` lists every entry but `.DS_Store` and `.git`)
+source: `bb_crates/bb_core/workspace/bb_explorer/src/tree/children.rs` (`read_folder` lists every entry but `.DS_Store` and `.git`)
 observed: BB-BUG-031
 links: fix=no lesson=yes evidence=yes toolgap=none
 

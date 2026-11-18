@@ -13,6 +13,7 @@ mod bb_window;
 mod open;
 pub(crate) mod recent;
 pub(crate) use bb_window::{on_view as window_actions, title as window_title};
+pub(crate) use open::langs::{self, WindowLangs};
 pub(crate) use open::{show_start_page, start_state};
 
 pub(crate) fn launch() {
@@ -96,11 +97,12 @@ fn build_window(
     window.focus(&focus, cx);
     // A titled window is listed in the Window menu (BB-BUG-048).
     window.set_window_title(&bb_window::title(&wanted.root));
-    install_close_guard(window, &view, cx);
+    bb_window::install_close_guard(window, &view, cx);
     install_appearance_observer(window, &view, cx);
     view.update(
         cx,
         |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
+            state.langs = WindowLangs::new(langs::resolve(&wanted.root, wanted.ticked));
             crate::intel::glue::connect(state, window, cx);
             crate::editor::watch_disk(window, cx);
             match &wanted.file {
@@ -197,19 +199,8 @@ pub(crate) fn fresh_view(
         file_menu: crate::files::Menus::default(),
         terminal: crate::terminal::Terminal::new(),
         title_drag: crate::editor::TitleDrag::default(),
+        langs: WindowLangs::new(bb_lang::Langs::csharp_only()),
     }
-}
-
-fn install_close_guard(window: &Window, view: &gpui::Entity<ExplorerView>, cx: &App) {
-    let close_view: gpui::Entity<ExplorerView> = view.clone();
-    window.on_window_should_close(cx, move |_: &mut Window, cx: &mut App| {
-        close_view.update(
-            cx,
-            |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
-                state.handle_window_close(cx)
-            },
-        )
-    });
 }
 
 /// The app's key bindings; window tests install them to prove a key still

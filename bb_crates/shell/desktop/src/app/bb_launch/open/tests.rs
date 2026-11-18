@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use gpui::{AnyWindowHandle, App, TestAppContext, VisualTestContext, WindowHandle};
 
-use super::bb_start_page::{open, StartPage};
-use super::start_entries::{entries, shown_path, StartEntry};
+use super::bb_start::entries::{entries, shown_path, StartEntry};
+use super::bb_start::{open, StartPage};
 use crate::ExplorerView;
 
 fn folder(base: &Path, name: &str) -> PathBuf {

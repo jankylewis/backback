@@ -4,17 +4,17 @@ use super::*;
 use bb_text::{CharIdx, Document};
 use proptest::prelude::*;
 
-fn reparsed(syntax: &mut CSharpSyntax, doc: &mut Document, tree: &Tree) -> Tree {
+fn reparsed(syntax: &mut Syntax, doc: &mut Document, tree: &Tree) -> Tree {
     let mut edited: Tree = tree.clone();
     for change in doc.take_changes() {
-        CSharpSyntax::edit(&mut edited, &change);
+        Syntax::edit(&mut edited, &change);
     }
     syntax.parse_rope(doc.rope(), Some(&edited)).unwrap()
 }
 
 #[test]
 fn edited_tree_and_visible_captures_follow_new_text() {
-    let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+    let mut syntax: Syntax = Syntax::new().unwrap();
     let mut doc: Document = Document::from_text("class A { string S = \"old\"; }", None);
     let first: Tree = syntax.parse_rope(doc.rope(), None).unwrap();
     doc.select(CharIdx::new(22), CharIdx::new(25)).unwrap();
@@ -37,7 +37,7 @@ fn edited_tree_and_visible_captures_follow_new_text() {
 /// whenever the text is valid; in broken text its error recovery may
 /// keep a different but valid tree for an edit (BB-GAT-001), and the
 /// text extent always matches.
-fn same_as_fresh(syntax: &mut CSharpSyntax, doc: &Document, tree: &Tree) -> Result<(), String> {
+fn same_as_fresh(syntax: &mut Syntax, doc: &Document, tree: &Tree) -> Result<(), String> {
     let fresh: Tree = syntax
         .parse(&doc.text(), None)
         .map_err(|error: crate::SyntaxError| error.to_string())?;
@@ -62,7 +62,7 @@ const SOURCE: &str =
 /// valid source matches a fresh parse exactly again.
 #[test]
 fn broken_code_may_recover_differently_but_valid_code_always_matches() {
-    let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+    let mut syntax: Syntax = Syntax::new().unwrap();
     let mut doc: Document = Document::from_text(SOURCE, None);
     let mut tree: Tree = syntax.parse_rope(doc.rope(), None).unwrap();
     for (at, enter) in [
@@ -97,7 +97,7 @@ proptest! {
     fn incremental_parse_equals_a_fresh_parse(
         edits in proptest::collection::vec((0usize..400, 0u8..4), 1..25),
     ) {
-        let mut syntax: CSharpSyntax = CSharpSyntax::new().unwrap();
+        let mut syntax: Syntax = Syntax::new().unwrap();
         let mut doc: Document = Document::from_text(SOURCE, None);
         let mut tree: Tree = syntax.parse_rope(doc.rope(), None).unwrap();
         for (at, kind) in edits {
@@ -112,4 +112,59 @@ proptest! {
             prop_assert_eq!(same_as_fresh(&mut syntax, &doc, &tree), Ok(()));
         }
     }
+}
+
+fn kinds_of(lang: Option<Lang>, text: &str) -> Vec<(String, HighlightKind)> {
+    let mut syntax: Syntax = Syntax::for_lang(lang).unwrap();
+    let doc: Document = Document::from_text(text, None);
+    let tree: Tree = syntax.parse_rope(doc.rope(), None).unwrap();
+    syntax
+        .highlight_spans(&tree, doc.rope(), 0..text.len())
+        .into_iter()
+        .map(|span: HighlightSpan| {
+            (
+                text.get(span.start..span.end).unwrap_or("").to_owned(),
+                span.kind,
+            )
+        })
+        .collect()
+}
+
+fn has(spans: &[(String, HighlightKind)], word: &str, kind: HighlightKind) -> bool {
+    spans
+        .iter()
+        .any(|(text, found): &(String, HighlightKind)| text.contains(word) && *found == kind)
+}
+
+/// BBEOD26: Rust and Python files of an active language get their own
+/// grammar's colours; plain text gets none.
+#[test]
+fn rust_and_python_get_keyword_string_and_comment_colours_and_plain_gets_none() {
+    let cases: [(Lang, &str, &str); 2] = [
+        (Lang::Rust, "fn main() { let s = \"hi\"; } // note", "fn"),
+        (
+            Lang::Python,
+            "def main():\n    return \"hi\"  # note\n",
+            "def",
+        ),
+    ];
+    for (lang, text, keyword) in cases {
+        let spans: Vec<(String, HighlightKind)> = kinds_of(Some(lang), text);
+        assert!(
+            has(&spans, keyword, HighlightKind::Keyword),
+            "{lang:?} {spans:?}"
+        );
+        assert!(
+            has(&spans, "hi", HighlightKind::String),
+            "{lang:?} {spans:?}"
+        );
+        assert!(
+            has(&spans, "note", HighlightKind::Comment),
+            "{lang:?} {spans:?}"
+        );
+        assert_eq!(Syntax::for_lang(Some(lang)).unwrap().lang(), Some(lang));
+        assert!(kinds_of(None, text).is_empty(), "{lang:?} plain");
+    }
+    assert_eq!(kinds_of(None, "class A { string S = \"x\"; }").len(), 0);
+    assert_eq!(Syntax::new().unwrap().lang(), Some(Lang::CSharp));
 }

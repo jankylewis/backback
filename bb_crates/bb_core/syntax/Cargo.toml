@@ -4,11 +4,15 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "tree-sitter C# parsing: highlighting, folding and outline without Roslyn"
+description = "tree-sitter parsing: C# highlighting, folding and outline without Roslyn; Rust and Python colours"
 
 [dependencies]
 tree-sitter.workspace = true
 tree-sitter-c-sharp.workspace = true
+tree-sitter-rust.workspace = true
+tree-sitter-python.workspace = true
+# which grammar a file gets (BBEOD26).
+bb-lang.workspace = true
 thiserror.workspace = true
 # the editor's text: parse and highlight straight from its rope, no copies.
 bb-text.workspace = true

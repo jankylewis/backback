@@ -41,7 +41,7 @@ impl ListError {
 
 pub(crate) fn open(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
     view.tests.side = super::Side::Tests;
-    if view.tests.scan != super::Scan::NotStarted {
+    if view.tests.scan != super::Scan::NotStarted || !c_sharp(view) {
         cx.notify();
         return;
     }
@@ -94,6 +94,16 @@ pub(crate) fn toggle_project(
     start_list(view, path, window, cx);
 }
 
+/// Whether test discovery may start: only with C# active (BBEOD26); else
+/// the panel says why.
+fn c_sharp(view: &mut ExplorerView) -> bool {
+    let allowed: bool = view.langs.start(bb_lang::Tool::TestDiscovery);
+    if !allowed {
+        view.tests.message = Some(String::from("Tests: C# is not active in this window"));
+    }
+    allowed
+}
+
 /// List `path`'s tests in the background; when the list ends, the filter's
 /// search lists its next project.
 fn start_list(
@@ -102,6 +112,9 @@ fn start_list(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
+    if !c_sharp(view) {
+        return;
+    }
     if let Some(project) = view.tests.model.project_mut(&path) {
         project.loading = true;
     }

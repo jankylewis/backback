@@ -6,7 +6,7 @@ use std::process::{Child, Command, ExitStatus, Stdio};
 use std::time::{Duration, Instant};
 
 use bb_dotnet::{ProjectInfo, SolutionPath};
-use bb_syntax::{CSharpSyntax, OutlineItem, Tree};
+use bb_syntax::{OutlineItem, Syntax, Tree};
 
 use super::stats::{repeat, timed, Summary};
 use super::{BenchError, Measured, Unit};
@@ -109,11 +109,11 @@ fn outline_row(
     name: &str,
     runs: usize,
 ) -> Result<Measured, CommandError> {
-    let mut syntax: CSharpSyntax = CSharpSyntax::new()?;
+    let mut syntax: Syntax = Syntax::new()?;
     let mut items: usize = 0;
     let summary: Summary = timed(runs, || -> Result<(), CommandError> {
         let tree: Tree = syntax.parse(text, None)?;
-        let outline: Vec<OutlineItem> = CSharpSyntax::outline(&tree, text);
+        let outline: Vec<OutlineItem> = Syntax::outline(&tree, text);
         items = std::hint::black_box(outline).len();
         Ok(())
     })?;

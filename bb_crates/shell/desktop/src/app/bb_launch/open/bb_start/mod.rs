@@ -7,76 +7,36 @@
 use std::path::PathBuf;
 
 use gpui::{
-    div, prelude::*, px, size, AnyWindowHandle, App, Bounds, ClickEvent, Context, FocusHandle,
-    KeyDownEvent, Subscription, TitlebarOptions, Window, WindowBounds, WindowHandle, WindowOptions,
+    div, prelude::*, px, AnyWindowHandle, App, ClickEvent, Context, FocusHandle, KeyDownEvent,
+    Subscription, Window, WindowHandle,
 };
 
-use super::start_entries::{
-    empty_note, entries, header, label, row_label, row_texts, rows_box, StartEntry,
-};
+mod bb_window;
+pub(super) mod entries;
+pub(super) mod script;
+mod ticks;
+
+#[cfg(test)]
+pub(crate) use bb_window::open;
+pub(crate) use bb_window::{reopen, show};
+
 use crate::editor::Quit;
 use crate::{color, ExplorerView};
+use entries::{empty_note, entries, header, label, row_label, row_texts, rows_box, StartEntry};
 
 pub(crate) struct StartPage {
     entries: Vec<StartEntry>,
     selected: usize,
     no_write: bool,
+    /// The language boxes (BBEOD26) and whether a click changed them.
+    ticks: bb_lang::LangSet,
+    touched: bool,
+    area: ticks::Area,
+    /// File > Languages...: the workspace window the next open replaces.
+    replace: Option<AnyWindowHandle>,
     home: Option<PathBuf>,
     focus: FocusHandle,
     _appearance: Subscription,
-}
-
-/// Show the page: bring an open one to the front, else open one.
-pub(crate) fn show(no_write: bool, cx: &mut App) {
-    let shown: Option<WindowHandle<StartPage>> = cx
-        .windows()
-        .into_iter()
-        .find_map(|window: AnyWindowHandle| window.downcast::<StartPage>());
-    if let Some(page) = shown {
-        let _gone: gpui::Result<()> = page.update(
-            cx,
-            |_: &mut StartPage, window: &mut Window, _: &mut Context<StartPage>| {
-                window.activate_window();
-            },
-        );
-        return;
-    }
-    if let Some(page) = open(crate::launch::recent::list(), no_write, cx) {
-        super::start_script::drive(page, cx);
-    }
-}
-
-/// A page for `recent` in a new window, focused.
-pub(crate) fn open(
-    recent: Vec<PathBuf>,
-    no_write: bool,
-    cx: &mut App,
-) -> Option<WindowHandle<StartPage>> {
-    let bounds: Bounds<gpui::Pixels> = Bounds::centered(None, size(px(640.0), px(640.0)), cx);
-    let opened: gpui::Result<WindowHandle<StartPage>> = cx.open_window(
-        WindowOptions {
-            window_bounds: Some(WindowBounds::Windowed(bounds)),
-            titlebar: Some(TitlebarOptions {
-                title: Some("Welcome to backback".into()),
-                ..Default::default()
-            }),
-            ..Default::default()
-        },
-        |window: &mut Window, cx: &mut App| {
-            let page: gpui::Entity<StartPage> =
-                cx.new(|cx: &mut Context<StartPage>| StartPage::new(recent, no_write, window, cx));
-            let focus: FocusHandle = page.read(cx).focus.clone();
-            window.focus(&focus, cx);
-            page
-        },
-    );
-    match opened {
-        Ok(page) => Some(page),
-        Err(error) => {
-            eprintln!("backback: cannot open the start page: {error}");
-            None
-        }
-    }
 }
 
 impl StartPage {
@@ -87,10 +47,15 @@ impl StartPage {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
+        let entries: Vec<StartEntry> = entries(recent);
         Self {
-            entries: entries(recent),
+            ticks: ticks::ticks_for(entries.first()),
+            entries,
             selected: 0,
             no_write,
+            touched: false,
+            area: ticks::Area::Rows,
+            replace: None,
             home: std::env::var_os("HOME").map(PathBuf::from),
             focus: cx.focus_handle(),
             _appearance: cx.observe_window_appearance(
@@ -116,30 +81,55 @@ impl StartPage {
         } else {
             self.selected.saturating_sub(1)
         };
+        self.refresh_ticks();
     }
 
     /// Open entry `index`: a workspace in its own window (the page closes), or
     /// the open panel (the page closes once a pick opens).
+    /// Nothing opens while no language box is ticked (BBEOD26).
     fn choose(&mut self, index: usize, window: &mut Window, cx: &mut Context<Self>) {
-        self.selected = index;
+        if self.selected != index {
+            self.selected = index;
+            self.refresh_ticks();
+        }
+        if self.ticks.is_empty() {
+            cx.notify();
+            return;
+        }
         match self.entries.get(index).cloned() {
             Some(StartEntry::Recent(path)) => {
-                let start: crate::args::Start = crate::args::start_for(path, self.no_write);
+                let mut start: crate::args::Start = crate::args::start_for(path, self.no_write);
+                start.ticked = self.chosen(false);
+                if let Some(old) = self.replace.take() {
+                    bb_window::close(old, cx);
+                }
                 if crate::launch::open_workspace(&start, cx) {
                     window.remove_window();
                 }
             }
-            Some(StartEntry::Open) => super::ask(cx, self.no_write, Some(window.window_handle())),
+            Some(StartEntry::Open) => self.ask(window, cx),
             None => {}
         }
         cx.notify();
     }
 
+    fn ask(&self, window: &Window, cx: &mut App) {
+        let page: Option<AnyWindowHandle> = Some(window.window_handle());
+        super::ask(cx, (self.no_write, self.chosen(true)), page);
+    }
+
     fn key(&mut self, event: &KeyDownEvent, window: &mut Window, cx: &mut Context<Self>) {
-        if event.keystroke.modifiers.modified() {
+        let keys: &gpui::Keystroke = &event.keystroke;
+        let shift_only: bool = keys.modifiers == gpui::Modifiers::shift();
+        if self.tick_key(keys.key.as_str(), shift_only) {
+            cx.stop_propagation();
+            cx.notify();
             return;
         }
-        match event.keystroke.key.as_str() {
+        if keys.modifiers.modified() {
+            return;
+        }
+        match keys.key.as_str() {
             "up" => self.step(false),
             "down" => self.step(true),
             "enter" => self.choose(self.selected, window, cx),
@@ -151,7 +141,7 @@ impl StartPage {
 
     /// Cmd+O on the page is its Open... entry.
     fn on_open(&mut self, _: &super::OpenWorkspace, window: &mut Window, cx: &mut Context<Self>) {
-        super::ask(cx, self.no_write, Some(window.window_handle()));
+        self.ask(window, cx);
     }
 
     /// Cmd+Q on the page: a workspace window, if any, quits as its own Cmd+Q
@@ -236,6 +226,8 @@ impl Render for StartPage {
             .bg(color(theme.bg))
             .text_color(color(theme.text))
             .child(header(theme))
+            .child(self.ticks_row(theme, cx))
+            .children(self.none_ticked_note(theme))
             .when(none, |page: gpui::Stateful<gpui::Div>| {
                 page.child(empty_note(theme))
             })

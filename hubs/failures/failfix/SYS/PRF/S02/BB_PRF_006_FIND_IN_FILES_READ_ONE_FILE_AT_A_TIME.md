@@ -3,7 +3,7 @@
 id: BB-PRF-006
 family: PRF
 status: FIXED
-source: `bb_crates/bb_core/search/src/walk/mod.rs` (`search_in`, `walk_sorted`), `walk/bb_scan.rs` (`scan`)
+source: `bb_crates/bb_core/workspace/search/src/walk/mod.rs` (`search_in`, `walk_sorted`), `walk/bb_scan.rs` (`scan`)
 
 ## The fix that holds
 

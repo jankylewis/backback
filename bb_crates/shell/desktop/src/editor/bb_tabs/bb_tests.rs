@@ -55,7 +55,7 @@ fn window_close_waits_for_each_dirty_tab() {
 }
 
 fn fresh_sexp(tab: &super::Tab) -> String {
-    let mut syntax: bb_syntax::CSharpSyntax = bb_syntax::CSharpSyntax::new().unwrap();
+    let mut syntax: bb_syntax::Syntax = bb_syntax::Syntax::new().unwrap();
     let tree: bb_syntax::Tree = syntax.parse(&tab.document.text(), None).unwrap();
     tree.root_node().to_sexp()
 }
@@ -92,7 +92,8 @@ fn a_loading_file_shows_once_and_a_failed_load_clears_its_placeholder() {
     let file: std::path::PathBuf = tabs.begin_open(&path).unwrap().unwrap();
     assert!(tabs.begin_open(&path).unwrap().is_none());
     assert_eq!(tabs.loading(), std::slice::from_ref(&file));
-    let loaded: Result<super::Tab, super::TabError> = super::Tab::load(file.clone());
+    let loaded: Result<super::Tab, super::TabError> =
+        super::Tab::load(file.clone(), super::tab::CSHARP);
     assert!(tabs.finish_open(&file, loaded).is_err());
     assert_eq!(tabs.loading().len(), 0);
     assert_eq!(tabs.len(), 0);
@@ -136,7 +137,7 @@ fn a_large_file_keeps_a_tree_bounded_by_the_window_not_the_file() {
     let nodes: usize = tab.live.tree().root_node().descendant_count();
     assert!(nodes < 200_000, "{nodes} nodes for {} bytes", source.len());
     let head: String = source.lines().take(600).collect::<Vec<&str>>().join("\n");
-    let mut parser: bb_syntax::CSharpSyntax = bb_syntax::CSharpSyntax::new().unwrap();
+    let mut parser: bb_syntax::Syntax = bb_syntax::Syntax::new().unwrap();
     let whole: bb_syntax::Tree = parser.parse(&head, None).unwrap();
     for line in 0..12 {
         assert_eq!(
@@ -160,7 +161,7 @@ fn scrolling_a_large_file_moves_the_window_and_highlights_match_a_full_parse() {
     assert!(tab.show_lines(&far));
     assert!(!tab.show_lines(&(200_010..200_050)));
     tab.reparse().unwrap();
-    let mut parser: bb_syntax::CSharpSyntax = bb_syntax::CSharpSyntax::new().unwrap();
+    let mut parser: bb_syntax::Syntax = bb_syntax::Syntax::new().unwrap();
     let before: bb_syntax::Tree = parser.parse(&source, None).unwrap();
     assert_eq!(
         line_spans(tab, tab.live.tree(), 200_001),

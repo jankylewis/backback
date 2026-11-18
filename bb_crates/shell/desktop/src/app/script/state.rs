@@ -36,6 +36,7 @@ pub(super) fn state(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext
             v.root.display().to_string(),
         );
         panels(v, app);
+        lang_state(v, tab);
         if let Some(tab) = tab {
             let at: Vec<String> = v.intel.diagnostics_of(&tab.path).iter()
                 .map(|d: &bb_intel::Diagnostic| format!("{}:{}", d.span.start.line.saturating_add(1), d.span.start.character.saturating_add(1)))
@@ -154,4 +155,19 @@ fn places(panel: Option<&crate::intel::model::popups::PlacesPanel>) {
         })
         .collect();
     eprintln!("bb_places_state title={:?} places={rows:?}", panel.title);
+}
+
+/// The `bb_lang_state` line (BBEOD26): ticks, languages found and active,
+/// the tools started, Debug, the tab's colours and the status bar.
+fn lang_state(v: &ExplorerView, tab: Option<&crate::editor::Tab>) {
+    eprintln!(
+        "bb_lang_state ticked={:?} detected={:?} active={:?} started={:?} debug={} tab_mode={:?} bar={:?}",
+        v.langs.langs.ticked().names(),
+        v.langs.langs.detected().names(),
+        v.langs.langs.active().names(),
+        v.langs.started,
+        v.langs.langs.debug_visible(),
+        tab.map(|t: &crate::editor::Tab| t.mode),
+        crate::launch::langs::status_line(v),
+    );
 }

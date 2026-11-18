@@ -4,8 +4,9 @@ members = [
   "bb_core/bb_text",
   "bb_core/process",
   "bb_core/syntax",
-  "bb_core/explorer",
-  "bb_core/search",
+  "bb_core/lang",
+  "bb_core/workspace/bb_explorer",
+  "bb_core/workspace/search",
   "edge/bb_lsp",
   "edge/framing",
   "edge/dap",
@@ -35,8 +36,9 @@ description = "backback: a very lightweight, dark-by-default, open-source C# IDE
 bb-text = { path = "bb_core/bb_text", version = "0.0.1" }
 bb-process = { path = "bb_core/process", version = "0.0.1" }
 bb-syntax = { path = "bb_core/syntax", version = "0.0.1" }
-bb-explorer = { path = "bb_core/explorer", version = "0.0.1" }
-bb-search = { path = "bb_core/search", version = "0.0.1" }
+bb-lang = { path = "bb_core/lang", version = "0.0.1" }
+bb-explorer = { path = "bb_core/workspace/bb_explorer", version = "0.0.1" }
+bb-search = { path = "bb_core/workspace/search", version = "0.0.1" }
 bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
 bb-framing = { path = "edge/framing", version = "0.0.1" }
 bb-dock = { path = "shell/ui/bb_dock", version = "0.0.1" }
@@ -55,6 +57,9 @@ ropey = "1.6"
 # syntax
 tree-sitter = "0.25"
 tree-sitter-c-sharp = "0.23"
+# BBEOD26: Rust and Python colours (MIT, same tree-sitter ABI range).
+tree-sitter-rust = "0.24"
+tree-sitter-python = "0.25"
 # protocols
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

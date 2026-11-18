@@ -83,3 +83,20 @@ pub(crate) fn title(root: &std::path::Path) -> String {
         |name: &std::ffi::OsStr| name.to_string_lossy().into_owned(),
     )
 }
+
+/// The window's close asks the view first (unsaved tabs ask).
+pub(crate) fn install_close_guard(
+    window: &gpui::Window,
+    view: &gpui::Entity<crate::ExplorerView>,
+    cx: &gpui::App,
+) {
+    let close_view: gpui::Entity<crate::ExplorerView> = view.clone();
+    window.on_window_should_close(cx, move |_: &mut gpui::Window, cx: &mut gpui::App| {
+        close_view.update(
+            cx,
+            |state: &mut crate::ExplorerView, cx: &mut gpui::Context<crate::ExplorerView>| {
+                state.handle_window_close(cx)
+            },
+        )
+    });
+}

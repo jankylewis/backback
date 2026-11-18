@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use gpui::{AnyView, AnyWindowHandle, App, AsyncApp, Window, WindowHandle};
 
-use super::bb_start_page::StartPage;
+use super::StartPage;
 use crate::ExplorerView;
 
 /// The `bb_start_state` line: whether a start page is shown, the selected
@@ -21,11 +21,12 @@ pub(crate) fn describe(cx: &App) -> String {
         .and_then(|page: WindowHandle<StartPage>| page.read(cx).ok());
     match page {
         Some(page) => format!(
-            "bb_start_state shown=true selected={} entries={:?}",
+            "bb_start_state shown=true selected={} entries={:?} ticks={:?}",
             page.selected(),
-            page.labels()
+            page.labels(),
+            page.ticks().names()
         ),
-        None => String::from("bb_start_state shown=false selected=0 entries=[]"),
+        None => String::from("bb_start_state shown=false selected=0 entries=[] ticks=\"\""),
     }
 }
 
