@@ -1,4 +1,4 @@
-//! Run `dotnet build` in its own process group (ended on quit), with a
+//! Run `dotnet build` (or `cargo build`/`check`, BBEOD27) in its own process group (ended on quit), with a
 //! deadline, and return everything it printed.
 //!
 //! `start` runs on the UI thread on purpose: on macOS a process spawned from
@@ -24,7 +24,8 @@ pub(super) struct Running {
 }
 
 pub(super) fn start(target: &Path) -> Result<Running, String> {
-    let mut child: Child = Command::new("dotnet")
+    let mut command: Command = Command::new("dotnet");
+    command
         .arg("build")
         .arg(target)
         // No worker nodes or compiler server outlive the build: they would
@@ -34,14 +35,21 @@ pub(super) fn start(target: &Path) -> Result<Running, String> {
             "-v:minimal",
             "-nodeReuse:false",
             "-p:UseSharedCompilation=false",
-        ])
+        ]);
+    spawn(command, "dotnet")
+}
+
+/// Start `command` (a build tool) in its own group with stdout read in
+/// the background.
+pub(super) fn spawn(mut command: Command, tool: &str) -> Result<Running, String> {
+    let mut child: Child = command
         // A process group of its own must not hold the terminal as stdin.
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .process_group(0)
         .spawn()
-        .map_err(|error: std::io::Error| format!("dotnet: {error}"))?;
+        .map_err(|error: std::io::Error| format!("{tool}: {error}"))?;
     let owned: Option<bb_process::OwnedGroup> =
         NonZeroU32::new(child.id()).map(bb_process::OwnedGroup::register);
     let mut stdout: std::process::ChildStdout = child.stdout.take().ok_or("no output pipe")?;

@@ -1,4 +1,5 @@
-//! The 49 combinations in real windows: tools started, Debug, tab colours.
+//! The 49 combinations in real windows: tools started (rust-analyzer and
+//! cargo with Rust active, BBEOD27), Debug, tab colours.
 
 use std::path::{Path, PathBuf};
 
@@ -11,11 +12,14 @@ use crate::ExplorerView;
 
 fn expected_started(active: LangSet, panel: bool) -> Vec<Tool> {
     let csharp: bool = active.has(Lang::CSharp);
-    let at_open: Vec<Tool> = if csharp {
+    let mut at_open: Vec<Tool> = if csharp {
         vec![Tool::Roslyn]
     } else {
         Vec::new()
     };
+    if active.has(Lang::Rust) {
+        at_open.extend([Tool::RustAnalyzer, Tool::Cargo]);
+    }
     let on_panel: Vec<Tool> = if csharp && panel {
         vec![Tool::TestDiscovery]
     } else {

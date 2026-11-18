@@ -10,7 +10,7 @@ use gpui::{
 use std::{path::PathBuf, time::Instant};
 
 mod bb_window;
-mod open;
+pub(crate) mod open;
 pub(crate) mod recent;
 pub(crate) use bb_window::{on_view as window_actions, title as window_title};
 pub(crate) use open::langs::{self, WindowLangs};
@@ -104,6 +104,8 @@ fn build_window(
         |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
             state.langs = WindowLangs::new(langs::resolve(&wanted.root, wanted.ticked));
             crate::intel::glue::connect(state, window, cx);
+            crate::intel::glue::connect_rust(state, window, cx);
+            crate::rows::cargo::load(state, window, cx);
             crate::editor::watch_disk(window, cx);
             match &wanted.file {
                 Some(file) => state.open_file(file, window, cx),
@@ -139,10 +141,11 @@ fn menus() -> Vec<Menu> {
             .into_iter()
             .chain(crate::settings::zoom_menu_items()),
         ),
-        Menu::new("Build").items([MenuItem::action(
-            "Build Solution",
-            crate::run::build::BuildSolution,
-        )]),
+        Menu::new("Build").items([
+            MenuItem::action("Build Solution", crate::run::build::BuildSolution),
+            MenuItem::action("Cargo Build", crate::run::build::CargoBuild),
+            MenuItem::action("Cargo Check", crate::run::build::CargoCheck),
+        ]),
         crate::run::bb_debug::debug_menu(),
         Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
         bb_window::window_menu(),
@@ -192,6 +195,7 @@ pub(crate) fn fresh_view(
         root: root.clone(),
         intel: crate::intel::model::IntelModel::new(crate::intel::model::LoadStatus::NoSolution),
         link: None,
+        rust: crate::intel::model::RustIntel::off(),
         tests: crate::tests_panel::TestsState::new(),
         debug: crate::run::bb_debug::DebugState::load(&root),
         quick_open: None,

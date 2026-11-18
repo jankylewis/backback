@@ -70,3 +70,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-BUG-072 | FIXED | `a_file_changed_since_the_debug_build_says_so`; `x` = 1 evaluated live in `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |
 | BB-BUG-073 | FIXED | Same tests as BB-BUG-072 (`vars-stale` row; `x` listed after an await) |
 | BB-BUG-074 | FIXED | `a_right_click_outside_a_test_method_opens_no_test_menu` red before the fix |
+| BB-BUG-075 | FIXED | `every_request_reaches_only_the_server_of_its_file_s_language` red under the old one-link `send` |
+| BB-GAT-010 | FIXED | `a_blocked_wait_ends_the_run_at_its_deadline_naming_what_it_waited_for` red on the stub, green with the watchdog |
+| BB-GAT-011 | FIXED | `every_literal_and_comment_keeps_its_line_breaks` red before, green after; gate log line `failed=1` |
+| BB-GAT-012 | OBSERVED | `the_same_error_from_the_lib_and_its_test_build_lists_once` red before, green after; PR #116 CI log (2 red); `-j1` vs `-j2` count on the fixture |

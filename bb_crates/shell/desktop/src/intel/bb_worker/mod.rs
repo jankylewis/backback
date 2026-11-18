@@ -15,6 +15,7 @@ use bb_intel::Config;
 use bb_lsp::roslyn::{LoadState, Restore};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
+pub(crate) use bb_loop::rust::{find_cargo, scratch, start_rust};
 use protocol::{Event, Request};
 
 /// The UI's end of the server thread.
@@ -37,14 +38,28 @@ impl Link {
 /// Start the server thread for `solution` with restore off. The events
 /// begin with progress and end the load with `Ready` or `Failed`.
 pub(crate) fn start(solution: &Path) -> (Link, UnboundedReceiver<Event>) {
+    let solution: PathBuf = solution.to_path_buf();
+    launch(
+        "bb-intel",
+        move |requests: UnboundedReceiver<Request>, events: &UnboundedSender<Event>| {
+            serve(&solution, requests, events);
+        },
+    )
+}
+
+/// Run `job` on a thread of its own named `name`, with the request and
+/// event channels; a thread that cannot start sends `Failed`.
+pub(super) fn launch<F>(name: &str, job: F) -> (Link, UnboundedReceiver<Event>)
+where
+    F: FnOnce(UnboundedReceiver<Request>, &UnboundedSender<Event>) + Send + 'static,
+{
     let (request_tx, request_rx): (UnboundedSender<Request>, UnboundedReceiver<Request>) =
         unbounded_channel();
     let (event_tx, event_rx): (UnboundedSender<Event>, UnboundedReceiver<Event>) =
         unbounded_channel();
-    let solution: PathBuf = solution.to_path_buf();
     let spawned: std::io::Result<std::thread::JoinHandle<()>> = std::thread::Builder::new()
-        .name(String::from("bb-intel"))
-        .spawn(move || serve(&solution, request_rx, &event_tx));
+        .name(name.to_owned())
+        .spawn(move || job(request_rx, &event_tx));
     if let Err(error) = spawned {
         let (failed_tx, failed_rx): (UnboundedSender<Event>, UnboundedReceiver<Event>) =
             unbounded_channel();
@@ -59,7 +74,9 @@ pub(crate) fn start(solution: &Path) -> (Link, UnboundedReceiver<Event>) {
 fn serve(solution: &Path, requests: UnboundedReceiver<Request>, events: &UnboundedSender<Event>) {
     match prepare(solution) {
         // `_folder` lives as long as the loop: its drop removes the logs.
-        Ok((_folder, config, projects)) => bb_loop::run(&config, projects, requests, events),
+        Ok((_folder, config, projects)) => {
+            bb_loop::run(bb_loop::Boot::Roslyn(config, projects), requests, events);
+        }
         Err(reason) => {
             // Nobody listening means the window closed during the load.
             let _sent: Result<(), tokio::sync::mpsc::error::SendError<Event>> =
@@ -97,7 +114,7 @@ fn prepare(solution: &Path) -> Result<(bb_process::OwnedTempDir, Config, LoadSta
 /// This worker's own folder, `backback-intel-<pid>-<n>`: one per worker, so
 /// a second window (or a parallel test) never removes another's scratch
 /// build and log (BB-BUG-038).
-fn intel_folder() -> std::io::Result<bb_process::OwnedTempDir> {
+pub(super) fn intel_folder() -> std::io::Result<bb_process::OwnedTempDir> {
     static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let n: u64 = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     bb_process::OwnedTempDir::create_with("backback-intel", &n.to_string())

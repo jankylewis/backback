@@ -1,9 +1,10 @@
 # Backback progress
 
-- BBEOD26 (`feat/lang-picker`, backback_1, 2026-11-19): start page ticks
-  C#, Rust, Python (saved per workspace); `bb-lang` active = ticked and
-  present gates Roslyn, netcoredbg, test discovery, colours and Debug.
-  Rust/Python tree-sitter colours, no servers yet (BBEOD27/28). ADR-11.
+- BBEOD27 (`feat/rust`, backback_1, 2026-11-19, in progress): rust-analyzer
+  worker routed by Lang, `bb-cargo` (metadata, build/check, tests), window
+  tests on real cargo; BB-GAT-010 watchdog on window-test waits. No debugger.
+- BBEOD26 (#115, `feat/lang-picker`): C#/Rust/Python ticks; active = ticked
+  and present gates every tool, colour and Debug. ADR-11.
 - BBEOD25 (#114, merged 52f2fd4): five debug/window bugs, BB-GAT-009.
 
 - FIND-SCOPE (2026-11-07, `find-in-files-scope`): Find in Files gets

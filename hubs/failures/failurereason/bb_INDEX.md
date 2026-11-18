@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 57 — FIXED 52, OBSERVED 4, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 59 — FIXED 54, OBSERVED 4, OPEN 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -61,3 +61,6 @@ One file per failure mechanism. This hub owns the id. Entries: 57 — FIXED 52, 
 | BB-PRC-008 | A debug-test run outlived its test binary (session thread killed at exit) | FIXED | yes | yes | none | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
 | BB-GAT-008 | A test wildcard arm reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | A patched local adapter hid a CI-only branch | FIXED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
+| BB-GAT-010 | A window test waited with no deadline that could fire | FIXED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
+| BB-GAT-011 | The lexer dropped an escaped line break | FIXED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` |
+| BB-GAT-012 | One local build job hid a duplicate CI error | OBSERVED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` |

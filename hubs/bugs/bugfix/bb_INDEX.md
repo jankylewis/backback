@@ -74,3 +74,4 @@
 | BB-BUG-072 | Stale file: the hover says so, never the server's type | FIXED | `a_file_changed_since_the_debug_build_says_so` | `C2/D5/S18/BB_BUG_072_THE_HOVER_SHOWED_A_TYPE_FOR_CODE_THAT_WAS_NOT_RUNNING.md` |
 | BB-BUG-073 | Stale file: VARIABLES and the status say so | FIXED | `a_file_changed_since_the_debug_build_says_so` | `C2/D5/S19/BB_BUG_073_VARIABLES_DID_NOT_SAY_THE_FILE_CHANGED_SINCE_THE_BUILD.md` |
 | BB-BUG-074 | Menu only within the test method's span | FIXED | `a_right_click_outside_a_test_method_opens_no_test_menu` | `C2/D5/S19/BB_BUG_074_THE_EDITORS_TEST_MENU_OPENED_BELOW_THE_TEST.md` |
+| BB-BUG-075 | One router by file language | FIXED | `every_request_reaches_only_the_server_of_its_file_s_language` | `C2/D5/S19/BB_BUG_075_A_RUST_OR_PYTHON_TAB_WAS_SENT_TO_ROSLYN_AS_CSHARP.md` |

@@ -1,10 +1,10 @@
 use std::path::{Path, PathBuf};
 
+use crate::launch::open::lang_tests::watchdog::{watchdog, Watchdog};
+use crate::ExplorerView;
 use bb_explorer::Explorer;
 use bb_testkit::Outcome;
 use gpui::{Entity, Modifiers, TestAppContext, VisualTestContext, Window, WindowAppearance};
-
-use crate::ExplorerView;
 
 fn write_fixture(root: &Path) -> PathBuf {
     let project: PathBuf = root.join("Tests.csproj");
@@ -35,6 +35,7 @@ fn wait_for(
     vcx: &mut VisualTestContext,
     ready: impl Fn(&ExplorerView) -> bool,
 ) {
+    let _armed: Watchdog = watchdog("the Tests panel", std::time::Duration::from_secs(60));
     let started: std::time::Instant = std::time::Instant::now();
     while started.elapsed() < std::time::Duration::from_secs(30) {
         vcx.run_until_parked();

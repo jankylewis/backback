@@ -450,6 +450,7 @@ name = "backback"
 version = "0.0.1"
 dependencies = [
  "alacritty_terminal",
+ "bb-cargo",
  "bb-dap",
  "bb-dock",
  "bb-dotnet",
@@ -525,6 +526,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bb-cargo"
+version = "0.0.1"
+dependencies = [
+ "bb-cargo",
+ "bb-process",
+ "bb-testkit",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "bb-dap"
 version = "0.0.1"
 dependencies = [
@@ -580,6 +594,7 @@ dependencies = [
 name = "bb-intel"
 version = "0.0.1"
 dependencies = [
+ "bb-cargo",
  "bb-dotnet",
  "bb-lsp",
  "bb-text",
@@ -587,6 +602,7 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.21",
  "tokio",
  "url",

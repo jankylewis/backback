@@ -1,4 +1,5 @@
-//! The session: one server, one loaded solution, the open documents.
+//! The session: one server, one loaded solution (or Cargo workspace), the
+//! open documents.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -8,16 +9,16 @@ use std::time::Duration;
 use bb_dotnet::{ProjectPath, Solution, SolutionPath};
 use bb_lsp::roslyn::{self, Restore};
 use bb_lsp::{Incoming, LspClient};
-use lsp_types::PublishDiagnosticsParams;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 use tokio::sync::Notify;
 
+use super::{pump, Server};
 use crate::model::bb_doc::{DocVersion, OpenDoc};
-use crate::model::store::{Entry, Recorded, Store};
-use crate::model::{DocPath, DocUri};
+use crate::model::store::Store;
+use crate::model::DocPath;
 use crate::IntelError;
 
 /// How to start a [`Session`].
@@ -43,10 +44,11 @@ pub struct Session {
     pub(crate) docs: HashMap<DocPath, OpenDoc>,
     pub(crate) store: Store,
     pub(crate) request_timeout: Duration,
-    scratch: PathBuf,
-    load: roslyn::Loaded,
-    pump: tokio::task::JoinHandle<()>,
-    refresh: Arc<Notify>,
+    pub(crate) scratch: Option<PathBuf>,
+    pub(crate) load: roslyn::Loaded,
+    pub(crate) pump: tokio::task::JoinHandle<()>,
+    pub(crate) refresh: Arc<Notify>,
+    pub(crate) server: Server,
 }
 
 /// How long the server's last log lines may take after `shutdown`.
@@ -92,17 +94,22 @@ impl Session {
         .await?;
         let store: Store = Store::default();
         let refresh: Arc<Notify> = Arc::new(Notify::new());
-        let pump: tokio::task::JoinHandle<()> =
-            tokio::spawn(pump(incoming, store.clone(), Arc::clone(&refresh), log));
+        let pump: tokio::task::JoinHandle<()> = tokio::spawn(pump(
+            incoming,
+            (store.clone(), Arc::clone(&refresh)),
+            Server::Roslyn,
+            log,
+        ));
         Ok(Self {
             client,
             docs: HashMap::new(),
             store,
             request_timeout: config.request_timeout,
-            scratch: config.scratch.clone(),
+            scratch: Some(config.scratch.clone()),
             load,
             pump,
             refresh,
+            server: Server::Roslyn,
         })
     }
 
@@ -131,6 +138,12 @@ impl Session {
     #[must_use]
     pub fn refresh_signal(&self) -> Arc<Notify> {
         Arc::clone(&self.refresh)
+    }
+
+    /// Which server this session runs.
+    #[must_use]
+    pub fn server(&self) -> Server {
+        self.server
     }
 
     /// Every open document.
@@ -176,7 +189,8 @@ impl Session {
     }
 
     /// Stop the server, wait (bounded) until its last log lines are
-    /// written, and remove the scratch folder.
+    /// written, and remove the scratch folder (Roslyn's; rust-analyzer's
+    /// target folder is kept, so the next start does not rebuild it).
     ///
     /// # Errors
     /// The `exit` notification cannot be sent.
@@ -187,7 +201,9 @@ impl Session {
         let _drained: Result<Result<(), tokio::task::JoinError>, tokio::time::error::Elapsed> =
             tokio::time::timeout(DRAIN_TIMEOUT, self.pump).await;
         // Best effort: a scratch folder left behind is only temp space.
-        let _removed: std::io::Result<()> = std::fs::remove_dir_all(&self.scratch);
+        if let Some(scratch) = &self.scratch {
+            let _removed: std::io::Result<()> = std::fs::remove_dir_all(scratch);
+        }
         Ok(stopped?)
     }
 
@@ -195,50 +211,5 @@ impl Session {
         self.docs
             .get(path)
             .ok_or_else(|| IntelError::NotOpen(path.as_path().to_path_buf()))
-    }
-}
-
-/// Keep reading server messages so the reader never blocks on a full
-/// channel; write each one to the run log, signal `refresh` when the lists
-/// may be stale, and keep each pushed `publishDiagnostics` per document
-/// unless a newer version is stored.
-async fn pump<W: std::io::Write>(
-    mut incoming: mpsc::Receiver<Incoming>,
-    store: Store,
-    refresh: Arc<Notify>,
-    mut log: W,
-) {
-    while let Some(message) = incoming.recv().await {
-        // A log that stops accepting lines must not stop the drain: the
-        // reader would block and every later request would time out.
-        let text: &str = roslyn::log_incoming(&message, &mut log).unwrap_or_default();
-        if crate::features::diagnostics::refresh_requested(&message, text) {
-            refresh.notify_one();
-        }
-        let Incoming::Notification { method, params }: Incoming = message else {
-            continue;
-        };
-        if method != "textDocument/publishDiagnostics" {
-            continue;
-        }
-        let Some(report): Option<PublishDiagnosticsParams> =
-            params.and_then(|p: serde_json::Value| serde_json::from_value(p).ok())
-        else {
-            continue;
-        };
-        let DocUri::File(path): DocUri = DocUri::from_url(&report.uri) else {
-            continue;
-        };
-        let entry: Entry = Entry {
-            version: report.version.and_then(DocVersion::from_wire),
-            list: report.diagnostics,
-        };
-        match store.record(&path, entry) {
-            Ok(Recorded::Kept | Recorded::Stale) => {}
-            // Every reader now fails with the same error; the log says when.
-            Err(error) => {
-                let _logged: std::io::Result<()> = writeln!(log, "backback: {error}");
-            }
-        }
     }
 }

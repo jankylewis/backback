@@ -2,8 +2,9 @@
 //! changes reach the server; [`on_event`] the one place answers reach the window.
 
 mod answers;
-mod asks;
-pub(crate) mod bb_keys;
+pub(crate) mod input;
+#[path = "bb_route.rs"]
+pub(crate) mod route;
 #[cfg(test)]
 pub(crate) mod window_tests;
 
@@ -16,13 +17,17 @@ use tokio::sync::mpsc::UnboundedReceiver;
 use crate::editor::{Tab, TabEvent};
 use crate::intel::bb_worker::protocol::{Event, Request};
 use crate::intel::bb_worker::{self, Link};
-use crate::intel::model::{LoadStatus, Now, Pending, Sent};
+use crate::intel::model::{LoadStatus, Now, Pending};
 use crate::ExplorerView;
+use bb_intel::Server;
+use route::send;
 
 pub(crate) use answers::apply_rename;
 pub(crate) use answers::{goto_point, jump, opened};
-pub(crate) use asks::{ask, ask_at_cursor, hover_ask, hover_move, word_start};
-pub(crate) use bb_keys::RestartServer;
+pub(crate) use input::asks::{ask, ask_at_cursor, hover_ask, hover_move, word_start};
+pub(crate) use input::bb_keys;
+pub(crate) use input::bb_keys::RestartServer;
+pub(crate) use route::{connect_rust, restart};
 
 /// Start Roslyn for the workspace's solution while C# is active (BBEOD26;
 /// window tests record the start, spawn nothing) and pump its events.
@@ -41,57 +46,36 @@ pub(crate) fn connect(
     attach(view, link, events, window, cx);
 }
 
-/// Relaunch Roslyn and replay the current text of every open tab.
-pub(crate) fn restart(
-    view: &mut ExplorerView,
-    window: &mut Window,
-    cx: &mut Context<ExplorerView>,
-) {
-    if !matches!(
-        view.intel.status,
-        LoadStatus::Stopped | LoadStatus::Failed(_)
-    ) {
-        return;
-    }
-    view.intel.in_flight.clear();
-    view.intel.dismiss();
-    connect(view, window, cx);
-    resync_open(view);
-    cx.notify();
-}
-
-fn resync_open(view: &mut ExplorerView) {
-    let _events: Vec<TabEvent> = view.tabs.take_events();
-    let opens: Vec<Request> = view
-        .tabs
-        .items_mut()
-        .iter_mut()
-        .map(|tab: &mut Tab| {
-            let _edits: Vec<CharEdit> = tab.document.take_char_edits();
-            Request::Open {
-                path: tab.path.clone(),
-                text: tab.document.text(),
-            }
-        })
-        .collect();
-    for open in opens {
-        send(view, open);
-    }
-}
-
-/// Use `link` for requests and deliver `events` to the window in order.
+/// Use `link` for Roslyn's requests and deliver `events` to the window in order.
 pub(crate) fn attach(
     view: &mut ExplorerView,
     link: Link,
+    events: UnboundedReceiver<Event>,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    attach_server(view, (Server::Roslyn, link), events, window, cx);
+}
+
+/// Use `link` for `server`'s requests and deliver `events` to the window
+/// in order, each tagged with the server it came from.
+pub(crate) fn attach_server(
+    view: &mut ExplorerView,
+    (server, link): (Server, Link),
     mut events: UnboundedReceiver<Event>,
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    view.link = Some(link);
-    view.intel.status = LoadStatus::Loading {
-        loaded: 0,
-        total: 0,
-    };
+    match server {
+        Server::Roslyn => {
+            view.link = Some(link);
+            view.intel.status = LoadStatus::Loading {
+                loaded: 0,
+                total: 0,
+            };
+        }
+        Server::RustAnalyzer => view.rust.link = Some(link),
+    }
     cx.spawn_in(
         window,
         async move |view: WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext| {
@@ -101,7 +85,7 @@ pub(crate) fn attach(
                     |view: &mut ExplorerView,
                      window: &mut Window,
                      cx: &mut Context<ExplorerView>| {
-                        on_event(view, event, window, cx);
+                        on_event(view, (server, event), window, cx);
                     },
                 );
                 if delivered.is_err() {
@@ -158,27 +142,17 @@ fn to_intel(edit: CharEdit) -> bb_intel::Edit {
     }
 }
 
-fn send(view: &mut ExplorerView, request: Request) {
-    let Some(link): Option<&Link> = view.link.as_ref() else {
-        return;
-    };
-    let sent: Option<Sent> = Sent::of(&request);
-    if link.send(request) {
-        view.intel.sent(sent);
-    } else {
-        view.link = None;
-        view.intel
-            .server_gone(LoadStatus::Failed(String::from("server thread stopped")));
-    }
-}
-
-/// Apply one server event to the window.
+/// Apply one event of `server`'s thread to the window.
 pub(crate) fn on_event(
     view: &mut ExplorerView,
-    event: Event,
+    (server, event): (Server, Event),
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
+    if server == Server::RustAnalyzer && route::rust_lifecycle(view, &event) {
+        cx.notify();
+        return;
+    }
     match event {
         Event::Stopped => {
             view.link = None;
@@ -189,7 +163,7 @@ pub(crate) fn on_event(
             eprintln!("intel_ready_ms={}", took.as_millis());
             view.intel.ready(failed);
         }
-        Event::Failed(reason) => {
+        Event::Failed(reason) | Event::Unavailable(reason) => {
             view.link = None;
             view.intel.server_gone(LoadStatus::Failed(reason));
         }
@@ -212,7 +186,7 @@ pub(crate) fn on_event(
             };
             answers::apply(view, &pending, answer, stages, window, cx);
         }
-        Event::SyncFailed(reason) => view.report(&format!("C# server: {reason}")),
+        Event::SyncFailed(reason) => view.report(&format!("{}: {reason}", server.name())),
     }
     cx.notify();
 }

@@ -55,6 +55,9 @@ pub(super) fn execute(
     settings_override: Option<PathBuf>,
     stop: StopFlag,
 ) -> Result<RunReport, String> {
+    if super::super::model::ProjectKind::of(path) == super::super::model::ProjectKind::Cargo {
+        return super::scan::cargo::run(&root, path, selection, &stop);
+    }
     let project: ProjectPath = ProjectPath::from_path(path.to_path_buf());
     let rt: tokio::runtime::Runtime = super::runtime()?;
     if super::super::uses_apex(&root, path) {

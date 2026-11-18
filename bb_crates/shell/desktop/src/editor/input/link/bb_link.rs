@@ -8,7 +8,7 @@ use gpui::{prelude::*, Context, ModifiersChangedEvent, Window};
 
 use crate::intel::bb_worker::protocol::{Ask, Place};
 use crate::intel::model::popups::LinkTarget;
-use crate::intel::model::{LoadStatus, Pending};
+use crate::intel::model::Pending;
 use crate::ExplorerView;
 
 /// The identifier (letters, digits, `_`) that holds the char at `at`.
@@ -80,7 +80,7 @@ pub(crate) fn link_move(view: &mut ExplorerView, at: Option<CharIdx>, cmd: bool)
         end,
         confirmed: false,
     });
-    let ready: bool = view.link.is_some() && view.intel.status == LoadStatus::Ready;
+    let ready: bool = crate::intel::glue::route::ready_for(view, &path);
     let point: Option<LspPoint> = view
         .tabs
         .active()

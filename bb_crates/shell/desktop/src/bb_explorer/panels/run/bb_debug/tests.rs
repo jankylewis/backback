@@ -115,6 +115,11 @@ fn wait_until(
     done: fn(&ExplorerView, &std::path::Path) -> bool,
     file: &std::path::Path,
 ) {
+    let _armed: crate::launch::open::lang_tests::watchdog::Watchdog =
+        crate::launch::open::lang_tests::watchdog::watchdog(
+            what,
+            std::time::Duration::from_secs(400),
+        );
     for _ in 0..12_000 {
         rig.view.update_in(
             vcx,

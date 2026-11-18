@@ -8,23 +8,35 @@ use crate::{Lang, LangSet};
 /// A process or service backback starts for a language.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Tool {
-    /// The Roslyn language server; the only tool that starts at open.
+    /// The Roslyn language server; starts at open.
     Roslyn,
     /// The debugger; starts on Debug only.
     Netcoredbg,
     /// The Tests panel's project scan and `dotnet test` lists.
     TestDiscovery,
+    /// rust-analyzer, the Rust language server; starts at open (BBEOD27).
+    RustAnalyzer,
+    /// `cargo metadata` at open (the Cargo explorer); `build`, `check` and
+    /// `test` on a click.
+    Cargo,
 }
 
 impl Tool {
     /// Every tool.
-    pub const ALL: [Self; 3] = [Self::Roslyn, Self::Netcoredbg, Self::TestDiscovery];
+    pub const ALL: [Self; 5] = [
+        Self::Roslyn,
+        Self::Netcoredbg,
+        Self::TestDiscovery,
+        Self::RustAnalyzer,
+        Self::Cargo,
+    ];
 
     /// The language the tool serves.
     #[must_use]
     pub fn lang(self) -> Lang {
         match self {
             Self::Roslyn | Self::Netcoredbg | Self::TestDiscovery => Lang::CSharp,
+            Self::RustAnalyzer | Self::Cargo => Lang::Rust,
         }
     }
 
@@ -32,7 +44,7 @@ impl Tool {
     #[must_use]
     pub fn at_open(self) -> bool {
         match self {
-            Self::Roslyn => true,
+            Self::Roslyn | Self::RustAnalyzer | Self::Cargo => true,
             Self::Netcoredbg | Self::TestDiscovery => false,
         }
     }

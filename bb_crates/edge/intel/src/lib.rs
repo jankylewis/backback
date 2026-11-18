@@ -1,17 +1,18 @@
-//! Roslyn code intelligence for backback, behind a typed API.
+//! Code intelligence for backback, behind a typed API: Roslyn for C#,
+//! rust-analyzer for Rust (BBEOD27), one [`Session`] type for both.
 //!
-//! A [`Session`] starts `roslyn-language-server`, loads one solution and
+//! A [`Session`] starts `roslyn-language-server` and loads one solution (or
+//! starts rust-analyzer on a Cargo workspace) and
 //! keeps a mirror of every open document in a [`bb_text::Buffer`]. Edits go
 //! to the server as incremental `didChange` events computed from that mirror,
 //! with a version that only goes up. Every feature is one typed function with
 //! its own deadline; nothing here applies a server edit to disk.
 
-mod bb_session;
 mod features;
 mod model;
-mod sync;
+#[path = "bb_sessions/mod.rs"]
+mod session;
 
-pub use bb_session::{Config, Session};
 pub use features::calls::{CallItem, IncomingCall};
 pub use model::bb_doc::{DocVersion, Edit};
 pub use model::results::{
@@ -19,6 +20,9 @@ pub use model::results::{
     TextChange,
 };
 pub use model::{DocPath, DocUri, Location, Span};
+pub use session::bb_session::{Config, Session};
+pub use session::rust::RustConfig;
+pub use session::Server;
 
 use std::path::PathBuf;
 
@@ -28,6 +32,9 @@ pub enum IntelError {
     /// Starting, initializing or loading the server failed.
     #[error(transparent)]
     Roslyn(#[from] bb_lsp::roslyn::RoslynError),
+    /// rust-analyzer is missing, or cargo failed.
+    #[error(transparent)]
+    Cargo(#[from] bb_cargo::CargoError),
     /// A request failed (timeout, closed, server error, bad shape).
     #[error(transparent)]
     Lsp(#[from] bb_lsp::LspError),

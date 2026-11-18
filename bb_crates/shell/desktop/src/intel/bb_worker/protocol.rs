@@ -100,6 +100,22 @@ pub(crate) enum Request {
     },
 }
 
+impl Request {
+    /// The file the request is about; `None` for a test-only request.
+    // `KillForTest` exists in test builds only; the others always have a file.
+    #[cfg_attr(not(test), allow(clippy::unnecessary_wraps))]
+    pub(crate) fn path(&self) -> Option<&std::path::Path> {
+        match self {
+            #[cfg(test)]
+            Self::KillForTest => None,
+            Self::Open { path, .. }
+            | Self::Change { path, .. }
+            | Self::Close { path }
+            | Self::Ask { path, .. } => Some(path),
+        }
+    }
+}
+
 /// A location with the text of its line, read on the server thread.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Place {
@@ -173,6 +189,9 @@ pub(crate) enum Event {
     },
     /// The server could not start or load; intel stays off.
     Failed(String),
+    /// The server is not installed; the text says how to install it
+    /// (BBEOD27: rust-analyzer). Everything else keeps working.
+    Unavailable(String),
     /// The diagnostics of one open document at one version; they belong on
     /// that version's text only.
     Diagnostics {

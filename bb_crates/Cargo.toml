@@ -7,12 +7,13 @@ members = [
   "bb_core/lang",
   "bb_core/workspace/bb_explorer",
   "bb_core/workspace/search",
-  "edge/bb_lsp",
-  "edge/framing",
+  "edge/bb_protocol/bb_lsp",
+  "edge/bb_protocol/framing",
   "edge/dap",
   "edge/dotnet/bb_sdk",
   "edge/dotnet/testkit",
   "edge/intel",
+  "edge/cargo",
   "shell/bb_cli",
   "shell/ui",
   "shell/ui/bb_dock",
@@ -39,13 +40,14 @@ bb-syntax = { path = "bb_core/syntax", version = "0.0.1" }
 bb-lang = { path = "bb_core/lang", version = "0.0.1" }
 bb-explorer = { path = "bb_core/workspace/bb_explorer", version = "0.0.1" }
 bb-search = { path = "bb_core/workspace/search", version = "0.0.1" }
-bb-lsp = { path = "edge/bb_lsp", version = "0.0.1" }
-bb-framing = { path = "edge/framing", version = "0.0.1" }
+bb-lsp = { path = "edge/bb_protocol/bb_lsp", version = "0.0.1" }
+bb-framing = { path = "edge/bb_protocol/framing", version = "0.0.1" }
 bb-dock = { path = "shell/ui/bb_dock", version = "0.0.1" }
 bb-dap = { path = "edge/dap", version = "0.0.1" }
 bb-dotnet = { path = "edge/dotnet/bb_sdk", version = "0.0.1" }
 bb-testkit = { path = "edge/dotnet/testkit", version = "0.0.1" }
 bb-intel = { path = "edge/intel", version = "0.0.1" }
+bb-cargo = { path = "edge/cargo", version = "0.0.1" }
 bb-ui = { path = "shell/ui", version = "0.0.1" }
 # One Zed revision for the macOS desktop shell.
 gpui = { version = "0.2.2", git = "https://github.com/zed-industries/zed", rev = "ba63a022c9a22ca66d68ef2a8f0bb9b5b0a9984d", default-features = false }

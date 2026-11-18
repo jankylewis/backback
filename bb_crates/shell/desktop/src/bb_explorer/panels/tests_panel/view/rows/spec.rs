@@ -61,6 +61,7 @@ pub(super) fn spec_row(
     let select_fqn: Fqn = fqn.clone();
     let debug_name: String = format!("test-spec-{}", fqn.as_str());
     let debug_id: String = format!("test-debug-{}", fqn.as_str());
+    let debuggable: bool = crate::tests_panel::model::ProjectKind::of(&path).debuggable();
     div()
         .id(format!("test-spec-{}", fqn.as_str()))
         .debug_selector(move || debug_name)
@@ -72,12 +73,9 @@ pub(super) fn spec_row(
         .child(super::menu::verdict(run, (icon, ink), &fqn, theme, cx))
         .child(label)
         .child(play_or_stop(path.clone(), fqn.clone(), running, theme, cx))
-        .child(debug_button(
-            debug_id,
-            (path.clone(), fqn.clone()),
-            theme,
-            cx,
-        ))
+        .children(
+            debuggable.then(|| debug_button(debug_id, (path.clone(), fqn.clone()), theme, cx)),
+        )
         .map(|row: gpui::Stateful<gpui::Div>| super::menu::on_right_click(row, (path, fqn), cx))
         .on_click(cx.listener(
             move |view: &mut ExplorerView,

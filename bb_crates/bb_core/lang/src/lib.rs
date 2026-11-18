@@ -22,7 +22,7 @@ pub use store::{choice_for, decode, encode, with_choice, Choices, StoreError};
 pub enum Lang {
     /// C#: Roslyn, netcoredbg and the tests panel.
     CSharp,
-    /// Rust: colours only for now (BBEOD27 brings its server).
+    /// Rust: rust-analyzer and cargo (BBEOD27); no debugger, ever.
     Rust,
     /// Python: colours only for now (BBEOD28 brings its server).
     Python,

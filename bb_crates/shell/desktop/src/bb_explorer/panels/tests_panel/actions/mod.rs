@@ -6,7 +6,7 @@ pub(crate) use backend::{debug_host, DEBUG_TRX};
 mod runner;
 mod scan;
 pub(crate) use runner::{run_category, run_class, run_failed, run_project, run_spec, stop};
-pub(crate) use scan::{find, scan};
+pub(crate) use scan::find;
 
 use bb_dotnet::ProjectPath;
 use bb_testkit::{
@@ -41,13 +41,20 @@ impl ListError {
 
 pub(crate) fn open(view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>) {
     view.tests.side = super::Side::Tests;
-    if view.tests.scan != super::Scan::NotStarted || !c_sharp(view) {
+    if view.tests.scan != super::Scan::NotStarted {
+        cx.notify();
+        return;
+    }
+    let langs: (bool, bool) = scan::cargo::discovery(view);
+    if langs == (false, false) {
         cx.notify();
         return;
     }
     view.tests.scan = super::Scan::Running;
     let root: PathBuf = view.root.clone();
-    let job: gpui::Task<ScanResult> = cx.background_executor().spawn(async move { scan(&root) });
+    let job: gpui::Task<ScanResult> = cx
+        .background_executor()
+        .spawn(async move { scan::cargo::scan_all(&root, langs) });
     cx.spawn_in(
         window,
         async move |view: WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext| {
@@ -94,16 +101,6 @@ pub(crate) fn toggle_project(
     start_list(view, path, window, cx);
 }
 
-/// Whether test discovery may start: only with C# active (BBEOD26); else
-/// the panel says why.
-fn c_sharp(view: &mut ExplorerView) -> bool {
-    let allowed: bool = view.langs.start(bb_lang::Tool::TestDiscovery);
-    if !allowed {
-        view.tests.message = Some(String::from("Tests: C# is not active in this window"));
-    }
-    allowed
-}
-
 /// List `path`'s tests in the background; when the list ends, the filter's
 /// search lists its next project.
 fn start_list(
@@ -112,7 +109,7 @@ fn start_list(
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    if !c_sharp(view) {
+    if !scan::cargo::may_list(view, &path) {
         return;
     }
     if let Some(project) = view.tests.model.project_mut(&path) {
@@ -201,6 +198,9 @@ fn runtime() -> Result<tokio::runtime::Runtime, String> {
 /// `--no-write` keeps the solution unchanged, and a build writes bin/ and
 /// obj/.
 fn list(root: PathBuf, path: &std::path::Path, may_build: bool) -> ListResult {
+    if super::model::ProjectKind::of(path) == super::model::ProjectKind::Cargo {
+        return scan::cargo::list(&root, path);
+    }
     let rt: tokio::runtime::Runtime = runtime()?;
     match list_once(&rt, root.clone(), path) {
         Ok(list) => Ok(list),

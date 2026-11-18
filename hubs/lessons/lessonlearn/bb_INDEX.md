@@ -50,3 +50,6 @@
 | BB-PRC-008 | FIXED | Join a detached owner before returning; pipe test runs to a file | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
 | BB-GAT-008 | FIXED | Clippy on touched crates before the gate; audit does not replace it | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | FIXED | Run a variant-dependent live test on the stock adapter too | `SHIP/GAT/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
+| BB-GAT-010 | FIXED | Arm the watchdog on every wait that can block; run new live tests under an alarm | `SHIP/GAT/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
+| BB-GAT-011 | FIXED | Test line-break counts for every literal form | `SHIP/GAT/S03/BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` |
+| BB-GAT-012 | OBSERVED | Count parallel-tool output with more than one job | `SHIP/GAT/S03/BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` |

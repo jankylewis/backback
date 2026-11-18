@@ -73,7 +73,7 @@ fn skip_string(chars: &[char], mut i: usize, out: &mut String) -> usize {
     i = i.saturating_add(1);
     while let Some(&c) = chars.get(i) {
         match c {
-            '\\' => i = i.saturating_add(2),
+            '\\' => i = skip_escape(chars, i, out),
             '"' => {
                 out.push('"');
                 return i.saturating_add(1);
@@ -86,6 +86,15 @@ fn skip_string(chars: &[char], mut i: usize, out: &mut String) -> usize {
         }
     }
     i
+}
+
+/// Past the escape at `i`; an escaped line break (Rust's string line
+/// continuation) stays a line break, so later line numbers hold (BB-GAT-011).
+fn skip_escape(chars: &[char], i: usize, out: &mut String) -> usize {
+    if chars.get(i.saturating_add(1)) == Some(&'\n') {
+        out.push('\n');
+    }
+    i.saturating_add(2)
 }
 
 fn skip_verbatim(chars: &[char], mut i: usize, out: &mut String) -> usize {
@@ -146,7 +155,7 @@ fn skip_char(chars: &[char], i: usize, out: &mut String, lang: Lang) -> usize {
     let mut j: usize = i.saturating_add(1);
     while let Some(&c) = chars.get(j) {
         match c {
-            '\\' => j = j.saturating_add(2),
+            '\\' => j = skip_escape(chars, j, out),
             '\'' | '\n' => break,
             _ => j = j.saturating_add(1),
         }
@@ -170,6 +179,30 @@ mod tests {
     fn raw_strings_lifetimes_and_chars() {
         let src: &str = "r#\"a\"b\"# 'a' '{' fn f<'a>(x: &'a str)";
         assert_eq!(strip(src, Lang::Rust), "\"\" ' ' ' ' fn f<'a>(x: &'a str)");
+    }
+
+    #[test]
+    fn every_literal_and_comment_keeps_its_line_breaks() {
+        let cases: [(&str, Lang); 7] = [
+            (
+                "const A: &str = \"one \\\ntwo {\\\n}\";\npub fn f() {}",
+                Lang::Rust,
+            ),
+            ("let c = '\\\n';\nfn g() {}", Lang::Rust),
+            ("r#\"a\n{\n\"#;\nfn h() {}", Lang::Rust),
+            ("/* a\n{ */\nfn i() {}", Lang::Rust),
+            ("// a\nfn j() {}", Lang::Rust),
+            ("@\"a\n{\"; \nclass K {}", Lang::CSharp),
+            ("\"a \\\nb\"; \nclass L {}", Lang::CSharp),
+        ];
+        for (src, lang) in cases {
+            let out: String = strip(src, lang);
+            assert_eq!(
+                out.matches('\n').count(),
+                src.matches('\n').count(),
+                "{src:?} -> {out:?}"
+            );
+        }
     }
 
     #[test]

@@ -5,7 +5,7 @@ family: PRF
 status: FIXED
 date: 2026-11-04
 signature: the roslyn-language-server child grows about 100 MB per editing round to about 2.4 GB
-source: `bb_crates/edge/bb_lsp/src/roslyn/mod.rs` (`start`); Roslyn's own `Microsoft.CodeAnalysis.LanguageServer.runtimeconfig.json` sets `System.GC.Server: true`
+source: `bb_crates/edge/bb_protocol/bb_lsp/src/roslyn/mod.rs` (`start`); Roslyn's own `Microsoft.CodeAnalysis.LanguageServer.runtimeconfig.json` sets `System.GC.Server: true`
 observed: night soak 2026-11-04 on the installed app at `8392878`, MbTx (17 projects), `docs/plan/bench/bb_GENERAL/RERUNS/bb_NIGHT_2026-11-04.md`
 links: fix=yes lesson=yes evidence=yes toolgap=none
 

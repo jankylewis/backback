@@ -36,6 +36,9 @@ impl Session {
         // the answer is for this version.
         let version: DocVersion = self.doc(path)?.version;
         let stored: Option<Entry> = self.store.entry(path)?;
+        if self.server.pushes_diagnostics() {
+            return Ok(pushed(stored, version));
+        }
         let params: DocumentDiagnosticParams = DocumentDiagnosticParams {
             text_document: TextDocumentIdentifier {
                 uri: path.to_url()?,
@@ -90,6 +93,15 @@ impl Session {
             })
             .unwrap_or_default())
     }
+}
+
+/// A pushing server's list for the current `version`: the last one it
+/// pushed (it re-pushes after it analyses an edit), or none yet.
+fn pushed(stored: Option<Entry>, version: DocVersion) -> DiagnosticsReport {
+    let list: Vec<Diagnostic> = stored
+        .map(|e: Entry| e.list.iter().map(Diagnostic::from_lsp).collect())
+        .unwrap_or_default();
+    DiagnosticsReport { version, list }
 }
 
 /// The entry a pull answer stands for at `version`.

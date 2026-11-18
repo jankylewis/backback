@@ -19,6 +19,7 @@ use popups::{ActionsPopup, CompletionPopup, HoverPopup, PlacesPanel, RenameInput
 use shown::Diags;
 pub(crate) use shown::LoadStatus;
 pub(crate) use shown::Sent;
+pub(crate) use shown::{RustIntel, RustStatus};
 
 /// One answered question's stage times, for the latency budget.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
