@@ -44,6 +44,7 @@
 | BB-PRF-004 | FIXED | `RENDER_CAP` where a line is shaped and styled | `SYS/PRF/S01/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
 | BB-PRF-005 | FIXED | Start the server behind the launcher when exactly one is installed | `SYS/PRF/S02/BB_PRF_005_THE_DOTNET_TOOL_LAUNCHER_STAYED_ALIVE_AS_ROSLYNS_PARENT.md` |
 | BB-PRF-006 | FIXED | Batches on up to 8 threads, hits added in file order; walk as listed, then parallel | `SYS/PRF/S02/BB_PRF_006_FIND_IN_FILES_READ_ONE_FILE_AT_A_TIME.md` |
+| BB-PRF-007 | FIXED | Walk the launch's folder on its own thread from the start; the window joins it | `SYS/PRF/S02/BB_PRF_007_THE_LANGUAGE_WALK_RAN_ON_THE_UI_THREAD_BEFORE_THE_FIRST_FRAME.md` |
 | BB-UIX-015 | FIXED | Stamp at read and write; refuse once on a mismatch | `APP/UIX/D2/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | FIXED | Re-read loaded folders on the disk check, merged by path | `APP/UIX/D2/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | FIXED | A folder per worker (`create_with` + counter) | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |

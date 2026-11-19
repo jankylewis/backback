@@ -2,7 +2,8 @@
 //! choice, what the folder holds, and the tools the window started. Every
 //! tool start asks [`WindowLangs::start`]; nothing else decides.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use bb_lang::{
     default_ticks, detect, detect_until, Detection, LangSet, Langs, Tool, DETECT_BUDGET,
@@ -47,18 +48,71 @@ impl WindowLangs {
 /// folder holds (saved once the walk saw the whole folder; C# alone for a
 /// folder that holds none, unsaved). With ticks
 /// known, the walk stops once each ticked language is seen.
+/// A launch's walk, when [`walk_early`] started it, is used instead of a
+/// walk on the UI thread (BB-PRF-007).
 pub(crate) fn resolve(root: &Path, ticked: Option<LangSet>) -> Langs {
     if let Some(ticks) = ticked {
         crate::launch::recent::save_langs(root, ticks);
     }
-    if let Some(ticks) = ticked.or_else(|| crate::launch::recent::langs_of(root)) {
-        return Langs::new(ticks, detect_until(root, ticks, DETECT_BUDGET).found);
+    let ticks: Option<LangSet> = ticked.or_else(|| crate::launch::recent::langs_of(root));
+    let found: Detection = early_walk(root, ticks).unwrap_or_else(|| walk(root, ticks));
+    if let Some(ticks) = ticks {
+        return Langs::new(ticks, found.found);
     }
-    let found: Detection = detect(root, DETECT_BUDGET);
     if found.complete && !found.found.is_empty() {
         crate::launch::recent::save_langs(root, found.found);
     }
     Langs::new(default_ticks(found.found), found.found)
+}
+
+/// The walk [`resolve`] needs: up to the known ticks, else the whole folder.
+fn walk(root: &Path, ticks: Option<LangSet>) -> Detection {
+    #[cfg(test)]
+    record_walk(root);
+    match ticks {
+        Some(ticks) => detect_until(root, ticks, DETECT_BUDGET),
+        None => detect(root, DETECT_BUDGET),
+    }
+}
+
+/// A walk started before the app ran: its folder, its ticks, the thread.
+struct Early {
+    root: PathBuf,
+    ticks: Option<LangSet>,
+    walk: std::thread::JoinHandle<Detection>,
+}
+
+static EARLY: Mutex<Option<Early>> = Mutex::new(None);
+
+/// A command-line launch: start the walk of `root` on its own thread now, so
+/// it runs while the app and the window start, not on the UI thread before
+/// the first frame (BB-PRF-007). The saved choice is read here, on the
+/// calling thread, as [`resolve`] reads it.
+pub(crate) fn walk_early(root: &Path, ticked: Option<LangSet>) {
+    let ticks: Option<LangSet> = ticked.or_else(|| crate::launch::recent::langs_of(root));
+    let owned: PathBuf = root.to_path_buf();
+    let spawned: std::io::Result<std::thread::JoinHandle<Detection>> = std::thread::Builder::new()
+        .name(String::from("bb-detect"))
+        .spawn(move || walk(&owned, ticks));
+    let Ok(walk): std::io::Result<std::thread::JoinHandle<Detection>> = spawned else {
+        return;
+    };
+    if let Ok(mut slot) = EARLY.lock() {
+        *slot = Some(Early {
+            root: root.to_path_buf(),
+            ticks,
+            walk,
+        });
+    }
+}
+
+/// The early walk's result when it was for `root` with `ticks`.
+fn early_walk(root: &Path, ticks: Option<LangSet>) -> Option<Detection> {
+    let early: Early = EARLY.lock().ok()?.take()?;
+    if early.root != root || early.ticks != ticks {
+        return None;
+    }
+    early.walk.join().ok()
 }
 
 /// The status bar: the active languages and absent notes, then the C#
@@ -118,4 +172,30 @@ pub(crate) fn may_debug(view: &mut ExplorerView) -> bool {
         return false;
     }
     true
+}
+
+/// Tests: which thread walked which folder (BB-PRF-007).
+#[cfg(test)]
+static WALKS: Mutex<Vec<(PathBuf, std::thread::ThreadId)>> = Mutex::new(Vec::new());
+
+#[cfg(test)]
+fn record_walk(root: &Path) {
+    if let Ok(mut walks) = WALKS.lock() {
+        walks.push((root.to_path_buf(), std::thread::current().id()));
+    }
+}
+
+/// Tests: the threads that walked `root`, oldest first.
+#[cfg(test)]
+pub(crate) fn walks_of(root: &Path) -> Vec<std::thread::ThreadId> {
+    let Ok(walks): Result<std::sync::MutexGuard<'_, Vec<(PathBuf, std::thread::ThreadId)>>, _> =
+        WALKS.lock()
+    else {
+        return Vec::new();
+    };
+    walks
+        .iter()
+        .filter(|(path, _): &&(PathBuf, std::thread::ThreadId)| path == root)
+        .map(|(_, id): &(PathBuf, std::thread::ThreadId)| *id)
+        .collect()
 }

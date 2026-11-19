@@ -52,6 +52,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-PRF-004 | `UI work grows with line length` | FIXED | Does the slow path go through `Columns::shape` or `styled_line` (both capped)? |
 | BB-PRF-005 | `two roslyn processes per window` | FIXED | Does `bb_direct::server_behind` find exactly one server in the tool store? |
 | BB-PRF-006 | `Find in Files slow on a big folder` | FIXED | `find_bench <root> <query>`: walk_ms vs median; are both phases used? |
+| BB-PRF-007 | `first_frame_ms grows with the folder on a launch with no saved languages` | FIXED | Is `walk_early` called before the app runs, and does `early_walk` match the root and ticks? |
 | BB-TG-017 | `progress.last() (2, 3) != (3, 3)` | FIXED | Read the failed list in the message: which project did Roslyn fail to load? |
 | BB-UIX-015 | `an outside change is lost after a save` | FIXED | Does `save` see `DiskGuard.seen` (stamped at `open`)? |
 | BB-TG-018 | `a readback gets slower each round` | OBSERVED | Is `ui_work` still small? Then the runner's timers are throttled (likely App Nap), not the app |

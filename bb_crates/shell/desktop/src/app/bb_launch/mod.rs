@@ -21,6 +21,7 @@ pub(crate) fn launch() {
     bb_process::shell_env::adopt_login_path();
     let wanted: Launch = crate::args::parse_args();
     if let Launch::Workspace(start) = &wanted {
+        langs::walk_early(&start.root, start.ticked);
         if let Err(error) = Explorer::open(&start.root) {
             eprintln!("{error}");
             std::process::exit(1);
