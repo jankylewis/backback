@@ -112,17 +112,21 @@ fn play_or_stop(
                 },
             ));
     }
-    div().id("test-spec-play").child(button(
-        "▶",
-        theme,
-        cx,
-        move |view: &mut ExplorerView,
-              _: &gpui::ClickEvent,
-              window: &mut Window,
-              cx: &mut Context<ExplorerView>| {
-            crate::tests_panel::run_spec(view, path.clone(), fqn.clone(), window, cx);
-        },
-    ))
+    let play: String = format!("test-play-{}", fqn.as_str());
+    div()
+        .id("test-spec-play")
+        .debug_selector(move || play)
+        .child(button(
+            "▶",
+            theme,
+            cx,
+            move |view: &mut ExplorerView,
+                  _: &gpui::ClickEvent,
+                  window: &mut Window,
+                  cx: &mut Context<ExplorerView>| {
+                crate::tests_panel::run_spec(view, path.clone(), fqn.clone(), window, cx);
+            },
+        ))
 }
 
 /// Debug: the test runs under the debugger and stops on its breakpoints.

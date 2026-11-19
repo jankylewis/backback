@@ -13,7 +13,7 @@ Paths only. Never copy logs with secrets, personal paths or account values.
 | BB-BUG-007 | OBSERVED | `docs/plan/readback/FIXES/S02/BBEOD12/bb_READBACK.md` (End did not move) |
 
 Capture next time: the build time of the binary that was read back.
-| BB-LSP-003 | OPEN | `docs/plan/readback/FIXES/S01/BBEOD03/STATE_LOG.txt` |
+| BB-LSP-003 | OPEN | `docs/plan/readback/FIXES/S01/BBEOD03/STATE_LOG.txt`; BBEOD35 window test log (`lsp003` lines) |
 | BB-BUG-001 | FIXED | `docs/plan/readback/FIXES/S01/BBEOD10/WINDOW_ON_SCREEN.txt` |
 | BB-BUG-007 | FIXED | `docs/plan/readback/FIXES/S01/BBEOD10/STATE_LOG.txt` |
 | BB-PRC-001 | FIXED | `docs/plan/readback/FIXES/S01/BBEOD08/QUIT_CHECK.txt` |
@@ -62,7 +62,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-ENV-002 | FIXED | Headmate report 2026-11-11 mid-gate; 1-worker gates green at 578 and 581 passed |
 | BB-BUG-063 | FIXED | Headmate screen video 2026-11-11 (not kept: it shows credentials); window test red on master with a 37-char selection |
 | BB-BUG-064 | FIXED | Headmate screenshot 2026-11-11; `debugging_a_test_stops_on_a_breakpoint_inside_it` stopped in `Hits` with n = 41 |
-| BB-LSP-008 | OBSERVED | CI run 42966229802 (PR #107) failed at 10.98 s; alone on master 3 of 3 passed |
+| BB-LSP-008 | FIXED | CI run 42966229802 (PR #107) failed at 10.98 s; alone on master 3 of 3 passed; BBEOD35 timings in the failfix |
 | BB-BLD-004 | FIXED | Dock capture of the PR #110 bundle; contact sheet `docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png` |
 | BB-PRC-008 | FIXED | `a_dropped_debug_test_session_leaves_no_test_run` (red with an empty drop); matemaster report 2026-11-18 |
 | BB-BUG-070 | FIXED | Headmate screen recording 2026-11-18 (12 s, not in the repo); `a_double_click_zooms_once_and_only_a_moved_press_drags` |

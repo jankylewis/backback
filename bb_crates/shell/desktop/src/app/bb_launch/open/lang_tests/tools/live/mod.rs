@@ -4,4 +4,5 @@
 
 mod bb_kit;
 mod python;
+mod roslyn;
 mod rust;

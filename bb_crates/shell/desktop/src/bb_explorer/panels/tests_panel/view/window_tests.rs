@@ -13,7 +13,7 @@ fn write_fixture(root: &Path) -> PathBuf {
     project
 }
 
-fn fixture(root: &Path) -> PathBuf {
+pub(super) fn fixture(root: &Path) -> PathBuf {
     let project: PathBuf = write_fixture(root);
     let status: std::process::ExitStatus = std::process::Command::new("dotnet")
         .args(["build", "Tests.csproj", "-c", "Debug", "-nologo", "-v", "q"])
@@ -30,7 +30,7 @@ fn click(vcx: &mut VisualTestContext, selector: &'static str) {
     vcx.run_until_parked();
 }
 
-fn wait_for(
+pub(super) fn wait_for(
     view: &Entity<ExplorerView>,
     vcx: &mut VisualTestContext,
     ready: impl Fn(&ExplorerView) -> bool,
@@ -48,7 +48,7 @@ fn wait_for(
 }
 
 /// The project's row has stopped loading.
-fn settled(project: &Path) -> impl Fn(&ExplorerView) -> bool + '_ {
+pub(super) fn settled(project: &Path) -> impl Fn(&ExplorerView) -> bool + '_ {
     move |state: &ExplorerView| {
         state
             .tests

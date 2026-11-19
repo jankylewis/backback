@@ -161,12 +161,12 @@ impl Session {
             .collect()
     }
 
-    /// Stop the server child for an instrument test.
+    /// Kill the server child as a crash would, for an instrument test.
     ///
     /// # Errors
-    /// The child cannot be stopped within the request deadline.
-    pub async fn stop_child(&mut self) -> Result<(), IntelError> {
-        Ok(self.client.stop_child().await?)
+    /// The child cannot be killed within the request deadline.
+    pub async fn kill_child(&mut self) -> Result<(), IntelError> {
+        Ok(self.client.kill_child().await?)
     }
 
     /// The mirror text of an open document.

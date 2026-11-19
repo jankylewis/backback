@@ -82,7 +82,7 @@ pub(crate) type Pending = Arc<Mutex<HashMap<i64, oneshot::Sender<Reply>>>>;
 /// A running language server connection.
 pub struct LspClient {
     child: Child,
-    group: Option<OwnedGroup>,
+    _group: Option<OwnedGroup>,
     outgoing: mpsc::Sender<Vec<u8>>,
     pending: Pending,
     next_id: AtomicI64,
@@ -129,7 +129,7 @@ impl LspClient {
         tokio::spawn(reader.run(stdout));
         Ok(Self {
             child,
-            group,
+            _group: group,
             outgoing,
             pending,
             next_id: AtomicI64::new(1),
