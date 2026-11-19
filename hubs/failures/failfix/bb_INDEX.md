@@ -64,6 +64,7 @@
 | BB-GAT-013 | FIXED | Canonical root; `BACKBACK_REQUIRE_TOOLS` fails every missing-tool branch | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
 | BB-GAT-014 | FIXED | Test thread forwards the real server's events (`try_recv`) | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
 | BB-GAT-015 | FIXED | Session test configs start on their own `START` deadline; slow scripted start | `SHIP/GAT/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |
+| BB-GAT-016 | OBSERVED | CI installs rust-analyzer, pyright, pytest; Tests set `BACKBACK_REQUIRE_TOOLS=1` | `SHIP/GAT/S04/BB_GAT_016_CI_RAN_ONLY_THE_MISSING_TOOL_BRANCH.md` |
 | BB-UIX-017 | FIXED | One reachability rule (`lives`) for the arrow and the press; optional `here` | `APP/UIX/D2/S05/BB_UIX_017_BACK_NEEDED_AN_OPEN_TAB_AND_ITS_ARROW_TRUSTED_A_NON_EMPTY_STACK.md` |
 | BB-UIX-018 | FIXED | `open_failed` on both open error arms | `APP/UIX/D2/S05/BB_UIX_018_A_FAILED_OPEN_KEPT_THE_JUMP_THAT_WAITED_FOR_IT.md` |
 | BB-UIX-019 | FIXED | `for_session` drops and names gone files | `APP/UIX/D2/S05/BB_UIX_019_THE_BREAKPOINT_STORE_OUTLIVED_ITS_FILE.md` |

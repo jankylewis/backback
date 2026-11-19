@@ -83,6 +83,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-014 | FIXED | 3 of 3 live window runs panicked `Detected activity on thread`; 3 of 3 green after; BBEOD29 READY evidence |
 | BB-GAT-008 | FIXED | Again in BBEOD29: `similar_names` (`line` beside `live`) in a new window test; full gate red at clippy only (701 passed); clippy run alone before the rerun |
 | BB-GAT-015 | FIXED | PR #118 CI run 44444581357 panic at `settle.rs:93`; local red with 2.5 s scripted start on the request deadline, green after |
+| BB-GAT-016 | OBSERVED | master CI run 44555640505: pyright session 0.019 s, pyright check 0.024 s (hint branch); local 13/13 real with CI PATH; no-pytest venv red with the switch |
 | BB-UIX-017 | FIXED | BBEOD30 RED run: 5 history tests red at bb82de2 logic (Hop { to: None } with no tab; deleted file not skipped); green after; mutations M1-M4, M8, M9 killed; `state/fleet/backback/evidence/BBEOD30_READY.md` (agentfarm) |
 | BB-UIX-018 | FIXED | BBEOD30 RED run: places family test red with `file path: No such file or directory (os error 2)`; mutations M5-M7 killed |
 | BB-UIX-019 | FIXED | BBEOD31 RED run: unit test red with the send-all rule (B.cs sent); no-status mutation killed by the view test |
