@@ -220,7 +220,9 @@ pub(crate) fn resync_open(view: &mut ExplorerView, started: &[Server]) {
         .tabs
         .items_mut()
         .iter_mut()
-        .filter(|tab: &&mut Tab| started.contains(&server_for(&tab.path)))
+        .filter(|tab: &&mut Tab| {
+            server_for(&tab.path).is_some_and(|server: Server| started.contains(&server))
+        })
         .map(|tab: &mut Tab| {
             // The text sent below already holds these edits.
             let _edits: Vec<CharEdit> = tab.document.take_char_edits();
