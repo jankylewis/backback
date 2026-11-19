@@ -1,0 +1,7 @@
+# lessons/lessonlearn/SHIP/GAT/D2/S05
+
+Index of this shelf; the hub-level `bb_INDEX.md` has the full table.
+
+| Entry | What |
+|---|---|
+| `BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` | BB-GAT-017 — lesson |

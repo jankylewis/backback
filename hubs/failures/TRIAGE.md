@@ -94,3 +94,6 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-UIX-022 | `C#` mark on a `.py`/`.rs` tab; C# or Debug menu without C# | FIXED | Does the chrome ask `Langs` / `Lang::of_source`? |
 | BB-UIX-023 | RECENT above LANGUAGES; Down leaves the row off screen | FIXED | Is RECENT its own element after the ticks? Does `step` scroll? |
 | BB-UIX-024 | `cargo metadata exited with Some(101): error:` over many lines | FIXED | Does the panel show `summary()` and keep `to_string()` for the hover? |
+| BB-GAT-017 | `items after a test module`; `Iterator::last` on a `DoubleEndedIterator`; map check `missing: pub(crate) fn` | FIXED | Is a test-only helper a named `#[cfg(test)]` module mid-file? Run clippy `--all-targets` and `-p bb-kmap --test views` |
+| BB-PRF-008 | binary or `.app` size grew after adding a language | OBSERVED | `size -m` of the new `libtree-sitter-*.a`; a linker map (`-Wl,-map`) by crate |
+| BB-PRF-009 | `first_frame_ms` ~220 only on the first open of a big folder | OBSERVED | Saved choice equal to base? Time `bb_lang::detect` on the tree; count its folders |

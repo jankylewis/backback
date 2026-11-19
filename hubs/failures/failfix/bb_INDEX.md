@@ -6,7 +6,7 @@
 | BB-LSP-001 | FIXED | Count projects by distinct path; wait on readiness | `APP/LSP/S01/BB_LSP_001_READINESS_WAIT_ON_A_FIXED_WALL.md` |
 | BB-PRF-001 | FIXED | Files over 4 MiB parse ±1,000 lines around the view | `SYS/PRF/S01/BB_PRF_001_WHOLE_FILE_SYNTAX_TREE_HOLDS_THE_HEAP.md` |
 | BB-UIX-001 | FIXED | One shaped line per row: caret quad, clicks, popups and hover share `Columns` | `APP/UIX/D1/S01/BB_UIX_001_CURSOR_DRAWN_AS_A_TEXT_CHARACTER.md` |
-| BB-LSP-002 | FIXED | `first_diagnostics` skips late Progress, names any other event | `APP/LSP/BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` |
+| BB-LSP-002 | FIXED | `first_diagnostics` skips late Progress, names any other event | `APP/LSP/S01/BB_LSP_002_TEST_TAKES_THE_FIRST_EVENT_AFTER_OPEN.md` |
 | BB-CIP-001 | FIXED | CI installs pinned dotnet, Roslyn server and netcoredbg; `--no-fail-fast` | `SHIP/CIP/S01/BB_CIP_001_CI_RUNNER_HAS_NO_ROSLYN_SERVER.md` |
 | BB-CIP-002 | FIXED | `runs-on: macos-latest` | `SHIP/CIP/S01/BB_CIP_002_RUNNER_LABEL_NEVER_GETS_A_MACHINE.md` |
 | BB-UIX-002 | FIXED | Minimize/Zoom handled on the root view with its own Window | `APP/UIX/D1/S01/BB_UIX_002_MINIMIZE_ON_THE_ACTIVE_WINDOW.md` |
@@ -20,10 +20,10 @@
 | BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/S01/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | FIXED | merge only when every `--json bucket` is `pass`; rerun a no-runner check | `SHIP/CIP/S01/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-CIP-005 | FIXED | Clean up only when the state's value is MERGED; `-d`, no `--force` | `SHIP/CIP/S02/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
-| BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/S01/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
-| BB-GAT-002 | FIXED | Fixture folder per process (`OwnedTempDir`, `bb-dap-<pid>-<tag>`) | `SHIP/GAT/S01/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
-| BB-GAT-003 | FIXED | `wait:tests` in place of a fixed sleep | `SHIP/GAT/S01/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
-| BB-GAT-004 | FIXED | The menu test names Word Wrap and counts 8 | `SHIP/GAT/S01/BB_GAT_004_A_MENU_ITEM_ADDED_WITHOUT_THE_FULL_SUITE.md` |
+| BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/D1/S01/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
+| BB-GAT-002 | FIXED | Fixture folder per process (`OwnedTempDir`, `bb-dap-<pid>-<tag>`) | `SHIP/GAT/D1/S01/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
+| BB-GAT-003 | FIXED | `wait:tests` in place of a fixed sleep | `SHIP/GAT/D1/S01/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
+| BB-GAT-004 | FIXED | The menu test names Word Wrap and counts 8 | `SHIP/GAT/D1/S01/BB_GAT_004_A_MENU_ITEM_ADDED_WITHOUT_THE_FULL_SUITE.md` |
 | BB-DAP-001 | FIXED | Headline from `details.fullTypeName` and `details.message`; else the id without its category | `APP/DAP/BB_DAP_001_EXCEPTION_INFO_NAMES_THE_CATEGORY_AND_MODULE.md` |
 | BB-LSP-006 | FIXED | `Loaded::restore_ended`; `bb open --restore` waits only when no end line came during the load | `APP/LSP/S02/BB_LSP_006_A_RESTORE_THAT_ENDS_DURING_THE_LOAD_IS_WAITED_FOR_AGAIN.md` |
 | BB-ENV-001 | FIXED | Adopt the login shell's PATH when there is no TERM; find installed tools in their own folders | `SYS/ENV/BB_ENV_001_AN_APP_LAUNCHED_BY_LAUNCHD_HAS_NO_SHELL_PATH.md` |
@@ -50,23 +50,25 @@
 | BB-PRC-005 | FIXED | A folder per worker (`create_with` + counter) | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
 | BB-PRC-006 | FIXED | Owned scratch folder, newest 50 logs, owner must predate its folder | `SYS/PRC/S02/BB_PRC_006_DEV_TOOL_TEMP_FILES_GREW_AND_A_REUSED_PID_KEPT_A_FOLDER.md` |
 | BB-BLD-003 | FIXED | The status bar names the build; check `BBCommit` before saying fixed | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |
-| BB-GAT-005 | FIXED | Read the state before the step; wait only after it | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
-| BB-GAT-006 | FIXED | Stop the stale run; one gate on the finished tree | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
+| BB-BLD-004 | FIXED | `bb_dock::set_icon` sets a transparent `dock.png` at launch | `SHIP/BLD/BB_BLD_004_THE_DOCK_DRAWS_A_TILE_BEHIND_A_BUNDLE_ICON.md` |
+| BB-GAT-005 | FIXED | Read the state before the step; wait only after it | `SHIP/GAT/D1/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
+| BB-GAT-006 | FIXED | Stop the stale run; one gate on the finished tree | `SHIP/GAT/D1/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
+| BB-GAT-007 | FIXED | Build the tests after audit edits, before the gate | `SHIP/GAT/D1/S02/BB_GAT_007_AUDIT_FIXES_WENT_TO_THE_GATE_UNBUILT.md` |
 | BB-ENV-002 | FIXED | One build job and one test thread locally; CI keeps 3 jobs | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
 | BB-PRC-008 | FIXED | A guard stops the session and waits for its thread | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
-| BB-GAT-008 | FIXED | List the variants; clippy before the gate | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
-| BB-GAT-009 | FIXED | Ask the adapter; assert the stock refusal and the patched goto | `SHIP/GAT/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
-| BB-GAT-010 | FIXED | Watchdog on every blocking test wait | `SHIP/GAT/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
-| BB-GAT-011 | FIXED | One escape helper keeps an escaped line break | `SHIP/GAT/S03/BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` |
-| BB-GAT-012 | OBSERVED | Identical cargo messages listed once | `SHIP/GAT/S03/BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` |
+| BB-GAT-008 | FIXED | List the variants; clippy before the gate | `SHIP/GAT/D1/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
+| BB-GAT-009 | FIXED | Ask the adapter; assert the stock refusal and the patched goto | `SHIP/GAT/D1/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
+| BB-GAT-010 | FIXED | Watchdog on every blocking test wait | `SHIP/GAT/D1/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
+| BB-GAT-011 | FIXED | One escape helper keeps an escaped line break | `SHIP/GAT/D1/S03/BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` |
+| BB-GAT-012 | OBSERVED | Identical cargo messages listed once | `SHIP/GAT/D1/S03/BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` |
 | BB-LSP-009 | FIXED | `Session::raw` asks again after -32801 within the deadline | `APP/LSP/S03/BB_LSP_009_A_CONTENT_MODIFIED_REPLY_WAS_SHOWN_AS_A_FAILURE.md` |
 | BB-LSP-010 | FIXED | `apply` gets the answering server; the text is its name | `APP/LSP/S03/BB_LSP_010_A_FAILED_ANSWER_WAS_NAMED_AFTER_ROSLYN.md` |
 | BB-LSP-011 | FIXED | No preview for an empty plan; `Nothing to rename here` | `APP/LSP/S03/BB_LSP_011_AN_EMPTY_RENAME_PLAN_OPENED_A_PREVIEW.md` |
 | BB-ENV-003 | FIXED | Fallback PATH adds `~/.cargo/bin` | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
-| BB-GAT-013 | FIXED | Canonical root; `BACKBACK_REQUIRE_TOOLS` fails every missing-tool branch | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
-| BB-GAT-014 | FIXED | Test thread forwards the real server's events (`try_recv`) | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
-| BB-GAT-015 | FIXED | Session test configs start on their own `START` deadline; slow scripted start | `SHIP/GAT/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |
-| BB-GAT-016 | OBSERVED | CI installs rust-analyzer, pyright, pytest; Tests set `BACKBACK_REQUIRE_TOOLS=1` | `SHIP/GAT/S04/BB_GAT_016_CI_RAN_ONLY_THE_MISSING_TOOL_BRANCH.md` |
+| BB-GAT-013 | FIXED | Canonical root; `BACKBACK_REQUIRE_TOOLS` fails every missing-tool branch | `SHIP/GAT/D1/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
+| BB-GAT-014 | FIXED | Test thread forwards the real server's events (`try_recv`) | `SHIP/GAT/D1/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
+| BB-GAT-015 | FIXED | Session test configs start on their own `START` deadline; slow scripted start | `SHIP/GAT/D1/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |
+| BB-GAT-016 | OBSERVED | CI installs rust-analyzer, pyright, pytest; Tests set `BACKBACK_REQUIRE_TOOLS=1` | `SHIP/GAT/D1/S04/BB_GAT_016_CI_RAN_ONLY_THE_MISSING_TOOL_BRANCH.md` |
 | BB-UIX-017 | FIXED | One reachability rule (`lives`) for the arrow and the press; optional `here` | `APP/UIX/D2/S05/BB_UIX_017_BACK_NEEDED_AN_OPEN_TAB_AND_ITS_ARROW_TRUSTED_A_NON_EMPTY_STACK.md` |
 | BB-UIX-018 | FIXED | `open_failed` on both open error arms | `APP/UIX/D2/S05/BB_UIX_018_A_FAILED_OPEN_KEPT_THE_JUMP_THAT_WAITED_FOR_IT.md` |
 | BB-UIX-019 | FIXED | `for_session` drops and names gone files | `APP/UIX/D2/S05/BB_UIX_019_THE_BREAKPOINT_STORE_OUTLIVED_ITS_FILE.md` |
@@ -75,3 +77,4 @@
 | BB-UIX-022 | FIXED | Tab mark from `Lang::of_source`; menu bar per front window | `APP/UIX/D2/S06/BB_UIX_022_CSHARP_ONLY_CHROME_WAS_NOT_TIED_TO_THE_WINDOWS_LANGUAGES.md` |
 | BB-UIX-023 | FIXED | `recent_heading` with the rows; `ScrollHandle` + `scroll_to_item` | `APP/UIX/D2/S06/BB_UIX_023_THE_START_PAGE_LIST_HAD_NO_SCROLL_HANDLE_AND_ITS_HEADING_SAT_IN_THE_HEADER.md` |
 | BB-UIX-024 | FIXED | `CargoError::summary`; full text on hover | `APP/UIX/D2/S06/BB_UIX_024_A_TOOLS_WHOLE_STDERR_WAS_SHOWN_IN_A_NARROW_SECTION.md` |
+| BB-GAT-017 | FIXED | Test-only items top-level `#[cfg(test)]` at the file's end; `.next_back()` | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
