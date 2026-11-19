@@ -67,3 +67,13 @@ pub(crate) fn after_edit(
         .saturating_sub(isize::try_from(before).unwrap_or(isize::MAX));
     view.debug.breakpoints.shift(path, from.min(to), delta);
 }
+
+/// The breakpoints a new session sends: a deleted file's are dropped and the
+/// status says so (BB-BUG-082).
+pub(crate) fn for_start(view: &mut ExplorerView) -> Vec<(PathBuf, Vec<usize>)> {
+    let points: super::ForSession = view.debug.breakpoints.for_session();
+    if let Some(said) = points.note() {
+        view.report(&said);
+    }
+    points.sent
+}

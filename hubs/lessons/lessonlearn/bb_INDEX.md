@@ -62,3 +62,5 @@
 | BB-GAT-015 | FIXED | A deadline test gives the start its own deadline | `SHIP/GAT/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |
 | BB-UIX-017 | FIXED | A control's live state and its action share one predicate | `APP/UIX/D2/S05/BB_UIX_017_BACK_NEEDED_AN_OPEN_TAB_AND_ITS_ARROW_TRUSTED_A_NON_EMPTY_STACK.md` |
 | BB-UIX-018 | FIXED | Whatever waits for an async result is cleared on its failure arm too | `APP/UIX/D2/S05/BB_UIX_018_A_FAILED_OPEN_KEPT_THE_JUMP_THAT_WAITED_FOR_IT.md` |
+| BB-UIX-019 | FIXED | A store keyed by path is checked against the disk where it is used | `APP/UIX/D2/S05/BB_UIX_019_THE_BREAKPOINT_STORE_OUTLIVED_ITS_FILE.md` |
+| BB-UIX-020 | FIXED | One error arm for two causes is split by a known fact | `APP/UIX/D2/S05/BB_UIX_020_A_PATH_THAT_DID_NOT_RESOLVE_WAS_ALWAYS_CALLED_REMOTE.md` |

@@ -85,3 +85,5 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-015 | FIXED | PR #118 CI run 44444581357 panic at `settle.rs:93`; local red with 2.5 s scripted start on the request deadline, green after |
 | BB-UIX-017 | FIXED | BBEOD30 RED run: 5 history tests red at bb82de2 logic (Hop { to: None } with no tab; deleted file not skipped); green after; mutations M1-M4, M8, M9 killed; `state/fleet/backback/evidence/BBEOD30_READY.md` (agentfarm) |
 | BB-UIX-018 | FIXED | BBEOD30 RED run: places family test red with `file path: No such file or directory (os error 2)`; mutations M5-M7 killed |
+| BB-UIX-019 | FIXED | BBEOD31 RED run: unit test red with the send-all rule (B.cs sent); no-status mutation killed by the view test |
+| BB-UIX-020 | FIXED | BBEOD31 RED run: go-to test red at 6f40103 (`not on this machine`); always-gone mutation killed |

@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use gpui::{Context, Window};
 
 pub(crate) use bb_breakpoints::{
-    after_edit, on_toggle, toggle_line, Breakpoints, ExceptionBreaks, ExceptionKind,
+    after_edit, for_start, on_toggle, toggle_line, Breakpoints, ExceptionBreaks, ExceptionKind,
     ToggleBreakpoint,
 };
 
