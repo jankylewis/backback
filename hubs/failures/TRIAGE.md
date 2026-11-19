@@ -84,6 +84,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-GAT-013 | a variant test red on the first machine with the tool | FIXED | Run with `BACKBACK_REQUIRE_TOOLS=1`; compare canonical paths |
 | BB-GAT-014 | `Detected activity on thread ... not deterministic` | FIXED | Does a foreign thread wake a gpui task? Forward with `try_recv` |
 | BB-GAT-015 | `Timeout { method: "initialize"` in a test with a short deadline | FIXED | Does the config's `request_timeout` (the start's deadline) equal the request's? |
+| BB-GAT-016 | a variant test green in CI in milliseconds | OBSERVED | Does CI install the tool and set `BACKBACK_REQUIRE_TOOLS=1`? Read the `before:` lines |
 | BB-UIX-017 | ← is live, a click does nothing | FIXED | Do the arrow and the press use the same `lives` rule? Does `go` need `here`? |
 | BB-UIX-018 | `file path: No such file or directory` with no file name | FIXED | Does the error arm call `open_failed` (drops `intel.jump`, `tests.pending_jump`)? |
 | BB-UIX-019 | a deleted file's path in a start's breakpoints | FIXED | Is every session read through `for_session`? |

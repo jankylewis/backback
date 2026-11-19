@@ -72,6 +72,7 @@ One file per failure mechanism. This hub owns the id. Entries: 76 — FIXED 69, 
 | BB-GAT-013 | A variant test's real-tool branch had never run | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
 | BB-GAT-014 | A real server thread woke gpui's test scheduler | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
 | BB-GAT-015 | A short request deadline also bounded the server start | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |
+| BB-GAT-016 | CI ran only the missing-tool branch | OBSERVED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_016_CI_RAN_ONLY_THE_MISSING_TOOL_BRANCH.md` |
 | BB-UIX-017 | Back needed an open tab and its arrow trusted a non-empty stack | FIXED | yes | yes | none | `APP/UIX/D2/S05/BB_UIX_017_BACK_NEEDED_AN_OPEN_TAB_AND_ITS_ARROW_TRUSTED_A_NON_EMPTY_STACK.md` |
 | BB-UIX-018 | A failed open kept the jump that waited for it and named no file | FIXED | yes | yes | none | `APP/UIX/D2/S05/BB_UIX_018_A_FAILED_OPEN_KEPT_THE_JUMP_THAT_WAITED_FOR_IT.md` |
 | BB-UIX-019 | The breakpoint store outlived its file | FIXED | yes | yes | none | `APP/UIX/D2/S05/BB_UIX_019_THE_BREAKPOINT_STORE_OUTLIVED_ITS_FILE.md` |

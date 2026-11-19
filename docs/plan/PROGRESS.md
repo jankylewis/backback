@@ -1,5 +1,6 @@
 # Backback progress
 
+- BBEOD34 (`ci/real-tools`): CI runs real rust-analyzer, pyright, pytest (BB-GAT-016).
 - BBEOD29 (`fix/real-tools`, backback_1, 2026-11-19): real rust-analyzer,
   pyright, pytest proven; BB-BUG-076..079; Cargo.lock ruling (BB-LSP-012).
 - BBEOD28 (#117): pyright routed by Lang, `bb-python`. No debugger.
