@@ -7,3 +7,4 @@ Shelves of this folder; the hub-level `bb_INDEX.md` has the full table.
 | `S01/` | BB-LSP-001 to BB-LSP-004 |
 | `S02/` | BB-LSP-005 to BB-LSP-008 |
 | `S03/` | BB-LSP-009 to BB-LSP-012 |
+| `S04/` | BB-LSP-013 onward |

@@ -44,7 +44,7 @@ fn harness_window(cx: &mut TestAppContext) -> (tempfile::TempDir, Live) {
 /// Move the server's events into the window, keeping the version and
 /// length of every list sent for `spec`.
 fn pump_logged(live: &mut Live, spec: &Path, sent: &mut Vec<(i32, usize)>) {
-    if let Some((from, to)) = live.bridge.as_mut() {
+    for (from, to) in live.bridges.borrow_mut().iter_mut() {
         while let Ok(event) = from.try_recv() {
             if let Event::Diagnostics {
                 path,

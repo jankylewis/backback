@@ -1,7 +1,5 @@
 # Triage — read first
-
-One row per failure reason and tool gap; grep the signature in your log.
-Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
+One row per failure reason and tool gap; grep the signature in your log. Bugs a user met: `../bugs/TRIAGE.md`.
 
 | Id | Signature | Status | First check |
 |---|---|---|---|
@@ -81,6 +79,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-LSP-010 | `C# server: ` for a Rust or Python request | FIXED | Is the answering server passed to `answers::apply`? |
 | BB-LSP-011 | `Renamed: 0 edits in 0 files` | FIXED | Was the plan empty (server still indexing)? |
 | BB-LSP-012 | a new `Cargo.lock` after opening a Cargo folder | ACCEPTED | Accepted by ruling 2026-11-19 (standard for rust-analyzer clients); any other new file is a bug |
+| BB-LSP-013 | `document is already open` after Restart Server | FIXED | Does `resync_open` get only the restarted server? Count `didOpen`s per start on the BBEOD39 seam |
 | BB-ENV-003 | `rust-analyzer not installed` only from the Dock | FIXED | Did the login shell give a PATH? Is the tool's folder in `fallback_dirs`? |
 | BB-GAT-013 | a variant test red on the first machine with the tool | FIXED | Run with `BACKBACK_REQUIRE_TOOLS=1`; compare canonical paths |
 | BB-GAT-014 | `Detected activity on thread ... not deterministic` | FIXED | Does a foreign thread wake a gpui task? Forward with `try_recv` |
@@ -95,5 +94,6 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-UIX-023 | RECENT above LANGUAGES; Down leaves the row off screen | FIXED | Is RECENT its own element after the ticks? Does `step` scroll? |
 | BB-UIX-024 | `cargo metadata exited with Some(101): error:` over many lines | FIXED | Does the panel show `summary()` and keep `to_string()` for the hover? |
 | BB-GAT-017 | `items after a test module`; `Iterator::last` on a `DoubleEndedIterator`; map check `missing: pub(crate) fn` | FIXED | Is a test-only helper a named `#[cfg(test)]` module mid-file? Run clippy `--all-targets` and `-p bb-kmap --test views` |
+| BB-GAT-018 | `the window waited for the walk` on CI; nextest `LEAK` after a real-server test | FIXED | `editor_open_ms` vs the hold cap; does the test `wait_ended`? `ps -o ppid` of BuildHost/servers (1 = orphan) |
 | BB-PRF-008 | binary or `.app` size grew after adding a language | ACCEPTED | `size -m` of the new `libtree-sitter-*.a`; a linker map (`-Wl,-map`) by crate |
 | BB-PRF-009 | `first_frame_ms` ~220 only on the first open of a big folder | FIXED | Does `build_window` take `Resolved::Later` (status "Detecting languages…")? Saved choice equal to base? Time `bb_lang::detect` on the tree; count its folders |

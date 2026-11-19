@@ -14,7 +14,7 @@ use crate::ExplorerView;
 
 mod bb_matrix;
 mod page;
-mod tools;
+pub(crate) mod tools;
 pub(crate) mod watchdog;
 
 fn opened(cx: &mut TestAppContext) -> Vec<WindowHandle<ExplorerView>> {

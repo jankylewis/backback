@@ -33,6 +33,8 @@ gpui_platform.workspace = true
 proptest.workspace = true
 roxmltree.workspace = true
 tempfile = "3"
+# BBEOD39: read a tab's tree in the mid-parse recolour test.
+tree-sitter.workspace = true
 # BBEOD26: the seven language fixture folders.
 bb-lang = { workspace = true, features = ["fixtures"] }
 # BBEOD27: the Rust fixture workspace.

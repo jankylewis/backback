@@ -79,6 +79,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-LSP-010 | FIXED | `a_failed_answer_names_the_server_that_failed_not_roslyn` red (`C# server: request timed out`) then green; BBEOD29 READY evidence |
 | BB-LSP-011 | FIXED | real-pyright window test status `Renamed: 0 edits in 0 files`; window test red/green; BBEOD29 READY evidence |
 | BB-LSP-012 | ACCEPTED | real rust-analyzer window test: `Cargo.lock` added, no `target/`; `analysis-stats` wrote none; BBEOD29 READY evidence |
+| BB-LSP-013 | FIXED | `a_roslyn_restart_reopens_only_the_csharp_tabs` red (2 `already open`) then green on real servers; mutations; BBEOD39 READY evidence |
 | BB-ENV-003 | FIXED | Dock readback (`env -i`, launchd PATH, failing shell): `rust_server_status=` missing before, Ready after; BBEOD29 READY evidence |
 | BB-GAT-013 | FIXED | `bb_tools.rs` red with `/private/var/...` paths on first real pyright; green with canonical root; BBEOD29 READY evidence |
 | BB-GAT-014 | FIXED | 3 of 3 live window runs panicked `Detected activity on thread`; 3 of 3 green after; BBEOD29 READY evidence |

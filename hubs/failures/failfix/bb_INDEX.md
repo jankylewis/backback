@@ -64,6 +64,7 @@
 | BB-LSP-009 | FIXED | `Session::raw` asks again after -32801 within the deadline | `APP/LSP/S03/BB_LSP_009_A_CONTENT_MODIFIED_REPLY_WAS_SHOWN_AS_A_FAILURE.md` |
 | BB-LSP-010 | FIXED | `apply` gets the answering server; the text is its name | `APP/LSP/S03/BB_LSP_010_A_FAILED_ANSWER_WAS_NAMED_AFTER_ROSLYN.md` |
 | BB-LSP-011 | FIXED | No preview for an empty plan; `Nothing to rename here` | `APP/LSP/S03/BB_LSP_011_AN_EMPTY_RENAME_PLAN_OPENED_A_PREVIEW.md` |
+| BB-LSP-013 | FIXED | `resync_open` reopens only the started servers' tabs; flush first | `APP/LSP/S04/BB_LSP_013_A_RESTART_SENT_EVERY_TAB_TO_EVERY_SERVER.md` |
 | BB-ENV-003 | FIXED | Fallback PATH adds `~/.cargo/bin` | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
 | BB-GAT-013 | FIXED | Canonical root; `BACKBACK_REQUIRE_TOOLS` fails every missing-tool branch | `SHIP/GAT/D1/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
 | BB-GAT-014 | FIXED | Test thread forwards the real server's events (`try_recv`) | `SHIP/GAT/D1/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
@@ -78,4 +79,5 @@
 | BB-UIX-023 | FIXED | `recent_heading` with the rows; `ScrollHandle` + `scroll_to_item` | `APP/UIX/D2/S06/BB_UIX_023_THE_START_PAGE_LIST_HAD_NO_SCROLL_HANDLE_AND_ITS_HEADING_SAT_IN_THE_HEADER.md` |
 | BB-UIX-024 | FIXED | `CargoError::summary`; full text on hover | `APP/UIX/D2/S06/BB_UIX_024_A_TOOLS_WHOLE_STDERR_WAS_SHOWN_IN_A_NARROW_SECTION.md` |
 | BB-GAT-017 | FIXED | Test-only items top-level `#[cfg(test)]` at the file's end; `.next_back()` | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
+| BB-GAT-018 | FIXED | Hold until released; relay drops the link; tests `wait_ended` | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
 | BB-PRF-009 | FIXED | The window opens at once; languages, menus, servers and tab colours follow the walk | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |

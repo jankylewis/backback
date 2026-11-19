@@ -1,5 +1,13 @@
 //! BB-PRF-009: a command-line launch shows its window before its language
 //! walk ends; the languages, menus, servers and tab colours follow the walk.
+//! BBEOD39: tabs opened during the walk reach the REAL servers it starts
+//! (`bb_late`), and a tab mid-parse at the answer ends coloured (`recolour`);
+//! a Roslyn restart reopens only the C# tabs (`restart`).
+
+mod bb_late;
+mod recolour;
+mod relay;
+mod restart;
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -37,11 +45,16 @@ struct Scratch {
 
 impl Scratch {
     fn of(name: &str) -> Self {
+        let fixture: &Fixture = FIXTURES.iter().find(|f: &&Fixture| f.name == name).unwrap();
+        Self::written(&mut |base: &Path| fixture.write(base).unwrap())
+    }
+
+    /// A folder `write` makes under a scratch base, with an empty store.
+    fn written(write: &mut dyn FnMut(&Path) -> PathBuf) -> Self {
         let store: tempfile::TempDir = tempfile::tempdir().unwrap();
         test_store(Some(store.path().to_path_buf()));
         let base: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let fixture: &Fixture = FIXTURES.iter().find(|f: &&Fixture| f.name == name).unwrap();
-        let root: PathBuf = fixture.write(base.path()).unwrap();
+        let root: PathBuf = write(base.path());
         Self {
             _base: base,
             _store: store,
@@ -201,4 +214,15 @@ fn the_start_page_path_with_ticks_knows_its_languages_at_once(cx: &mut TestAppCo
         vec![std::thread::current().id()],
         "the start page path walks as before"
     );
+}
+
+/// Close `window`, ending its servers.
+fn close_window(window: WindowHandle<ExplorerView>, cx: &mut TestAppContext) {
+    let _closed: gpui::Result<()> = window.update(
+        cx,
+        |_: &mut ExplorerView, w: &mut gpui::Window, _: &mut gpui::Context<ExplorerView>| {
+            w.remove_window();
+        },
+    );
+    cx.run_until_parked();
 }

@@ -160,8 +160,9 @@ pub(crate) fn when_found(pending: Pending, window: &mut Window, cx: &mut Context
     .detach();
 }
 
-/// Tests: a slow walk. Every walk waits until [`release_walks`], 3 s at
-/// most, so a window that waits for its walk is late, not hung.
+/// Tests: a slow walk. Every walk waits until [`release_walks`], 60 s at
+/// most, so a window that waits for its walk fails, not hangs. Not less:
+/// a 3 s cap ran out while CI opened a big file under load (BB-GAT-018).
 #[cfg(test)]
 static HELD: Mutex<bool> = Mutex::new(false);
 
@@ -185,8 +186,14 @@ fn wait_while_held() {
     while HELD
         .lock()
         .is_ok_and(|held: std::sync::MutexGuard<'_, bool>| *held)
-        && since.elapsed() < std::time::Duration::from_secs(3)
     {
+        if since.elapsed() > HOLD_CAP {
+            eprintln!("walk_hold_expired_ms={}", since.elapsed().as_millis());
+            return;
+        }
         std::thread::sleep(std::time::Duration::from_millis(1));
     }
 }
+
+#[cfg(test)]
+const HOLD_CAP: std::time::Duration = std::time::Duration::from_secs(60);

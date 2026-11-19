@@ -3,7 +3,9 @@
 //! the window shows the result or [`STEP`] passes, then fails naming what
 //! it waited for and what the window showed.
 
+use std::cell::RefCell;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use gpui::{App, Modifiers, VisualTestContext, WindowHandle};
@@ -13,23 +15,24 @@ use crate::intel::bb_worker::protocol::Event;
 use crate::ExplorerView;
 
 /// How long one step on a real server may take.
-pub(super) const STEP: Duration = Duration::from_secs(120);
+pub(crate) const STEP: Duration = Duration::from_secs(120);
+
+type Events = tokio::sync::mpsc::UnboundedReceiver<Event>;
+/// A real server's events and the window's channel: gpui panics when a foreign
+/// thread wakes its tasks, so the test thread moves each across (`try_recv`).
+pub(crate) type Bridge = (Events, tokio::sync::mpsc::UnboundedSender<Event>);
 
 /// A window on a fixture and the fixture's folder.
-type Events = tokio::sync::mpsc::UnboundedReceiver<Event>;
-
-pub(super) struct Live {
-    pub(super) root: PathBuf,
-    pub(super) window: WindowHandle<ExplorerView>,
-    pub(super) vcx: VisualTestContext,
-    /// The real server thread's events and the window's in-thread channel:
-    /// gpui's test scheduler panics when a foreign thread wakes its tasks,
-    /// so the test thread moves each event across with `try_recv`.
-    pub(super) bridge: Option<(Events, tokio::sync::mpsc::UnboundedSender<Event>)>,
+pub(crate) struct Live {
+    pub(crate) root: PathBuf,
+    pub(crate) window: WindowHandle<ExplorerView>,
+    pub(crate) vcx: VisualTestContext,
+    /// One bridge per real server the window talks to.
+    pub(crate) bridges: Rc<RefCell<Vec<Bridge>>>,
 }
 
 impl Live {
-    pub(super) fn new(
+    pub(crate) fn new(
         root: PathBuf,
         window: WindowHandle<ExplorerView>,
         vcx: VisualTestContext,
@@ -38,13 +41,13 @@ impl Live {
             root,
             window,
             vcx,
-            bridge: None,
+            bridges: Rc::default(),
         }
     }
 
     /// Move the events the server thread sent so far into the window.
     fn pump(&mut self) {
-        if let Some((from, to)) = self.bridge.as_mut() {
+        for (from, to) in self.bridges.borrow_mut().iter_mut() {
             while let Ok(event) = from.try_recv() {
                 to.send(event).unwrap();
             }
@@ -68,14 +71,14 @@ fn seen(v: &ExplorerView) -> String {
 }
 
 impl Live {
-    pub(super) fn read<T>(&mut self, read: impl FnOnce(&ExplorerView) -> T) -> T {
+    pub(crate) fn read<T>(&mut self, read: impl FnOnce(&ExplorerView) -> T) -> T {
         self.window
             .read_with(&self.vcx, |v: &ExplorerView, _: &App| read(v))
             .unwrap()
     }
 
     /// Run `act`, then wait for `done`; act again every 2 s until [`STEP`].
-    pub(super) fn until(
+    pub(crate) fn until(
         &mut self,
         what: &str,
         act: &mut dyn FnMut(&mut Self),
@@ -105,7 +108,7 @@ impl Live {
     /// Start the REAL server thread of `server` on the root and attach it
     /// as the app does (`connect_rust`/`connect_python` start nothing in a
     /// test build).
-    pub(super) fn attach(&mut self, server: bb_intel::Server) {
+    pub(crate) fn attach(&mut self, server: bb_intel::Server) {
         let started: (crate::intel::bb_worker::Link, Events) = match server {
             bb_intel::Server::RustAnalyzer => crate::intel::bb_worker::start_rust(&self.root),
             bb_intel::Server::Pyright => crate::intel::bb_worker::start_python(&self.root),
@@ -116,7 +119,7 @@ impl Live {
         };
         let (to, window_end): (tokio::sync::mpsc::UnboundedSender<Event>, Events) =
             tokio::sync::mpsc::unbounded_channel();
-        self.bridge = Some((started.1, to));
+        self.bridges.borrow_mut().push((started.1, to));
         let link: crate::intel::bb_worker::Link = started.0;
         self.window
             .update(
@@ -130,7 +133,7 @@ impl Live {
             .unwrap();
     }
 
-    pub(super) fn open(&mut self, file: &str) {
+    pub(crate) fn open(&mut self, file: &str) {
         let path: PathBuf = self.root.join(file);
         self.window
             .update(
@@ -145,7 +148,7 @@ impl Live {
         self.vcx.run_until_parked();
     }
 
-    pub(super) fn cursor_after(&mut self, needle: &str) {
+    pub(crate) fn cursor_after(&mut self, needle: &str) {
         self.window
             .update(
                 &mut self.vcx,
@@ -161,7 +164,7 @@ impl Live {
     }
 
     /// The window point over column `column` of 0-based line `line`.
-    pub(super) fn point(&mut self, line: u32, column: u32) -> gpui::Point<gpui::Pixels> {
+    pub(crate) fn point(&mut self, line: u32, column: u32) -> gpui::Point<gpui::Pixels> {
         let row: gpui::Bounds<gpui::Pixels> = self
             .vcx
             .debug_bounds(format!("editor-line-{line}").leak())
@@ -171,28 +174,28 @@ impl Live {
         gpui::point(gpui::px(x), row.center().y)
     }
 
-    pub(super) fn center_of(&mut self, selector: &'static str) -> gpui::Point<gpui::Pixels> {
+    pub(crate) fn center_of(&mut self, selector: &'static str) -> gpui::Point<gpui::Pixels> {
         self.vcx.debug_bounds(selector).unwrap().center()
     }
 
-    pub(super) fn click_at(&mut self, at: gpui::Point<gpui::Pixels>, mods: Modifiers) {
+    pub(crate) fn click_at(&mut self, at: gpui::Point<gpui::Pixels>, mods: Modifiers) {
         self.vcx.simulate_click(at, mods);
     }
 
     /// Rest the mouse at `at` past the hover delay.
-    pub(super) fn rest_mouse(&mut self, at: gpui::Point<gpui::Pixels>) {
+    pub(crate) fn rest_mouse(&mut self, at: gpui::Point<gpui::Pixels>) {
         self.vcx.simulate_mouse_move(at, None, Modifiers::default());
         self.vcx
             .executor()
             .advance_clock(Duration::from_millis(400));
     }
 
-    pub(super) fn keys(&mut self, keys: &str) {
+    pub(crate) fn keys(&mut self, keys: &str) {
         self.vcx.simulate_keystrokes(keys);
     }
 
     /// The Problems row of the error on 0-based `line` of `file`.
-    pub(super) fn error_row(&mut self, file: &Path, line: u32) -> usize {
+    pub(crate) fn error_row(&mut self, file: &Path, line: u32) -> usize {
         self.read(|v: &ExplorerView| {
             v.intel
                 .problems_in(&v.root)
@@ -206,7 +209,7 @@ impl Live {
         })
     }
 
-    pub(super) fn tab_text(&mut self, path: &Path) -> Option<String> {
+    pub(crate) fn tab_text(&mut self, path: &Path) -> Option<String> {
         self.read(|v: &ExplorerView| {
             v.tabs
                 .items()
@@ -218,14 +221,14 @@ impl Live {
 }
 
 /// The active tab's file and cursor line.
-pub(super) fn active(v: &ExplorerView) -> Option<(PathBuf, usize)> {
+pub(crate) fn active(v: &ExplorerView) -> Option<(PathBuf, usize)> {
     v.tabs
         .active_tab()
         .map(|t: &crate::editor::Tab| (t.path.clone(), t.document.cursor_line()))
 }
 
 /// Every file and folder under `root`, sorted.
-pub(super) fn listing(root: &Path) -> Vec<PathBuf> {
+pub(crate) fn listing(root: &Path) -> Vec<PathBuf> {
     let mut found: Vec<PathBuf> = Vec::new();
     let mut todo: Vec<PathBuf> = vec![root.to_path_buf()];
     while let Some(dir) = todo.pop() {
@@ -242,6 +245,6 @@ pub(super) fn listing(root: &Path) -> Vec<PathBuf> {
 }
 
 /// True when `BACKBACK_REQUIRE_TOOLS` is set: a missing server fails.
-pub(super) fn tools_required() -> bool {
+pub(crate) fn tools_required() -> bool {
     std::env::var_os("BACKBACK_REQUIRE_TOOLS").is_some()
 }

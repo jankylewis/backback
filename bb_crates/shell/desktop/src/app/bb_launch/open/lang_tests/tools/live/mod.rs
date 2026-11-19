@@ -2,7 +2,7 @@
 //! (F12, Cmd+click, hover, F2, Problems); variant aware like the session
 //! tests, and a failure on a missing server when `BACKBACK_REQUIRE_TOOLS`.
 
-mod bb_kit;
+pub(crate) mod bb_kit;
 mod python;
 mod roslyn;
 mod rust;

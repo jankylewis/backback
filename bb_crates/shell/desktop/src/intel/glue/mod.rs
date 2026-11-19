@@ -30,19 +30,19 @@ pub(crate) use input::bb_keys::RestartServer;
 pub(crate) use route::{connect_python, connect_rust, restart, resync_open};
 
 /// Start Roslyn for the workspace's solution while C# is active (BBEOD26;
-/// window tests record the start, spawn nothing) and pump its events.
+/// a window test spawns only through its test starter) and pump its events.
 pub(crate) fn connect(
     view: &mut ExplorerView,
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
 ) {
-    let started: Option<PathBuf> = bb_worker::find_solution(&view.root)
-        .filter(|_: &PathBuf| view.langs.start(bb_lang::Tool::Roslyn) && !cfg!(test));
-    let Some(solution): Option<PathBuf> = started else {
+    let started: Option<(Link, UnboundedReceiver<Event>)> = bb_worker::find_solution(&view.root)
+        .filter(|_: &PathBuf| view.langs.start(bb_lang::Tool::Roslyn))
+        .and_then(|solution: PathBuf| bb_worker::spawn(Server::Roslyn, &solution));
+    let Some((link, events)): Option<(Link, UnboundedReceiver<Event>)> = started else {
         view.intel.status = LoadStatus::NoSolution;
         return;
     };
-    let (link, events): (Link, UnboundedReceiver<Event>) = bb_worker::start(&solution);
     attach(view, link, events, window, cx);
 }
 

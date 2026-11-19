@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use bb_dotnet::{Solution, SolutionPath};
-use bb_intel::Config;
+use bb_intel::{Config, Server};
 use bb_lsp::roslyn::{LoadState, Restore};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
@@ -70,6 +70,41 @@ where
         return (Link::new(request_tx), failed_rx);
     }
     (Link::new(request_tx), event_rx)
+}
+
+/// What starts a server thread: `server` and the solution or root it
+/// serves.
+#[cfg(test)]
+pub(crate) type Starter = Box<dyn FnMut(Server, &Path) -> (Link, UnboundedReceiver<Event>)>;
+
+#[cfg(test)]
+thread_local! {
+    static STARTER: std::cell::RefCell<Option<Starter>> = const { std::cell::RefCell::new(None) };
+}
+
+/// Window tests: start servers with `starter` from now on (`None`: start
+/// nothing, the default).
+#[cfg(test)]
+pub(crate) fn test_starter(starter: Option<Starter>) {
+    STARTER.with(|slot: &std::cell::RefCell<Option<Starter>>| *slot.borrow_mut() = starter);
+}
+
+/// Start `server`'s thread on `at` (a solution for Roslyn, else a root).
+/// A window test starts only through its [`test_starter`]: `None` without.
+#[cfg_attr(not(test), allow(clippy::unnecessary_wraps))]
+pub(crate) fn spawn(server: Server, at: &Path) -> Option<(Link, UnboundedReceiver<Event>)> {
+    #[cfg(test)]
+    return STARTER.with(|slot: &std::cell::RefCell<Option<Starter>>| {
+        slot.borrow_mut()
+            .as_mut()
+            .map(|start: &mut Starter| start(server, at))
+    });
+    #[cfg(not(test))]
+    Some(match server {
+        Server::Roslyn => start(at),
+        Server::RustAnalyzer => start_rust(at),
+        Server::Pyright => start_python(at),
+    })
 }
 
 fn serve(solution: &Path, requests: UnboundedReceiver<Request>, events: &UnboundedSender<Event>) {
