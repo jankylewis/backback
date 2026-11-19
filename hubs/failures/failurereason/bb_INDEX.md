@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 59 — FIXED 54, OBSERVED 4, OPEN 1.
+One file per failure mechanism. This hub owns the id. Entries: 67 — FIXED 60, OBSERVED 5, OPEN 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -64,3 +64,10 @@ One file per failure mechanism. This hub owns the id. Entries: 59 — FIXED 54, 
 | BB-GAT-010 | A window test waited with no deadline that could fire | FIXED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
 | BB-GAT-011 | The lexer dropped an escaped line break | FIXED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` |
 | BB-GAT-012 | One local build job hid a duplicate CI error | OBSERVED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` |
+| BB-LSP-009 | A content modified reply was shown as a failure | FIXED | yes | yes | none | `APP/LSP/S03/BB_LSP_009_A_CONTENT_MODIFIED_REPLY_WAS_SHOWN_AS_A_FAILURE.md` |
+| BB-LSP-010 | A failed answer was named after Roslyn | FIXED | yes | yes | none | `APP/LSP/S03/BB_LSP_010_A_FAILED_ANSWER_WAS_NAMED_AFTER_ROSLYN.md` |
+| BB-LSP-011 | An empty rename plan opened a preview | FIXED | yes | yes | none | `APP/LSP/S03/BB_LSP_011_AN_EMPTY_RENAME_PLAN_OPENED_A_PREVIEW.md` |
+| BB-LSP-012 | A Cargo.lock appeared in the workspace on open | OPEN | no | no | none | `APP/LSP/S03/BB_LSP_012_A_CARGO_LOCK_APPEARED_IN_THE_WORKSPACE_ON_OPEN.md` |
+| BB-ENV-003 | The fallback PATH missed rustup's folder | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
+| BB-GAT-013 | A variant test's real-tool branch had never run | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
+| BB-GAT-014 | A real server thread woke gpui's test scheduler | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |

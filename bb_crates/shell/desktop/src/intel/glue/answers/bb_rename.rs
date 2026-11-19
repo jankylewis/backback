@@ -43,6 +43,27 @@ struct Staged {
     edits: Vec<CharEdit>,
 }
 
+/// A rename plan opens its preview; an empty one only says so (BBEOD29:
+/// pyright answers none while it indexes).
+pub(super) fn rename_answer(view: &mut ExplorerView, changes: Vec<FileChange>) {
+    if changes.is_empty() {
+        view.intel.rename_asked = None;
+        view.report(&"Nothing to rename here");
+        return;
+    }
+    let revisions: std::collections::BTreeMap<PathBuf, u64> = view
+        .tabs
+        .items()
+        .iter()
+        .map(|tab: &Tab| (tab.path.clone(), tab.document.revision()))
+        .collect();
+    view.intel.rename_preview = Some(RenamePreview {
+        name: view.intel.rename_asked.take().unwrap_or_default(),
+        changes,
+        revisions,
+    });
+}
+
 /// Apply the previewed plan. Returns (files, edits) changed.
 ///
 /// # Errors

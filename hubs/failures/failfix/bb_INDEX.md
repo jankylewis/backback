@@ -57,3 +57,9 @@
 | BB-GAT-010 | FIXED | Watchdog on every blocking test wait | `SHIP/GAT/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
 | BB-GAT-011 | FIXED | One escape helper keeps an escaped line break | `SHIP/GAT/S03/BB_GAT_011_THE_LEXER_DROPPED_AN_ESCAPED_LINE_BREAK.md` |
 | BB-GAT-012 | OBSERVED | Identical cargo messages listed once | `SHIP/GAT/S03/BB_GAT_012_ONE_LOCAL_BUILD_JOB_HID_A_DUPLICATE_CI_ERROR.md` |
+| BB-LSP-009 | FIXED | `Session::raw` asks again after -32801 within the deadline | `APP/LSP/S03/BB_LSP_009_A_CONTENT_MODIFIED_REPLY_WAS_SHOWN_AS_A_FAILURE.md` |
+| BB-LSP-010 | FIXED | `apply` gets the answering server; the text is its name | `APP/LSP/S03/BB_LSP_010_A_FAILED_ANSWER_WAS_NAMED_AFTER_ROSLYN.md` |
+| BB-LSP-011 | FIXED | No preview for an empty plan; `Nothing to rename here` | `APP/LSP/S03/BB_LSP_011_AN_EMPTY_RENAME_PLAN_OPENED_A_PREVIEW.md` |
+| BB-ENV-003 | FIXED | Fallback PATH adds `~/.cargo/bin` | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
+| BB-GAT-013 | FIXED | Canonical root; `BACKBACK_REQUIRE_TOOLS` fails every missing-tool branch | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
+| BB-GAT-014 | FIXED | Test thread forwards the real server's events (`try_recv`) | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |

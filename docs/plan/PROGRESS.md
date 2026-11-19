@@ -1,7 +1,8 @@
 # Backback progress
 
-- BBEOD28 (`feat/python`, backback_1, 2026-11-19, in progress): pyright worker
-  routed by Lang, `bb-python` (interpreter, check, pytest). No debugger.
+- BBEOD29 (`fix/real-tools`, backback_1, 2026-11-19): real rust-analyzer,
+  pyright, pytest proven; BB-BUG-076..079; Cargo.lock ruling (BB-LSP-012).
+- BBEOD28 (#117): pyright routed by Lang, `bb-python`. No debugger.
 - BBEOD27 (#116, `feat/rust`): rust-analyzer, `bb-cargo`, BB-GAT-010/011/012.
 - BBEOD26 (#115, `feat/lang-picker`): C#/Rust/Python ticks; active = ticked
   and present gates every tool, colour and Debug. ADR-11. BBEOD25: #114.

@@ -103,3 +103,35 @@ fn a_missing_pyright_shows_its_hint_and_csharp_and_python_colours_keep_working(
         "{to_csharp:?}"
     );
 }
+
+#[gpui::test]
+fn a_failed_answer_names_the_server_that_failed_not_roslyn(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (RustRig, &mut VisualTestContext) =
+        rig_with(cx, LangSet::of(&Lang::ALL), true);
+    let said: fn(&mut VisualTestContext, &RustRig) -> Option<String> =
+        |vcx: &mut VisualTestContext, rig: &RustRig| -> Option<String> {
+            rig.view
+                .read_with(vcx, |v: &ExplorerView, _: &gpui::App| v.status.clone())
+        };
+    rig.open(vcx, CART_FILE);
+    vcx.simulate_keystrokes("f12");
+    let (ticket, _ask): (Ticket, Ask) = rig.last_python_ask();
+    let failed: Answer = Answer::Failed(String::from("request timed out"));
+    reply_on(&rig.python_events, vcx, (ticket, failed));
+    assert_eq!(
+        said(vcx, &rig).as_deref(),
+        Some("Python server: request timed out")
+    );
+    rig.open(vcx, LIB);
+    vcx.simulate_keystrokes("f12");
+    let (ticket, _ask): (Ticket, Ask) = rig.last_rust_ask();
+    rig.reply(
+        vcx,
+        ticket,
+        Answer::Failed(String::from("request timed out")),
+    );
+    assert_eq!(
+        said(vcx, &rig).as_deref(),
+        Some("Rust server: request timed out")
+    );
+}

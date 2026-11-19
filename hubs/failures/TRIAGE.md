@@ -76,3 +76,10 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-GAT-010 | a test run idle at 0 % CPU for minutes; or `waited <time> for <what>` | FIXED | Which wait? Does it arm the watchdog? Run the test alone under an alarm |
 | BB-GAT-011 | `bb map` item on the wrong line; `... is_on_the_map ... missing: pub fn` | FIXED | Does the file continue a string with `\\` + newline? Is `skip_escape` used? |
 | BB-GAT-012 | a parsed tool message listed twice on CI, once locally (`left: 2` `right: 1`) | OBSERVED | Does the tool build the same file in two units? Count with `-j2` |
+| BB-LSP-009 | `-32801` / `content modified` | FIXED | Does every request go through `Session::raw`? |
+| BB-LSP-010 | `C# server: ` for a Rust or Python request | FIXED | Is the answering server passed to `answers::apply`? |
+| BB-LSP-011 | `Renamed: 0 edits in 0 files` | FIXED | Was the plan empty (server still indexing)? |
+| BB-LSP-012 | a new `Cargo.lock` after opening a Cargo folder | OPEN | Which rust-analyzer step resolved? (ruling pending) |
+| BB-ENV-003 | `rust-analyzer not installed` only from the Dock | FIXED | Did the login shell give a PATH? Is the tool's folder in `fallback_dirs`? |
+| BB-GAT-013 | a variant test red on the first machine with the tool | FIXED | Run with `BACKBACK_REQUIRE_TOOLS=1`; compare canonical paths |
+| BB-GAT-014 | `Detected activity on thread ... not deterministic` | FIXED | Does a foreign thread wake a gpui task? Forward with `try_recv` |

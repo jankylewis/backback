@@ -5,26 +5,24 @@ mod calls;
 
 pub(crate) use bb_rename::apply_rename;
 
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use bb_intel::{CompletionEntry, DocUri, HoverInfo};
+use bb_intel::{CompletionEntry, DocUri, HoverInfo, Server};
 use bb_text::{CharIdx, LspPoint};
 use gpui::{Context, ScrollStrategy, Window};
 
 use crate::editor::Tab;
 use crate::intel::bb_worker::protocol::{Answer, AskKind, Place, Stages};
-use crate::intel::model::popups::{
-    ActionsPopup, CompletionPopup, HoverPopup, Pick, PlacesPanel, RenamePreview,
-};
+use crate::intel::model::popups::{ActionsPopup, CompletionPopup, HoverPopup, Pick, PlacesPanel};
 use crate::intel::model::{Jump, Pending, Undrawn};
 use crate::ExplorerView;
 
+/// Apply `answer` from `server`, which names a failure (BBEOD29).
 pub(super) fn apply(
     view: &mut ExplorerView,
     pending: &Pending,
-    answer: Answer,
+    (server, answer): (Server, Answer),
     stages: Stages,
     window: &mut Window,
     cx: &mut Context<ExplorerView>,
@@ -45,19 +43,7 @@ pub(super) fn apply(
                 pick: Pick::default(),
             });
         }
-        Answer::Rename(changes) => {
-            let revisions: BTreeMap<PathBuf, u64> = view
-                .tabs
-                .items()
-                .iter()
-                .map(|tab: &Tab| (tab.path.clone(), tab.document.revision()))
-                .collect();
-            view.intel.rename_preview = Some(RenamePreview {
-                name: view.intel.rename_asked.take().unwrap_or_default(),
-                changes,
-                revisions,
-            });
-        }
+        Answer::Rename(changes) => bb_rename::rename_answer(view, changes),
         Answer::Actions(items) if items.is_empty() => view.report(&"No code actions here"),
         Answer::Actions(items) => {
             view.intel.actions = Some(ActionsPopup {
@@ -65,7 +51,7 @@ pub(super) fn apply(
                 pick: Pick::default(),
             });
         }
-        Answer::Failed(reason) => view.report(&format!("C# server: {reason}")),
+        Answer::Failed(reason) => view.report(&format!("{}: {reason}", server.name())),
     }
 }
 

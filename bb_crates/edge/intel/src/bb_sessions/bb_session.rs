@@ -4,13 +4,14 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use bb_dotnet::{ProjectPath, Solution, SolutionPath};
 use bb_lsp::roslyn::{self, Restore};
-use bb_lsp::{Incoming, LspClient};
+use bb_lsp::{Incoming, LspClient, LspError};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 use tokio::sync::Notify;
@@ -53,6 +54,11 @@ pub struct Session {
 
 /// How long the server's last log lines may take after `shutdown`.
 const DRAIN_TIMEOUT: Duration = Duration::from_secs(5);
+/// LSP `ContentModified`: the server dropped the request because its state
+/// changed meanwhile (rust-analyzer while it reloads its workspace).
+const CONTENT_MODIFIED: i64 = -32801;
+/// The pause before asking again after [`CONTENT_MODIFIED`].
+const SETTLE: Duration = Duration::from_millis(200);
 
 impl Session {
     /// Start the server, load `config.solution` and wait until every project
@@ -175,17 +181,36 @@ impl Session {
         self.docs.get(path).map(|d: &OpenDoc| d.version)
     }
 
-    /// A raw request with its own deadline, for what the typed API lacks.
+    /// A raw request with its own deadline; every feature goes through it.
+    /// A [`CONTENT_MODIFIED`] reply is asked again while the deadline lasts
+    /// (BBEOD29), so a request made while the server settles still answers.
     ///
     /// # Errors
-    /// See [`LspClient::request_within`].
+    /// See [`LspClient::request_within`]; past the deadline, the server's
+    /// last [`CONTENT_MODIFIED`] error.
     pub async fn raw<P: Serialize, R: DeserializeOwned>(
         &self,
         method: &str,
         params: P,
         deadline: Duration,
     ) -> Result<R, IntelError> {
-        Ok(self.client.request_within(method, params, deadline).await?)
+        let params: Value = serde_json::to_value(params).map_err(LspError::Json)?;
+        let asked: Instant = Instant::now();
+        loop {
+            let left: Duration = deadline.saturating_sub(asked.elapsed());
+            match self
+                .client
+                .request_within(method, params.clone(), left)
+                .await
+            {
+                Err(LspError::Server { code, .. })
+                    if code == CONTENT_MODIFIED && asked.elapsed() + SETTLE < deadline =>
+                {
+                    tokio::time::sleep(SETTLE).await;
+                }
+                answered => return Ok(answered?),
+            }
+        }
     }
 
     /// Stop the server, wait (bounded) until its last log lines are
@@ -213,3 +238,7 @@ impl Session {
             .ok_or_else(|| IntelError::NotOpen(path.as_path().to_path_buf()))
     }
 }
+
+#[cfg(test)]
+#[path = "servers/server_tests/settle.rs"]
+mod settle_tests;

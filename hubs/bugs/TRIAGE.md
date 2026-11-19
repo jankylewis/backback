@@ -64,3 +64,7 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-073 | VARIABLES has no x that the editor shows | FIXED | Same as BB-BUG-072: was `x` typed after the build? |
 | BB-BUG-074 | Run / Debug menu outside a test method | FIXED | Does `holding` use the method's span (`TestMethod::end_line`)? |
 | BB-BUG-075 | a `.rs`/`.py` tab reaches Roslyn as C# | FIXED | Does the request go through `route::send` (`server_for`)? |
+| BB-BUG-076 | `server error -32801: content modified` after hover/F12 | FIXED | Does the request go through `Session::raw`? |
+| BB-BUG-077 | `C# server: ` after a request in a `.rs`/`.py` tab | FIXED | Does `answers::apply` get the server it came from? |
+| BB-BUG-078 | `rust-analyzer not installed` only from the Dock | FIXED | Did the login shell give a PATH? Is `~/.cargo/bin` in `fallback_dirs`? |
+| BB-BUG-079 | `Renamed: 0 edits in 0 files` | FIXED | Did the server answer an empty plan (still indexing)? |

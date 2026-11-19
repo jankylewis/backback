@@ -75,3 +75,7 @@
 | BB-BUG-073 | Stale file: VARIABLES and the status say so | FIXED | `a_file_changed_since_the_debug_build_says_so` | `C2/D5/S19/BB_BUG_073_VARIABLES_DID_NOT_SAY_THE_FILE_CHANGED_SINCE_THE_BUILD.md` |
 | BB-BUG-074 | Menu only within the test method's span | FIXED | `a_right_click_outside_a_test_method_opens_no_test_menu` | `C2/D5/S19/BB_BUG_074_THE_EDITORS_TEST_MENU_OPENED_BELOW_THE_TEST.md` |
 | BB-BUG-075 | One router by file language | FIXED | `every_request_reaches_only_the_server_of_its_file_s_language` | `C2/D5/S19/BB_BUG_075_A_RUST_OR_PYTHON_TAB_WAS_SENT_TO_ROSLYN_AS_CSHARP.md` |
+| BB-BUG-076 | Ask again after -32801 within the deadline (`Session::raw`) | FIXED | `a_content_modified_reply_is_asked_again_and_the_hover_arrives` + real rust-analyzer 8 of 8 | `C2/D5/S19/BB_BUG_076_HOVER_OR_F12_IN_A_RUST_FILE_FAILED_WITH_CONTENT_MODIFIED.md` |
+| BB-BUG-077 | The failure names the server that answered | FIXED | `a_failed_answer_names_the_server_that_failed_not_roslyn` | `C2/D6/S20/BB_BUG_077_A_FAILED_RUST_OR_PYTHON_REQUEST_SAID_CSHARP_SERVER.md` |
+| BB-BUG-078 | Fallback PATH adds `~/.cargo/bin` | FIXED | `the_fallback_path_finds_rust_analyzer_where_rustup_installs_it` + Dock readback | `C2/D6/S20/BB_BUG_078_A_DOCK_START_WITHOUT_A_SHELL_PATH_MISSED_RUST_ANALYZER.md` |
+| BB-BUG-079 | No preview for an empty plan; `Nothing to rename here` | FIXED | `a_rename_with_no_edit_says_so_and_opens_no_preview` | `C2/D6/S20/BB_BUG_079_AN_EMPTY_RENAME_SAID_RENAMED_0_EDITS.md` |

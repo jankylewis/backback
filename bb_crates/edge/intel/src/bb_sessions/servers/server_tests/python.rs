@@ -1,14 +1,16 @@
 //! BBEOD28: a pyright session on the Python fixture, variant aware like
 //! the rust-analyzer one. With pyright on this machine: definition and
-//! references across modules, hover, document symbols, rename, pushed
-//! diagnostics on the syntax error, the language id, and no bytecode in
-//! the project. Without one: the start fails with exactly the install hint.
+//! references across modules, hover, completion (BBEOD29), document
+//! symbols, rename, pushed diagnostics on the syntax error, the language
+//! id, and no bytecode in the project. Without one: the start fails with
+//! exactly the install hint, unless `BACKBACK_REQUIRE_TOOLS` is set.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use crate::{
-    DocPath, DocUri, FileChange, HoverInfo, IntelError, Location, PythonConfig, Server, Session,
+    CompletionEntry, DocPath, DocUri, FileChange, HoverInfo, IntelError, Location, PythonConfig,
+    Server, Session,
 };
 use bb_python::fixtures::{self, Shape};
 use bb_python::pyright::{self, Inputs, MISSING_HINT};
@@ -78,6 +80,19 @@ async fn pushed_errors(session: &Session, broken: &DocPath) -> Vec<u32> {
     }
 }
 
+async fn prove_completion(session: &Session, cart: &DocPath) {
+    let after_add: LspPoint = LspPoint {
+        line: fixtures::CALL_LINE - 1,
+        character: fixtures::CALL_COLUMN + 3,
+    };
+    let offered: Vec<CompletionEntry> =
+        session.completion(cart, after_add, DEADLINE).await.unwrap();
+    assert!(
+        offered.iter().any(|c: &CompletionEntry| c.label == "add"),
+        "{offered:?}"
+    );
+}
+
 async fn prove_live_server(root: &Path) {
     let mut session: Session = Session::start_python(&config(root), std::io::sink())
         .await
@@ -116,6 +131,7 @@ async fn prove_live_server(root: &Path) {
     assert!(symbols.to_string().contains("total"), "{symbols}");
     let renamed: Vec<FileChange> = session.rename(&cart, call, "plus", DEADLINE).await.unwrap();
     assert!(renamed.len() >= 2, "{renamed:?}");
+    prove_completion(&session, &cart).await;
     let broken: DocPath = DocPath::new(root.join(fixtures::BROKEN_FILE)).unwrap();
     session.open(&broken).await.unwrap();
     assert!(pushed_errors(&session, &broken)
@@ -131,6 +147,10 @@ async fn pyright_serves_the_fixture_or_the_start_names_the_install_hint() {
     if pyright::locate(&Inputs::from_env()).is_ok() {
         prove_live_server(&root).await;
     } else {
+        assert!(
+            std::env::var_os("BACKBACK_REQUIRE_TOOLS").is_none(),
+            "BACKBACK_REQUIRE_TOOLS is set but no pyright runs"
+        );
         let started: Result<Session, IntelError> =
             Session::start_python(&config(&root), std::io::sink()).await;
         let said: String = started

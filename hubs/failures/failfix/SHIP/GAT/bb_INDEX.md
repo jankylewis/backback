@@ -6,4 +6,5 @@ Shelves of this family: `S01` = ids 001-004, `S02` = 005-008, `S03` = 009-012; t
 |---|---|
 | `S01/` | BB-GAT-001 to 004 |
 | `S02/` | BB-GAT-005 to 008 |
-| `S03/` | BB-GAT-009 onward |
+| `S03/` | BB-GAT-009 to 012 |
+| `S04/` | BB-GAT-013 onward |

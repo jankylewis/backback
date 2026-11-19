@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 70 — FIXED 67, OBSERVED 3.
+Bugs a user met in the app. Entries: 79 — FIXED 76, OBSERVED 3.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -79,3 +79,7 @@ Bugs a user met in the app. Entries: 70 — FIXED 67, OBSERVED 3.
 | BB-BUG-073 | VARIABLES did not say the file changed since the build | FIXED | same as BB-BUG-072: `x` was typed after the build | yes | `C2/D5/S19/BB_BUG_073_VARIABLES_DID_NOT_SAY_THE_FILE_CHANGED_SINCE_THE_BUILD.md` |
 | BB-BUG-074 | The editor's test menu opened below the test | FIXED | nearest test above, with no end | yes | `C2/D5/S19/BB_BUG_074_THE_EDITORS_TEST_MENU_OPENED_BELOW_THE_TEST.md` |
 | BB-BUG-075 | A Rust or Python tab was sent to Roslyn as C# | FIXED | one link for every file | yes | `C2/D5/S19/BB_BUG_075_A_RUST_OR_PYTHON_TAB_WAS_SENT_TO_ROSLYN_AS_CSHARP.md` |
+| BB-BUG-076 | Hover or F12 in a Rust file failed with content modified | FIXED | content modified shown as a failure | yes | `C2/D5/S19/BB_BUG_076_HOVER_OR_F12_IN_A_RUST_FILE_FAILED_WITH_CONTENT_MODIFIED.md` |
+| BB-BUG-077 | A failed Rust or Python request said C# server | FIXED | Roslyn's name in the failure text | yes | `C2/D6/S20/BB_BUG_077_A_FAILED_RUST_OR_PYTHON_REQUEST_SAID_CSHARP_SERVER.md` |
+| BB-BUG-078 | A Dock start without a shell PATH missed rust-analyzer | FIXED | fallback PATH without ~/.cargo/bin | yes | `C2/D6/S20/BB_BUG_078_A_DOCK_START_WITHOUT_A_SHELL_PATH_MISSED_RUST_ANALYZER.md` |
+| BB-BUG-079 | An empty rename said Renamed: 0 edits | FIXED | empty plan opened a preview | yes | `C2/D6/S20/BB_BUG_079_AN_EMPTY_RENAME_SAID_RENAMED_0_EDITS.md` |

@@ -74,3 +74,11 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-010 | FIXED | `a_blocked_wait_ends_the_run_at_its_deadline_naming_what_it_waited_for` red on the stub, green with the watchdog |
 | BB-GAT-011 | FIXED | `every_literal_and_comment_keeps_its_line_breaks` red before, green after; gate log line `failed=1` |
 | BB-GAT-012 | OBSERVED | `the_same_error_from_the_lib_and_its_test_build_lists_once` red before, green after; PR #116 CI log (2 red); `-j1` vs `-j2` count on the fixture |
+| BB-LSP-009 | FIXED | real rust-analyzer live test 1 of 6 red before, 8 of 8 after; `settle.rs` red/green; BBEOD29 READY evidence |
+| BB-LSP-010 | FIXED | `a_failed_answer_names_the_server_that_failed_not_roslyn` red (`C# server: request timed out`) then green; BBEOD29 READY evidence |
+| BB-LSP-011 | FIXED | real-pyright window test status `Renamed: 0 edits in 0 files`; window test red/green; BBEOD29 READY evidence |
+| BB-LSP-012 | OPEN | real rust-analyzer window test: `Cargo.lock` added, no `target/`; `analysis-stats` wrote none; BBEOD29 READY evidence |
+| BB-ENV-003 | FIXED | Dock readback (`env -i`, launchd PATH, failing shell): `rust_server_status=` missing before, Ready after; BBEOD29 READY evidence |
+| BB-GAT-013 | FIXED | `bb_tools.rs` red with `/private/var/...` paths on first real pyright; green with canonical root; BBEOD29 READY evidence |
+| BB-GAT-014 | FIXED | 3 of 3 live window runs panicked `Detected activity on thread`; 3 of 3 green after; BBEOD29 READY evidence |
+| BB-GAT-008 | FIXED | Again in BBEOD29: `similar_names` (`line` beside `live`) in a new window test; full gate red at clippy only (701 passed); clippy run alone before the rerun |

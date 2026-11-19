@@ -166,3 +166,22 @@ fn the_box_opens_with_the_old_name_selected_so_typing_replaces_it(cx: &mut TestA
         "typed over the selected old name"
     );
 }
+
+/// BBEOD29: pyright answers a rename with no edit while it still indexes;
+/// the window opened an empty preview and Enter said `Renamed: 0 edits`.
+#[gpui::test]
+fn a_rename_with_no_edit_says_so_and_opens_no_preview(cx: &mut TestAppContext) {
+    let (mut rig, vcx): (Rig, &mut VisualTestContext) = rig(cx, false);
+    let ticket: Ticket = ask_rename(&mut rig, vcx);
+    rig.reply(
+        vcx,
+        ticket,
+        crate::intel::bb_worker::protocol::Answer::Rename(Vec::new()),
+    );
+    let (preview, said): (bool, Option<String>) =
+        rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+            (v.intel.rename_preview.is_some(), v.status.clone())
+        });
+    assert!(!preview, "an empty plan opens no preview");
+    assert_eq!(said.as_deref(), Some("Nothing to rename here"));
+}

@@ -110,6 +110,10 @@ fn this_machine_either_runs_rust_analyzer_or_names_the_install_hint() {
     match found {
         Ok(server) => assert!(server.version.starts_with("rust-analyzer"), "{server:?}"),
         Err(error) => {
+            assert!(
+                std::env::var_os("BACKBACK_REQUIRE_TOOLS").is_none(),
+                "BACKBACK_REQUIRE_TOOLS is set: {error}"
+            );
             let said: String = error.to_string();
             assert!(
                 said == MISSING_HINT || said.contains("does not run"),
