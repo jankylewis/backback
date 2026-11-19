@@ -57,7 +57,7 @@ One file per failure mechanism. This hub owns the id. Entries: 76 — FIXED 69, 
 | BB-GAT-005 | A test waited for a search it had not started | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
 | BB-GAT-006 | A worktree was edited while its gate ran | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_006_A_WORKTREE_WAS_EDITED_WHILE_ITS_GATE_RAN.md` |
 | BB-ENV-002 | A gate on every core overheated the Mac | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
-| BB-LSP-008 | A killed server was reported stopped after one second under load | OBSERVED | no | no | none | `APP/LSP/S02/BB_LSP_008_A_KILLED_SERVER_WAS_REPORTED_STOPPED_AFTER_ONE_SECOND_UNDER_LOAD.md` |
+| BB-LSP-008 | A killed server was reported stopped after one second under load | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_008_A_KILLED_SERVER_WAS_REPORTED_STOPPED_AFTER_ONE_SECOND_UNDER_LOAD.md` |
 | BB-PRC-008 | A debug-test run outlived its test binary (session thread killed at exit) | FIXED | yes | yes | none | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
 | BB-GAT-008 | A test wildcard arm reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | A patched local adapter hid a CI-only branch | FIXED | yes | yes | none | `SHIP/GAT/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |

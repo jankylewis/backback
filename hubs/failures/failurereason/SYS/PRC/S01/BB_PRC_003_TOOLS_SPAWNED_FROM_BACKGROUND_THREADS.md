@@ -27,3 +27,12 @@ niced launch; its fix (spawn on the UI thread) holds by its own test.
 ## How to confirm
 
 `ps -o stat,nice` of the app: `N` or nice > 0 means the launch shell niced it.
+
+## Checked on master 6dc536f (BBEOD35, 2026-11-20)
+
+Debug build of this branch on a `_Harness` copy, own state folder:
+- launched from `bash` with `&` (no renice): app `S` nice 0, Roslyn `S`
+  nice 0, priority 33 (normal, not a background clamp);
+- launched from an interactive `zsh` with `&`: app `SN` nice 5, Roslyn
+  `SN` nice 5, the signature.
+The `N` follows the launch shell on master too; nothing to fix in the app.

@@ -119,7 +119,7 @@ async fn handle(
     match request {
         #[cfg(test)]
         Request::KillForTest => {
-            if let Err(error) = session.stop_child().await {
+            if let Err(error) = session.kill_child().await {
                 send(events, Event::SyncFailed(error.to_string()));
             }
         }

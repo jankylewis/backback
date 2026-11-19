@@ -108,8 +108,10 @@ impl Live {
     pub(super) fn attach(&mut self, server: bb_intel::Server) {
         let started: (crate::intel::bb_worker::Link, Events) = match server {
             bb_intel::Server::RustAnalyzer => crate::intel::bb_worker::start_rust(&self.root),
-            bb_intel::Server::Roslyn | bb_intel::Server::Pyright => {
-                crate::intel::bb_worker::start_python(&self.root)
+            bb_intel::Server::Pyright => crate::intel::bb_worker::start_python(&self.root),
+            bb_intel::Server::Roslyn => {
+                let solution: Option<PathBuf> = crate::intel::bb_worker::find_solution(&self.root);
+                crate::intel::bb_worker::start(&solution.unwrap())
             }
         };
         let (to, window_end): (tokio::sync::mpsc::UnboundedSender<Event>, Events) =

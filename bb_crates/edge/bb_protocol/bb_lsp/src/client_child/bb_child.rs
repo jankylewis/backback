@@ -19,12 +19,14 @@ pub(super) fn own_group(child: &tokio::process::Child) -> Option<OwnedGroup> {
 mod tests;
 
 impl LspClient {
-    /// Stop the child process within the configured deadline.
+    /// Kill the server as a crash would: KILL to it alone, then reap it
+    /// within the configured deadline. Its group still ends when the client
+    /// drops (BB-LSP-008: TERM then grace took the test's time budget).
     ///
     /// # Errors
     /// The process cannot be killed or does not exit in time.
-    pub async fn stop_child(&mut self) -> Result<(), LspError> {
-        drop(self.group.take());
+    pub async fn kill_child(&mut self) -> Result<(), LspError> {
+        self.child.start_kill().map_err(LspError::Spawn)?;
         tokio::time::timeout(self.timeout, self.child.wait())
             .await
             .map_err(|_: tokio::time::error::Elapsed| LspError::Timeout {

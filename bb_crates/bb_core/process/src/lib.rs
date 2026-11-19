@@ -7,5 +7,5 @@ mod owner;
 pub mod shell_env;
 mod temp;
 
-pub use bb_group::{end_all, exit_on_signal, shutdown, GroupId, OwnedGroup};
+pub use bb_group::{end_all, exit_on_signal, shutdown, GroupId, OwnedGroup, GRACE};
 pub use temp::{remove_owned, sweep, sweep_all, OwnedTempDir, FAMILIES};

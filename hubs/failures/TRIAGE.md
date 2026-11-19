@@ -15,14 +15,14 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-UIX-001 | `push_run(&mut runs, '│'` | FIXED | Every x on a line comes from `Columns` (one shaped line) |
 | BB-LSP-002 | `trace.rs:38:5` | FIXED | Wait for Diagnostics with `first_diagnostics`, never `next()` |
 | BB-CIP-002 | `gate:queued` | FIXED | `runs-on` is a label a hosted image serves (`macos-latest`) |
-| BB-LSP-003 | `problems=18 after backspace` | OPEN | Poll `state` each second after an edit; check the shown version |
+| BB-LSP-003 | `problems=18 after backspace` | OPEN | Not reproduced on master (4/4, BBEOD35); did the keys reach the text? Run `roslyn_problems_return_...` |
 | BB-UIX-002 | `min window_on_screen=23` | FIXED | Window commands use the dispatching Window, not `active_window()` |
 | BB-PRC-001 | `process left after quit` | FIXED | Record the app's process tree before quit; check every pid after |
 | BB-LSP-004 | `open_with_restore_flag_lets_roslyn_restore` | FIXED | Does `bb open --restore` wait for the restore to finish? |
 | BB-LSP-005 | `no server line of the pull after the load` | FIXED | Is the asserted log line written for our request, or by a side effect? |
 | BB-UIX-003 | `gutter stayed 50 px at zoom` | FIXED | Every width that holds text scales with `Typography` |
 | BB-PRC-002 | `Building Harness.slnx... (never ends)` | FIXED | `ps -o stat` of the child: `SN` = spawned from a background thread |
-| BB-PRC-003 | `SN roslyn-language-server` | OBSERVED | Is the app itself `N`? A zsh `&` launch is niced (BB-TG-006) |
+| BB-PRC-003 | `SN roslyn-language-server` | OBSERVED | Is the app itself `N`? A zsh `&` launch is niced (BB-TG-006); rechecked on master 2026-11-20 |
 | BB-GAT-001 | `incremental_parse_equals_a_fresh_parse ... FAILED` | FIXED | Is the text broken? Then only the extent must match |
 | BB-GAT-002 | `fixture build failed` ... `being used by another process` | FIXED | Do parallel test processes share a fixture folder? Use `OwnedTempDir` |
 | BB-GAT-003 | `discovered=0 loading=1` in a native window test | FIXED | Does the test sleep a fixed time? Use `wait:tests` |
@@ -69,7 +69,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-CIP-005 | `OPEN` then the worktree is gone | FIXED | Is cleanup gated on the state value MERGED? |
 | BB-ENV-002 | the machine runs hot during a gate | FIXED | Is `CARGO_BUILD_JOBS` 1 and `--test-threads=1`? Nothing else heavy running? |
 | BB-TG-023 | a gate takes many minutes for a small change | FIXED | `gate.sh --plan`: is the scope right? `--full` only when unsure |
-| BB-LSP-008 | `stopped within one second: Elapsed(())` in the dead-server test | OBSERVED | Is the runner loaded? Rerun it alone; time kill to `Stopped` |
+| BB-LSP-008 | `stopped within one second: Elapsed(())` in the dead-server test | FIXED | Does the clock time the kill too? `kill_child` is a crash-like KILL |
 | BB-PRC-008 | `dotnet test` on a temp `Tests.csproj` with ppid 1 | FIXED | Did the session test drop its `Debugged` guard? Is the thread drained? |
 | BB-GAT-008 | `wildcard match will also match any future added variants` in a test | FIXED | Did clippy run on the touched crates before the gate? |
 | BB-GAT-009 | `got Refused("Set Next Statement refused: adapter does not support` in CI only | FIXED | Is CI on the stock adapter? Run the test with `BACKBACK_NETCOREDBG` on the stock copy |

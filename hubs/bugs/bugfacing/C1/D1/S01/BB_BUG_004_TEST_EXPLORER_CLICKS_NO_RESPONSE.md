@@ -37,3 +37,11 @@ The headmate's own feedback of 2026-11-03 is the hand check: they pressed
 stop it (BB-BUG-026). A hand click runs tests. The first report came from
 synthetic input that never reached the window (BB-TG-007). Not a backback
 bug: no fix.
+
+## Checked on master 6dc536f (BBEOD35, 2026-11-20)
+
+The ▶ of one test had no `debug_selector`, so no window test could click it.
+It now has `test-play-<name>`, and
+`play_on_one_test_runs_only_that_test_and_shows_its_verdict` (real dotnet)
+clicks ▶ on `Fails`: it runs, shows Failed, and `Passes` does not run.
+Mutation: with the click handler emptied the test fails. Not reproduced.

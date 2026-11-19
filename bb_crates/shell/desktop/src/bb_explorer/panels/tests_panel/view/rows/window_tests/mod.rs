@@ -215,3 +215,4 @@ fn a_right_click_on_a_test_offers_run_and_debug(cx: &mut TestAppContext) {
 
 mod bb_debug;
 mod fold;
+mod play;
