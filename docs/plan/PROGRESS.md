@@ -1,8 +1,8 @@
 # Backback progress
 
+- BBEOD37 (`chore/gat-shelves-and-size`): GAT in drawers, BB-GAT-017; size by crate (BB-PRF-008), dna-ax first open (BB-PRF-009).
 - BBEOD34 (`ci/real-tools`): CI runs real rust-analyzer, pyright, pytest (BB-GAT-016).
-- BBEOD29 (`fix/real-tools`, backback_1, 2026-11-19): real rust-analyzer,
-  pyright, pytest proven; BB-BUG-076..079; Cargo.lock ruling (BB-LSP-012).
+- BBEOD29 (`fix/real-tools`, 2026-11-19): real tools proven; BB-BUG-076..079, BB-LSP-012.
 - BBEOD28 (#117): pyright routed by Lang, `bb-python`. No debugger.
 - BBEOD27 (#116, `feat/rust`): rust-analyzer, `bb-cargo`, BB-GAT-010/011/012.
 - BBEOD26 (#115, `feat/lang-picker`): C#/Rust/Python ticks; active = ticked
