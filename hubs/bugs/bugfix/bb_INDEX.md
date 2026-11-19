@@ -79,3 +79,5 @@
 | BB-BUG-077 | The failure names the server that answered | FIXED | `a_failed_answer_names_the_server_that_failed_not_roslyn` | `C2/D6/S20/BB_BUG_077_A_FAILED_RUST_OR_PYTHON_REQUEST_SAID_CSHARP_SERVER.md` |
 | BB-BUG-078 | Fallback PATH adds `~/.cargo/bin` | FIXED | `the_fallback_path_finds_rust_analyzer_where_rustup_installs_it` + Dock readback | `C2/D6/S20/BB_BUG_078_A_DOCK_START_WITHOUT_A_SHELL_PATH_MISSED_RUST_ANALYZER.md` |
 | BB-BUG-079 | No preview for an empty plan; `Nothing to rename here` | FIXED | `a_rename_with_no_edit_says_so_and_opens_no_preview` | `C2/D6/S20/BB_BUG_079_AN_EMPTY_RENAME_SAID_RENAMED_0_EDITS.md` |
+| BB-BUG-080 | Reachable = tab open or file on disk; press and arrow share it; no-tab press goes; gone files named | FIXED | model + mouse/keys window tests, red first | `C2/D6/S20/BB_BUG_080_BACK_STAYED_LIVE_AND_DID_NOTHING_AFTER_ITS_FILES_TAB_CLOSED.md` |
+| BB-BUG-081 | `open_failed`: drop waiting jumps, `Cannot open <name>: <error>` | FIXED | `a_places_row_reopens_its_closed_file_and_a_deleted_one_says_why_and_leaves_no_jump` red first | `C2/D6/S21/BB_BUG_081_A_ROW_INTO_A_DELETED_FILE_NAMED_NO_FILE_AND_LEFT_A_JUMP_WAITING.md` |

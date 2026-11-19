@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 79 — FIXED 76, OBSERVED 3.
+Bugs a user met in the app. Entries: 81 — FIXED 78, OBSERVED 3.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -83,3 +83,5 @@ Bugs a user met in the app. Entries: 79 — FIXED 76, OBSERVED 3.
 | BB-BUG-077 | A failed Rust or Python request said C# server | FIXED | Roslyn's name in the failure text | yes | `C2/D6/S20/BB_BUG_077_A_FAILED_RUST_OR_PYTHON_REQUEST_SAID_CSHARP_SERVER.md` |
 | BB-BUG-078 | A Dock start without a shell PATH missed rust-analyzer | FIXED | fallback PATH without ~/.cargo/bin | yes | `C2/D6/S20/BB_BUG_078_A_DOCK_START_WITHOUT_A_SHELL_PATH_MISSED_RUST_ANALYZER.md` |
 | BB-BUG-079 | An empty rename said Renamed: 0 edits | FIXED | empty plan opened a preview | yes | `C2/D6/S20/BB_BUG_079_AN_EMPTY_RENAME_SAID_RENAMED_0_EDITS.md` |
+| BB-BUG-080 | Back stayed live and did nothing after its file's tab closed | FIXED | BB-UIX-017 | yes | `C2/D6/S20/BB_BUG_080_BACK_STAYED_LIVE_AND_DID_NOTHING_AFTER_ITS_FILES_TAB_CLOSED.md` |
+| BB-BUG-081 | A row into a deleted file named no file and left a jump waiting | FIXED | BB-UIX-018 | yes | `C2/D6/S21/BB_BUG_081_A_ROW_INTO_A_DELETED_FILE_NAMED_NO_FILE_AND_LEFT_A_JUMP_WAITING.md` |

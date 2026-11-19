@@ -11,7 +11,7 @@ pub(crate) use bar::{
 };
 pub(crate) use bar::{bb_view, on_tab_actions, TabMenu};
 pub(crate) use model::bb_groups::{Group, MAX_GROUPS};
-pub(crate) use model::history::{go, go_back, go_forward, GoBack, GoForward, History};
+pub(crate) use model::history::{go, go_back, go_forward, open_failed, GoBack, GoForward, History};
 pub(crate) use tab::{Tab, TabError, TabEvent};
 
 #[cfg(test)]

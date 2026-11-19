@@ -76,7 +76,7 @@ where
     answer.await.ok()?.ok()??.into_iter().next()
 }
 
-pub(crate) fn bindings() -> [KeyBinding; 10] {
+pub(crate) fn bindings() -> [KeyBinding; 12] {
     [
         KeyBinding::new("cmd-o", OpenWorkspace, None),
         KeyBinding::new("cmd-shift-o", crate::quick_open::GoToFile, None),
@@ -93,6 +93,9 @@ pub(crate) fn bindings() -> [KeyBinding; 10] {
         KeyBinding::new("cmd-k f", crate::editor::CloseWorkspace, None),
         // VS Code's New Text File.
         KeyBinding::new("cmd-n", crate::editor::NewFile, None),
+        // VS Code's Go Back / Go Forward on macOS (BB-BUG-080), beside Cmd+[ / Cmd+].
+        KeyBinding::new("ctrl--", crate::editor::GoBack, None),
+        KeyBinding::new("ctrl-shift--", crate::editor::GoForward, None),
     ]
 }
 

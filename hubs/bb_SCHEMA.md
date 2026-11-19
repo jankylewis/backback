@@ -54,7 +54,7 @@ Title `# <id> — <short name>`, then one line each:
 ```
 id: BB-UIX-001            (or BB-BUG-001, BB-TG-001)
 family: UIX
-status: OPEN | OBSERVED | FIXED
+status: OPEN | OBSERVED | FIXED | ACCEPTED
 date: <first seen, YYYY-MM-DD>
 signature: <exact text to grep in a new log; failurereason and bugfacing only>
 source: <tracked path + line, commit, or PR>   (one per source)
@@ -68,6 +68,7 @@ cause: <BB-FAM-nnn>       (bugfacing only, when proven)
 | `OPEN` | Cause not proven. Write "not proven" for each unproven part. |
 | `OBSERVED` | Proven by a cited source; fix not in place on `master` or not proven. |
 | `FIXED` | Fix on `master` AND a cited proof: red-first test then green, gate run, readback. |
+| `ACCEPTED` | Kept as is by a headmate ruling; the entry quotes the ruling, its date and reason. No fix file. |
 
 ## Laws
 

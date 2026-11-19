@@ -11,7 +11,7 @@ pub(crate) use bb_tabs::{
     apply_tab_menu, on_tab_actions, tab_bindings, tab_menu_item, TabMenuItem,
 };
 pub(crate) use bb_tabs::{
-    go, go_back, go_forward, GoBack, GoForward, Tab, TabError, TabEvent, Tabs,
+    go, go_back, go_forward, open_failed, GoBack, GoForward, Tab, TabError, TabEvent, Tabs,
 };
 pub(crate) use bb_tabs::{Group, MAX_GROUPS};
 pub(crate) use input::handle_key;
