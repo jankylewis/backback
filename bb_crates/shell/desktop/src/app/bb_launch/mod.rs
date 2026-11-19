@@ -1,18 +1,18 @@
 use crate::args::{Launch, Start};
 use crate::editor::{Quit, Tabs};
-use crate::theme::{install_appearance_observer, resolved_theme, FollowAppearance, ToggleTheme};
+use crate::theme::{install_appearance_observer, resolved_theme};
 use crate::{ExplorerView, MoveDown, MoveLeft, MoveRight, MoveUp, Open, RestartServer};
 use bb_explorer::Explorer;
 use gpui::{
-    px, size, App, AppContext, Bounds, FocusHandle, KeyBinding, Menu, MenuItem, Window,
-    WindowAppearance, WindowBounds, WindowOptions,
+    px, size, App, AppContext, Bounds, FocusHandle, KeyBinding, Window, WindowAppearance,
+    WindowBounds, WindowOptions,
 };
 use std::{path::PathBuf, time::Instant};
 
 mod bb_window;
 pub(crate) mod open;
 pub(crate) mod recent;
-pub(crate) use bb_window::{on_view as window_actions, title as window_title};
+pub(crate) use bb_window::{menus, on_view as window_actions, title as window_title};
 pub(crate) use open::langs::{self, WindowLangs};
 pub(crate) use open::{show_start_page, start_state};
 
@@ -42,7 +42,7 @@ pub(crate) fn launch() {
         open::register(cx, wanted.no_write());
         crate::settings::install(cx);
         crate::settings::register_zoom(cx);
-        cx.set_menus(menus());
+        cx.set_menus(menus(false));
         // BB-FEAT-080: the pixel mascot in the Dock, with no macOS tile.
         if let Err(error) = bb_dock::set_icon(include_bytes!("../../../bb_assets/dock.png")) {
             eprintln!("bb: {error}");
@@ -103,6 +103,7 @@ fn build_window(
         cx,
         |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
             state.langs = WindowLangs::new(langs::resolve(&wanted.root, wanted.ticked));
+            bb_window::follow_languages(state, window, cx);
             crate::intel::glue::connect(state, window, cx);
             crate::intel::glue::connect_rust(state, window, cx);
             crate::intel::glue::connect_python(state, window, cx);
@@ -119,39 +120,6 @@ fn build_window(
         eprintln!("first_frame_ms={}", start.elapsed().as_millis());
     });
     view
-}
-
-fn menus() -> Vec<Menu> {
-    vec![
-        Menu::new("Backback").items(
-            bb_window::app_items()
-                .into_iter()
-                .chain([MenuItem::action("Quit Backback", Quit)]),
-        ),
-        open::file_menu(),
-        Menu::new("View").items(
-            [
-                MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
-                MenuItem::action("Follow macOS Appearance", FollowAppearance),
-                MenuItem::separator(),
-                // Ctrl+` shows it, a second time hides it (BB-BUG-047).
-                MenuItem::action("Terminal", crate::terminal::ToggleTerminal),
-                MenuItem::action("Split Terminal", crate::terminal::SplitTerminal),
-                MenuItem::separator(),
-            ]
-            .into_iter()
-            .chain(crate::settings::zoom_menu_items()),
-        ),
-        Menu::new("Build").items([
-            MenuItem::action("Build Solution", crate::run::build::BuildSolution),
-            MenuItem::action("Cargo Build", crate::run::build::CargoBuild),
-            MenuItem::action("Cargo Check", crate::run::build::CargoCheck),
-            MenuItem::action("Python Check", crate::run::build::PythonCheck),
-        ]),
-        crate::run::bb_debug::debug_menu(),
-        Menu::new("C#").items([MenuItem::action("Restart Server", RestartServer)]),
-        bb_window::window_menu(),
-    ]
 }
 
 fn new_view(

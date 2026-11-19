@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 83 — FIXED 80, OBSERVED 3.
+Bugs a user met in the app. Entries: 89 — FIXED 85, OBSERVED 4.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -87,3 +87,9 @@ Bugs a user met in the app. Entries: 83 — FIXED 80, OBSERVED 3.
 | BB-BUG-081 | A row into a deleted file named no file and left a jump waiting | FIXED | BB-UIX-018 | yes | `C2/D6/S21/BB_BUG_081_A_ROW_INTO_A_DELETED_FILE_NAMED_NO_FILE_AND_LEFT_A_JUMP_WAITING.md` |
 | BB-BUG-082 | A Debug start sent the breakpoints of a deleted file | FIXED | BB-UIX-019 | yes | `C2/D6/S21/BB_BUG_082_A_DEBUG_START_SENT_THE_BREAKPOINTS_OF_A_DELETED_FILE.md` |
 | BB-BUG-083 | Go to a deleted local file said "not on this machine" | FIXED | BB-UIX-020 | yes | `C2/D6/S21/BB_BUG_083_GO_TO_A_DELETED_LOCAL_FILE_SAID_NOT_ON_THIS_MACHINE.md` |
+| BB-BUG-084 | A Rust or Python file argument opened its own folder | FIXED | BB-UIX-021 | yes | `C2/D6/S21/BB_BUG_084_A_RUST_OR_PYTHON_FILE_ARGUMENT_OPENED_ITS_OWN_FOLDER.md` |
+| BB-BUG-085 | Every tab showed a C# mark | FIXED | BB-UIX-022 | yes | `C2/D6/S22/BB_BUG_085_EVERY_TAB_SHOWED_A_CSHARP_MARK.md` |
+| BB-BUG-086 | The C# and Debug menus showed without C# | FIXED | BB-UIX-022 | yes | `C2/D6/S22/BB_BUG_086_THE_CSHARP_AND_DEBUG_MENUS_SHOWED_WITHOUT_CSHARP.md` |
+| BB-BUG-087 | Start Page RECENT sat apart from its list and keys did not scroll | FIXED | BB-UIX-023 | yes | `C2/D6/S22/BB_BUG_087_START_PAGE_RECENT_SAT_APART_FROM_ITS_LIST_AND_KEYS_DID_NOT_SCROLL.md` |
+| BB-BUG-088 | A broken Cargo.toml filled the Explorer with cargo's error | FIXED | BB-UIX-024 | yes | `C2/D6/S22/BB_BUG_088_A_BROKEN_CARGO_TOML_FILLED_THE_EXPLORER_WITH_CARGOS_ERROR.md` |
+| BB-BUG-089 | A scratch folder showed in RECENT | OBSERVED | not a bug: RECENT lists every workspace opened; it still existed | no | `C2/D6/S23/BB_BUG_089_A_SCRATCH_FOLDER_SHOWED_IN_RECENT.md` |

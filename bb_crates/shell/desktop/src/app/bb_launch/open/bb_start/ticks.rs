@@ -26,7 +26,7 @@ pub(crate) enum Area {
 pub(super) fn ticks_for(entry: Option<&StartEntry>) -> LangSet {
     match entry {
         Some(StartEntry::Recent(path)) => saved_or_found(path),
-        Some(StartEntry::Open) | None => LangSet::of(&Lang::ALL),
+        Some(StartEntry::Gone(_) | StartEntry::Open) | None => LangSet::of(&Lang::ALL),
     }
 }
 
@@ -95,6 +95,7 @@ impl StartPage {
             .map(|lang: Lang| self.tick_box(lang, theme, cx))
             .collect();
         div()
+            .debug_selector(|| String::from("start-languages"))
             .flex()
             .gap(px(16.0))
             .py(px(6.0))

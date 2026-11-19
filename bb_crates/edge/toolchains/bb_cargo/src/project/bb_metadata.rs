@@ -73,11 +73,12 @@ pub fn members(root: &Path, deadline: Duration) -> Result<CargoWorkspace, CargoE
         .current_dir(root);
     let done: Output = bb_proc::run(command, "cargo metadata", deadline, None)?;
     if done.code != Some(0) {
-        return Err(CargoError::failed(
-            "cargo metadata",
-            done.code,
-            &done.stderr,
-        ));
+        // The message and its place lead cargo's stderr (BBEOD33).
+        return Err(CargoError::Failed {
+            what: String::from("cargo metadata"),
+            code: done.code,
+            detail: super::failure::kept(&done.stderr, 12),
+        });
     }
     parse(&done.stdout)
 }

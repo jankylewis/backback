@@ -14,15 +14,18 @@ fn folder(base: &Path, name: &str) -> PathBuf {
     path.canonicalize().unwrap()
 }
 
+/// BBEOD33: a folder gone from disk stays, as `Gone` (VS Code keeps it
+/// until removed); it was left out before.
 #[test]
-fn the_entries_keep_the_recent_folders_on_disk_newest_first_then_open() {
+fn the_entries_keep_every_recent_folder_newest_first_a_gone_one_marked_then_open() {
     let base: tempfile::TempDir = tempfile::tempdir().unwrap();
     let (new, old): (PathBuf, PathBuf) = (folder(base.path(), "New"), folder(base.path(), "Old"));
     let gone: PathBuf = base.path().join("Gone");
     assert_eq!(
-        entries(vec![new.clone(), gone, old.clone()]),
+        entries(vec![new.clone(), gone.clone(), old.clone()]),
         vec![
             StartEntry::Recent(new),
+            StartEntry::Gone(gone),
             StartEntry::Recent(old),
             StartEntry::Open
         ]
@@ -124,3 +127,5 @@ fn new_window_is_first_in_the_file_menu_and_on_cmd_shift_n() {
         Some(gpui::MenuItem::Action { name, .. }) if name.as_ref() == "New Window"
     ));
 }
+mod bb_readback;
+mod start_page;

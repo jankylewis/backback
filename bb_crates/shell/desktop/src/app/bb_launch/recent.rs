@@ -142,6 +142,21 @@ pub(crate) fn remember(path: &Path) {
     }
 }
 
+/// Take `path` out of the recent list (the start page's remove button,
+/// BBEOD33); the folder itself is never touched.
+pub(crate) fn forget(path: &Path) {
+    let Some(dir): Option<PathBuf> = store() else {
+        return;
+    };
+    let paths: Vec<PathBuf> = read(&dir)
+        .into_iter()
+        .filter(|p: &PathBuf| p != path)
+        .collect();
+    if let Err(error) = write_atomic(&dir, FILE, &encode(&paths)) {
+        eprintln!("backback: cannot save recent workspaces: {error}");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

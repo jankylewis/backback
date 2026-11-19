@@ -13,7 +13,7 @@ use crate::ExplorerView;
 /// The manifests of every member of the workspace at `root`.
 pub(crate) fn members(root: &Path) -> Result<Vec<PathBuf>, String> {
     let found: CargoWorkspace =
-        bb_cargo::members(root, METADATA_DEADLINE).map_err(|e: CargoError| e.to_string())?;
+        bb_cargo::members(root, METADATA_DEADLINE).map_err(|e: CargoError| e.summary())?;
     Ok(found
         .members
         .into_iter()
@@ -51,7 +51,7 @@ pub(crate) fn scan_all(root: &Path, kinds: Kinds) -> Result<(Vec<PathBuf>, Vec<P
 /// window's scratch test folder.
 fn target(root: &Path, manifest: &Path) -> Result<TestTarget, String> {
     let found: CargoWorkspace =
-        bb_cargo::members(root, METADATA_DEADLINE).map_err(|e: CargoError| e.to_string())?;
+        bb_cargo::members(root, METADATA_DEADLINE).map_err(|e: CargoError| e.summary())?;
     let member: Member = found
         .members
         .into_iter()

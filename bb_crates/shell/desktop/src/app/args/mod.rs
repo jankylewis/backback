@@ -2,6 +2,10 @@
 
 use std::path::{Path, PathBuf};
 
+pub(crate) mod bb_root;
+#[cfg(test)]
+mod root_tests;
+
 /// A workspace to open: its Explorer root and the file to show.
 pub(crate) struct Start {
     pub(crate) root: PathBuf,
@@ -64,16 +68,17 @@ pub(crate) fn start_for(argument: PathBuf, no_write: bool) -> Start {
     }
 }
 
-/// A file argument opens the nearest folder above it that holds a solution
-/// (else its own folder) in the Explorer, and the file in a tab; a solution
+/// A file argument opens its project's folder ([`bb_root::project_root`],
+/// else its own folder) in the Explorer, and the file in a tab; a solution
 /// file opens its folder.
 fn split_argument(argument: PathBuf) -> (PathBuf, Option<PathBuf>) {
     if !argument.is_file() {
         return (argument, None);
     }
-    let folder: PathBuf = argument
+    let file: PathBuf =
+        std::path::absolute(&argument).unwrap_or_else(|_: std::io::Error| argument.clone());
+    let folder: PathBuf = file
         .parent()
-        .filter(|parent: &&std::path::Path| !parent.as_os_str().is_empty())
         .map_or_else(|| PathBuf::from("."), std::path::Path::to_path_buf);
     let solution: bool = argument
         .extension()
@@ -81,10 +86,9 @@ fn split_argument(argument: PathBuf) -> (PathBuf, Option<PathBuf>) {
     if solution {
         return (folder, None);
     }
-    let root: PathBuf = folder
-        .ancestors()
-        .find(|dir: &&std::path::Path| crate::intel::bb_worker::find_solution(dir).is_some())
-        .map_or(folder.clone(), std::path::Path::to_path_buf);
+    let home: Option<PathBuf> = std::env::var_os("HOME").map(PathBuf::from);
+    let root: PathBuf =
+        bb_root::project_root(&file, home.as_deref(), &bb_root::cargo_root).unwrap_or(folder);
     (root, Some(argument))
 }
 
@@ -125,5 +129,29 @@ mod tests {
         assert_eq!(split_argument(file.clone()), (root.clone(), Some(file)));
         let solution: PathBuf = root.join("App.slnx");
         assert_eq!(split_argument(solution), (root, None));
+    }
+
+    /// BBEOD32 row 3: a Rust or Python file roots at its project, not at
+    /// its own folder, in every fixture that holds its language.
+    #[test]
+    fn a_rust_or_python_file_argument_roots_at_its_project() {
+        let base: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let mut wrong: Vec<String> = Vec::new();
+        for fixture in &bb_lang::fixtures::FIXTURES {
+            let root: PathBuf = base.path().join(fixture.name);
+            let _written: PathBuf = fixture.write(base.path()).unwrap();
+            for (source, lang) in fixture.sources() {
+                let held: bool = fixture.langs.contains(&lang);
+                if !held || lang == bb_lang::Lang::CSharp {
+                    continue;
+                }
+                let file: PathBuf = root.join(source);
+                let got: (PathBuf, Option<PathBuf>) = split_argument(file.clone());
+                if got != (root.clone(), Some(file)) {
+                    wrong.push(format!("{} {source}: {got:?}", fixture.name));
+                }
+            }
+        }
+        assert!(wrong.is_empty(), "{wrong:#?}");
     }
 }

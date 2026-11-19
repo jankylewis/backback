@@ -42,6 +42,16 @@ impl Lang {
         }
     }
 
+    /// The short mark in front of an editor tab's name (BBEOD33).
+    #[must_use]
+    pub fn mark(self) -> &'static str {
+        match self {
+            Self::CSharp => "C#",
+            Self::Rust => "RS",
+            Self::Python => "PY",
+        }
+    }
+
     /// The word the saved choice uses.
     #[must_use]
     pub fn key(self) -> &'static str {
