@@ -81,6 +81,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-LSP-010 | `C# server: ` for a Rust or Python request | FIXED | Is the answering server passed to `answers::apply`? |
 | BB-LSP-011 | `Renamed: 0 edits in 0 files` | FIXED | Was the plan empty (server still indexing)? |
 | BB-LSP-012 | a new `Cargo.lock` after opening a Cargo folder | ACCEPTED | Accepted by ruling 2026-11-19 (standard for rust-analyzer clients); any other new file is a bug |
+| BB-LSP-013 | `document is already open` after Restart Server | FIXED | Does `resync_open` get only the restarted server? Count `didOpen`s per start on the BBEOD39 seam |
 | BB-ENV-003 | `rust-analyzer not installed` only from the Dock | FIXED | Did the login shell give a PATH? Is the tool's folder in `fallback_dirs`? |
 | BB-GAT-013 | a variant test red on the first machine with the tool | FIXED | Run with `BACKBACK_REQUIRE_TOOLS=1`; compare canonical paths |
 | BB-GAT-014 | `Detected activity on thread ... not deterministic` | FIXED | Does a foreign thread wake a gpui task? Forward with `try_recv` |

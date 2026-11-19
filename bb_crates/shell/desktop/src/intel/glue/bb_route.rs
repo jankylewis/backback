@@ -13,7 +13,7 @@ use tokio::sync::mpsc::UnboundedReceiver;
 
 use bb_text::CharEdit;
 
-use crate::editor::{Tab, TabEvent};
+use crate::editor::Tab;
 use crate::intel::bb_worker::protocol::{Event, Request};
 use crate::intel::bb_worker::{self, Link};
 use crate::intel::model::{LoadStatus, Sent, ServerStatus};
@@ -107,7 +107,7 @@ pub(crate) fn send(view: &mut ExplorerView, request: Request) {
 }
 
 /// Start rust-analyzer for the workspace while Rust is active and it holds
-/// a `Cargo.toml` (window tests record the start, spawn nothing).
+/// a `Cargo.toml` (a window test spawns only through its test starter).
 pub(crate) fn connect_rust(
     view: &mut ExplorerView,
     window: &mut Window,
@@ -119,15 +119,16 @@ pub(crate) fn connect_rust(
         return;
     };
     view.rust.status = ServerStatus::Starting;
-    if cfg!(test) {
+    let Some((link, events)): Option<(Link, UnboundedReceiver<Event>)> =
+        bb_worker::spawn(Server::RustAnalyzer, &root)
+    else {
         return;
-    }
-    let (link, events): (Link, UnboundedReceiver<Event>) = bb_worker::start_rust(&root);
+    };
     super::attach_server(view, (Server::RustAnalyzer, link), events, window, cx);
 }
 
-/// Start pyright for the window root while Python is active (window
-/// tests record the start, spawn nothing).
+/// Start pyright for the window root while Python is active (a window
+/// test spawns only through its test starter).
 pub(crate) fn connect_python(
     view: &mut ExplorerView,
     window: &mut Window,
@@ -137,10 +138,11 @@ pub(crate) fn connect_python(
         return;
     }
     view.python.status = ServerStatus::Starting;
-    if cfg!(test) {
+    let Some((link, events)): Option<(Link, UnboundedReceiver<Event>)> =
+        bb_worker::spawn(Server::Pyright, &view.root)
+    else {
         return;
-    }
-    let (link, events): (Link, UnboundedReceiver<Event>) = bb_worker::start_python(&view.root);
+    };
     super::attach_server(view, (Server::Pyright, link), events, window, cx);
 }
 
@@ -185,18 +187,24 @@ pub(crate) fn restart(
     }
     view.intel.in_flight.clear();
     view.intel.dismiss();
+    super::flush(view);
     super::connect(view, window, cx);
-    resync_open(view);
+    resync_open(view, &[Server::Roslyn]);
     cx.notify();
 }
 
-pub(crate) fn resync_open(view: &mut ExplorerView) {
-    let _events: Vec<TabEvent> = view.tabs.take_events();
+/// Send every tab of the servers in `started` to them (`didOpen` with the
+/// current text). Only those: the other servers still hold their tabs
+/// open, and a second open fails (BB-LSP-013). Flush before the servers
+/// start, so no other tab's edit or close is lost here.
+pub(crate) fn resync_open(view: &mut ExplorerView, started: &[Server]) {
     let opens: Vec<Request> = view
         .tabs
         .items_mut()
         .iter_mut()
+        .filter(|tab: &&mut Tab| started.contains(&server_for(&tab.path)))
         .map(|tab: &mut Tab| {
+            // The text sent below already holds these edits.
             let _edits: Vec<CharEdit> = tab.document.take_char_edits();
             Request::Open {
                 path: tab.path.clone(),

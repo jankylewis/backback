@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 83 — FIXED 75, OBSERVED 5, OPEN 1, ACCEPTED 2.
+One file per failure mechanism. This hub owns the id. Entries: 84 — FIXED 76, OBSERVED 5, OPEN 1, ACCEPTED 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -71,6 +71,7 @@ One file per failure mechanism. This hub owns the id. Entries: 83 — FIXED 75, 
 | BB-LSP-010 | A failed answer was named after Roslyn | FIXED | yes | yes | none | `APP/LSP/S03/BB_LSP_010_A_FAILED_ANSWER_WAS_NAMED_AFTER_ROSLYN.md` |
 | BB-LSP-011 | An empty rename plan opened a preview | FIXED | yes | yes | none | `APP/LSP/S03/BB_LSP_011_AN_EMPTY_RENAME_PLAN_OPENED_A_PREVIEW.md` |
 | BB-LSP-012 | A Cargo.lock appeared in the workspace on open (accepted by ruling 2026-11-19) | ACCEPTED | no | no | none | `APP/LSP/S03/BB_LSP_012_A_CARGO_LOCK_APPEARED_IN_THE_WORKSPACE_ON_OPEN.md` |
+| BB-LSP-013 | A restart sent every tab to every server | FIXED | yes | yes | none | `APP/LSP/S04/BB_LSP_013_A_RESTART_SENT_EVERY_TAB_TO_EVERY_SERVER.md` |
 | BB-ENV-003 | The fallback PATH missed rustup's folder | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
 | BB-GAT-013 | A variant test's real-tool branch had never run | FIXED | yes | yes | none | `SHIP/GAT/D1/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
 | BB-GAT-014 | A real server thread woke gpui's test scheduler | FIXED | yes | yes | none | `SHIP/GAT/D1/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |

@@ -185,8 +185,16 @@ pub(crate) fn languages_found(
     if window.is_window_active() {
         cx.set_menus(menus(state.langs.langs.debug_visible()));
     }
+    crate::intel::glue::flush(state);
     start_tools(state, window, cx);
     crate::editor::recolour(state);
-    crate::intel::glue::resync_open(state);
+    crate::intel::glue::resync_open(
+        state,
+        &[
+            bb_intel::Server::Roslyn,
+            bb_intel::Server::RustAnalyzer,
+            bb_intel::Server::Pyright,
+        ],
+    );
     cx.notify();
 }
