@@ -150,7 +150,7 @@ fn rust_analyzer_by_mouse_and_keys_f12_click_hover_rename_problems_or_its_instal
         added
             .iter()
             .all(|p: &PathBuf| *p == live.root.join("Cargo.lock")),
-        "no target/ or other file in the workspace (Cargo.lock: BBEOD29 READY ruling): {added:?}"
+        "no target/ or other file in the workspace (Cargo.lock: BB-LSP-012, accepted by ruling): {added:?}"
     );
     close_all(cx);
 }

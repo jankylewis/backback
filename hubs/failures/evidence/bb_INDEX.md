@@ -77,9 +77,11 @@ Capture next time: the build time of the binary that was read back.
 | BB-LSP-009 | FIXED | real rust-analyzer live test 1 of 6 red before, 8 of 8 after; `settle.rs` red/green; BBEOD29 READY evidence |
 | BB-LSP-010 | FIXED | `a_failed_answer_names_the_server_that_failed_not_roslyn` red (`C# server: request timed out`) then green; BBEOD29 READY evidence |
 | BB-LSP-011 | FIXED | real-pyright window test status `Renamed: 0 edits in 0 files`; window test red/green; BBEOD29 READY evidence |
-| BB-LSP-012 | OPEN | real rust-analyzer window test: `Cargo.lock` added, no `target/`; `analysis-stats` wrote none; BBEOD29 READY evidence |
+| BB-LSP-012 | ACCEPTED | real rust-analyzer window test: `Cargo.lock` added, no `target/`; `analysis-stats` wrote none; BBEOD29 READY evidence |
 | BB-ENV-003 | FIXED | Dock readback (`env -i`, launchd PATH, failing shell): `rust_server_status=` missing before, Ready after; BBEOD29 READY evidence |
 | BB-GAT-013 | FIXED | `bb_tools.rs` red with `/private/var/...` paths on first real pyright; green with canonical root; BBEOD29 READY evidence |
 | BB-GAT-014 | FIXED | 3 of 3 live window runs panicked `Detected activity on thread`; 3 of 3 green after; BBEOD29 READY evidence |
 | BB-GAT-008 | FIXED | Again in BBEOD29: `similar_names` (`line` beside `live`) in a new window test; full gate red at clippy only (701 passed); clippy run alone before the rerun |
 | BB-GAT-015 | FIXED | PR #118 CI run 44444581357 panic at `settle.rs:93`; local red with 2.5 s scripted start on the request deadline, green after |
+| BB-UIX-017 | FIXED | BBEOD30 RED run: 5 history tests red at bb82de2 logic (Hop { to: None } with no tab; deleted file not skipped); green after; mutations M1-M4, M8, M9 killed; `state/fleet/backback/evidence/BBEOD30_READY.md` (agentfarm) |
+| BB-UIX-018 | FIXED | BBEOD30 RED run: places family test red with `file path: No such file or directory (os error 2)`; mutations M5-M7 killed |

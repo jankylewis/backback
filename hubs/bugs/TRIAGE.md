@@ -68,3 +68,5 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-077 | `C# server: ` after a request in a `.rs`/`.py` tab | FIXED | Does `answers::apply` get the server it came from? |
 | BB-BUG-078 | `rust-analyzer not installed` only from the Dock | FIXED | Did the login shell give a PATH? Is `~/.cargo/bin` in `fallback_dirs`? |
 | BB-BUG-079 | `Renamed: 0 edits in 0 files` | FIXED | Did the server answer an empty plan (still indexing)? |
+| BB-BUG-080 | ← is live, a click does nothing | FIXED | Is a tab open? Is the place's file on disk? `Tabs::can_go` and `Tabs::hop` share `lives` |
+| BB-BUG-081 | `file path: No such file or directory` after a row click | FIXED | Does the open error go through `editor::open_failed`? Is `intel.jump` still set? |

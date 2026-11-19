@@ -175,7 +175,7 @@ impl ExplorerView {
                 .detach();
             }
             Ok(None) => window.focus(&self.editor_focus, cx),
-            Err(error) => self.report(&error),
+            Err(error) => editor::open_failed(self, path, &error),
         }
         cx.notify();
     }
@@ -195,7 +195,7 @@ impl ExplorerView {
                 latency::drive(self, window, cx);
             }
             Err(error) => {
-                self.report(&error);
+                editor::open_failed(self, file, &error);
                 latency::drive(self, window, cx);
             }
         }

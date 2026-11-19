@@ -48,8 +48,8 @@ pub(crate) fn title_bar(
     cx: &mut Context<ExplorerView>,
 ) -> gpui::Stateful<gpui::Div> {
     let theme: Theme = view.theme;
-    let back: bool = view.tabs.history.can_back();
-    let forward: bool = view.tabs.history.can_forward();
+    let back: bool = view.tabs.can_go(true);
+    let forward: bool = view.tabs.can_go(false);
     let bar: gpui::Stateful<gpui::Div> = div()
         .id("title-bar")
         .debug_selector(|| "title-bar".to_owned())
