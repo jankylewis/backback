@@ -161,3 +161,32 @@ pub(crate) fn follow_languages(
     )
     .detach();
 }
+
+/// Start the tools the window's languages allow.
+pub(super) fn start_tools(
+    state: &mut crate::ExplorerView,
+    window: &mut Window,
+    cx: &mut gpui::Context<crate::ExplorerView>,
+) {
+    crate::intel::glue::connect(state, window, cx);
+    crate::intel::glue::connect_rust(state, window, cx);
+    crate::intel::glue::connect_python(state, window, cx);
+    crate::rows::cargo::load(state, window, cx);
+}
+
+/// BB-PRF-009: the launch's walk ended after the window showed. Its menus,
+/// tools and tab colours follow the languages; every open tab is sent to
+/// the servers that just started.
+pub(crate) fn languages_found(
+    state: &mut crate::ExplorerView,
+    window: &mut Window,
+    cx: &mut gpui::Context<crate::ExplorerView>,
+) {
+    if window.is_window_active() {
+        cx.set_menus(menus(state.langs.langs.debug_visible()));
+    }
+    start_tools(state, window, cx);
+    crate::editor::recolour(state);
+    crate::intel::glue::resync_open(state);
+    cx.notify();
+}

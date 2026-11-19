@@ -27,7 +27,7 @@ pub(crate) use answers::{goto_point, jump, opened};
 pub(crate) use input::asks::{ask, ask_at_cursor, hover_ask, hover_move, word_start};
 pub(crate) use input::bb_keys;
 pub(crate) use input::bb_keys::RestartServer;
-pub(crate) use route::{connect_python, connect_rust, restart};
+pub(crate) use route::{connect_python, connect_rust, restart, resync_open};
 
 /// Start Roslyn for the workspace's solution while C# is active (BBEOD26;
 /// window tests record the start, spawn nothing) and pump its events.

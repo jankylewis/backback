@@ -90,5 +90,5 @@ Capture next time: the build time of the binary that was read back.
 | BB-UIX-019 | FIXED | BBEOD31 RED run: unit test red with the send-all rule (B.cs sent); no-status mutation killed by the view test |
 | BB-UIX-020 | FIXED | BBEOD31 RED run: go-to test red at 6f40103 (`not on this machine`); always-gone mutation killed |
 | BB-GAT-017 | FIXED | BBEOD36 gate run 1 log (local, not kept in the repo): clippy rc=101 at `langs.rs:120` and `early_walk.rs:16`, `bb-kmap` views 3 passed 1 failed; runs 2-3 green 730/733 passed; BBEOD36 READY evidence |
-| BB-PRF-008 | OBSERVED | `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD37_BINARY_SIZE_AND_DNAAX.md` section 1: linker-map sums by crate, `aa1d223` vs `243c495`; signed sizes vs the BBEOD36 bundles |
-| BB-PRF-009 | OBSERVED | `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD37_BINARY_SIZE_AND_DNAAX.md` section 2: dna-ax first frame 184 vs 350 ms (saved choice 184 vs 184); `detect` 229 ms, 4,873 folders |
+| BB-PRF-008 | ACCEPTED | `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD37_BINARY_SIZE_AND_DNAAX.md` section 1: linker-map sums by crate, `aa1d223` vs `243c495`; signed sizes vs the BBEOD36 bundles |
+| BB-PRF-009 | FIXED | `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD37_BINARY_SIZE_AND_DNAAX.md` section 2: dna-ax first frame 184 vs 350 ms (saved choice 184 vs 184); `detect` 229 ms, 4,873 folders; fix: `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD38_FIRST_FRAME_NO_WAIT.md` |

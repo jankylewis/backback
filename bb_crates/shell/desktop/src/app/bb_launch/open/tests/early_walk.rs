@@ -23,6 +23,27 @@ fn shown_langs(cx: &mut TestAppContext) -> Option<Langs> {
         .ok()
 }
 
+/// BB-PRF-009: the window takes the languages when the walk ends.
+fn wait_for_languages(cx: &mut TestAppContext) {
+    for _ in 0..5000 {
+        cx.run_until_parked();
+        let detecting: bool = cx
+            .windows()
+            .into_iter()
+            .filter_map(|w: AnyWindowHandle| w.downcast::<ExplorerView>())
+            .any(|w: WindowHandle<ExplorerView>| {
+                w.read_with(cx, |v: &ExplorerView, _: &App| v.langs.detecting)
+                    .unwrap_or(false)
+            });
+        if !detecting {
+            return;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(1));
+        cx.executor()
+            .advance_clock(std::time::Duration::from_millis(4));
+    }
+}
+
 fn close_all(cx: &mut TestAppContext) {
     for window in cx.windows() {
         let _gone: gpui::Result<()> =
@@ -44,7 +65,7 @@ fn a_launch_walks_its_folder_once_off_the_ui_thread_and_the_window_shows_what_it
     let start: crate::args::Start = crate::args::start_for(root, false);
     walk_early(&start.root, start.ticked);
     let opened: bool = cx.update(|cx: &mut App| crate::launch::open_workspace(&start, cx));
-    cx.run_until_parked();
+    wait_for_languages(cx);
     let shown: Option<Langs> = shown_langs(cx);
     let walkers: Vec<ThreadId> = walks_of(&start.root);
     close_all(cx);

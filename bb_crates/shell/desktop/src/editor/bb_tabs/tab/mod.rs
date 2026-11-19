@@ -141,6 +141,28 @@ impl Tab {
         self.test_methods = csharp_tests(self.mode, self.live.tree(), self.document.rope());
     }
 
+    /// Show the tab as `mode` (BB-PRF-009: the window's languages arrived
+    /// after it opened): a new grammar and a fresh parse of its text. A tab
+    /// whose background parse still runs keeps its mode (false); its parse
+    /// end asks again.
+    pub(crate) fn recolour(&mut self, mode: bb_lang::FileMode) -> Result<bool, TabError> {
+        if self.mode == mode || self.live.parsing() {
+            return Ok(self.mode == mode);
+        }
+        // The fresh parse below reads the whole current text.
+        let _parsed_below: Vec<TextChange> = self.document.take_changes();
+        let mut syntax: Syntax = Syntax::for_lang(lang_of(mode))?;
+        let points: Option<(bb_text::BytePoint, bb_text::BytePoint)> =
+            window::points(&self.document, self.window_lines.as_ref());
+        let tree: Tree = syntax.parse_rope_in(self.document.rope(), None, points)?;
+        self.highlighter = Syntax::for_lang(lang_of(mode))?;
+        self.live = LiveTree::new(syntax, tree);
+        self.mode = mode;
+        self.braces.set(None);
+        self.refresh_test_methods();
+        Ok(true)
+    }
+
     /// Make the tab read-only: no edit, and no save from any path.
     pub(crate) fn set_read_only(&mut self) {
         self.read_only = true;

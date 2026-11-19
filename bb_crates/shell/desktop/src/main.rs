@@ -189,6 +189,7 @@ impl ExplorerView {
     ) {
         match self.tabs.finish_open(file, loaded) {
             Ok(()) => {
+                editor::recolour(self); // BB-PRF-009: begun before the languages
                 intel::glue::opened(self, file);
                 tests_panel::navigation::apply(self, cx);
                 window.focus(&self.editor_focus, cx);

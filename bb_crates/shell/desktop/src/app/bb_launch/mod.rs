@@ -12,8 +12,10 @@ use std::{path::PathBuf, time::Instant};
 mod bb_window;
 pub(crate) mod open;
 pub(crate) mod recent;
-pub(crate) use bb_window::{menus, on_view as window_actions, title as window_title};
-pub(crate) use open::langs::{self, WindowLangs};
+pub(crate) use bb_window::{
+    languages_found, menus, on_view as window_actions, title as window_title,
+};
+pub(crate) use open::langs::{self, Resolved, WindowLangs};
 pub(crate) use open::{show_start_page, start_state};
 
 pub(crate) fn launch() {
@@ -103,12 +105,22 @@ fn build_window(
     view.update(
         cx,
         |state: &mut ExplorerView, cx: &mut gpui::Context<ExplorerView>| {
-            state.langs = WindowLangs::new(langs::resolve(&wanted.root, wanted.ticked));
+            let later: Option<langs::Pending> = match langs::resolve(&wanted.root, wanted.ticked) {
+                Resolved::Now(found) => {
+                    state.langs = WindowLangs::new(found);
+                    None
+                }
+                Resolved::Later(pending) => {
+                    state.langs = WindowLangs::detecting();
+                    Some(pending)
+                }
+            };
             bb_window::follow_languages(state, window, cx);
-            crate::intel::glue::connect(state, window, cx);
-            crate::intel::glue::connect_rust(state, window, cx);
-            crate::intel::glue::connect_python(state, window, cx);
-            crate::rows::cargo::load(state, window, cx);
+            match later {
+                None => bb_window::start_tools(state, window, cx),
+                // BB-PRF-009: the window shows now; the rest follows the walk.
+                Some(pending) => langs::when_found(pending, window, cx),
+            }
             crate::editor::watch_disk(window, cx);
             match &wanted.file {
                 Some(file) => state.open_file(file, window, cx),
