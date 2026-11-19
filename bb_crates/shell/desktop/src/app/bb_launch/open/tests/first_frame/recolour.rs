@@ -122,3 +122,20 @@ fn a_big_file_still_parsing_when_the_languages_land_ends_coloured_with_its_edit(
     super::close_window(window, cx);
     drop(slow);
 }
+
+/// BB-GAT-018: CI opened the big file in 3.09 s under load and the held
+/// walk, capped at 3 s, answered first; a hold lasts until it is released.
+#[test]
+fn a_held_walk_still_has_no_answer_after_the_old_three_second_cap() {
+    let scratch: Scratch = Scratch::of("py_only");
+    let slow: SlowWalks = SlowWalks::hold();
+    crate::launch::langs::walk_early(&scratch.root, None);
+    std::thread::sleep(std::time::Duration::from_millis(3_500));
+    let resolved: crate::launch::langs::Resolved =
+        crate::launch::langs::resolve(&scratch.root, None);
+    assert!(
+        matches!(resolved, crate::launch::langs::Resolved::Later(_)),
+        "the walk answered while held"
+    );
+    drop(slow);
+}

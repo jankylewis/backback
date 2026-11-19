@@ -111,6 +111,7 @@ fn a_roslyn_restart_reopens_only_the_csharp_tabs(cx: &mut TestAppContext) {
         once_per_server(&live, &log);
     }
     super::close_window(window, cx);
+    super::relay::wait_ended(&log);
 }
 
 /// Tab `file` lands (load done, its open event not yet flushed), then

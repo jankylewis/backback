@@ -241,4 +241,5 @@ fn files_opened_while_detecting_reach_the_real_servers_once_with_their_typed_tex
     opened_once(&live, &log, &texts);
     assert_eq!(log.lock().unwrap().sync_failed, Vec::<String>::new());
     super::close_window(window, cx);
+    super::relay::wait_ended(&log);
 }

@@ -75,5 +75,6 @@
 | BB-UIX-023 | FIXED | Keep a list's heading with the list; key-driven lists scroll | `APP/UIX/D2/S06/BB_UIX_023_THE_START_PAGE_LIST_HAD_NO_SCROLL_HANDLE_AND_ITS_HEADING_SAT_IN_THE_HEADER.md` |
 | BB-UIX-024 | FIXED | A panel shows one line with the place; the full text on hover | `APP/UIX/D2/S06/BB_UIX_024_A_TOOLS_WHOLE_STDERR_WAS_SHOWN_IN_A_NARROW_SECTION.md` |
 | BB-GAT-017 | FIXED | Test-only helpers are end-of-file `#[cfg(test)]` items; lint all targets before the gate | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
+| BB-GAT-018 | FIXED | No wall-clock release under CI load; wait for real processes to end | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
 | BB-PRF-008 | ACCEPTED | Check a grammar's tables before adding a language; attribute size with a linker map | `SYS/PRF/S02/BB_PRF_008_THE_RUST_AND_PYTHON_GRAMMARS_GREW_THE_BINARY_BY_A_TENTH.md` |
 | BB-PRF-009 | FIXED | An overlapped walk is free only when it ends first; bench a many-folder tree | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |

@@ -27,6 +27,8 @@ pub(super) struct Log {
     pub(super) diagnosed: Vec<PathBuf>,
     /// Each sync failure a server reported.
     pub(super) sync_failed: Vec<String>,
+    /// Starts whose server thread ended (its events closed after shutdown).
+    pub(super) ended: usize,
 }
 
 pub(super) type Shared = Arc<Mutex<Log>>;
@@ -97,6 +99,9 @@ fn relay_requests(
                 break;
             }
         }
+        // The window let go: drop the real link so the server shuts down
+        // now, not when the process exits (nextest LEAK, BB-GAT-018).
+        let _gone: Option<Link> = link.lock().unwrap().take();
     });
 }
 
@@ -109,11 +114,31 @@ fn relay_events(mut events: UnboundedReceiver<Event>, back: UnboundedSender<Even
             if let Event::SyncFailed(reason) = &event {
                 log.lock().unwrap().sync_failed.push(reason.clone());
             }
-            if back.send(event).is_err() {
-                break;
-            }
+            // A closed window no longer listens; keep draining to the end.
+            let _unheard: Result<(), _> = back.send(event);
         }
+        log.lock().unwrap().ended += 1;
     });
+}
+
+/// Wait until every server thread started so far has shut down, so none
+/// outlives the test (BB-GAT-018); a server that never stops fails it.
+pub(super) fn wait_ended(log: &Shared) {
+    let since: std::time::Instant = std::time::Instant::now();
+    loop {
+        let (ended, started): (usize, usize) = {
+            let shared: std::sync::MutexGuard<'_, Log> = log.lock().unwrap();
+            (shared.ended, shared.links.len())
+        };
+        if ended >= started {
+            return;
+        }
+        assert!(
+            since.elapsed() < std::time::Duration::from_secs(60),
+            "{ended} of {started} server threads ended"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
 }
 
 /// What a fake server got from the window.
