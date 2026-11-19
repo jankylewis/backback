@@ -180,7 +180,9 @@ impl Tab {
     }
 }
 
-/// A C# file's mode: the rename's loads (Roslyn renames C# only) and tests.
+/// A C# file's mode, for tests; a rename loads a file in the window's mode
+/// for it (BB-BUG-092).
+#[cfg(test)]
 pub(crate) const CSHARP: bb_lang::FileMode = bb_lang::FileMode::Colours(bb_lang::Lang::CSharp);
 
 /// The grammar of `mode`; None is plain text.

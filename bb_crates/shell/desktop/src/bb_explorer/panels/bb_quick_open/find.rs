@@ -65,10 +65,7 @@ fn open(
     let walk: gpui::Task<Vec<PathBuf>> = cx.background_executor().spawn(async move {
         QuickOpen::list_files(&walk_root)
             .into_iter()
-            .filter(|file: &PathBuf| {
-                file.extension()
-                    .is_some_and(|e: &std::ffi::OsStr| e == "csproj")
-            })
+            .filter(|file: &PathBuf| bb_lang::Lang::of_project(file).is_some())
             .map(|file: PathBuf| walk_root.join(file))
             .collect()
     });

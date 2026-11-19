@@ -54,7 +54,7 @@ pub(crate) enum Scope {
     All,
     /// The workspace (Rider's Solution).
     Solution,
-    /// The C# projects: the list is Rider's project dropdown.
+    /// The projects of every language: Rider's project dropdown.
     Project,
     /// Folders.
     Directory,
@@ -119,7 +119,7 @@ impl QuickOpen {
         quick
     }
 
-    /// Every C# project under `root` (its `.csproj` files), after the walk.
+    /// Every project under `root` (its project files), after the walk.
     pub(crate) fn add_projects(&mut self, root: &Path, projects: &[PathBuf]) {
         for file in projects {
             if let Some(dir) = file.parent() {
@@ -219,7 +219,8 @@ impl QuickOpen {
     }
 }
 
-/// The nearest folder above `file`, inside `root`, holding a `.csproj`.
+/// The nearest folder above `file`, inside `root`, holding a project file
+/// of any language ([`bb_lang::Lang::of_project`]).
 fn project_of(file: &Path, root: &Path) -> Option<PathBuf> {
     file.ancestors()
         .skip(1)
@@ -227,10 +228,7 @@ fn project_of(file: &Path, root: &Path) -> Option<PathBuf> {
         .find(|dir: &&Path| {
             std::fs::read_dir(dir).is_ok_and(|entries: std::fs::ReadDir| {
                 entries.flatten().any(|entry: std::fs::DirEntry| {
-                    entry
-                        .path()
-                        .extension()
-                        .is_some_and(|e: &std::ffi::OsStr| e == "csproj")
+                    bb_lang::Lang::of_project(&entry.path()).is_some()
                 })
             })
         })

@@ -170,3 +170,19 @@ fn a_folder_with_no_language_starts_with_csharp_ticked_and_others_with_what_they
         assert_eq!(bb_lang::default_ticks(set), set);
     }
 }
+
+#[test]
+fn a_project_is_a_csproj_cargo_toml_pyproject_or_setup_py_never_a_solution() {
+    let cases: [(&str, Option<Lang>); 7] = [
+        ("Core/Core.csproj", Some(Lang::CSharp)),
+        ("alpha/Cargo.toml", Some(Lang::Rust)),
+        ("pyproject.toml", Some(Lang::Python)),
+        ("tool/setup.py", Some(Lang::Python)),
+        ("App.slnx", None),
+        ("App.sln", None),
+        ("requirements-dev.txt", None),
+    ];
+    for (file, lang) in cases {
+        assert_eq!(Lang::of_project(&PathBuf::from(file)), lang, "{file}");
+    }
+}

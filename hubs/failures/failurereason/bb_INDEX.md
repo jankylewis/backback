@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 85 — FIXED 77, OBSERVED 5, OPEN 1, ACCEPTED 2.
+One file per failure mechanism. This hub owns the id. Entries: 86 — FIXED 78, OBSERVED 5, OPEN 1, ACCEPTED 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -85,6 +85,7 @@ One file per failure mechanism. This hub owns the id. Entries: 85 — FIXED 77, 
 | BB-UIX-022 | C#-only chrome was not tied to the window's languages | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_022_CSHARP_ONLY_CHROME_WAS_NOT_TIED_TO_THE_WINDOWS_LANGUAGES.md` |
 | BB-UIX-023 | The start page list had no scroll handle and its heading sat in the header | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_023_THE_START_PAGE_LIST_HAD_NO_SCROLL_HANDLE_AND_ITS_HEADING_SAT_IN_THE_HEADER.md` |
 | BB-UIX-024 | A tool's whole stderr was shown in a narrow section | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_024_A_TOOLS_WHOLE_STDERR_WAS_SHOWN_IN_A_NARROW_SECTION.md` |
+| BB-UIX-025 | A language-neutral path fell back to C# | FIXED | yes | yes | none | `APP/UIX/D2/S07/BB_UIX_025_A_LANGUAGE_NEUTRAL_PATH_FELL_BACK_TO_CSHARP.md` |
 | BB-GAT-017 | A test-only module in a source file reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-018 | A timed walk hold and a kept server link failed under CI load | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
 | BB-PRF-008 | The Rust and Python grammars grew the binary by a tenth | ACCEPTED | no | yes | none | `SYS/PRF/S02/BB_PRF_008_THE_RUST_AND_PYTHON_GRAMMARS_GREW_THE_BINARY_BY_A_TENTH.md` |

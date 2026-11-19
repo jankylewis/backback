@@ -4,6 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
+use bb_lang::FileMode;
 use bb_syntax::{LiveTree, Syntax, Tree};
 use bb_text::Document;
 use gpui::{AsyncWindowContext, Context, WeakEntity, Window};
@@ -21,8 +22,9 @@ const NEW_FILE: &str = "New file";
 pub(crate) struct NewFile;
 
 impl Tab {
-    /// An empty tab whose (not yet real) path is `dir/name`.
-    pub(crate) fn untitled(dir: &Path, name: &str) -> Result<Tab, TabError> {
+    /// An empty tab whose (not yet real) path is `dir/name`, shown in
+    /// `mode`: the window's mode for a file of no language (BB-BUG-092).
+    pub(crate) fn untitled(dir: &Path, name: &str, mode: FileMode) -> Result<Tab, TabError> {
         let document: Document = Document::from_text("", None);
         let mut syntax: Syntax = Syntax::new()?;
         let tree: Tree = syntax.parse_rope_in(document.rope(), None, None)?;
@@ -30,7 +32,7 @@ impl Tab {
             path: dir.join(name),
             document,
             highlighter: Syntax::new()?,
-            mode: bb_lang::FileMode::Colours(bb_lang::Lang::CSharp),
+            mode,
             live: LiveTree::new(syntax, tree),
             test_methods: Vec::new(),
             window_lines: None,
@@ -54,7 +56,7 @@ impl Tab {
 impl Tabs {
     /// Open a new file in `dir`, the active tab; the language server is not
     /// told of it until it is saved.
-    pub(crate) fn new_file(&mut self, dir: &Path) -> Result<(), TabError> {
+    pub(crate) fn new_file(&mut self, dir: &Path, mode: FileMode) -> Result<(), TabError> {
         // One more name than open tabs: one of them is always free.
         let name: String = (1..=self.items.len().saturating_add(1))
             .map(|n: usize| match n {
@@ -63,7 +65,7 @@ impl Tabs {
             })
             .find(|name: &String| !self.untitled_named(name))
             .unwrap_or_else(|| NEW_FILE.to_owned());
-        let tab: Tab = Tab::untitled(dir, &name)?;
+        let tab: Tab = Tab::untitled(dir, &name, mode)?;
         let path: PathBuf = tab.path.clone();
         let at: usize = self.admit(tab);
         self.events
@@ -105,7 +107,8 @@ pub(crate) fn on_new_file(
         .active_tab()
         .and_then(|tab: &Tab| tab.path.parent().map(Path::to_path_buf))
         .unwrap_or_else(|| view.root.clone());
-    if let Err(error) = view.tabs.new_file(&dir) {
+    let mode: FileMode = view.langs.langs.file_mode(&dir.join(NEW_FILE));
+    if let Err(error) = view.tabs.new_file(&dir, mode) {
         view.report(&error);
     }
     window.focus(&view.editor_focus, cx);

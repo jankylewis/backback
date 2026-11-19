@@ -87,6 +87,21 @@ impl Lang {
         Self::of_project_file(path).or_else(|| Self::of_source(path))
     }
 
+    /// The language of a file that makes its folder a project: a `.csproj`,
+    /// a `Cargo.toml`, a `pyproject.toml` or a `setup.py` (BB-BUG-091: Find
+    /// in Files knew only the first).
+    #[must_use]
+    pub fn of_project(path: &Path) -> Option<Self> {
+        let name: String = path.file_name()?.to_str()?.to_ascii_lowercase();
+        let ext: Option<String> = path
+            .extension()
+            .and_then(std::ffi::OsStr::to_str)
+            .map(str::to_ascii_lowercase);
+        let solution: bool = matches!(ext.as_deref(), Some("sln" | "slnx"));
+        let requirements: bool = name.starts_with("requirements");
+        Self::of_project_file(path).filter(|_: &Self| !solution && !requirements)
+    }
+
     /// The language of a project file: `.sln`, `.slnx`, `.csproj`,
     /// `Cargo.toml`, `pyproject.toml`, `setup.py`, `requirements*.txt` (the
     /// Explorer marks them, BBEOD28).

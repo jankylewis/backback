@@ -78,3 +78,6 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-087 | RECENT above LANGUAGES; Down leaves the row off screen | FIXED | Is `recent_heading` after the ticks row? Does `step` call `scroll_to_item`? |
 | BB-BUG-088 | `cargo metadata exited with Some(101)` over many lines | FIXED | Does the section show `CargoError::summary`? Hover for the full text |
 | BB-BUG-089 | a `/private/tmp/...` folder in RECENT | OBSERVED | Not a bug: was it opened once? Readbacks set `BACKBACK_STATE_DIR` |
+| BB-BUG-090 | `C# server: Ready` (or `No solution`) after F12 in `Cargo.toml` or a README; its didOpen in Roslyn | FIXED | Is `server_for` `None` for the file (`Lang::of_source`)? Does `send` drop it? |
+| BB-BUG-091 | Find in Files places `Workspace · ws`, `Folder · alpha/src` and no `Project · …` in a Cargo or Python workspace | FIXED | Does the walk filter use `Lang::of_project`? |
+| BB-BUG-092 | a `.rs` tab in C# colours after a rename touched it closed; `New file` in C# colours with no C# ticked | FIXED | Was the tab made with `langs.file_mode(path)`, not a fixed mode? |

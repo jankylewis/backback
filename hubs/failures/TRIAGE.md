@@ -93,6 +93,7 @@ One row per failure reason and tool gap; grep the signature in your log. Bugs a 
 | BB-UIX-022 | `C#` mark on a `.py`/`.rs` tab; C# or Debug menu without C# | FIXED | Does the chrome ask `Langs` / `Lang::of_source`? |
 | BB-UIX-023 | RECENT above LANGUAGES; Down leaves the row off screen | FIXED | Is RECENT its own element after the ticks? Does `step` scroll? |
 | BB-UIX-024 | `cargo metadata exited with Some(101): error:` over many lines | FIXED | Does the panel show `summary()` and keep `to_string()` for the hover? |
+| BB-UIX-025 | `C# server:` with no C#; no `Project ·` for a crate; `Colours(CSharp)` on a `.rs`/new tab | FIXED | `grep -n "None =>\|unwrap_or(Lang::CSharp)\|csproj\|CSHARP"` on the path; does it use `server_of`/`of_project`/`file_mode`? |
 | BB-GAT-017 | `items after a test module`; `Iterator::last` on a `DoubleEndedIterator`; map check `missing: pub(crate) fn` | FIXED | Is a test-only helper a named `#[cfg(test)]` module mid-file? Run clippy `--all-targets` and `-p bb-kmap --test views` |
 | BB-GAT-018 | `the window waited for the walk` on CI; nextest `LEAK` after a real-server test | FIXED | `editor_open_ms` vs the hold cap; does the test `wait_ended`? `ps -o ppid` of BuildHost/servers (1 = orphan) |
 | BB-PRF-008 | binary or `.app` size grew after adding a language | ACCEPTED | `size -m` of the new `libtree-sitter-*.a`; a linker map (`-Wl,-map`) by crate |
