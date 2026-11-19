@@ -185,7 +185,7 @@ pub(crate) fn on_event(
             let Some(pending): Option<Pending> = take_pending(view, ticket) else {
                 return;
             };
-            answers::apply(view, &pending, answer, stages, window, cx);
+            answers::apply(view, &pending, (server, answer), stages, window, cx);
         }
         Event::SyncFailed(reason) => view.report(&format!("{}: {reason}", server.name())),
     }

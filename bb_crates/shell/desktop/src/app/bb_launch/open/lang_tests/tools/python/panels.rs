@@ -184,6 +184,10 @@ fn the_tests_panel_runs_pytest_with_no_debug_or_shows_its_install_command(cx: &m
     match error {
         None => run_every_test(&mut vcx, window),
         Some(said) => {
+            assert!(
+                std::env::var_os("BACKBACK_REQUIRE_TOOLS").is_none(),
+                "BACKBACK_REQUIRE_TOOLS is set: {said}"
+            );
             assert_eq!(said, missing_hint(&python));
             assert!(shown(&mut vcx, "test-project-error-py"));
         }

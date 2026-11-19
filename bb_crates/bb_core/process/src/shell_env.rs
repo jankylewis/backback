@@ -3,7 +3,8 @@
 //! the user's shell `PATH` are not found: projects fail to load, Build, tests
 //! and F5 fail (BB-BUG-009). As VS Code does ("resolve shell environment"),
 //! read the login shell's `PATH` once at start and adopt it; if the shell
-//! gives nothing, add the usual .NET and Homebrew folders.
+//! gives nothing, add the usual .NET, Homebrew and rustup folders (rustup's
+//! `~/.cargo/bin` holds `rust-analyzer` and `rustup`, BBEOD29).
 
 use std::ffi::{OsStr, OsString};
 use std::io::Read;
@@ -32,7 +33,8 @@ pub fn marked_path(output: &str) -> Option<String> {
     (!path.trim().is_empty()).then(|| path.to_owned())
 }
 
-/// The folders added when the shell gives no `PATH`.
+/// The folders added when the shell gives no `PATH`: where the tools
+/// backback names are installed by their own install commands.
 #[must_use]
 pub fn fallback_dirs(home: Option<&Path>) -> Vec<PathBuf> {
     let mut dirs: Vec<PathBuf> = vec![
@@ -43,6 +45,7 @@ pub fn fallback_dirs(home: Option<&Path>) -> Vec<PathBuf> {
     if let Some(home) = home {
         dirs.push(home.join(".dotnet"));
         dirs.push(home.join(".dotnet/tools"));
+        dirs.push(home.join(".cargo/bin"));
     }
     dirs
 }
@@ -137,6 +140,24 @@ mod tests {
         let dirs: Vec<PathBuf> = fallback_dirs(Some(Path::new("/h")));
         assert!(dirs.contains(&PathBuf::from("/usr/local/share/dotnet")));
         assert!(dirs.contains(&PathBuf::from("/h/.dotnet/tools")));
+    }
+
+    /// BBEOD29 readback: a Dock start whose login shell gave nothing said
+    /// `rust-analyzer not installed` while rustup had put it (and `rustup`)
+    /// in `~/.cargo/bin`.
+    #[test]
+    fn the_fallback_path_finds_rust_analyzer_where_rustup_installs_it() {
+        let home: PathBuf =
+            std::env::temp_dir().join(format!("bb-fallback-home-{}", std::process::id()));
+        let bin: PathBuf = home.join(".cargo/bin");
+        std::fs::create_dir_all(&bin).unwrap();
+        std::fs::write(bin.join("rust-analyzer"), "").unwrap();
+        let found: Option<PathBuf> = fallback_dirs(Some(&home))
+            .into_iter()
+            .map(|dir: PathBuf| dir.join("rust-analyzer"))
+            .find(|file: &PathBuf| file.is_file());
+        std::fs::remove_dir_all(&home).unwrap();
+        assert_eq!(found, Some(bin.join("rust-analyzer")));
     }
 
     #[test]

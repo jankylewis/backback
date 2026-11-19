@@ -126,27 +126,33 @@ fn the_syntax_check_names_the_broken_line_and_writes_nothing_into_the_project() 
 
 #[test]
 fn pyright_checks_the_fixture_or_discovery_names_the_install_hint() {
-    let root: tempfile::TempDir = fixture(Shape::Broken);
-    let before: Vec<PathBuf> = files_under(root.path());
-    let python: Interpreter =
-        interpreter_for(root.path(), root.path(), std::env::var_os("PATH").as_ref());
+    let base: tempfile::TempDir = fixture(Shape::Broken);
+    let root: PathBuf = base.path().canonicalize().unwrap();
+    let before: Vec<PathBuf> = files_under(&root);
+    let python: Interpreter = interpreter_for(&root, &root, std::env::var_os("PATH").as_ref());
     let outcome: Result<Vec<Issue>, String> = match pyright::locate(&Inputs::from_env()) {
-        Ok(found) => check::pyright(&found.cli, &python.program, root.path())
+        Ok(found) => check::pyright(&found.cli, &python.program, &root)
             .map_err(|e: PythonError| e.to_string()),
         Err(missing) => Err(missing.to_string()),
     };
     match outcome {
         Ok(found) => assert!(
-            found.iter().any(
-                |i: &Issue| i.path == root.path().join(fixtures::BROKEN_FILE)
+            found
+                .iter()
+                .any(|i: &Issue| i.path == root.join(fixtures::BROKEN_FILE)
                     && i.line == fixtures::BROKEN_LINE
-                    && i.level == Level::Error
-            ),
+                    && i.level == Level::Error),
             "{found:?}"
         ),
-        Err(hint) => assert_eq!(hint, pyright::MISSING_HINT),
+        Err(hint) => {
+            assert!(
+                std::env::var_os("BACKBACK_REQUIRE_TOOLS").is_none(),
+                "BACKBACK_REQUIRE_TOOLS is set: {hint}"
+            );
+            assert_eq!(hint, pyright::MISSING_HINT);
+        }
     }
-    assert_eq!(files_under(root.path()), before);
+    assert_eq!(files_under(&root), before);
 }
 
 #[test]

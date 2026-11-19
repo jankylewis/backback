@@ -87,7 +87,13 @@ fn pytest_lists_and_runs_pass_fail_skip_or_names_the_install_command() {
     };
     match listed_then_run(&root, &project.path().join("pyproject.toml")) {
         Ok((list, all)) => assert_full_run(&root, &list, &all),
-        Err(PythonError::PytestMissing(hint)) => assert_eq!(hint, missing_hint(&python.program)),
+        Err(PythonError::PytestMissing(hint)) => {
+            assert!(
+                std::env::var_os("BACKBACK_REQUIRE_TOOLS").is_none(),
+                "BACKBACK_REQUIRE_TOOLS is set: {hint}"
+            );
+            assert_eq!(hint, missing_hint(&python.program));
+        }
         Err(other) => panic!("neither a run nor the missing hint: {other}"),
     }
     assert_eq!(files_under(project.path()), before);
