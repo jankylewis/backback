@@ -1,6 +1,6 @@
 # Bugfacing index
 
-Bugs a user met in the app. Entries: 89 — FIXED 85, OBSERVED 4.
+Bugs a user met in the app. Entries: 92 — FIXED 88, OBSERVED 4.
 
 | Id | Bug | Status | Cause | Fix | Path |
 |---|---|---|---|---|---|
@@ -93,3 +93,6 @@ Bugs a user met in the app. Entries: 89 — FIXED 85, OBSERVED 4.
 | BB-BUG-087 | Start Page RECENT sat apart from its list and keys did not scroll | FIXED | BB-UIX-023 | yes | `C2/D6/S22/BB_BUG_087_START_PAGE_RECENT_SAT_APART_FROM_ITS_LIST_AND_KEYS_DID_NOT_SCROLL.md` |
 | BB-BUG-088 | A broken Cargo.toml filled the Explorer with cargo's error | FIXED | BB-UIX-024 | yes | `C2/D6/S22/BB_BUG_088_A_BROKEN_CARGO_TOML_FILLED_THE_EXPLORER_WITH_CARGOS_ERROR.md` |
 | BB-BUG-089 | A scratch folder showed in RECENT | OBSERVED | not a bug: RECENT lists every workspace opened; it still existed | no | `C2/D6/S23/BB_BUG_089_A_SCRATCH_FOLDER_SHOWED_IN_RECENT.md` |
+| BB-BUG-090 | A file of no language reached the C# server | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_090_A_FILE_OF_NO_LANGUAGE_REACHED_THE_C_SERVER.md` |
+| BB-BUG-091 | Find in Files offered no Project in a Rust or Python window | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_091_FIND_IN_FILES_OFFERED_NO_PROJECT_IN_A_RUST_OR_PYTHON_WINDOW.md` |
+| BB-BUG-092 | A rename and Cmd+N opened C# tabs in a Rust window | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_092_A_RENAME_AND_CMD_N_OPENED_C_TABS_IN_A_RUST_WINDOW.md` |

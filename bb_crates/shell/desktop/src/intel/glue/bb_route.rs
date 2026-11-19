@@ -1,8 +1,8 @@
 //! Which server a file's requests go to (BBEOD27/28): the one place that
 //! decides, so a Rust or Python file never reaches Roslyn and a C# file
-//! never reaches another server. C# files (and files of no language, as
-//! before the picker) go to Roslyn, Rust files to rust-analyzer, Python
-//! files to pyright.
+//! never reaches another server. C# files go to Roslyn, Rust files to
+//! rust-analyzer, Python files to pyright; a file of no language (a README,
+//! `Cargo.toml`) goes to none (BB-BUG-090: it went to Roslyn).
 
 use std::path::{Path, PathBuf};
 
@@ -19,13 +19,22 @@ use crate::intel::bb_worker::{self, Link};
 use crate::intel::model::{LoadStatus, Sent, ServerStatus};
 use crate::ExplorerView;
 
-/// The server that serves `path`: every language has one (BBEOD28).
-pub(crate) fn server_for(path: &Path) -> Server {
-    match Lang::of_source(path) {
-        Some(Lang::CSharp) | None => Server::Roslyn,
-        Some(Lang::Rust) => Server::RustAnalyzer,
-        Some(Lang::Python) => Server::Pyright,
+/// What the status bar says for a question about a file of no language.
+pub(crate) const NO_SERVER: &str = "No language server for this file";
+
+/// The server of each language: one exhaustive match, so a new language
+/// gets a server or fails to compile, never falls through to Roslyn.
+pub(crate) const fn server_of(lang: Lang) -> Server {
+    match lang {
+        Lang::CSharp => Server::Roslyn,
+        Lang::Rust => Server::RustAnalyzer,
+        Lang::Python => Server::Pyright,
     }
+}
+
+/// The server that serves `path`; `None` for a file of no language.
+pub(crate) fn server_for(path: &Path) -> Option<Server> {
+    Lang::of_source(path).map(server_of)
 }
 
 /// The link and status of a server next to Roslyn; `None` for Roslyn.
@@ -51,7 +60,10 @@ fn side_status(view: &ExplorerView, server: Server) -> (bool, &ServerStatus) {
 
 /// Whether `path`'s server is connected and ready for questions.
 pub(crate) fn ready_for(view: &ExplorerView, path: &Path) -> bool {
-    match server_for(path) {
+    let Some(server): Option<Server> = server_for(path) else {
+        return false;
+    };
+    match server {
         Server::Roslyn => view.link.is_some() && view.intel.status == LoadStatus::Ready,
         other @ (Server::RustAnalyzer | Server::Pyright) => {
             let (linked, status): (bool, &ServerStatus) = side_status(view, other);
@@ -69,7 +81,10 @@ pub(crate) fn ready_active(view: &ExplorerView) -> bool {
 
 /// What the status bar says when a question about `path` cannot be asked.
 pub(crate) fn status_for(view: &ExplorerView, path: &Path) -> String {
-    match server_for(path) {
+    let Some(server): Option<Server> = server_for(path) else {
+        return String::from(NO_SERVER);
+    };
+    match server {
         Server::Roslyn => format!("C# server: {}", view.intel.status_label()),
         other @ (Server::RustAnalyzer | Server::Pyright) => format!(
             "{}: {}",
@@ -82,7 +97,10 @@ pub(crate) fn status_for(view: &ExplorerView, path: &Path) -> String {
 /// Send `request` to the server of its file; a request whose server is
 /// not running is dropped here.
 pub(crate) fn send(view: &mut ExplorerView, request: Request) {
-    let server: Server = request.path().map_or(Server::Roslyn, server_for);
+    let Some(server): Option<Server> = request.path().map_or(Some(Server::Roslyn), server_for)
+    else {
+        return;
+    };
     let link: Option<&Link> = match server {
         Server::Roslyn => view.link.as_ref(),
         Server::RustAnalyzer => view.rust.link.as_ref(),
@@ -202,7 +220,9 @@ pub(crate) fn resync_open(view: &mut ExplorerView, started: &[Server]) {
         .tabs
         .items_mut()
         .iter_mut()
-        .filter(|tab: &&mut Tab| started.contains(&server_for(&tab.path)))
+        .filter(|tab: &&mut Tab| {
+            server_for(&tab.path).is_some_and(|server: Server| started.contains(&server))
+        })
         .map(|tab: &mut Tab| {
             // The text sent below already holds these edits.
             let _edits: Vec<CharEdit> = tab.document.take_char_edits();
