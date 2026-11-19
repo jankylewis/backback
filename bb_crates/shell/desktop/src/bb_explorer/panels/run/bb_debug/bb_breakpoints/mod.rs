@@ -9,7 +9,37 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 pub(crate) use bb_exceptions::{ExceptionBreaks, ExceptionKind};
-pub(crate) use toggle::{after_edit, on_toggle, toggle_line, ToggleBreakpoint};
+pub(crate) use toggle::{after_edit, for_start, on_toggle, toggle_line, ToggleBreakpoint};
+
+/// What a new session sends, and the deleted files whose breakpoints were
+/// dropped.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct ForSession {
+    pub(crate) sent: Vec<(PathBuf, Vec<usize>)>,
+    pub(crate) gone: Vec<PathBuf>,
+}
+
+impl ForSession {
+    /// The status line naming the dropped files, if any.
+    pub(crate) fn note(&self) -> Option<String> {
+        let names: Vec<String> = self
+            .gone
+            .iter()
+            .map(|path: &PathBuf| {
+                path.file_name().map_or_else(
+                    || path.display().to_string(),
+                    |name: &std::ffi::OsStr| name.to_string_lossy().into_owned(),
+                )
+            })
+            .collect();
+        (!names.is_empty()).then(|| {
+            format!(
+                "Debug: breakpoints in {} dropped: the file no longer exists",
+                names.join(", ")
+            )
+        })
+    }
+}
 
 /// Every breakpoint, by file.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -47,14 +77,27 @@ impl Breakpoints {
             .unwrap_or_default()
     }
 
-    /// Every file with breakpoints and its lines, for a new session.
-    pub(crate) fn all(&self) -> Vec<(PathBuf, Vec<usize>)> {
-        self.by_file
+    /// The breakpoints a new session sends. A file no longer on disk cannot
+    /// bind (BB-BUG-082): its breakpoints are dropped here and the file is
+    /// returned in `gone`, so the start can say so.
+    pub(crate) fn for_session(&mut self) -> ForSession {
+        let gone: Vec<PathBuf> = self
+            .by_file
+            .keys()
+            .filter(|path: &&PathBuf| !path.exists())
+            .cloned()
+            .collect();
+        for path in &gone {
+            self.by_file.remove(path);
+        }
+        let sent: Vec<(PathBuf, Vec<usize>)> = self
+            .by_file
             .iter()
             .map(|(path, lines): (&PathBuf, &BTreeSet<usize>)| {
                 (path.clone(), lines.iter().copied().collect())
             })
-            .collect()
+            .collect();
+        ForSession { sent, gone }
     }
 
     /// An edit at `anchor` added (`delta` > 0) or removed lines. Lines after
@@ -121,5 +164,31 @@ mod tests {
         assert_eq!(points.lines(&path()), [2, 8, 12], "line 9 joined into 8");
         points.shift(&path(), 0, -20);
         assert_eq!(points.lines(&path()), [0], "a deleted block keeps one");
+    }
+
+    #[test]
+    fn a_deleted_files_breakpoints_are_not_sent_and_are_dropped_and_named() {
+        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let kept: PathBuf = dir.path().join("A.cs");
+        let deleted: PathBuf = dir.path().join("B.cs");
+        std::fs::write(&kept, "a").unwrap();
+        std::fs::write(&deleted, "b").unwrap();
+        let mut points: Breakpoints = Breakpoints::default();
+        points.toggle(&kept, 3);
+        points.toggle(&deleted, 5);
+        std::fs::remove_file(&deleted).unwrap();
+        let start: ForSession = points.for_session();
+        assert_eq!(start.sent, vec![(kept.clone(), vec![3])]);
+        assert_eq!(start.gone, vec![deleted.clone()]);
+        assert_eq!(
+            start.note().as_deref(),
+            Some("Debug: breakpoints in B.cs dropped: the file no longer exists")
+        );
+        assert!(!points.has(&deleted, 5), "the dropped breakpoint is gone");
+        assert_eq!(
+            points.for_session().note(),
+            None,
+            "a clean start says nothing"
+        );
     }
 }

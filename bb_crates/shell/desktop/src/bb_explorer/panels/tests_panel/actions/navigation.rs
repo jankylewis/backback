@@ -40,7 +40,8 @@ pub(crate) fn jump(view: &mut ExplorerView, window: &mut Window, cx: &mut Contex
 
 /// Open a stack frame's file at its 0-based line. Relative paths and a
 /// deterministic build's `/_/` paths are read under the opened root; a file
-/// not on this machine is said in the status bar.
+/// not on this machine is said in the status bar, and a file under the root
+/// that is gone says it no longer exists (BB-BUG-083).
 pub(crate) fn jump_to(
     view: &mut ExplorerView,
     (path, line): (&std::path::Path, usize),
@@ -53,10 +54,12 @@ pub(crate) fn jump_to(
         Err(_) => view.root.join(path),
     };
     let Ok(canonical): Result<PathBuf, std::io::Error> = local.canonicalize() else {
-        view.report(&format!(
-            "Cannot open {}: not on this machine",
-            path.display()
-        ));
+        let why: &str = if local.starts_with(&view.root) {
+            "the file no longer exists"
+        } else {
+            "not on this machine"
+        };
+        view.report(&format!("Cannot open {}: {why}", path.display()));
         return;
     };
     view.tests.pending_jump = Some((canonical.clone(), line));

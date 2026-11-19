@@ -129,6 +129,10 @@ fn a_test_rows_go_to_reopens_its_closed_file_and_a_deleted_one_says_why(cx: &mut
     go(vcx);
     let said: String = left_behind(&rig, vcx).1;
     assert!(said.contains("B.cs"), "the status says why: {said}");
+    assert!(
+        said.ends_with("the file no longer exists"),
+        "a deleted local file is not 'not on this machine': {said}"
+    );
 }
 
 fn chmod(path: &Path, mode: u32) {
@@ -169,4 +173,34 @@ fn an_unreadable_file_says_why_and_leaves_no_waiting_jump_from_a_row_or_a_test(
         Some((b, 0)),
         "a later open stays at the top"
     );
+}
+
+/// BB-BUG-082: a breakpoint in a file deleted since it was set is not sent at
+/// Debug start; the status names the file and the store forgets it.
+#[gpui::test]
+fn a_debug_start_drops_a_deleted_files_breakpoints_and_says_so(cx: &mut TestAppContext) {
+    let (rig, vcx): (Rig, &mut VisualTestContext) = rig_with(cx, false, true, LINES);
+    let b: PathBuf = rig.root.join("B.cs");
+    std::fs::write(&b, LINES).unwrap();
+    let a: PathBuf = rig.root.join("A.cs");
+    std::fs::write(&a, LINES).unwrap();
+    let sent: Vec<(PathBuf, Vec<usize>)> = rig.view.update(
+        vcx,
+        |v: &mut ExplorerView, _: &mut gpui::Context<ExplorerView>| {
+            v.debug.breakpoints.toggle(&a, 1);
+            v.debug.breakpoints.toggle(&b, 2);
+            std::fs::remove_file(&b).unwrap();
+            crate::run::bb_debug::for_start(v)
+        },
+    );
+    assert_eq!(sent, vec![(a.clone(), vec![1])], "only A.cs is sent");
+    let said: String = left_behind(&rig, vcx).1;
+    assert_eq!(
+        said,
+        "Debug: breakpoints in B.cs dropped: the file no longer exists"
+    );
+    let kept: bool = rig.view.read_with(vcx, |v: &ExplorerView, _: &gpui::App| {
+        v.debug.breakpoints.has(&b, 2)
+    });
+    assert!(!kept, "the dropped breakpoint is not sent again");
 }

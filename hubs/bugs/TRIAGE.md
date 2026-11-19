@@ -70,3 +70,5 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-079 | `Renamed: 0 edits in 0 files` | FIXED | Did the server answer an empty plan (still indexing)? |
 | BB-BUG-080 | ← is live, a click does nothing | FIXED | Is a tab open? Is the place's file on disk? `Tabs::can_go` and `Tabs::hop` share `lives` |
 | BB-BUG-081 | `file path: No such file or directory` after a row click | FIXED | Does the open error go through `editor::open_failed`? Is `intel.jump` still set? |
+| BB-BUG-082 | F5 with a breakpoint in a deleted file, no status | FIXED | Does `begin` take `for_start(view)`? Is the file in `breakpoints` after? |
+| BB-BUG-083 | `Cannot open <root>/X: not on this machine` | FIXED | Does the path map under `view.root`? `jump_to` picks the words |

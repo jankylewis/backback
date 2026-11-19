@@ -112,7 +112,7 @@ fn begin(
     let (commands, notes): (UnboundedSender<Command>, UnboundedReceiver<Note>) = start(Start {
         target,
         test,
-        breakpoints: view.debug.breakpoints.all(),
+        breakpoints: crate::run::bb_debug::for_start(view),
         exceptions: view.debug.exceptions.filters(),
     });
     view.debug.started = Some(std::time::SystemTime::now());
