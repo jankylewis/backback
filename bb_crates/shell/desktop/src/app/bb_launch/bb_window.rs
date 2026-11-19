@@ -1,5 +1,7 @@
 //! The standard macOS window keys (BB-BUG-001): Cmd+M minimizes, Cmd+H hides
 //! the app, Cmd+Alt+H hides the others; a Window menu with Minimize and Zoom.
+//! The menu bar follows the active window's languages: Debug and C# only
+//! while C# is active there (BBEOD33).
 
 use gpui::{App, InteractiveElement, KeyBinding, Menu, MenuItem, Window};
 
@@ -99,4 +101,63 @@ pub(crate) fn install_close_guard(
             },
         )
     });
+}
+
+/// The menu bar; `csharp`: C# is active in the front window, so the C#-only
+/// menus (Debug, C#) show (BBEOD33; they showed in every window before).
+pub(crate) fn menus(csharp: bool) -> Vec<Menu> {
+    use crate::theme::{FollowAppearance, ToggleTheme};
+    let view: Menu = Menu::new("View").items(
+        [
+            MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
+            MenuItem::action("Follow macOS Appearance", FollowAppearance),
+            MenuItem::separator(),
+            // Ctrl+` shows it, a second time hides it (BB-BUG-047).
+            MenuItem::action("Terminal", crate::terminal::ToggleTerminal),
+            MenuItem::action("Split Terminal", crate::terminal::SplitTerminal),
+            MenuItem::separator(),
+        ]
+        .into_iter()
+        .chain(crate::settings::zoom_menu_items()),
+    );
+    let build: Menu = Menu::new("Build").items([
+        MenuItem::action("Build Solution", crate::run::build::BuildSolution),
+        MenuItem::action("Cargo Build", crate::run::build::CargoBuild),
+        MenuItem::action("Cargo Check", crate::run::build::CargoCheck),
+        MenuItem::action("Python Check", crate::run::build::PythonCheck),
+    ]);
+    let quit: MenuItem = MenuItem::action("Quit Backback", crate::editor::Quit);
+    let mut bar: Vec<Menu> = vec![
+        Menu::new("Backback").items(app_items().into_iter().chain([quit])),
+        super::open::file_menu(),
+        view,
+        build,
+    ];
+    if csharp {
+        bar.push(crate::run::bb_debug::debug_menu());
+        bar.push(Menu::new("C#").items([MenuItem::action("Restart Server", crate::RestartServer)]));
+    }
+    bar.push(window_menu());
+    bar
+}
+
+/// Show the menu bar of `view`'s languages now (its window opens in front)
+/// and each time its window comes to the front again.
+pub(crate) fn follow_languages(
+    view: &mut crate::ExplorerView,
+    window: &mut Window,
+    cx: &mut gpui::Context<crate::ExplorerView>,
+) {
+    cx.set_menus(menus(view.langs.langs.debug_visible()));
+    cx.observe_window_activation(
+        window,
+        |view: &mut crate::ExplorerView,
+         window: &mut Window,
+         cx: &mut gpui::Context<crate::ExplorerView>| {
+            if window.is_window_active() {
+                cx.set_menus(menus(view.langs.langs.debug_visible()));
+            }
+        },
+    )
+    .detach();
 }

@@ -68,3 +68,7 @@
 | BB-UIX-018 | FIXED | `open_failed` on both open error arms | `APP/UIX/D2/S05/BB_UIX_018_A_FAILED_OPEN_KEPT_THE_JUMP_THAT_WAITED_FOR_IT.md` |
 | BB-UIX-019 | FIXED | `for_session` drops and names gone files | `APP/UIX/D2/S05/BB_UIX_019_THE_BREAKPOINT_STORE_OUTLIVED_ITS_FILE.md` |
 | BB-UIX-020 | FIXED | `jump_to` words by the opened root | `APP/UIX/D2/S05/BB_UIX_020_A_PATH_THAT_DID_NOT_RESOLVE_WAS_ALWAYS_CALLED_REMOTE.md` |
+| BB-UIX-021 | FIXED | `bb_root::project_root` per language, bounded walk | `APP/UIX/D2/S06/BB_UIX_021_A_FILE_ARGUMENT_LOOKED_ONLY_FOR_A_CSHARP_SOLUTION.md` |
+| BB-UIX-022 | FIXED | Tab mark from `Lang::of_source`; menu bar per front window | `APP/UIX/D2/S06/BB_UIX_022_CSHARP_ONLY_CHROME_WAS_NOT_TIED_TO_THE_WINDOWS_LANGUAGES.md` |
+| BB-UIX-023 | FIXED | `recent_heading` with the rows; `ScrollHandle` + `scroll_to_item` | `APP/UIX/D2/S06/BB_UIX_023_THE_START_PAGE_LIST_HAD_NO_SCROLL_HANDLE_AND_ITS_HEADING_SAT_IN_THE_HEADER.md` |
+| BB-UIX-024 | FIXED | `CargoError::summary`; full text on hover | `APP/UIX/D2/S06/BB_UIX_024_A_TOOLS_WHOLE_STDERR_WAS_SHOWN_IN_A_NARROW_SECTION.md` |

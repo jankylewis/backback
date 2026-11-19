@@ -1,5 +1,5 @@
 //! macOS desktop shell for the backback Explorer.
-#[path = "app/args.rs"]
+#[path = "app/args/mod.rs"]
 mod args;
 mod editor;
 #[path = "bb_explorer/files/mod.rs"]

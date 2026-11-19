@@ -1,7 +1,7 @@
 # Features hub
 
 Every feature backback ships has one row here, in the same PR that ships it
-(law: `bb_SCHEMA.md`). Entries: 109. Bugs a user met are in `bugs/`; this hub
+(law: `bb_SCHEMA.md`). Entries: 111. Bugs a user met are in `bugs/`; this hub
 lists what the app can do and when it came.
 
 | Shelf | Ids |

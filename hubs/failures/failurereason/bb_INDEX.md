@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 72 — FIXED 65, OBSERVED 5, OPEN 1, ACCEPTED 1.
+One file per failure mechanism. This hub owns the id. Entries: 76 — FIXED 69, OBSERVED 5, OPEN 1, ACCEPTED 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -76,3 +76,7 @@ One file per failure mechanism. This hub owns the id. Entries: 72 — FIXED 65, 
 | BB-UIX-018 | A failed open kept the jump that waited for it and named no file | FIXED | yes | yes | none | `APP/UIX/D2/S05/BB_UIX_018_A_FAILED_OPEN_KEPT_THE_JUMP_THAT_WAITED_FOR_IT.md` |
 | BB-UIX-019 | The breakpoint store outlived its file | FIXED | yes | yes | none | `APP/UIX/D2/S05/BB_UIX_019_THE_BREAKPOINT_STORE_OUTLIVED_ITS_FILE.md` |
 | BB-UIX-020 | A path that did not resolve was always called remote | FIXED | yes | yes | none | `APP/UIX/D2/S05/BB_UIX_020_A_PATH_THAT_DID_NOT_RESOLVE_WAS_ALWAYS_CALLED_REMOTE.md` |
+| BB-UIX-021 | A file argument looked only for a C# solution | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_021_A_FILE_ARGUMENT_LOOKED_ONLY_FOR_A_CSHARP_SOLUTION.md` |
+| BB-UIX-022 | C#-only chrome was not tied to the window's languages | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_022_CSHARP_ONLY_CHROME_WAS_NOT_TIED_TO_THE_WINDOWS_LANGUAGES.md` |
+| BB-UIX-023 | The start page list had no scroll handle and its heading sat in the header | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_023_THE_START_PAGE_LIST_HAD_NO_SCROLL_HANDLE_AND_ITS_HEADING_SAT_IN_THE_HEADER.md` |
+| BB-UIX-024 | A tool's whole stderr was shown in a narrow section | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_024_A_TOOLS_WHOLE_STDERR_WAS_SHOWN_IN_A_NARROW_SECTION.md` |

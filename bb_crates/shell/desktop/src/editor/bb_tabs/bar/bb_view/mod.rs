@@ -111,6 +111,24 @@ pub(super) fn file_name(path: &std::path::Path) -> String {
     )
 }
 
+/// The mark in front of a tab's name: its file's language (BBEOD33; was
+/// `C#` on every tab), none for a file of no language.
+fn lang_mark(index: usize, path: &std::path::Path, theme: Theme) -> Option<gpui::Div> {
+    let lang: bb_lang::Lang = bb_lang::Lang::of_source(path)?;
+    let tint: bb_ui::Rgb = match lang {
+        bb_lang::Lang::CSharp => theme.icon_csharp,
+        bb_lang::Lang::Rust => theme.warn,
+        bb_lang::Lang::Python => theme.accent,
+    };
+    let mark: &'static str = lang.mark();
+    Some(
+        div()
+            .debug_selector(move || format!("tab-mark-{index}-{mark}"))
+            .text_color(color(tint))
+            .child(format!("{mark} ")),
+    )
+}
+
 /// What a tab's hover shows: the file's path from the workspace folder
 /// down (`MbTx/Specs/A.cs`); the whole path for a file outside it.
 pub(crate) fn shown_path(root: &std::path::Path, path: &std::path::Path) -> String {
@@ -169,7 +187,7 @@ fn tab_item(
             ),
         )
         .map(|item: gpui::Stateful<gpui::Div>| draggable(item, index, (name.clone(), path), theme))
-        .child(div().text_color(color(theme.icon_csharp)).child("C# "))
+        .children(lang_mark(index, &tab.path, theme))
         .child(format!("{name}{dirty}"))
         .child(corner(index, tab.pinned, cx))
 }

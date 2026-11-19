@@ -72,3 +72,9 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-081 | `file path: No such file or directory` after a row click | FIXED | Does the open error go through `editor::open_failed`? Is `intel.jump` still set? |
 | BB-BUG-082 | F5 with a breakpoint in a deleted file, no status | FIXED | Does `begin` take `for_start(view)`? Is the file in `breakpoints` after? |
 | BB-BUG-083 | `Cannot open <root>/X: not on this machine` | FIXED | Does the path map under `view.root`? `jump_to` picks the words |
+| BB-BUG-084 | window title is the file's folder; no server for a `.rs`/`.py` | FIXED | Does `split_argument` go through `bb_root::project_root`? Is the root inside the walk (git root, home)? |
+| BB-BUG-085 | `C#` before a `.py`/`.rs` tab name | FIXED | Does the tab draw `lang_mark` (`Lang::of_source`)? |
+| BB-BUG-086 | `C#` or `Debug` menu in a window without C# | FIXED | Was the bar set by `follow_languages` for the front window? |
+| BB-BUG-087 | RECENT above LANGUAGES; Down leaves the row off screen | FIXED | Is `recent_heading` after the ticks row? Does `step` call `scroll_to_item`? |
+| BB-BUG-088 | `cargo metadata exited with Some(101)` over many lines | FIXED | Does the section show `CargoError::summary`? Hover for the full text |
+| BB-BUG-089 | a `/private/tmp/...` folder in RECENT | OBSERVED | Not a bug: was it opened once? Readbacks set `BACKBACK_STATE_DIR` |

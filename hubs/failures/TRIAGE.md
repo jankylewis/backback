@@ -88,3 +88,7 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-UIX-018 | `file path: No such file or directory` with no file name | FIXED | Does the error arm call `open_failed` (drops `intel.jump`, `tests.pending_jump`)? |
 | BB-UIX-019 | a deleted file's path in a start's breakpoints | FIXED | Is every session read through `for_session`? |
 | BB-UIX-020 | `not on this machine` for a path under the root | FIXED | Does `jump_to` compare the mapped path with `view.root`? |
+| BB-UIX-021 | window title = the file's folder; no server for a `.rs`/`.py` file | FIXED | Does `split_argument` ask `project_root`? Is the root inside the walk? |
+| BB-UIX-022 | `C#` mark on a `.py`/`.rs` tab; C# or Debug menu without C# | FIXED | Does the chrome ask `Langs` / `Lang::of_source`? |
+| BB-UIX-023 | RECENT above LANGUAGES; Down leaves the row off screen | FIXED | Is RECENT its own element after the ticks? Does `step` scroll? |
+| BB-UIX-024 | `cargo metadata exited with Some(101): error:` over many lines | FIXED | Does the panel show `summary()` and keep `to_string()` for the hover? |

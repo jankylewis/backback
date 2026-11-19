@@ -1,7 +1,8 @@
 //! The Cargo explorer (BBEOD27): above the file tree of a window with Rust
 //! active, the workspace's members from `cargo metadata --no-deps` (read
 //! in the background, with a deadline); a click opens a member's
-//! `Cargo.toml`. A failed read says why there, never in a popup.
+//! `Cargo.toml`. A failed read says why there, never in a popup: one line
+//! with the place cargo named, the full text on hover (BBEOD33).
 
 use std::path::PathBuf;
 
@@ -21,8 +22,8 @@ pub(crate) enum CargoMembers {
     Loading,
     /// The members, by name.
     Ready(Vec<Member>),
-    /// The read failed; the text says why.
-    Failed(String),
+    /// The read failed: one line, and cargo's full text.
+    Failed { summary: String, full: String },
 }
 
 /// Read the members while Rust is active and the root holds a
@@ -46,7 +47,10 @@ pub(crate) fn load(view: &mut ExplorerView, window: &mut Window, cx: &mut Contex
                 |v: &mut ExplorerView, cx: &mut Context<ExplorerView>| {
                     v.rust.members = match found {
                         Ok(workspace) => CargoMembers::Ready(workspace.members),
-                        Err(error) => CargoMembers::Failed(error.to_string()),
+                        Err(error) => CargoMembers::Failed {
+                            summary: error.summary(),
+                            full: error.to_string(),
+                        },
                     };
                     cx.notify();
                 },
@@ -62,7 +66,7 @@ pub(crate) fn section(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Op
     let rows: Vec<AnyElement> = match &view.rust.members {
         CargoMembers::Off => return None,
         CargoMembers::Loading => vec![note("Reading cargo metadata...", theme)],
-        CargoMembers::Failed(reason) => vec![note(&format!("cargo metadata: {reason}"), theme)],
+        CargoMembers::Failed { summary, full } => vec![failure(summary, full, theme)],
         CargoMembers::Ready(members) => members
             .iter()
             .map(|member: &Member| row(member, theme, cx))
@@ -86,6 +90,20 @@ fn note(text: &str, theme: bb_ui::Theme) -> AnyElement {
     div()
         .text_color(color(theme.text_dim))
         .child(text.to_owned())
+        .into_any_element()
+}
+
+/// The failure's one line, cut with an ellipsis; a hover shows `full`.
+fn failure(summary: &str, full: &str, theme: bb_ui::Theme) -> AnyElement {
+    div()
+        .id("cargo-error")
+        .debug_selector(|| "cargo-error".to_owned())
+        .overflow_hidden()
+        .whitespace_nowrap()
+        .text_ellipsis()
+        .text_color(color(theme.error))
+        .child(summary.to_owned())
+        .tooltip(crate::tooltip::path(full.to_owned(), theme))
         .into_any_element()
 }
 

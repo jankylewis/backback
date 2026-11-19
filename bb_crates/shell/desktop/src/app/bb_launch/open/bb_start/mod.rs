@@ -7,7 +7,7 @@
 use std::path::PathBuf;
 
 use gpui::{
-    div, prelude::*, px, AnyWindowHandle, App, ClickEvent, Context, FocusHandle, KeyDownEvent,
+    prelude::*, px, AnyWindowHandle, App, Context, FocusHandle, KeyDownEvent, ScrollHandle,
     Subscription, Window, WindowHandle,
 };
 
@@ -22,7 +22,7 @@ pub(crate) use bb_window::{reopen, show};
 
 use crate::editor::Quit;
 use crate::{color, ExplorerView};
-use entries::{empty_note, entries, header, label, row_label, row_texts, rows_box, StartEntry};
+use entries::{empty_note, entries, header, label, recent_heading, rows_box, StartEntry};
 
 pub(crate) struct StartPage {
     entries: Vec<StartEntry>,
@@ -35,8 +35,12 @@ pub(crate) struct StartPage {
     /// File > Languages...: the workspace window the next open replaces.
     replace: Option<AnyWindowHandle>,
     home: Option<PathBuf>,
+    /// The rows' scroll: Up/Down keep the selected row in sight (BBEOD33).
+    scroll: ScrollHandle,
     focus: FocusHandle,
     _appearance: Subscription,
+    /// In front, the menu bar has no C#-only menus (BBEOD33).
+    _front: Subscription,
 }
 
 impl StartPage {
@@ -57,10 +61,19 @@ impl StartPage {
             area: ticks::Area::Rows,
             replace: None,
             home: std::env::var_os("HOME").map(PathBuf::from),
+            scroll: ScrollHandle::new(),
             focus: cx.focus_handle(),
             _appearance: cx.observe_window_appearance(
                 window,
                 |_: &mut Self, _: &mut Window, cx: &mut Context<Self>| cx.notify(),
+            ),
+            _front: cx.observe_window_activation(
+                window,
+                |_: &mut Self, window: &mut Window, cx: &mut Context<Self>| {
+                    if window.is_window_active() {
+                        cx.set_menus(crate::launch::menus(false));
+                    }
+                },
             ),
         }
     }
@@ -81,6 +94,7 @@ impl StartPage {
         } else {
             self.selected.saturating_sub(1)
         };
+        self.scroll.scroll_to_item(self.selected);
         self.refresh_ticks();
     }
 
@@ -108,7 +122,7 @@ impl StartPage {
                 }
             }
             Some(StartEntry::Open) => self.ask(window, cx),
-            None => {}
+            Some(StartEntry::Gone(_)) | None => {}
         }
         cx.notify();
     }
@@ -133,6 +147,7 @@ impl StartPage {
             "up" => self.step(false),
             "down" => self.step(true),
             "enter" => self.choose(self.selected, window, cx),
+            "delete" | "backspace" => self.remove(self.selected),
             _ => return,
         }
         cx.stop_propagation();
@@ -165,44 +180,6 @@ impl StartPage {
             None => cx.quit(),
         }
     }
-
-    fn row(
-        &self,
-        index: usize,
-        theme: bb_ui::Theme,
-        cx: &Context<Self>,
-    ) -> gpui::Stateful<gpui::Div> {
-        let (name, folder, open): (String, String, bool) =
-            row_label(self.entries.get(index), self.home.as_deref());
-        let (left, right): (gpui::Div, gpui::Div) = row_texts(name, folder, open, theme);
-        div()
-            .id(("start-entry", index))
-            .debug_selector(move || format!("start-entry-{index}"))
-            .px(px(10.0))
-            .py(px(6.0))
-            .rounded(px(4.0))
-            .border_1()
-            .border_color(color(if index == self.selected {
-                theme.accent
-            } else {
-                theme.bg
-            }))
-            .hover(move |style: gpui::StyleRefinement| style.bg(color(theme.overlay)))
-            .cursor_pointer()
-            .flex()
-            .justify_between()
-            .gap(px(16.0))
-            .on_click(cx.listener(
-                move |page: &mut Self,
-                      _: &ClickEvent,
-                      window: &mut Window,
-                      cx: &mut Context<Self>| {
-                    page.choose(index, window, cx);
-                },
-            ))
-            .child(left)
-            .child(right)
-    }
 }
 
 impl Render for StartPage {
@@ -214,6 +191,7 @@ impl Render for StartPage {
         let none: bool = self.entries.len() == 1;
         crate::launch::window_actions(crate::settings::root(cx))
             .id("start-page")
+            .debug_selector(|| String::from("start-page-root"))
             .track_focus(&self.focus)
             .on_key_down(cx.listener(Self::key))
             .on_action(cx.listener(Self::on_open))
@@ -228,9 +206,10 @@ impl Render for StartPage {
             .child(header(theme))
             .child(self.ticks_row(theme, cx))
             .children(self.none_ticked_note(theme))
+            .child(recent_heading(theme))
             .when(none, |page: gpui::Stateful<gpui::Div>| {
                 page.child(empty_note(theme))
             })
-            .child(rows_box(rows))
+            .child(rows_box(rows, &self.scroll))
     }
 }
