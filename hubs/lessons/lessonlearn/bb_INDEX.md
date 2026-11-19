@@ -59,3 +59,4 @@
 | BB-ENV-003 | FIXED | A new tool adds its install folder to the fallback; read back with a failing shell | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
 | BB-GAT-013 | FIXED | A variant green counts for its branch; prove the other with BACKBACK_REQUIRE_TOOLS | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
 | BB-GAT-014 | FIXED | Real tools reach a test window through the test thread | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
+| BB-GAT-015 | FIXED | A deadline test gives the start its own deadline | `SHIP/GAT/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |

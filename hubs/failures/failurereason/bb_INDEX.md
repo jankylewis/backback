@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 67 — FIXED 60, OBSERVED 5, OPEN 2.
+One file per failure mechanism. This hub owns the id. Entries: 68 — FIXED 61, OBSERVED 5, OPEN 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -71,3 +71,4 @@ One file per failure mechanism. This hub owns the id. Entries: 67 — FIXED 60, 
 | BB-ENV-003 | The fallback PATH missed rustup's folder | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
 | BB-GAT-013 | A variant test's real-tool branch had never run | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
 | BB-GAT-014 | A real server thread woke gpui's test scheduler | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
+| BB-GAT-015 | A short request deadline also bounded the server start | FIXED | yes | yes | none | `SHIP/GAT/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |

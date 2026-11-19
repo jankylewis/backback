@@ -18,6 +18,9 @@ use bb_text::LspPoint;
 use serde_json::{json, Value};
 
 const DEADLINE: Duration = Duration::from_secs(20);
+/// The start's own deadline (spawn and `initialize`), apart from the
+/// requests' [`DEADLINE`] (BB-GAT-015).
+const START: Duration = Duration::from_secs(60);
 const INDEXED: Duration = Duration::from_secs(120);
 
 fn fixture() -> (tempfile::TempDir, PathBuf) {
@@ -33,7 +36,7 @@ fn config(root: &Path) -> PythonConfig {
         root: root.to_path_buf(),
         interpreter: PathBuf::from("/usr/bin/python3"),
         inputs: Inputs::from_env(),
-        request_timeout: DEADLINE,
+        request_timeout: START,
     }
 }
 

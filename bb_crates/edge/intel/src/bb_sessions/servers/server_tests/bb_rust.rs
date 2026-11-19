@@ -19,6 +19,9 @@ use bb_text::LspPoint;
 use serde_json::{json, Value};
 
 const DEADLINE: Duration = Duration::from_secs(20);
+/// The start's own deadline (spawn and `initialize`), apart from the
+/// requests' [`DEADLINE`] (BB-GAT-015).
+const START: Duration = Duration::from_secs(60);
 const INDEXED: Duration = Duration::from_secs(180);
 
 fn fixture() -> (tempfile::TempDir, PathBuf, PathBuf) {
@@ -35,7 +38,7 @@ fn config(root: &Path, scratch: &Path) -> RustConfig {
         root: root.to_path_buf(),
         target_dir: scratch.to_path_buf(),
         inputs: Inputs::from_env(),
-        request_timeout: DEADLINE,
+        request_timeout: START,
     }
 }
 

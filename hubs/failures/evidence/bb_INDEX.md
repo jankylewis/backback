@@ -82,3 +82,4 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-013 | FIXED | `bb_tools.rs` red with `/private/var/...` paths on first real pyright; green with canonical root; BBEOD29 READY evidence |
 | BB-GAT-014 | FIXED | 3 of 3 live window runs panicked `Detected activity on thread`; 3 of 3 green after; BBEOD29 READY evidence |
 | BB-GAT-008 | FIXED | Again in BBEOD29: `similar_names` (`line` beside `live`) in a new window test; full gate red at clippy only (701 passed); clippy run alone before the rerun |
+| BB-GAT-015 | FIXED | PR #118 CI run 44444581357 panic at `settle.rs:93`; local red with 2.5 s scripted start on the request deadline, green after |

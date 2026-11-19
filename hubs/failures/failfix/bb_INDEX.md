@@ -63,3 +63,4 @@
 | BB-ENV-003 | FIXED | Fallback PATH adds `~/.cargo/bin` | `SYS/ENV/BB_ENV_003_THE_FALLBACK_PATH_MISSED_RUSTUPS_FOLDER.md` |
 | BB-GAT-013 | FIXED | Canonical root; `BACKBACK_REQUIRE_TOOLS` fails every missing-tool branch | `SHIP/GAT/S04/BB_GAT_013_A_VARIANT_TESTS_REAL_TOOL_BRANCH_HAD_NEVER_RUN.md` |
 | BB-GAT-014 | FIXED | Test thread forwards the real server's events (`try_recv`) | `SHIP/GAT/S04/BB_GAT_014_A_REAL_SERVER_THREAD_WOKE_GPUIS_TEST_SCHEDULER.md` |
+| BB-GAT-015 | FIXED | Session test configs start on their own `START` deadline; slow scripted start | `SHIP/GAT/S04/BB_GAT_015_A_SHORT_REQUEST_DEADLINE_ALSO_BOUNDED_THE_SERVER_START.md` |

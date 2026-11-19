@@ -83,3 +83,4 @@ Bugs a user met in the app have their own table: `../bugs/TRIAGE.md`.
 | BB-ENV-003 | `rust-analyzer not installed` only from the Dock | FIXED | Did the login shell give a PATH? Is the tool's folder in `fallback_dirs`? |
 | BB-GAT-013 | a variant test red on the first machine with the tool | FIXED | Run with `BACKBACK_REQUIRE_TOOLS=1`; compare canonical paths |
 | BB-GAT-014 | `Detected activity on thread ... not deterministic` | FIXED | Does a foreign thread wake a gpui task? Forward with `try_recv` |
+| BB-GAT-015 | `Timeout { method: "initialize"` in a test with a short deadline | FIXED | Does the config's `request_timeout` (the start's deadline) equal the request's? |
