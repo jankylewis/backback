@@ -22,7 +22,7 @@ pub(crate) enum StartEntry {
 
 /// How a row looks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Look {
+pub(crate) enum Look {
     Recent,
     Gone,
     Open,
@@ -70,12 +70,12 @@ pub(crate) fn shown_path(path: &Path, home: Option<&Path>) -> String {
 }
 
 /// A row's name, its folder (or the key of Open...) and its look.
-pub(super) fn row_label(entry: Option<&StartEntry>, home: Option<&Path>) -> (String, String, Look) {
+pub(crate) fn row_label(entry: Option<&StartEntry>, home: Option<&Path>) -> (String, String, Look) {
     match entry {
         Some(StartEntry::Recent(path)) => (name_of(path), shown_path(path, home), Look::Recent),
         Some(StartEntry::Gone(path)) => (
             name_of(path),
-            format!("{} — no longer exists", shown_path(path, home)),
+            format!("no longer exists · {}", shown_path(path, home)),
             Look::Gone,
         ),
         Some(StartEntry::Open) | None => {

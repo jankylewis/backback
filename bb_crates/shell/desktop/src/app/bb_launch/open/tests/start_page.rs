@@ -155,3 +155,13 @@ fn a_gone_folder_shows_greyed_and_its_remove_button_drops_it_from_the_list_only(
     );
     test_store(None);
 }
+
+#[test]
+fn a_gone_rows_note_comes_before_its_path_so_a_long_path_never_hides_it() {
+    let gone: super::super::bb_start::entries::StartEntry =
+        super::super::bb_start::entries::StartEntry::Gone(PathBuf::from("/h/me/a/long/path/App"));
+    let (name, folder, _): (String, String, super::super::bb_start::entries::Look) =
+        super::super::bb_start::entries::row_label(Some(&gone), Some(Path::new("/h/me")));
+    assert_eq!(name, "App");
+    assert_eq!(folder, "no longer exists · ~/a/long/path/App");
+}
