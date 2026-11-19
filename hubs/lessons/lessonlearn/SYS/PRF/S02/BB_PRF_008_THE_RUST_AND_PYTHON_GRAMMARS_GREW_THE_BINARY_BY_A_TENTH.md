@@ -2,7 +2,7 @@
 
 id: BB-PRF-008
 family: PRF
-status: OBSERVED
+status: ACCEPTED
 source: `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD37_BINARY_SIZE_AND_DNAAX.md`
 
 ## Who believed what

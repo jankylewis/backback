@@ -2,7 +2,7 @@
 
 id: BB-PRF-009
 family: PRF
-status: OBSERVED
+status: FIXED
 source: `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD37_BINARY_SIZE_AND_DNAAX.md`
 
 ## Who believed what
@@ -20,3 +20,11 @@ walk's cost.
 
 A walk that overlaps the start is free only when it ends first; bench the
 first open on a tree of many folders as well as one of many files.
+
+## What the fix taught (BBEOD38)
+
+Work the first frame does not need must not sit before it, however fast
+it is made: hand its answer to the window as an event. In a gpui window
+test, a wake from a plain thread is refused as non-deterministic
+("Detected activity on thread bb-detect"); the window polls the walk's
+answer on a gpui timer instead, so the app and the tests take one path.

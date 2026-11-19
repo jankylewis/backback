@@ -123,3 +123,19 @@ fn refresh_tree(view: &mut crate::ExplorerView) -> bool {
         .min(rows.len().saturating_sub(1));
     true
 }
+
+/// Every tab in the colours of the window's languages now (BB-PRF-009);
+/// a tab mid-parse is done when its parse ends.
+pub(crate) fn recolour(view: &mut crate::ExplorerView) {
+    let langs: bb_lang::Langs = view.langs.langs;
+    let mut failed: Option<TabError> = None;
+    for tab in view.tabs.items_mut() {
+        let mode: bb_lang::FileMode = langs.file_mode(&tab.path);
+        if let Err(error) = tab.recolour(mode) {
+            failed = Some(error);
+        }
+    }
+    if let Some(error) = failed {
+        view.report(&error);
+    }
+}

@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 83 — FIXED 74, OBSERVED 7, OPEN 1, ACCEPTED 1.
+One file per failure mechanism. This hub owns the id. Entries: 83 — FIXED 75, OBSERVED 5, OPEN 1, ACCEPTED 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -85,5 +85,5 @@ One file per failure mechanism. This hub owns the id. Entries: 83 — FIXED 74, 
 | BB-UIX-023 | The start page list had no scroll handle and its heading sat in the header | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_023_THE_START_PAGE_LIST_HAD_NO_SCROLL_HANDLE_AND_ITS_HEADING_SAT_IN_THE_HEADER.md` |
 | BB-UIX-024 | A tool's whole stderr was shown in a narrow section | FIXED | yes | yes | none | `APP/UIX/D2/S06/BB_UIX_024_A_TOOLS_WHOLE_STDERR_WAS_SHOWN_IN_A_NARROW_SECTION.md` |
 | BB-GAT-017 | A test-only module in a source file reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
-| BB-PRF-008 | The Rust and Python grammars grew the binary by a tenth | OBSERVED | no | yes | none | `SYS/PRF/S02/BB_PRF_008_THE_RUST_AND_PYTHON_GRAMMARS_GREW_THE_BINARY_BY_A_TENTH.md` |
-| BB-PRF-009 | A first open of a many-folder tree still waits for the walk | OBSERVED | no | yes | none | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |
+| BB-PRF-008 | The Rust and Python grammars grew the binary by a tenth | ACCEPTED | no | yes | none | `SYS/PRF/S02/BB_PRF_008_THE_RUST_AND_PYTHON_GRAMMARS_GREW_THE_BINARY_BY_A_TENTH.md` |
+| BB-PRF-009 | A first open of a many-folder tree still waits for the walk | FIXED | yes | yes | none | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |

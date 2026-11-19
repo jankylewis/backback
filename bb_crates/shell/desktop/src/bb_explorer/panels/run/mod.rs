@@ -17,6 +17,9 @@ pub(crate) fn root_actions(
     let set_next: bool = bb_debug::session::control::can_set_next(view);
     let root: gpui::Div = if view.langs.langs.debug_visible() {
         bb_debug::actions(root, set_next, cx)
+    } else if view.langs.detecting {
+        // BB-PRF-009: F5 before the languages are known says so.
+        root.on_action(cx.listener(crate::launch::langs::debug_while_detecting))
     } else {
         root
     };

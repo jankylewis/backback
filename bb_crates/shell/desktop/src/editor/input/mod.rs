@@ -227,6 +227,7 @@ pub(super) fn schedule_parse(
                     if let Some(Err(error)) = outcome {
                         view.report(&error);
                     }
+                    super::recolour(view);
                     schedule_parse(view, path, window, cx);
                     cx.notify();
                 },

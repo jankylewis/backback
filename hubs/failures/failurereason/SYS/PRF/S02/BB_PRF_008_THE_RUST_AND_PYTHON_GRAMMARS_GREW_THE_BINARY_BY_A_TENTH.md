@@ -2,7 +2,7 @@
 
 id: BB-PRF-008
 family: PRF
-status: OBSERVED
+status: ACCEPTED
 date: 2026-11-20
 signature: binary size 14.23 MB -> 16.05 MB (+12.8 %) after the language picker
 source: `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD37_BINARY_SIZE_AND_DNAAX.md` (section 1)
@@ -30,7 +30,8 @@ Build with `-C link-arg=-Wl,-map,<file>` (the bench record's commands),
 sum symbol sizes by crate or archive, compare two commits. `size -m` on
 `libtree-sitter-<lang>.a` in the build folder gives each grammar alone.
 
-## Status
+## Ruling (matemaster, 2026-11-20, BBEOD38 brief): ACCEPTED
 
-No fix: the growth is the feature (Rust and Python colours). OBSERVED
-until a ruling accepts it or names a size budget.
+"BB-PRF-008: ACCEPTED (+1.8 MB are the Rust/Python grammars = the
+feature)." The grammars are the Rust and Python colours themselves; no
+size budget is set. No fix file.

@@ -50,6 +50,12 @@ impl LiveTree {
         &self.tree
     }
 
+    /// Whether a background parse holds the parser now.
+    #[must_use]
+    pub fn parsing(&self) -> bool {
+        self.parser.is_none()
+    }
+
     /// Whether edits wait for a parse.
     #[must_use]
     pub fn is_stale(&self) -> bool {
