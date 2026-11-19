@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 76 — FIXED 69, OBSERVED 5, OPEN 1, ACCEPTED 1.
+One file per failure mechanism. This hub owns the id. Entries: 78 — FIXED 71, OBSERVED 5, OPEN 1, ACCEPTED 1.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -48,6 +48,7 @@ One file per failure mechanism. This hub owns the id. Entries: 76 — FIXED 69, 
 | BB-PRF-004 | Every frame shaped and styled the whole line: seconds a key past 100 000 chars | FIXED | yes | yes | none | `SYS/PRF/S01/BB_PRF_004_EVERY_FRAME_SHAPED_AND_STYLED_THE_WHOLE_LINE.md` |
 | BB-PRF-005 | The dotnet tool launcher stayed alive as Roslyn's parent | FIXED | yes | yes | none | `SYS/PRF/S02/BB_PRF_005_THE_DOTNET_TOOL_LAUNCHER_STAYED_ALIVE_AS_ROSLYNS_PARENT.md` |
 | BB-PRF-006 | Find in Files read one file at a time | FIXED | yes | yes | none | `SYS/PRF/S02/BB_PRF_006_FIND_IN_FILES_READ_ONE_FILE_AT_A_TIME.md` |
+| BB-PRF-007 | The language walk ran on the UI thread before the first frame | FIXED | yes | yes | none | `SYS/PRF/S02/BB_PRF_007_THE_LANGUAGE_WALK_RAN_ON_THE_UI_THREAD_BEFORE_THE_FIRST_FRAME.md` |
 | BB-UIX-015 | Save never compared the file with what it had read, so an outside change was lost | FIXED | yes | yes | none | `APP/UIX/D2/S04/BB_UIX_015_SAVE_NEVER_COMPARED_THE_FILE_WITH_WHAT_IT_HAD_READ.md` |
 | BB-UIX-016 | The Explorer read each folder once, so outside changes never showed | FIXED | yes | yes | none | `APP/UIX/D2/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | Two intel workers in one process shared and removed one owned temp folder | FIXED | yes | yes | BB-TG-017 | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |

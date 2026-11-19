@@ -128,4 +128,5 @@ fn new_window_is_first_in_the_file_menu_and_on_cmd_shift_n() {
     ));
 }
 mod bb_readback;
+mod early_walk;
 mod start_page;
