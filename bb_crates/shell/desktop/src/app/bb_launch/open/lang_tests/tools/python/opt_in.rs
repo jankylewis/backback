@@ -19,6 +19,7 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 use super::super::super::{close_all, open_with, opened};
 use super::super::live::bb_kit::tools_required;
+use super::pyright_servers;
 use crate::intel::bb_worker::protocol::{Event, Request};
 use crate::intel::bb_worker::{self, Link};
 use crate::ExplorerView;
@@ -97,41 +98,6 @@ fn real_pyright(at: &Path, ended: Arc<AtomicUsize>) -> (Link, UnboundedReceiver<
     (link, window_end)
 }
 
-/// The processes under this test process whose command holds `name`,
-/// read from `ps`.
-pub(super) fn pyright_processes(name: &str) -> Vec<String> {
-    let out: std::process::Output = std::process::Command::new("ps")
-        .args(["-A", "-o", "pid=,ppid=,command="])
-        .output()
-        .unwrap();
-    let rows: Vec<(u32, u32, String)> = String::from_utf8_lossy(&out.stdout)
-        .lines()
-        .filter_map(|line: &str| {
-            let mut parts: std::str::SplitWhitespace<'_> = line.split_whitespace();
-            let child: u32 = parts.next()?.parse().ok()?;
-            let parent: u32 = parts.next()?.parse().ok()?;
-            Some((child, parent, parts.collect::<Vec<&str>>().join(" ")))
-        })
-        .collect();
-    let mut ours: Vec<u32> = vec![std::process::id()];
-    let mut grew: bool = true;
-    while grew {
-        let more: Vec<u32> = rows
-            .iter()
-            .filter(|(pid, ppid, _): &&(u32, u32, String)| {
-                ours.contains(ppid) && !ours.contains(pid)
-            })
-            .map(|(pid, _, _): &(u32, u32, String)| *pid)
-            .collect();
-        grew = !more.is_empty();
-        ours.extend(more);
-    }
-    rows.into_iter()
-        .filter(|(pid, _, cmd): &(u32, u32, String)| ours.contains(pid) && cmd.contains(name))
-        .map(|(pid, _, cmd): (u32, u32, String)| format!("{pid} {cmd}"))
-        .collect()
-}
-
 /// A scratch `cs_py` fixture and an empty choice store for one test.
 pub(super) struct Unpicked {
     _base: tempfile::TempDir,
@@ -175,7 +141,7 @@ impl Drop for Unpicked {
 fn no_pyright_for(settle: Duration) -> Vec<String> {
     let since: Instant = Instant::now();
     while since.elapsed() < settle {
-        let found: Vec<String> = pyright_processes("pyright");
+        let found: Vec<String> = pyright_servers();
         if !found.is_empty() {
             return found;
         }
@@ -187,7 +153,7 @@ fn no_pyright_for(settle: Duration) -> Vec<String> {
 fn pyright_within(limit: Duration) -> Vec<String> {
     let since: Instant = Instant::now();
     loop {
-        let found: Vec<String> = pyright_processes("pyright-langserver");
+        let found: Vec<String> = pyright_servers();
         if !found.is_empty() || since.elapsed() > limit {
             return found;
         }
@@ -236,7 +202,7 @@ fn a_csharp_and_python_folder_with_no_saved_choice_starts_no_pyright_process(
     close_all(cx);
     starts.wait_ended();
     assert_eq!(
-        pyright_processes("pyright"),
+        pyright_servers(),
         Vec::<String>::new(),
         "pyright ended with its window"
     );

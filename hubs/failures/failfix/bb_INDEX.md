@@ -82,4 +82,5 @@
 | BB-UIX-026 | FIXED | Ticks = pick or `default_ticks`, never stored; v2 `picked` mark; chrome asks the active set | `APP/UIX/D2/S07/BB_UIX_026_AN_AUTO_DETECTED_LANGUAGE_SET_ACTED_AS_THE_USERS_CHOICE.md` |
 | BB-GAT-017 | FIXED | Test-only items top-level `#[cfg(test)]` at the file's end; `.next_back()` | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-018 | FIXED | Hold until released; relay drops the link; tests `wait_ended` | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
+| BB-GAT-019 | FIXED | Probe matches the program only, never its own pid or arguments | `SHIP/GAT/D2/S05/BB_GAT_019_A_TEST_PROBE_MATCHED_ITS_OWN_COMMAND_LINE.md` |
 | BB-PRF-009 | FIXED | The window opens at once; languages, menus, servers and tab colours follow the walk | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |
