@@ -37,7 +37,7 @@ fn up(
     (keys, quit, mark): (&str, bool, &str),
     servers: &[&str],
 ) -> Running {
-    let app: App = launch(file, state, keys, quit);
+    let mut app: App = launch(file, state, keys, quit);
     let pid: u32 = app.child.id();
     let mut seen: BTreeMap<u32, Row> = BTreeMap::new();
     let started: Instant = Instant::now();
@@ -51,6 +51,9 @@ fn up(
         if all_up && marked {
             break;
         }
+        if app.child.try_wait().unwrap().is_some() {
+            break;
+        }
         std::thread::sleep(Duration::from_millis(200));
     }
     let missing: Vec<&&str> = servers
@@ -59,7 +62,8 @@ fn up(
         .collect();
     assert!(
         missing.is_empty() && marked,
-        "servers missing {missing:?}, mark {mark} printed {marked}; said {:?}",
+        "servers missing {missing:?}, mark {mark} printed {marked}, backback ended {}; said {:?}",
+        app.child.try_wait().unwrap().is_some(),
         app.said.lock().unwrap()
     );
     Running {
@@ -96,7 +100,11 @@ pub fn nothing_left(mut run: Running, how: &str) {
 }
 
 pub fn building(keys: &str, mark: &str) -> Running {
+    building_on(keys, mark, false)
+}
+
+pub fn building_on(keys: &str, mark: &str, slow: bool) -> Running {
     let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-    let (file, state): (PathBuf, PathBuf) = hang::fixture(dir.path());
+    let (file, state): (PathBuf, PathBuf) = hang::fixture(dir.path(), slow);
     up(dir, (&file, &state), (keys, false, mark), &[hang::STEP])
 }

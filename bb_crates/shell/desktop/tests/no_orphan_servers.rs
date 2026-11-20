@@ -22,7 +22,7 @@ use std::process::Command;
 use std::time::Duration;
 
 use bb_tree::{launch, App};
-use run::{building, nothing_left, running, running_with, Running};
+use run::{building, building_on, nothing_left, running, running_with, Running};
 
 #[test]
 fn a_sigkilled_backback_leaves_no_process_behind() {
@@ -72,17 +72,20 @@ fn a_sigtermed_backback_leaves_no_process_behind() {
 
 #[test]
 fn a_backback_that_quits_leaves_no_process_behind() {
-    let mut run: Running = running("wait:ready mark:up", true, "bb_mark up");
+    let mut run: Running = running("wait:ready mark:up wait:go", true, "bb_mark up");
+    run.app.go();
     assert!(run.app.ended_within(Duration::from_secs(30)), "quit");
     nothing_left(run, "quit");
 }
 
 #[test]
 fn a_backback_that_panics_while_it_builds_leaves_no_process_behind() {
-    let mut run: Running = building(
-        "cmd-shift-b mark:building sleep:8000 crash:panic",
+    let mut run: Running = building_on(
+        "cmd-shift-b mark:building wait:go crash:panic",
         "bb_mark building",
+        true,
     );
+    run.app.go();
     assert!(
         run.app.ended_within(Duration::from_secs(30)),
         "the panic ends it"

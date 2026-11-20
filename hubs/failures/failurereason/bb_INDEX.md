@@ -91,5 +91,6 @@ One file per failure mechanism. This hub owns the id. Entries: 87 — FIXED 79, 
 | BB-GAT-017 | A test-only module in a source file reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-018 | A timed walk hold and a kept server link failed under CI load | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
 | BB-GAT-019 | A test probe matched its own command line | FIXED | yes | no | none | `SHIP/GAT/D2/S05/BB_GAT_019_A_TEST_PROBE_MATCHED_ITS_OWN_COMMAND_LINE.md` |
+| BB-GAT-020 | A kill test acted on a timer before its processes existed | FIXED | yes | no | none | `SHIP/GAT/D2/S05/BB_GAT_020_A_KILL_TEST_ACTED_ON_A_TIMER_BEFORE_ITS_PROCESSES_EXISTED.md` |
 | BB-PRF-008 | The Rust and Python grammars grew the binary by a tenth | ACCEPTED | no | yes | none | `SYS/PRF/S02/BB_PRF_008_THE_RUST_AND_PYTHON_GRAMMARS_GREW_THE_BINARY_BY_A_TENTH.md` |
 | BB-PRF-009 | A first open of a many-folder tree still waits for the walk | FIXED | yes | yes | none | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |

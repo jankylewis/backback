@@ -8,7 +8,9 @@
 //! its ▶), `teststop` (the ■), `open:<path>` (a file under the root), `tabmenu:<n>:<row>`
 //! (tab `n`'s right-click menu row, e.g. `close-others`, `pin`), `pressat:<x>:<y>`
 //! (a left press at a window point), `size` (prints the window size), `crash:panic`
-//! (a real panic on the UI thread, BBEOD42: its servers must still end). Keys and
+//! (a real panic on the UI thread, BBEOD42: its servers must still end), `wait:go`
+//! (until the file `BB_KEYS_GO` names exists: the caller saw what it waited for,
+//! BB-GAT-020). Keys and
 //! mouse go through the window's own dispatch.
 
 use std::time::{Duration, Instant};
@@ -32,6 +34,7 @@ pub(crate) async fn run(
     match parts.as_slice() {
         ["wait", "ready"] => wait(view, cx, ready).await,
         ["wait", "tests"] => wait(view, cx, tests_listed).await,
+        ["wait", "go"] => wait_go(cx).await,
         ["wait", "answer"] => wait(view, cx, |v: &ExplorerView| v.intel.in_flight.is_empty()).await,
         ["sleep", ms] => pause(cx, ms.parse::<u64>().unwrap_or(0)).await,
         ["goto", line, col] => goto(view, cx, (number(line), number(col))),
@@ -154,6 +157,24 @@ async fn pause(cx: &mut AsyncWindowContext, ms: u64) {
     cx.background_executor()
         .timer(Duration::from_millis(ms))
         .await;
+}
+
+/// `wait:go`: until the file `$BB_KEYS_GO` exists, at most as long as any wait.
+async fn wait_go(cx: &mut AsyncWindowContext) {
+    let go: Option<std::path::PathBuf> =
+        std::env::var_os("BB_KEYS_GO").map(std::path::PathBuf::from);
+    let started: Instant = Instant::now();
+    while started.elapsed() < Duration::from_secs(180) {
+        if go
+            .as_ref()
+            .is_some_and(|file: &std::path::PathBuf| file.exists())
+        {
+            eprintln!("bb_go");
+            return;
+        }
+        pause(cx, 50).await;
+    }
+    eprintln!("bb_wait timeout");
 }
 
 async fn wait(

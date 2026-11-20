@@ -8,7 +8,16 @@ use std::path::{Path, PathBuf};
 /// The long step, as `ps` shows it.
 pub const STEP: &str = "sleep 600";
 
-pub fn fixture(base: &Path) -> (PathBuf, PathBuf) {
+/// A slow runner's build: this long before the long step starts (CI run
+/// 44768652825 crashed backback before `sleep 600` began, BB-GAT-020).
+pub const SLOW_START: &str = "sleep 12";
+
+pub fn fixture(base: &Path, slow: bool) -> (PathBuf, PathBuf) {
+    let before: String = if slow {
+        format!("/bin/{SLOW_START}; ")
+    } else {
+        String::new()
+    };
     let root: PathBuf = base.join("hang");
     std::fs::create_dir_all(&root).unwrap();
     std::fs::write(
@@ -19,7 +28,7 @@ pub fn fixture(base: &Path) -> (PathBuf, PathBuf) {
     std::fs::write(
         root.join("Hang.csproj"),
         format!(
-            r#"<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup><Target Name="LongStep" BeforeTargets="Build"><Exec Command="/bin/{STEP}" /></Target></Project>"#
+            r#"<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup><Target Name="LongStep" BeforeTargets="Build"><Exec Command="{before}/bin/{STEP}" /></Target></Project>"#
         ),
     )
     .unwrap();

@@ -156,16 +156,27 @@ pub fn fixture(base: &Path) -> (PathBuf, PathBuf, PathBuf) {
 /// A running `backback` and what it printed so far.
 pub struct App {
     pub child: Child,
+    pub go: PathBuf,
     pub said: Arc<Mutex<Vec<String>>>,
 }
 
+/// A script that ends backback by itself (`crash:`, or the quit after the
+/// last step) must first hold at `wait:go`, so it ends only once the test
+/// saw the processes it waits for (BB-GAT-020).
 pub fn launch(file: &Path, state: &Path, keys: &str, quit: bool) -> App {
+    let ends_itself: bool = quit || keys.contains("crash:");
+    assert!(
+        !ends_itself || keys.split_whitespace().any(|step: &str| step == "wait:go"),
+        "{keys:?} ends backback on its own timer: hold it at wait:go"
+    );
+    let go: PathBuf = state.join("go");
     let mut command: Command = Command::new(env!("CARGO_BIN_EXE_backback"));
     command
         .arg(file)
         .env("BACKBACK_STATE_DIR", state)
         .env("BB_KEYS", keys)
         .env_remove("BB_KEYS_QUIT")
+        .env("BB_KEYS_GO", &go)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::piped());
@@ -181,7 +192,7 @@ pub fn launch(file: &Path, state: &Path, keys: &str, quit: bool) -> App {
             into.lock().unwrap().push(line);
         }
     });
-    App { child, said }
+    App { child, go, said }
 }
 
 impl Drop for App {
@@ -192,6 +203,12 @@ impl Drop for App {
 }
 
 impl App {
+    /// Let a script held at `wait:go` go on.
+    pub fn go(&self) {
+        std::fs::create_dir_all(self.go.parent().unwrap()).unwrap();
+        std::fs::write(&self.go, "go\n").unwrap();
+    }
+
     pub fn printed(&self, wanted: &str, within: Duration) -> bool {
         let started: Instant = Instant::now();
         loop {

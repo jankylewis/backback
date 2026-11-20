@@ -67,6 +67,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-BLD-004 | FIXED | Dock capture of the PR #110 bundle; contact sheet `docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png` |
 | BB-PRC-008 | FIXED | `a_dropped_debug_test_session_leaves_no_test_run` (red with an empty drop); matemaster report 2026-11-18 |
 | BB-PRC-009 | FIXED | `no_orphan_servers` red/green process lists (fleet `evidence/BBEOD42_READY.md`); matemaster report 2026-11-20 |
+| BB-GAT-020 | FIXED | CI run 44768652825; local slow-build red then green (fleet `evidence/BBEOD42_READY.md`) |
 | BB-BUG-070 | FIXED | Headmate screen recording 2026-11-18 (12 s, not in the repo); `a_double_click_zooms_once_and_only_a_moved_press_drags` |
 | BB-BUG-071 | OBSERVED | Live DAP probes 2026-11-18 (launch, attach, NUnit test host; targets only on statement-start lines); `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |
 | BB-BUG-072 | FIXED | `a_file_changed_since_the_debug_build_says_so`; `x` = 1 evaluated live in `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |
