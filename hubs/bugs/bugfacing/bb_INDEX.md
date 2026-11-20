@@ -97,3 +97,4 @@ Bugs a user met in the app. Entries: 92 — FIXED 88, OBSERVED 4.
 | BB-BUG-091 | Find in Files offered no Project in a Rust or Python window | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_091_FIND_IN_FILES_OFFERED_NO_PROJECT_IN_A_RUST_OR_PYTHON_WINDOW.md` |
 | BB-BUG-092 | A rename and Cmd+N opened C# tabs in a Rust window | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_092_A_RENAME_AND_CMD_N_OPENED_C_TABS_IN_A_RUST_WINDOW.md` |
 | BB-BUG-093 | A C# repo with .py files started pyright with no choice | FIXED | BB-UIX-026 | yes | `C2/D7/S24/BB_BUG_093_A_CSHARP_REPO_WITH_PY_FILES_STARTED_PYRIGHT_WITH_NO_CHOICE.md` |
+| BB-BUG-094 | dotnet build hosts ran hours after backback ended | FIXED | BB-PRC-009 | yes | `C2/D7/S24/BB_BUG_094_DOTNET_BUILD_HOSTS_RAN_HOURS_AFTER_BACKBACK_ENDED.md` |

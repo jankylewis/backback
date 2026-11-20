@@ -40,7 +40,10 @@ pub async fn resolve(target: &Path, deadline: Duration) -> Result<PathBuf, Targe
                 Command::new("dotnet")
                     .arg("build")
                     .arg(&project)
-                    .arg("-v:q"),
+                    .arg("-v:q")
+                    // No node or compiler server outlives the build, as
+                    // Build Solution (run.rs); BBEOD42 found `VBCSCompiler` left.
+                    .args(["-nodeReuse:false", "-p:UseSharedCompilation=false"]),
                 deadline,
             )
             .await?;
@@ -63,10 +66,22 @@ async fn run(
     command: &mut Command,
     deadline: Duration,
 ) -> Result<std::process::Output, TargetError> {
-    let output: std::process::Output =
-        tokio::time::timeout(deadline, command.kill_on_drop(true).output())
-            .await
-            .map_err(|_: tokio::time::error::Elapsed| TargetError::Timeout)??;
+    // Its own owned group: `dotnet build` starts MSBuild nodes, which end
+    // with the group however backback ends (BB-PRC-009).
+    let child: tokio::process::Child = command
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .process_group(0)
+        .kill_on_drop(true)
+        .spawn()?;
+    let _group: Option<bb_process::OwnedGroup> = child
+        .id()
+        .and_then(std::num::NonZeroU32::new)
+        .map(bb_process::OwnedGroup::register);
+    let output: std::process::Output = tokio::time::timeout(deadline, child.wait_with_output())
+        .await
+        .map_err(|_: tokio::time::error::Elapsed| TargetError::Timeout)??;
     if output.status.success() {
         Ok(output)
     } else {

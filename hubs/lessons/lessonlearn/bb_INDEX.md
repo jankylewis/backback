@@ -52,6 +52,7 @@
 | BB-GAT-007 | FIXED | A clean audit says nothing about the build | `SHIP/GAT/D1/S02/BB_GAT_007_AUDIT_FIXES_WENT_TO_THE_GATE_UNBUILT.md` |
 | BB-ENV-002 | FIXED | Heavy jobs on the headmate's Mac run with one worker | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
 | BB-PRC-008 | FIXED | Join a detached owner before returning; pipe test runs to a file | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
+| BB-PRC-009 | FIXED | A dying owner's cleanup never runs: watch it from outside, prove it with a real kill | `SYS/PRC/S03/BB_PRC_009_A_CHILD_GROUP_OUTLIVES_AN_OWNER_THAT_SKIPS_CLEANUP.md` |
 | BB-GAT-008 | FIXED | Clippy on touched crates before the gate; audit does not replace it | `SHIP/GAT/D1/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | FIXED | Run a variant-dependent live test on the stock adapter too | `SHIP/GAT/D1/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
 | BB-GAT-010 | FIXED | Arm the watchdog on every wait that can block; run new live tests under an alarm | `SHIP/GAT/D1/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |

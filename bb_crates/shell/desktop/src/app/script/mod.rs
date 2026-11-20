@@ -7,8 +7,9 @@
 //! `testrun:<name>` (the first spec whose name holds `name`: a row click /
 //! its ▶), `teststop` (the ■), `open:<path>` (a file under the root), `tabmenu:<n>:<row>`
 //! (tab `n`'s right-click menu row, e.g. `close-others`, `pin`), `pressat:<x>:<y>`
-//! (a left press at a window point), `size` (prints the window size). Keys and mouse go
-//! through the window's own dispatch.
+//! (a left press at a window point), `size` (prints the window size), `crash:panic`
+//! (a real panic on the UI thread, BBEOD42: its servers must still end). Keys and
+//! mouse go through the window's own dispatch.
 
 use std::time::{Duration, Instant};
 
@@ -50,6 +51,7 @@ pub(crate) async fn run(
                 );
             });
         }
+        ["crash", "panic"] => crash(),
         ["mark", name] => {
             eprintln!("bb_mark {name}");
             pause(cx, 1_500).await;
@@ -65,6 +67,16 @@ pub(crate) async fn run(
         _ => return false,
     }
     true
+}
+
+/// `crash:panic`: a real panic on the UI thread, as a bug would raise one.
+#[allow(
+    clippy::panic,
+    reason = "the crash:panic readback step panics on purpose (BBEOD42)"
+)]
+fn crash() -> ! {
+    eprintln!("bb_crash panic");
+    std::panic::panic_any(String::from("bb_script crash:panic"))
 }
 
 fn tests(view: &WeakEntity<ExplorerView>, cx: &mut AsyncWindowContext, expand: bool) {

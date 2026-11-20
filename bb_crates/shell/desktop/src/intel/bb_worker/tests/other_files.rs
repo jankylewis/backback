@@ -81,4 +81,5 @@ async fn an_edit_in_one_file_refreshes_the_diagnostics_of_the_other_open_files()
         "the error cleared",
     )
     .await;
+    live.finish().await;
 }

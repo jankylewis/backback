@@ -56,7 +56,7 @@ One row per failure reason and tool gap; grep the signature in your log. Bugs a 
 | BB-UIX-016 | `tree rows differ from ls -A` | FIXED | Does `Explorer::refresh` run (editor `refresh_tree`)? |
 | BB-PRC-005 | `a project load fails only with two workers` | FIXED | Do two owners in one process share a folder name? |
 | BB-PRC-006 | `a temp folder kept although its owner is gone` | FIXED | Is the pid's process younger than the folder (`ps -o etime=`)? |
-| BB-PRC-007 | `LEAK [ ... ] intel::bb_worker::tests` | OBSERVED | Which child holds the test's pipe: Roslyn, a dotnet build server? |
+| BB-PRC-007 | `LEAK [ ... ] intel::bb_worker::tests` | FIXED | Does the test drain its server thread (`finish`/`end`) before returning? |
 | BB-BLD-003 | `still broken after the fix merged` | FIXED | `BBCommit` of the running app (status bar) holds the fix? |
 | BB-BLD-004 | `a dark tile behind the Dock icon` | FIXED | Is the icon set at launch (`bb_dock::set_icon`)? Is `dock.png` transparent? |
 | BB-TG-019 | `a runner press outside a popup did nothing` | OBSERVED | Did the readback window draw a frame after the popup opened? |

@@ -9,7 +9,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
-use crate::owner::{owner, owns};
+use crate::orphan::{owner, owns};
 
 /// Every prefix backback and its tests name temp folders with.
 pub const FAMILIES: [&str; 11] = [

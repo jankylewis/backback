@@ -89,3 +89,37 @@ pub(super) async fn wait_ready(
         }
     }
 }
+
+/// End a session as a closed window does: drop its link, wait until its
+/// thread has ended (the event channel closes only then), and find no
+/// language server of this process left. A test that returns before this
+/// leaves Roslyn holding the run's output pipe: nextest's LEAK (BBEOD42).
+pub(super) async fn finish(link: Link, mut events: UnboundedReceiver<Event>) {
+    drop(link);
+    let drained: Result<(), tokio::time::error::Elapsed> =
+        tokio::time::timeout(WAIT, async { while events.recv().await.is_some() {} }).await;
+    assert!(
+        drained.is_ok(),
+        "the server thread ends once its link drops"
+    );
+    let left: Vec<String> = servers_of_this_process();
+    assert!(left.is_empty(), "{left:?}");
+}
+
+fn servers_of_this_process() -> Vec<String> {
+    let out: std::process::Output = std::process::Command::new("/bin/ps")
+        .args(["-A", "-ww", "-o", "ppid=,stat=,command="])
+        .output()
+        .unwrap();
+    let own: String = std::process::id().to_string();
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .filter(|line: &&str| {
+            let mut words: std::str::SplitWhitespace<'_> = line.split_whitespace();
+            words.next() == Some(own.as_str())
+                && !words.next().is_some_and(|stat: &str| stat.starts_with('Z'))
+                && line.contains("LanguageServer")
+        })
+        .map(str::to_owned)
+        .collect()
+}

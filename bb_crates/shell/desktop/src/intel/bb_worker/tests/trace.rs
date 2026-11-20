@@ -6,7 +6,7 @@ use std::time::SystemTime;
 
 use tokio::sync::mpsc::UnboundedReceiver;
 
-use super::{first_diagnostics, harness, start, wait_ready};
+use super::{finish, first_diagnostics, harness, start, wait_ready};
 use crate::intel::bb_worker::protocol::{Event, Request};
 use crate::intel::bb_worker::Link;
 
@@ -36,5 +36,6 @@ async fn gui_solution_open_and_document_sync_leave_no_trace() {
     let text: String = std::fs::read_to_string(&path).unwrap();
     assert!(link.send(Request::Open { path, text }));
     first_diagnostics(&mut events).await;
+    finish(link, events).await;
     assert_eq!(snapshot(&root), before);
 }

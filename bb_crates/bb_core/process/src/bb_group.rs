@@ -2,6 +2,8 @@
 //!
 //! Every child starts as the leader of its own process group. A drop, fatal
 //! signal, and app quit end the group the same way: TERM, grace, then KILL.
+//! Every registered group is also watched by the guard (`crate::orphan`),
+//! which ends it when this process ends without running any of that.
 
 use std::num::NonZeroU32;
 use std::process::{Command, Stdio};
@@ -35,8 +37,20 @@ impl GroupId {
             group.terminate(&mut || {});
         } else {
             groups.push(group);
+            crate::orphan::watch(leader.get());
         }
         group
+    }
+
+    /// A group this process did not register (a record's, BB-PRC-009):
+    /// [`Self::end_now`] ends it; [`Self::end`] ignores it.
+    pub(crate) fn foreign(leader: NonZeroU32) -> Self {
+        Self(leader)
+    }
+
+    /// End the group now (TERM, grace, KILL), registered or not.
+    pub(crate) fn end_now(self) {
+        self.terminate(&mut || {});
     }
 
     /// Whether any member (a zombie leader too) still exists.
@@ -81,6 +95,7 @@ impl GroupId {
         }
         self.terminate(reap);
         groups.retain(|group: &Self| *group != self);
+        crate::orphan::forget(self.0.get());
     }
 
     fn terminate(self, reap: &mut dyn FnMut()) {
@@ -143,6 +158,7 @@ pub fn end_all() {
 pub fn shutdown() {
     SHUTTING_DOWN.store(true, Ordering::SeqCst);
     end_all();
+    crate::orphan::close();
     crate::temp::remove_owned();
 }
 

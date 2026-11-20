@@ -11,7 +11,6 @@ use bb_cargo::analyzer::{self, Inputs, MISSING_HINT};
 use bb_cargo::fixtures::{Shape, ADD_LINE, BROKEN_LINE, CALL_LINE};
 use gpui::{Modifiers, TestAppContext, VisualTestContext, WindowHandle};
 
-use super::super::super::close_all;
 use super::super::rust::panel_kit::{rust_window, workspace};
 use super::bb_kit::{active, listing, tools_required, Live};
 use crate::ExplorerView;
@@ -152,5 +151,5 @@ fn rust_analyzer_by_mouse_and_keys_f12_click_hover_rename_problems_or_its_instal
             .all(|p: &PathBuf| *p == live.root.join("Cargo.lock")),
         "no target/ or other file in the workspace (Cargo.lock: BB-LSP-012, accepted by ruling): {added:?}"
     );
-    close_all(cx);
+    super::end(live, cx);
 }

@@ -82,3 +82,4 @@ One row per bug (`BB-BUG-*`); failure reasons and tool gaps are in
 | BB-BUG-091 | Find in Files places `Workspace · ws`, `Folder · alpha/src` and no `Project · …` in a Cargo or Python workspace | FIXED | Does the walk filter use `Lang::of_project`? |
 | BB-BUG-092 | a `.rs` tab in C# colours after a rename touched it closed; `New file` in C# colours with no C# ticked | FIXED | Was the tab made with `langs.file_mode(path)`, not a fixed mode? |
 | BB-BUG-093 | `Python: starting pyright` in a C# window nobody ticked Python in | FIXED | `ps` for `pyright` under the app; the `langs` header and the folder's line (BB-UIX-026) |
+| BB-BUG-094 | `dotnet` / `MSBuild.dll /nodemode:1` with ppid 1 and no backback running | FIXED | `ps -o pid,ppid,pgid,lstart`; a `children/` record naming its group? (BB-PRC-009) |
