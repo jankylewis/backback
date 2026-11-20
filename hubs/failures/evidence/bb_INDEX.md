@@ -30,7 +30,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-GAT-003 | FIXED | PR #97 CI run: `discovered=0 loading=1` after a 6 s sleep, first frame 2.9 s |
 | BB-GAT-004 | FIXED | Local gate: `menus_go_app_then_file_then_view_as_on_every_mac` 8 vs 7, suites=53 passed=558 failed=1 |
 | BB-CIP-005 | FIXED | PR #97: `OPEN` printed, worktree removed; restored from `daf397d` on origin |
-| BB-PRC-007 | OBSERVED | PR #93 CI run: nextest `LEAK` on `the_server_thread_counts_projects_then_syncs_edits_and_answers` |
+| BB-PRC-007 | FIXED | PR #93 and run 44701010716 nextest `LEAK`; BBEOD42 local LEAK then 3 clean runs (fleet `evidence/BBEOD42_READY.md`) |
 | BB-PRF-005 | FIXED | MbTx process tree at idle (launcher 49 MB); 3+3 runs; `bb probe` hover x10 A/B |
 | BB-PRF-006 | FIXED | MbTx `find_bench` A/B, 3 rounds x 7 runs, 4 queries; `tests/parallel.rs` |
 | BB-PRF-007 | FIXED | `docs/plan/bench/bb_GENERAL/RERUNS/BBEOD36_LANG_NO_REGRESSION.md`: base/master/fix A/B, 5 of each after a warm-up |
@@ -66,6 +66,8 @@ Capture next time: the build time of the binary that was read back.
 | BB-LSP-008 | FIXED | CI run 42966229802 (PR #107) failed at 10.98 s; alone on master 3 of 3 passed; BBEOD35 timings in the failfix |
 | BB-BLD-004 | FIXED | Dock capture of the PR #110 bundle; contact sheet `docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png` |
 | BB-PRC-008 | FIXED | `a_dropped_debug_test_session_leaves_no_test_run` (red with an empty drop); matemaster report 2026-11-18 |
+| BB-PRC-009 | FIXED | `no_orphan_servers` red/green process lists (fleet `evidence/BBEOD42_READY.md`); matemaster report 2026-11-20 |
+| BB-GAT-020 | FIXED | CI run 44768652825; local slow-build red then green (fleet `evidence/BBEOD42_READY.md`) |
 | BB-BUG-070 | FIXED | Headmate screen recording 2026-11-18 (12 s, not in the repo); `a_double_click_zooms_once_and_only_a_moved_press_drags` |
 | BB-BUG-071 | OBSERVED | Live DAP probes 2026-11-18 (launch, attach, NUnit test host; targets only on statement-start lines); `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |
 | BB-BUG-072 | FIXED | `a_file_changed_since_the_debug_build_says_so`; `x` = 1 evaluated live in `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |

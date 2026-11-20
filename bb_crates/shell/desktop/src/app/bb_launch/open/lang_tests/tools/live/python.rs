@@ -13,7 +13,7 @@ use bb_python::fixtures::{
 use bb_python::pyright::{self, Inputs, MISSING_HINT};
 use gpui::{Modifiers, TestAppContext, VisualTestContext, WindowHandle};
 
-use super::super::super::{close_all, open_with};
+use super::super::super::open_with;
 use super::bb_kit::{active, listing, tools_required, Live};
 use crate::ExplorerView;
 
@@ -154,5 +154,5 @@ fn pyright_by_mouse_and_keys_f12_click_hover_rename_problems_or_its_install_hint
         before,
         "nothing written into the folder"
     );
-    close_all(cx);
+    super::end(live, cx);
 }

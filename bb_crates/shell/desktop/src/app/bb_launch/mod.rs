@@ -21,6 +21,9 @@ pub(crate) use open::{show_start_page, start_state};
 pub(crate) fn launch() {
     // First, before any thread or child process (BB-BUG-009).
     bb_process::shell_env::adopt_login_path();
+    // Then, still alone: end what an earlier backback left, and start the
+    // guard that ends this one's servers however it ends (BB-PRC-009).
+    adopt_children();
     let wanted: Launch = crate::args::parse_args();
     if let Launch::Workspace(start) = &wanted {
         langs::walk_early(&start.root, start.ticked);
@@ -58,6 +61,21 @@ pub(crate) fn launch() {
         }
         cx.activate(true);
     });
+}
+
+/// The startup sweep and the guard; a line only when something was found.
+fn adopt_children() {
+    let Some(dir): Option<PathBuf> = recent::state_dir() else {
+        return;
+    };
+    match bb_process::adopt(&dir.join("children")) {
+        Ok(swept) if swept.ended.is_empty() && swept.refused.is_empty() => {}
+        Ok(swept) => eprintln!(
+            "bb_orphans ended={:?} refused={:?}",
+            swept.ended, swept.refused
+        ),
+        Err(error) => eprintln!("bb: child records: {error}"),
+    }
 }
 
 /// Open `wanted` in a new window and remember it as the newest workspace;

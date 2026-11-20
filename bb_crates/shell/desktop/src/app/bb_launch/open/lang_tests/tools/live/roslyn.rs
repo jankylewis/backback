@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use bb_lang::{Lang, LangSet};
 use gpui::{TestAppContext, VisualTestContext, WindowHandle};
 
-use super::super::super::{close_all, open_with};
+use super::super::super::open_with;
 use super::bb_kit::Live;
 use crate::intel::bb_worker::protocol::Event;
 use crate::ExplorerView;
@@ -140,5 +140,5 @@ fn roslyn_problems_return_to_the_loaded_count_after_typed_text_is_deleted(cx: &m
         back.is_some_and(|b: Duration| b < Duration::from_secs(5)),
         "{log:#?}"
     );
-    close_all(cx);
+    super::end(live, cx);
 }

@@ -1,5 +1,6 @@
 # Backback progress
 
+- BBEOD42 (`bbeod-42-no-orphan-servers`, 2026-11-20 21:05 (est.)-22:37, READY: 5/8 red at 5ad7d19, 9/9 green, 14/15 mutants killed): no child outlives backback (BB-PRC-009, BB-BUG-094): a `/bin/sh` guard on a pipe ends every owned group however backback ends; launch sweeps dead owners' `children/` records; debugger build grouped; worker and live window tests drain their servers (BB-PRC-007 LEAK). CI fix-forward (run 44768652825): self-ending scripts hold at `wait:go` until the test saw its processes (BB-GAT-020).
 - BBEOD41 (`bbeod-41-python-opt-in`, 2026-11-20 14:34-15:11, READY: gate 440/0, 13/13 mutants killed): Python opt-in ruling; default ticks drop Python (Python-only folder keeps it), choice saved only when picked (store v2 `picked` mark, v1 = no choice), Python ignored window-wide when unticked.
 - BBEOD39 (`test/late-langs-real`): late languages on real servers, mid-parse recolour; BB-LSP-013 (restart reopened every tab); CI red fixed: walk hold until released, servers end before a test returns (BB-GAT-018).
 - BBEOD38 (`perf/first-frame-no-wait`): the window no longer waits for the language walk; languages, menus, servers, colours follow it (BB-PRF-009 FIXED; BB-PRF-008 ACCEPTED).

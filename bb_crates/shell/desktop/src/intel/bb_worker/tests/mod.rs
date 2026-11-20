@@ -16,7 +16,7 @@ use tokio::sync::mpsc::UnboundedReceiver;
 
 use super::protocol::{Answer, Ask, Event, Place, Request, Stages, Ticket};
 use super::{find_solution, start, Link};
-use events::{answer, ask, first_diagnostics, next, wait_ready};
+use events::{answer, ask, finish, first_diagnostics, next, wait_ready};
 
 const SPEC: &str = "_NUnitApex/GreeterSpec.cs";
 const WAIT: Duration = Duration::from_secs(180);
@@ -55,6 +55,10 @@ impl Live {
     async fn ask(&mut self, ticket: u64, question: Ask) -> (Answer, Stages) {
         let sent: Ticket = ask(&self.link, &self.spec, ticket, question);
         answer(&mut self.events, sent).await
+    }
+
+    async fn finish(self) {
+        finish(self.link, self.events).await;
     }
 
     async fn definitions(&mut self, ticket: u64, at: LspPoint) -> Vec<Place> {
@@ -102,6 +106,7 @@ async fn the_server_thread_counts_projects_then_syncs_edits_and_answers() {
     complete_after_an_edit(&mut live).await;
     navigate(&mut live).await;
     rename_changes_no_file(&mut live).await;
+    live.finish().await;
 }
 
 async fn complete_after_an_edit(live: &mut Live) {

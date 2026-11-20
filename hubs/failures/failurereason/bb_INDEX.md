@@ -53,7 +53,7 @@ One file per failure mechanism. This hub owns the id. Entries: 87 — FIXED 79, 
 | BB-UIX-016 | The Explorer read each folder once, so outside changes never showed | FIXED | yes | yes | none | `APP/UIX/D2/S04/BB_UIX_016_THE_EXPLORER_READ_EACH_FOLDER_ONCE.md` |
 | BB-PRC-005 | Two intel workers in one process shared and removed one owned temp folder | FIXED | yes | yes | BB-TG-017 | `SYS/PRC/S02/BB_PRC_005_TWO_WORKERS_SHARED_ONE_OWNED_TEMP_FOLDER.md` |
 | BB-PRC-006 | Dev-tool logs and scratch folders grew; a reused pid kept a dead owner's folder | FIXED | yes | no | none | `SYS/PRC/S02/BB_PRC_006_DEV_TOOL_TEMP_FILES_GREW_AND_A_REUSED_PID_KEPT_A_FOLDER.md` |
-| BB-PRC-007 | A Roslyn worker test left a child running | OBSERVED | no | no | none | `SYS/PRC/S02/BB_PRC_007_A_ROSLYN_WORKER_TEST_LEFT_A_CHILD_RUNNING.md` |
+| BB-PRC-007 | A Roslyn worker test left a child running | FIXED | yes | no | none | `SYS/PRC/S02/BB_PRC_007_A_ROSLYN_WORKER_TEST_LEFT_A_CHILD_RUNNING.md` |
 | BB-BLD-003 | A merged fix was reported before it was installed | FIXED | yes | yes | BB-TG-019 | `SHIP/BLD/BB_BLD_003_A_MERGED_FIX_WAS_REPORTED_BEFORE_IT_WAS_INSTALLED.md` |
 | BB-BLD-004 | The Dock draws a tile behind a bundle icon | FIXED | yes | yes | none | `SHIP/BLD/BB_BLD_004_THE_DOCK_DRAWS_A_TILE_BEHIND_A_BUNDLE_ICON.md` |
 | BB-GAT-005 | A test waited for a search it had not started | FIXED | yes | yes | none | `SHIP/GAT/D1/S02/BB_GAT_005_A_TEST_WAITED_FOR_A_SEARCH_IT_HAD_NOT_STARTED.md` |
@@ -62,6 +62,7 @@ One file per failure mechanism. This hub owns the id. Entries: 87 — FIXED 79, 
 | BB-ENV-002 | A gate on every core overheated the Mac | FIXED | yes | yes | none | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
 | BB-LSP-008 | A killed server was reported stopped after one second under load | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_008_A_KILLED_SERVER_WAS_REPORTED_STOPPED_AFTER_ONE_SECOND_UNDER_LOAD.md` |
 | BB-PRC-008 | A debug-test run outlived its test binary (session thread killed at exit) | FIXED | yes | yes | none | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
+| BB-PRC-009 | A child group outlives an owner that skips its cleanup (SIGKILL, abort, exit) | FIXED | yes | yes | none | `SYS/PRC/S03/BB_PRC_009_A_CHILD_GROUP_OUTLIVES_AN_OWNER_THAT_SKIPS_CLEANUP.md` |
 | BB-GAT-008 | A test wildcard arm reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/D1/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | A patched local adapter hid a CI-only branch | FIXED | yes | yes | none | `SHIP/GAT/D1/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
 | BB-GAT-010 | A window test waited with no deadline that could fire | FIXED | yes | yes | none | `SHIP/GAT/D1/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
@@ -90,5 +91,6 @@ One file per failure mechanism. This hub owns the id. Entries: 87 — FIXED 79, 
 | BB-GAT-017 | A test-only module in a source file reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-018 | A timed walk hold and a kept server link failed under CI load | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
 | BB-GAT-019 | A test probe matched its own command line | FIXED | yes | no | none | `SHIP/GAT/D2/S05/BB_GAT_019_A_TEST_PROBE_MATCHED_ITS_OWN_COMMAND_LINE.md` |
+| BB-GAT-020 | A kill test acted on a timer before its processes existed | FIXED | yes | no | none | `SHIP/GAT/D2/S05/BB_GAT_020_A_KILL_TEST_ACTED_ON_A_TIMER_BEFORE_ITS_PROCESSES_EXISTED.md` |
 | BB-PRF-008 | The Rust and Python grammars grew the binary by a tenth | ACCEPTED | no | yes | none | `SYS/PRF/S02/BB_PRF_008_THE_RUST_AND_PYTHON_GRAMMARS_GREW_THE_BINARY_BY_A_TENTH.md` |
 | BB-PRF-009 | A first open of a many-folder tree still waits for the walk | FIXED | yes | yes | none | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |

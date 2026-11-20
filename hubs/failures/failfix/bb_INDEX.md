@@ -56,6 +56,8 @@
 | BB-GAT-007 | FIXED | Build the tests after audit edits, before the gate | `SHIP/GAT/D1/S02/BB_GAT_007_AUDIT_FIXES_WENT_TO_THE_GATE_UNBUILT.md` |
 | BB-ENV-002 | FIXED | One build job and one test thread locally; CI keeps 3 jobs | `SYS/ENV/BB_ENV_002_A_GATE_ON_EVERY_CORE_OVERHEATED_THE_MAC.md` |
 | BB-PRC-008 | FIXED | A guard stops the session and waits for its thread | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
+| BB-PRC-007 | FIXED | Worker and live window tests drain their server thread before returning | `SYS/PRC/S02/BB_PRC_007_A_ROSLYN_WORKER_TEST_LEFT_A_CHILD_RUNNING.md` |
+| BB-PRC-009 | FIXED | A guard process on a pipe ends every owned group; a launch sweeps dead owners' records | `SYS/PRC/S03/BB_PRC_009_A_CHILD_GROUP_OUTLIVES_AN_OWNER_THAT_SKIPS_CLEANUP.md` |
 | BB-GAT-008 | FIXED | List the variants; clippy before the gate | `SHIP/GAT/D1/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | FIXED | Ask the adapter; assert the stock refusal and the patched goto | `SHIP/GAT/D1/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
 | BB-GAT-010 | FIXED | Watchdog on every blocking test wait | `SHIP/GAT/D1/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |
@@ -83,4 +85,5 @@
 | BB-GAT-017 | FIXED | Test-only items top-level `#[cfg(test)]` at the file's end; `.next_back()` | `SHIP/GAT/D2/S05/BB_GAT_017_A_TEST_ONLY_MODULE_IN_A_SOURCE_FILE_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-018 | FIXED | Hold until released; relay drops the link; tests `wait_ended` | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
 | BB-GAT-019 | FIXED | Probe matches the program only, never its own pid or arguments | `SHIP/GAT/D2/S05/BB_GAT_019_A_TEST_PROBE_MATCHED_ITS_OWN_COMMAND_LINE.md` |
+| BB-GAT-020 | FIXED | Self-ending scripts hold at `wait:go` until the test saw the tree | `SHIP/GAT/D2/S05/BB_GAT_020_A_KILL_TEST_ACTED_ON_A_TIMER_BEFORE_ITS_PROCESSES_EXISTED.md` |
 | BB-PRF-009 | FIXED | The window opens at once; languages, menus, servers and tab colours follow the walk | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |

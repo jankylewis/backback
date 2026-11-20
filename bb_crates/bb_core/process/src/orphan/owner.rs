@@ -1,4 +1,4 @@
-//! Who owns a temp folder: the pid in its name, if that process is alive
+//! Who owns a temp folder or a process group: the pid in its name, if that process is alive
 //! and started before the folder was last written. macOS reuses pids, so a
 //! live pid alone can be another program that came later (BB-PRC-006).
 
@@ -54,25 +54,54 @@ enum Seen {
 }
 
 fn elapsed(pid: u32) -> Seen {
+    match ps_field(pid, "etime=") {
+        Field::Gone => Seen::Gone,
+        Field::Unknown => Seen::Alive(None),
+        Field::Text(text) => Seen::Alive(parse_etime(text.trim())),
+    }
+}
+
+/// When `pid` started, as one token (`ps` `lstart` words joined by `_`):
+/// with the pid it names one process, as macOS reuses pids. `None` when no
+/// such process runs or the probe fails.
+pub(crate) fn started(pid: u32) -> Option<String> {
+    let Field::Text(text): Field = ps_field(pid, "lstart=") else {
+        return None;
+    };
+    let token: String = text.split_whitespace().collect::<Vec<&str>>().join("_");
+    (!token.is_empty()).then_some(token)
+}
+
+/// What one `ps -o <field> -p <pid>` probe printed.
+enum Field {
+    /// No such process.
+    Gone,
+    /// The probe could not run or passed its deadline.
+    Unknown,
+    /// The field's text.
+    Text(String),
+}
+
+fn ps_field(pid: u32, field: &str) -> Field {
     let spawned: std::io::Result<std::process::Child> = Command::new("/bin/ps")
-        .args(["-o", "etime=", "-p", &pid.to_string()])
+        .args(["-o", field, "-p", &pid.to_string()])
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn();
     let Ok(mut probe): std::io::Result<std::process::Child> = spawned else {
-        return Seen::Alive(None);
+        return Field::Unknown;
     };
     let deadline: Instant = Instant::now() + PROBE_DEADLINE;
     loop {
         match probe.try_wait() {
             Ok(Some(status)) if status.success() => break,
-            Ok(Some(_)) => return Seen::Gone,
+            Ok(Some(_)) => return Field::Gone,
             Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(5)),
             Ok(None) | Err(_) => {
                 let _stopped: std::io::Result<()> = probe.kill();
                 let _reaped: std::io::Result<std::process::ExitStatus> = probe.wait();
-                return Seen::Alive(None);
+                return Field::Unknown;
             }
         }
     }
@@ -80,7 +109,7 @@ fn elapsed(pid: u32) -> Seen {
     if let Some(mut stdout) = probe.stdout.take() {
         let _read: std::io::Result<usize> = std::io::Read::read_to_string(&mut stdout, &mut out);
     }
-    Seen::Alive(parse_etime(out.trim()))
+    Field::Text(out)
 }
 
 /// `ps` elapsed time, `[[dd-]hh:]mm:ss`.
@@ -124,6 +153,14 @@ mod tests {
         );
         assert_eq!(parse_etime(""), None);
         assert_eq!(parse_etime("ab:cd"), None);
+    }
+
+    #[test]
+    fn a_start_token_names_a_live_process_and_none_names_a_gone_one() {
+        let own: String = started(std::process::id()).unwrap();
+        assert_eq!(own.split('_').count(), 5, "{own}");
+        assert_eq!(started(std::process::id()), Some(own), "the same each time");
+        assert_eq!(started(99_999_999), None);
     }
 
     #[test]
