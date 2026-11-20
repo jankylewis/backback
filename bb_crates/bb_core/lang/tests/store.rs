@@ -1,5 +1,7 @@
 //! BBEOD26: the ticks saved per workspace read back as written; a file
-//! backback did not write is refused, never guessed.
+//! backback did not write is refused, never guessed. BBEOD41: v2 marks each
+//! record as picked by the user; a v1 file (auto-saved found sets mixed with
+//! picks, not told apart) reads as no choice at all.
 
 use std::path::{Path, PathBuf};
 
@@ -37,15 +39,50 @@ fn an_empty_tick_set_is_never_saved() {
 #[test]
 fn an_unknown_header_or_language_is_refused() {
     assert_eq!(
-        decode("backback langs v9\ncsharp\t/a\n"),
+        decode("backback langs v9\npicked\tcsharp\t/a\n"),
         Err(StoreError::UnknownFormat("backback langs v9".to_owned()))
     );
     assert_eq!(
-        decode("backback langs v1\ngo\t/a\n"),
-        Err(StoreError::BadLine("go\t/a".to_owned()))
+        decode("backback langs v2\npicked\tgo\t/a\n"),
+        Err(StoreError::BadLine("picked\tgo\t/a".to_owned()))
     );
     assert_eq!(
-        decode("backback langs v1\n\t/a\n"),
-        Err(StoreError::BadLine("\t/a".to_owned()))
+        decode("backback langs v2\npicked\t\t/a\n"),
+        Err(StoreError::BadLine("picked\t\t/a".to_owned()))
     );
+}
+
+#[test]
+fn every_saved_record_carries_the_picked_mark() {
+    let saved: Choices = with_choice(
+        Vec::new(),
+        Path::new("/w/App"),
+        LangSet::of(&[Lang::CSharp]),
+    );
+    assert_eq!(
+        encode(&saved),
+        "backback langs v2\npicked\tcsharp\t/w/App\n"
+    );
+}
+
+#[test]
+fn a_record_without_the_picked_mark_is_refused() {
+    assert_eq!(
+        decode("backback langs v2\ncsharp\t/a\n"),
+        Err(StoreError::BadLine("csharp\t/a".to_owned()))
+    );
+    assert_eq!(
+        decode("backback langs v2\nfound\tcsharp,python\t/a\n"),
+        Err(StoreError::BadLine("found\tcsharp,python\t/a".to_owned()))
+    );
+}
+
+#[test]
+fn a_v1_file_reads_as_no_choice_for_any_workspace() {
+    let old: &str = "backback langs v1\ncsharp,python\t/a\npython\t/b\ncsharp\t/c\n";
+    let read: Choices = decode(old).unwrap();
+    assert_eq!(read, Vec::new());
+    for workspace in ["/a", "/b", "/c"] {
+        assert_eq!(choice_for(&read, Path::new(workspace)), None, "{workspace}");
+    }
 }

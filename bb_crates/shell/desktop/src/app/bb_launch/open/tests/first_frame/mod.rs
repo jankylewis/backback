@@ -73,7 +73,7 @@ impl Drop for Scratch {
 fn launch(cx: &mut TestAppContext, argument: &Path) -> WindowHandle<ExplorerView> {
     cx.update(|cx: &mut App| {
         crate::launch::bind_keys(cx);
-        cx.set_menus(crate::launch::menus(false));
+        cx.set_menus(crate::launch::menus(LangSet::EMPTY));
     });
     let start: crate::args::Start = crate::args::start_for(argument.to_path_buf(), false);
     walk_early(&start.root, start.ticked);
@@ -153,7 +153,7 @@ fn the_window_shows_before_a_slow_walk_ends_and_takes_the_languages_after(cx: &m
     wait_for_languages(window, cx);
     let held: LangSet = LangSet::of(&[Lang::CSharp, Lang::Python]);
     let (after, _, started): (Langs, String, Vec<Tool>) = shown(window, cx);
-    assert_eq!(after, Langs::new(held, held));
+    assert_eq!(after, Langs::new(LangSet::of(&[Lang::CSharp]), held));
     assert!(started.contains(&Tool::Roslyn), "{started:?}");
     let names: Vec<String> = menu_names(cx);
     assert!(names.contains(&String::from("C#")), "{names:?}");
@@ -173,7 +173,11 @@ fn a_rust_file_opened_before_the_walk_ends_is_plain_then_rust(cx: &mut TestAppCo
     assert_eq!(tab_mode(window, cx), Some(FileMode::Colours(Lang::Rust)));
     let (_, status, started): (Langs, String, Vec<Tool>) = shown(window, cx);
     assert!(started.contains(&Tool::RustAnalyzer), "{started:?}");
-    assert!(status.starts_with("Rust · Python"), "{status}");
+    assert!(status.starts_with("Rust · "), "{status}");
+    assert!(
+        !status.contains("Python"),
+        "Python stays unticked: {status}"
+    );
 }
 
 #[gpui::test]

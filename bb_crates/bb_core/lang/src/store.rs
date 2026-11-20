@@ -1,12 +1,19 @@
 //! The ticks saved per workspace, kept next to the recent list: a header
-//! line, then one `keys<TAB>path` line per workspace, newest first. An
-//! unknown header, key or line is an error, never a guess.
+//! line, then one `picked<TAB>keys<TAB>path` line per workspace, newest
+//! first. Only a user's pick is saved, and each record says so (BBEOD41).
+//! A v1 file mixed picks with auto-saved found sets that cannot be told
+//! apart, so it reads as no choice at all (migrate: the next pick writes
+//! v2). An unknown header, key, mark or line is an error, never a guess.
 
 use std::path::{Path, PathBuf};
 
 use crate::{Lang, LangSet};
 
-const HEADER: &str = "backback langs v1";
+const HEADER: &str = "backback langs v2";
+/// The format before the user-picked mark (BBEOD26 to BBEOD40).
+const V1_HEADER: &str = "backback langs v1";
+/// The mark on every record: the user ticked these languages.
+const PICKED: &str = "picked";
 /// Choices kept; the oldest go first.
 const KEEP: usize = 50;
 
@@ -24,13 +31,16 @@ pub enum StoreError {
     BadLine(String),
 }
 
-/// The choices of a saved file.
+/// The choices of a saved file; a v1 file has none.
 ///
 /// # Errors
 /// [`StoreError`] for an unknown header or a line it cannot read.
 pub fn decode(text: &str) -> Result<Choices, StoreError> {
     let mut lines: std::str::Lines<'_> = text.lines();
     let header: &str = lines.next().unwrap_or_default();
+    if header == V1_HEADER {
+        return Ok(Vec::new());
+    }
     if header != HEADER {
         return Err(StoreError::UnknownFormat(header.to_owned()));
     }
@@ -42,7 +52,11 @@ pub fn decode(text: &str) -> Result<Choices, StoreError> {
 
 fn line_choice(line: &str) -> Result<(PathBuf, LangSet), StoreError> {
     let bad: &dyn Fn() -> StoreError = &|| StoreError::BadLine(line.to_owned());
-    let (keys, path): (&str, &str) = line.split_once('\t').ok_or_else(bad)?;
+    let (mark, rest): (&str, &str) = line.split_once('\t').ok_or_else(bad)?;
+    if mark != PICKED {
+        return Err(bad());
+    }
+    let (keys, path): (&str, &str) = rest.split_once('\t').ok_or_else(bad)?;
     let mut set: LangSet = LangSet::EMPTY;
     for key in keys.split(',') {
         set = set.with(Lang::from_key(key).ok_or_else(bad)?);
@@ -62,6 +76,8 @@ pub fn encode(choices: &[(PathBuf, LangSet)]) -> String {
         .filter(|(_, set): &&(PathBuf, LangSet)| !set.is_empty())
     {
         let keys: Vec<&str> = set.langs().map(Lang::key).collect();
+        text.push_str(PICKED);
+        text.push('\t');
         text.push_str(&keys.join(","));
         text.push('\t');
         text.push_str(&path.display().to_string());

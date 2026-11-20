@@ -3,7 +3,8 @@
 //! starts: one `didOpen` each, to its own server, with the tab's text;
 //! then hover, F12 and diagnostics answer for each file, the Python ones
 //! on the typed line. A server that is not installed takes its branch (a
-//! failure when `BACKBACK_REQUIRE_TOOLS`).
+//! failure when `BACKBACK_REQUIRE_TOOLS`). The user picked all three
+//! languages before (BBEOD41: Python is never on by default).
 
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
@@ -204,6 +205,8 @@ fn files_opened_while_detecting_reach_the_real_servers_once_with_their_typed_tex
     cx: &mut TestAppContext,
 ) {
     let scratch: Scratch = Scratch::written(&mut |base: &Path| workspace(base));
+    let picked: bb_lang::LangSet = bb_lang::LangSet::of(&bb_lang::Lang::ALL);
+    crate::launch::recent::save_langs(&scratch.root, picked);
     let (log, bridges): (Shared, Rc<RefCell<Vec<Bridge>>>) = (Shared::default(), Rc::default());
     let _starts: Starts = Starts::install(starter(&log, &bridges));
     let slow: SlowWalks = SlowWalks::hold();

@@ -1,5 +1,6 @@
 # Backback progress
 
+- BBEOD41 (`bbeod-41-python-opt-in`, 2026-11-20 14:34-15:11, READY: gate 440/0, 13/13 mutants killed): Python opt-in ruling; default ticks drop Python (Python-only folder keeps it), choice saved only when picked (store v2 `picked` mark, v1 = no choice), Python ignored window-wide when unticked.
 - BBEOD39 (`test/late-langs-real`): late languages on real servers, mid-parse recolour; BB-LSP-013 (restart reopened every tab); CI red fixed: walk hold until released, servers end before a test returns (BB-GAT-018).
 - BBEOD38 (`perf/first-frame-no-wait`): the window no longer waits for the language walk; languages, menus, servers, colours follow it (BB-PRF-009 FIXED; BB-PRF-008 ACCEPTED).
 - BBEOD37 (`chore/gat-shelves-and-size`): GAT in drawers, BB-GAT-017; size by crate (BB-PRF-008), dna-ax first open (BB-PRF-009).
@@ -14,12 +15,8 @@
   text narrows); "files" takes globs (`*.cs, !*.md`, `!Tests`), with
   .gitignore still applied. Explorer right-click: Find in Folder....
 
-- CI-WORKERS (2026-11-06, `ci-nextest-workers`): CI tests run with
-  `cargo nextest` in parallel workers on the one macOS runner, sized to its
-  RAM (2 GB kept free, 1.2 GB a worker); the peak is printed each run.
-  cargo-deny and nextest come prebuilt, pinned and checksummed (deny was
-  built from source, 3.7 min a run). No push run on PR branches. The local
-  gate is unchanged.
+- CI-WORKERS (2026-11-06, `ci-nextest-workers`): CI runs `cargo nextest`
+  workers sized to the runner's RAM; deny and nextest prebuilt and pinned.
 
 - CLOSE-FOLDER (2026-11-06, `close-folder-recent10`): File > Close Folder
   (Cmd+K F) closes the workspace (unsaved tabs ask first) and shows the

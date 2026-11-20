@@ -12,6 +12,8 @@ pub(crate) struct RowState {
     pub(crate) selected: bool,
     pub(crate) panel_width: f32,
     pub(crate) theme: Theme,
+    /// Python is active: its project files get the build icon (BBEOD41).
+    pub(crate) python: bool,
 }
 
 struct RowAction {
@@ -67,11 +69,18 @@ pub(crate) fn row(
                 .map(|_: &f32| indent_guide(state.theme)),
         )
         .child(div().w(px(16.0)).flex_shrink_0().child(chevron(entry)))
-        .child(icons::icon(entry, color(icons::tint(entry, &state.theme))))
+        .child(row_icon(entry, state))
         .child(name_box(name, layout.name_width))
 }
 
 /// BB-BUG-050: a right-click selects the row and opens New / Rename / Delete.
+/// The row's icon; Python's project files get the build icon only while
+/// Python is active (BBEOD41).
+fn row_icon(entry: &Entry, state: RowState) -> gpui::Svg {
+    let tint: gpui::Rgba = color(icons::tint(entry, &state.theme, state.python));
+    icons::icon(entry, tint, state.python)
+}
+
 fn menu_on_right_click(
     item: gpui::Stateful<gpui::Div>,
     index: usize,

@@ -14,7 +14,8 @@ pub(crate) fn chevron(entry: &Entry) -> &'static str {
     }
 }
 
-pub(crate) fn icon(entry: &Entry, tint: Rgba) -> Svg {
+/// `python`: Python is active, so its project files get the build icon.
+pub(crate) fn icon(entry: &Entry, tint: Rgba, python: bool) -> Svg {
     let data: &'static [u8] = match entry.kind() {
         EntryKind::Folder if entry.expanded() => {
             include_bytes!("../../../bb_assets/bb_folders/open.svg")
@@ -24,7 +25,7 @@ pub(crate) fn icon(entry: &Entry, tint: Rgba) -> Svg {
         EntryKind::Markdown => include_bytes!("../../../bb_assets/files/markdown.svg"),
         EntryKind::Project => include_bytes!("../../../bb_assets/files/project.svg"),
         EntryKind::Solution => include_bytes!("../../../bb_assets/files/solution.svg"),
-        EntryKind::Other => type_icon(file_type(entry.name())),
+        EntryKind::Other => type_icon(file_type(entry.name(), python)),
     };
     svg()
         .data(data)
@@ -33,7 +34,7 @@ pub(crate) fn icon(entry: &Entry, tint: Rgba) -> Svg {
         .text_color(tint)
 }
 
-pub(crate) fn tint(entry: &Entry, theme: &Theme) -> Rgb {
+pub(crate) fn tint(entry: &Entry, theme: &Theme, python: bool) -> Rgb {
     if entry.ignored() {
         return theme.ignored;
     }
@@ -45,7 +46,7 @@ pub(crate) fn tint(entry: &Entry, theme: &Theme) -> Rgb {
         EntryKind::CSharp => theme.icon_csharp,
         EntryKind::Markdown => theme.icon_markdown,
         EntryKind::Project | EntryKind::Solution => theme.icon_project,
-        EntryKind::Other => type_tint(file_type(entry.name()), theme),
+        EntryKind::Other => type_tint(file_type(entry.name(), python), theme),
     }
 }
 
@@ -71,8 +72,9 @@ pub(crate) enum FileType {
 }
 
 /// The type of a file from its name (case ignored): whole names first,
-/// then the extension.
-pub(crate) fn file_type(name: &str) -> FileType {
+/// then the extension. Python's project files are build files only while
+/// Python is active (`python`, BBEOD41).
+pub(crate) fn file_type(name: &str, python: bool) -> FileType {
     let lower: String = name.to_ascii_lowercase();
     if lower == "dockerfile"
         || lower.ends_with(".dockerfile")
@@ -87,7 +89,10 @@ pub(crate) fn file_type(name: &str) -> FileType {
         return FileType::Text;
     }
     // Python project files are marked like build files (BBEOD28).
-    if bb_lang::Lang::of_project_file(std::path::Path::new(&lower)) == Some(bb_lang::Lang::Python) {
+    if python
+        && bb_lang::Lang::of_project_file(std::path::Path::new(&lower))
+            == Some(bb_lang::Lang::Python)
+    {
         return FileType::Build;
     }
     let ext: &str = lower
@@ -153,9 +158,12 @@ mod tests {
     #[test]
     fn python_project_files_are_marked_and_other_python_files_are_not() {
         let names: [&str; 3] = ["pyproject.toml", "Setup.py", "requirements-dev.txt"];
-        assert_eq!(names.map(file_type), [FileType::Build; 3]);
         assert_eq!(
-            [file_type("notes.txt"), file_type("Cargo.toml")],
+            names.map(|n: &str| file_type(n, true)),
+            [FileType::Build; 3]
+        );
+        assert_eq!(
+            [file_type("notes.txt", true), file_type("Cargo.toml", true)],
             [FileType::Text, FileType::Config]
         );
     }
@@ -197,7 +205,7 @@ mod tests {
             ("LICENSE", FileType::Text),
         ];
         for (name, want) in cases {
-            assert_eq!(file_type(name), want, "{name}");
+            assert_eq!(file_type(name, true), want, "{name}");
         }
     }
 
@@ -236,7 +244,7 @@ mod tests {
     #[test]
     fn unknown_names_stay_generic() {
         for name in ["data.bin", "Makefile.am", "noext", "archive.tar.gz"] {
-            assert_eq!(file_type(name), FileType::Generic, "{name}");
+            assert_eq!(file_type(name, true), FileType::Generic, "{name}");
         }
     }
 }

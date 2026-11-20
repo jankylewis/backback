@@ -68,11 +68,18 @@ fn a_launch_walks_its_folder_once_off_the_ui_thread_and_the_window_shows_what_it
     wait_for_languages(cx);
     let shown: Option<Langs> = shown_langs(cx);
     let walkers: Vec<ThreadId> = walks_of(&start.root);
+    let saved: Option<LangSet> = crate::launch::recent::langs_of(&start.root);
     close_all(cx);
     test_store(None);
     let held: LangSet = LangSet::of(&[Lang::CSharp, Lang::Python]);
+    let csharp: LangSet = LangSet::of(&[Lang::CSharp]);
     assert!(opened);
-    assert_eq!(shown, Some(Langs::new(held, held)));
+    assert_eq!(
+        shown,
+        Some(Langs::new(csharp, held)),
+        "Python stays unticked"
+    );
+    assert_eq!(saved, None, "a found set is never saved as a choice");
     assert_eq!(walkers.len(), 1, "one walk of the folder: {walkers:?}");
     assert_ne!(
         walkers[0],

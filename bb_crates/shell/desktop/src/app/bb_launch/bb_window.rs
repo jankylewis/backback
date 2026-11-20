@@ -103,10 +103,12 @@ pub(crate) fn install_close_guard(
     });
 }
 
-/// The menu bar; `csharp`: C# is active in the front window, so the C#-only
-/// menus (Debug, C#) show (BBEOD33; they showed in every window before).
-pub(crate) fn menus(csharp: bool) -> Vec<Menu> {
+/// The menu bar of the front window's `active` languages: the C#-only
+/// menus (Debug, C#) with C# (BBEOD33; they showed in every window before),
+/// Python Check with Python (BBEOD41).
+pub(crate) fn menus(active: bb_lang::LangSet) -> Vec<Menu> {
     use crate::theme::{FollowAppearance, ToggleTheme};
+    let csharp: bool = active.has(bb_lang::Lang::CSharp);
     let view: Menu = Menu::new("View").items(
         [
             MenuItem::action("Toggle Light/Dark Theme", ToggleTheme),
@@ -120,12 +122,18 @@ pub(crate) fn menus(csharp: bool) -> Vec<Menu> {
         .into_iter()
         .chain(crate::settings::zoom_menu_items()),
     );
-    let build: Menu = Menu::new("Build").items([
-        MenuItem::action("Build Solution", crate::run::build::BuildSolution),
-        MenuItem::action("Cargo Build", crate::run::build::CargoBuild),
-        MenuItem::action("Cargo Check", crate::run::build::CargoCheck),
-        MenuItem::action("Python Check", crate::run::build::PythonCheck),
-    ]);
+    let python: Option<MenuItem> = active
+        .has(bb_lang::Lang::Python)
+        .then(|| MenuItem::action("Python Check", crate::run::build::PythonCheck));
+    let build: Menu = Menu::new("Build").items(
+        [
+            MenuItem::action("Build Solution", crate::run::build::BuildSolution),
+            MenuItem::action("Cargo Build", crate::run::build::CargoBuild),
+            MenuItem::action("Cargo Check", crate::run::build::CargoCheck),
+        ]
+        .into_iter()
+        .chain(python),
+    );
     let quit: MenuItem = MenuItem::action("Quit Backback", crate::editor::Quit);
     let mut bar: Vec<Menu> = vec![
         Menu::new("Backback").items(app_items().into_iter().chain([quit])),
@@ -148,14 +156,14 @@ pub(crate) fn follow_languages(
     window: &mut Window,
     cx: &mut gpui::Context<crate::ExplorerView>,
 ) {
-    cx.set_menus(menus(view.langs.langs.debug_visible()));
+    cx.set_menus(menus(view.langs.langs.active()));
     cx.observe_window_activation(
         window,
         |view: &mut crate::ExplorerView,
          window: &mut Window,
          cx: &mut gpui::Context<crate::ExplorerView>| {
             if window.is_window_active() {
-                cx.set_menus(menus(view.langs.langs.debug_visible()));
+                cx.set_menus(menus(view.langs.langs.active()));
             }
         },
     )
@@ -183,7 +191,7 @@ pub(crate) fn languages_found(
     cx: &mut gpui::Context<crate::ExplorerView>,
 ) {
     if window.is_window_active() {
-        cx.set_menus(menus(state.langs.langs.debug_visible()));
+        cx.set_menus(menus(state.langs.langs.active()));
     }
     crate::intel::glue::flush(state);
     start_tools(state, window, cx);

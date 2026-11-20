@@ -175,14 +175,20 @@ fn rows_in(
         .enumerate()
         .map(|(offset, (depth, entry)): (usize, &(usize, &Entry))| {
             let index: usize = first.saturating_add(offset);
-            let state: RowState = RowState {
-                selected: index == view.selected,
-                panel_width: view.panel_width,
-                theme: view.theme,
-            };
-            row(index, *depth, entry, state, cx).into_any_element()
+            row(index, *depth, entry, row_state(view, index), cx).into_any_element()
         })
         .collect()
+}
+
+/// How the Explorer row at `index` draws: Python's project files get the
+/// build icon only while Python is active (BBEOD41).
+pub(crate) fn row_state(view: &ExplorerView, index: usize) -> RowState {
+    RowState {
+        selected: index == view.selected,
+        panel_width: view.panel_width,
+        theme: view.theme,
+        python: view.langs.langs.active().has(bb_lang::Lang::Python),
+    }
 }
 
 /// The tool window's edge: drag it to set the tool window's width.

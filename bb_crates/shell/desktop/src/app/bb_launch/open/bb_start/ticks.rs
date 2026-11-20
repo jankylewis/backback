@@ -1,9 +1,10 @@
 //! The start page's language ticks (BBEOD26): C#, Rust and Python boxes
-//! under the heading. They show the selected workspace's saved choice, else
-//! what its folder holds (C# for a folder holding none); for Open... every box is ticked and means "what
-//! the picked folder holds" until one is clicked. Tab moves between the
-//! rows and the boxes, Space ticks the focused box; Open is disabled with
-//! no box ticked.
+//! under the heading. They show the selected workspace's saved pick, else
+//! `default_ticks` of what its folder holds (no Python unless the folder
+//! holds only Python, BBEOD41; C# for a folder holding none). For Open...
+//! every box but Python is ticked and means "what the picked folder holds"
+//! until one is clicked. Tab moves between the rows and the boxes, Space
+//! ticks the focused box; Open is disabled with no box ticked.
 
 use std::path::Path;
 
@@ -21,12 +22,14 @@ pub(crate) enum Area {
     Tick(Lang),
 }
 
-/// The boxes for `entry`: its saved ticks, else what its folder holds;
-/// every language for Open....
+/// The boxes for `entry`: its saved pick, else the default ticks of what
+/// its folder holds; every language but Python for Open... (BBEOD41).
 pub(super) fn ticks_for(entry: Option<&StartEntry>) -> LangSet {
     match entry {
         Some(StartEntry::Recent(path)) => saved_or_found(path),
-        Some(StartEntry::Gone(_) | StartEntry::Open) | None => LangSet::of(&Lang::ALL),
+        Some(StartEntry::Gone(_) | StartEntry::Open) | None => {
+            LangSet::of(&Lang::ALL).set(Lang::Python, false)
+        }
     }
 }
 

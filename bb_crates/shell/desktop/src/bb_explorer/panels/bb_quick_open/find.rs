@@ -45,7 +45,7 @@ pub(crate) fn find_in(
     open(view, Some(folder), window, cx);
 }
 
-/// Opens the box at once; the C# projects join its places after a walk
+/// Opens the box at once; the active languages' projects join its places after a walk
 /// off the UI thread (as Go to File's, BB-PRF-002).
 fn open(
     view: &mut ExplorerView,
@@ -58,14 +58,17 @@ fn open(
         .tabs
         .active_tab()
         .map(|tab: &crate::editor::Tab| tab.path.clone());
-    view.quick_open = Some(QuickOpen::find_box(&root, active.as_deref(), first));
+    let langs: bb_lang::LangSet = view.langs.langs.active();
+    view.quick_open = Some(QuickOpen::find_box(&root, active.as_deref(), first, langs));
     window.focus(&view.quick_focus, cx);
     cx.notify();
     let walk_root: PathBuf = root.clone();
     let walk: gpui::Task<Vec<PathBuf>> = cx.background_executor().spawn(async move {
         QuickOpen::list_files(&walk_root)
             .into_iter()
-            .filter(|file: &PathBuf| bb_lang::Lang::of_project(file).is_some())
+            .filter(|file: &PathBuf| {
+                bb_lang::Lang::of_project(file).is_some_and(|lang: bb_lang::Lang| langs.has(lang))
+            })
             .map(|file: PathBuf| walk_root.join(file))
             .collect()
     });

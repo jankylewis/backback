@@ -91,3 +91,4 @@
 | BB-BUG-090 | `server_of(Lang)` + `server_for` -> `Option` | FIXED | `a_file_of_no_language_reaches_no_server_in_a_window_of_all_three` red first | `C2/D6/S23/BB_BUG_090_A_FILE_OF_NO_LANGUAGE_REACHED_THE_C_SERVER.md` |
 | BB-BUG-091 | `Lang::of_project` for both places paths | FIXED | `find_in_files_offers_each_cargo_crate_as_a_project` red first | `C2/D6/S23/BB_BUG_091_FIND_IN_FILES_OFFERED_NO_PROJECT_IN_A_RUST_OR_PYTHON_WINDOW.md` |
 | BB-BUG-092 | `Langs::file_mode` for rename loads and `new_file` | FIXED | `a_rust_rename_opens_the_closed_file_it_edits_with_rust_colours` red first | `C2/D6/S23/BB_BUG_092_A_RENAME_AND_CMD_N_OPENED_C_TABS_IN_A_RUST_WINDOW.md` |
+| BB-BUG-093 | `default_ticks` drops Python; only a pick is saved (store v2 `picked`); unticked Python hidden window-wide | FIXED | `a_csharp_and_python_folder_with_no_saved_choice_starts_no_pyright_process` red first | `C2/D7/S24/BB_BUG_093_A_CSHARP_REPO_WITH_PY_FILES_STARTED_PYRIGHT_WITH_NO_CHOICE.md` |

@@ -100,8 +100,14 @@ pub(crate) struct FindFields {
 impl QuickOpen {
     /// The Find in Files box over `root`. Its places: `first` (a folder the
     /// Explorer asked for), the workspace, then the active file's project
-    /// and folder; [`Self::add_projects`] adds every project after a walk.
-    pub(crate) fn find_box(root: &Path, active: Option<&Path>, first: Option<&Path>) -> QuickOpen {
+    /// (of a language in `langs`, the window's active ones, BBEOD41) and
+    /// folder; [`Self::add_projects`] adds every project after a walk.
+    pub(crate) fn find_box(
+        root: &Path,
+        active: Option<&Path>,
+        first: Option<&Path>,
+        langs: bb_lang::LangSet,
+    ) -> QuickOpen {
         let mut quick: QuickOpen = QuickOpen::blank();
         quick.find = Some(FindFields::default());
         if let Some(dir) = first {
@@ -109,7 +115,7 @@ impl QuickOpen {
         }
         quick.add_place(format!("Workspace · {}", name_of(root)), root);
         if let Some(file) = active.filter(|file: &&Path| file.starts_with(root)) {
-            if let Some(project) = project_of(file, root) {
+            if let Some(project) = project_of(file, root, langs) {
                 quick.add_place(project_label(&project, root), &project);
             }
             if let Some(folder) = file.parent() {
@@ -220,15 +226,16 @@ impl QuickOpen {
 }
 
 /// The nearest folder above `file`, inside `root`, holding a project file
-/// of any language ([`bb_lang::Lang::of_project`]).
-fn project_of(file: &Path, root: &Path) -> Option<PathBuf> {
+/// of a language in `langs` ([`bb_lang::Lang::of_project`]).
+fn project_of(file: &Path, root: &Path, langs: bb_lang::LangSet) -> Option<PathBuf> {
     file.ancestors()
         .skip(1)
         .take_while(|dir: &&Path| dir.starts_with(root))
         .find(|dir: &&Path| {
             std::fs::read_dir(dir).is_ok_and(|entries: std::fs::ReadDir| {
                 entries.flatten().any(|entry: std::fs::DirEntry| {
-                    bb_lang::Lang::of_project(&entry.path()).is_some()
+                    bb_lang::Lang::of_project(&entry.path())
+                        .is_some_and(|lang: bb_lang::Lang| langs.has(lang))
                 })
             })
         })

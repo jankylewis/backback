@@ -96,3 +96,4 @@ Bugs a user met in the app. Entries: 92 — FIXED 88, OBSERVED 4.
 | BB-BUG-090 | A file of no language reached the C# server | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_090_A_FILE_OF_NO_LANGUAGE_REACHED_THE_C_SERVER.md` |
 | BB-BUG-091 | Find in Files offered no Project in a Rust or Python window | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_091_FIND_IN_FILES_OFFERED_NO_PROJECT_IN_A_RUST_OR_PYTHON_WINDOW.md` |
 | BB-BUG-092 | A rename and Cmd+N opened C# tabs in a Rust window | FIXED | BB-UIX-025 | yes | `C2/D6/S23/BB_BUG_092_A_RENAME_AND_CMD_N_OPENED_C_TABS_IN_A_RUST_WINDOW.md` |
+| BB-BUG-093 | A C# repo with .py files started pyright with no choice | FIXED | BB-UIX-026 | yes | `C2/D7/S24/BB_BUG_093_A_CSHARP_REPO_WITH_PY_FILES_STARTED_PYRIGHT_WITH_NO_CHOICE.md` |

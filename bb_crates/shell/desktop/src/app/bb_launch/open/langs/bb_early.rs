@@ -36,9 +36,9 @@ struct Early {
 static EARLY: Mutex<Option<Early>> = Mutex::new(None);
 
 /// The ticks a window opening `root` uses: `ticked` from the start page
-/// (saved for next time), else the saved choice, else the languages the
-/// folder holds (saved once the walk saw the whole folder; C# alone for a
-/// folder that holds none, unsaved). With ticks known, the walk stops once
+/// (the user's pick, saved for next time), else the saved pick, else
+/// [`default_ticks`] of what the folder holds, never saved: only a user's
+/// pick is a choice (BBEOD41). With ticks known, the walk stops once
 /// each ticked language is seen. A launch's walk still running is `Later`;
 /// every other open walks here, as before (the start page path).
 pub(crate) fn resolve(root: &Path, ticked: Option<LangSet>) -> Resolved {
@@ -47,31 +47,29 @@ pub(crate) fn resolve(root: &Path, ticked: Option<LangSet>) -> Resolved {
     }
     let ticks: Option<LangSet> = ticked.or_else(|| crate::launch::recent::langs_of(root));
     let Some(mut found): Option<oneshot::Receiver<Detection>> = early_walk(root, ticks) else {
-        return Resolved::Now(finish(root, ticks, walk(root, ticks)));
+        return Resolved::Now(finish(ticks, walk(root, ticks)));
     };
     match found.try_recv() {
-        Ok(done) => Resolved::Now(finish(root, ticks, done)),
+        Ok(done) => Resolved::Now(finish(ticks, done)),
         Err(oneshot::error::TryRecvError::Empty) => Resolved::Later(Pending {
             root: root.to_path_buf(),
             ticks,
             found,
         }),
         Err(oneshot::error::TryRecvError::Closed) => {
-            Resolved::Now(finish(root, ticks, walk(root, ticks)))
+            Resolved::Now(finish(ticks, walk(root, ticks)))
         }
     }
 }
 
-/// The window's languages from a walk's answer; a complete walk of a folder
-/// with no saved choice is saved. Called on the UI thread.
-fn finish(root: &Path, ticks: Option<LangSet>, found: Detection) -> Langs {
-    if let Some(ticks) = ticks {
-        return Langs::new(ticks, found.found);
-    }
-    if found.complete && !found.found.is_empty() {
-        crate::launch::recent::save_langs(root, found.found);
-    }
-    Langs::new(default_ticks(found.found), found.found)
+/// The window's languages from a walk's answer: the known ticks, else the
+/// default ticks of what it found (unsaved, BBEOD41). Called on the UI
+/// thread.
+fn finish(ticks: Option<LangSet>, found: Detection) -> Langs {
+    Langs::new(
+        ticks.unwrap_or_else(|| default_ticks(found.found)),
+        found.found,
+    )
 }
 
 /// The walk [`resolve`] needs: up to the known ticks, else the whole folder.
@@ -151,7 +149,7 @@ pub(crate) fn when_found(pending: Pending, window: &mut Window, cx: &mut Context
             let _closed: gpui::Result<()> = view.update_in(
                 cx,
                 |view: &mut ExplorerView, window: &mut Window, cx: &mut Context<ExplorerView>| {
-                    view.langs = WindowLangs::new(finish(&root, ticks, done));
+                    view.langs = WindowLangs::new(finish(ticks, done));
                     crate::launch::languages_found(view, window, cx);
                 },
             );
