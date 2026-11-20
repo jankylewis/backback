@@ -21,7 +21,7 @@ fn absent_preference_is_dark_and_system_light_is_live_source() {
 
 #[test]
 fn menus_go_app_then_file_then_view_as_on_every_mac() {
-    let configured: Vec<Menu> = menus(true);
+    let configured: Vec<Menu> = menus(bb_lang::LangSet::of(&bb_lang::Lang::ALL));
     assert_eq!(configured[0].name.as_ref(), "Backback");
     assert!(matches!(
         configured[0].items.first(),
@@ -59,7 +59,7 @@ fn menus_go_app_then_file_then_view_as_on_every_mac() {
 /// Headmate ruling 2026-11-01: no menu opens an MCP or Harness panel.
 #[test]
 fn no_menu_item_opens_an_mcp_panel() {
-    for menu in menus(true) {
+    for menu in menus(bb_lang::LangSet::of(&bb_lang::Lang::ALL)) {
         for item in &menu.items {
             if let MenuItem::Action { name, .. } = item {
                 let lower: String = name.to_lowercase();
@@ -100,7 +100,7 @@ fn cmd_m_minimizes_cmd_h_hides_and_cmd_alt_h_hides_others() {
 
 #[test]
 fn the_app_menu_can_hide_and_a_window_menu_minimizes_and_zooms() {
-    let configured: Vec<Menu> = menus(true);
+    let configured: Vec<Menu> = menus(bb_lang::LangSet::of(&bb_lang::Lang::ALL));
     assert_eq!(
         names(&configured[0]),
         [
@@ -135,7 +135,7 @@ fn cmd_o_and_the_file_menu_open_a_workspace() {
         Some(false)
     );
     assert!(go.action().partial_eq(&crate::quick_open::GoToFile));
-    let file: Menu = menus(true)
+    let file: Menu = menus(bb_lang::LangSet::of(&bb_lang::Lang::ALL))
         .into_iter()
         .find(|menu: &Menu| menu.name.as_ref() == "File")
         .expect("a File menu");

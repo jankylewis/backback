@@ -30,3 +30,31 @@ paying for them in a C# window, and without a second debugger.
 - File > Languages... refuses while a tab is unsaved; untitled tabs keep C#.
 **Consequences.** ADR-10's "C# only" now means "debugging and servers C#
 only"; the scope of other languages grows one EOD at a time.
+
+## ADR-12 · Python is opt-in (BBEOD41, headmate ruling 2026-11-20)
+**Context.** A C# repo holding `.py` helpers (MbTx, Apex) ticked Python by
+default and started pyright with no choice made; the found set was then saved
+as if the user had picked it. Ruling, verbatim: "pyright and python stuff
+should only be started once it is checked at lang option picker ... if only
+tick c# -> ignore everything about python in the opened repo".
+**Decision.**
+- `default_ticks` (no saved pick) is what the folder holds without Python;
+  Rust and C# keep ADR-11's default.
+- Only a user's pick is saved: Start Page Open with ticks, File > Languages...
+  A found set is never saved (supersedes ADR-11's "Detected languages are
+  saved only after a complete walk").
+- The `langs` store is v2: each record carries the mark `picked`. A v1 file
+  cannot tell picks from auto-saves, so it reads as no choice; the next pick
+  writes v2. An unknown header, mark or key is refused.
+- With Python unticked the window ignores Python: no pyright, pytest, Python
+  build, Python Check menu item, PY tab mark, Python projects in Find in
+  Files, Python build icon, Python in the status bar; `.py` opens plain.
+**Seat's calls (headmate may overrule).**
+- A folder holding only Python pre-ticks Python (else nothing works there).
+- Open... pre-ticks every language but Python; an untouched Open... still
+  takes the picked folder's default ticks.
+- A tab's language mark follows its colours, so an unticked Rust or C# file
+  also shows no mark.
+**Consequences.** Every user loses their v1 picks once (they read as no
+choice); C# picks come back as the default anyway. Folders without a pick walk
+whole on each open (BB-PRF-009 keeps the window from waiting).

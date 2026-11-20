@@ -42,17 +42,16 @@ fn the_start_page_ticks_by_mouse_and_keys_and_opens_each_fixture_with_them(
         let root: PathBuf = fixture.write(base.path()).unwrap();
         let (page, mut vcx): (WindowHandle<StartPage>, VisualTestContext) =
             page_for(cx, vec![root.clone()]);
+        let defaults: LangSet = bb_lang::default_ticks(LangSet::of(fixture.langs));
         assert_eq!(
             page_ticks(page, &vcx),
-            LangSet::of(fixture.langs),
+            defaults,
             "{} defaults",
             fixture.name
         );
         click_tick(&mut vcx, Lang::Rust);
         vcx.simulate_keystrokes("tab tab tab space tab");
-        let want: LangSet = LangSet::of(fixture.langs)
-            .toggled(Lang::Rust)
-            .toggled(Lang::Python);
+        let want: LangSet = defaults.toggled(Lang::Rust).toggled(Lang::Python);
         assert_eq!(page_ticks(page, &vcx), want, "{}", fixture.name);
         vcx.simulate_keystrokes("enter");
         vcx.run_until_parked();
@@ -109,7 +108,7 @@ fn the_saved_ticks_come_back_when_the_workspace_is_picked_again(cx: &mut TestApp
     let restored: LangSet = page_ticks(again, &vcx);
     close_all(cx);
     test_store(None);
-    assert_eq!(restored, LangSet::of(&[Lang::Rust]));
+    assert_eq!(restored, LangSet::of(&[Lang::Rust, Lang::Python]));
 }
 
 #[gpui::test]
@@ -139,4 +138,12 @@ fn file_languages_reopens_the_window_with_the_new_ticks(cx: &mut TestAppContext)
         .unwrap();
     assert_eq!(langs.active(), LangSet::of(&[Lang::CSharp, Lang::Rust]));
     close_all(cx);
+}
+
+#[gpui::test]
+fn open_pre_ticks_every_language_but_python(cx: &mut TestAppContext) {
+    let (page, vcx): (WindowHandle<StartPage>, VisualTestContext) = page_for(cx, Vec::new());
+    let ticks: LangSet = page_ticks(page, &vcx);
+    close_all(cx);
+    assert_eq!(ticks, LangSet::of(&[Lang::CSharp, Lang::Rust]));
 }

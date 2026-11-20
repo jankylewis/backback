@@ -83,7 +83,7 @@ pub(crate) fn open(
                 cx.new(|cx: &mut Context<StartPage>| StartPage::new(recent, no_write, window, cx));
             let focus: FocusHandle = page.read(cx).focus.clone();
             window.focus(&focus, cx);
-            cx.set_menus(crate::launch::menus(false));
+            cx.set_menus(crate::launch::menus(bb_lang::LangSet::EMPTY));
             page
         },
     );

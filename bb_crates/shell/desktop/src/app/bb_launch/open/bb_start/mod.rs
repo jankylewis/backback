@@ -71,7 +71,7 @@ impl StartPage {
                 window,
                 |_: &mut Self, window: &mut Window, cx: &mut Context<Self>| {
                     if window.is_window_active() {
-                        cx.set_menus(crate::launch::menus(false));
+                        cx.set_menus(crate::launch::menus(bb_lang::LangSet::EMPTY));
                     }
                 },
             ),

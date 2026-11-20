@@ -6,3 +6,4 @@ Cabinet of drawers D5 to D8; the hub-level `bb_INDEX.md` has the full table.
 |---|---|
 | `D5/` | shelves S16 to S19 |
 | `D6/` | shelves S20 to S23 |
+| `D7/` | shelves S24 to S27 |

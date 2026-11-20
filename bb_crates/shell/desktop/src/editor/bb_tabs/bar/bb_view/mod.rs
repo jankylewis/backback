@@ -112,9 +112,19 @@ pub(super) fn file_name(path: &std::path::Path) -> String {
 }
 
 /// The mark in front of a tab's name: its file's language (BBEOD33; was
-/// `C#` on every tab), none for a file of no language.
-fn lang_mark(index: usize, path: &std::path::Path, theme: Theme) -> Option<gpui::Div> {
+/// `C#` on every tab), none for a file of no language, and none while the
+/// tab is not coloured as that language: an unticked language shows
+/// nothing (BBEOD41, no PY mark without Python).
+fn lang_mark(
+    index: usize,
+    path: &std::path::Path,
+    mode: bb_lang::FileMode,
+    theme: Theme,
+) -> Option<gpui::Div> {
     let lang: bb_lang::Lang = bb_lang::Lang::of_source(path)?;
+    if mode != bb_lang::FileMode::Colours(lang) {
+        return None;
+    }
     let tint: bb_ui::Rgb = match lang {
         bb_lang::Lang::CSharp => theme.icon_csharp,
         bb_lang::Lang::Rust => theme.warn,
@@ -187,7 +197,7 @@ fn tab_item(
             ),
         )
         .map(|item: gpui::Stateful<gpui::Div>| draggable(item, index, (name.clone(), path), theme))
-        .children(lang_mark(index, &tab.path, theme))
+        .children(lang_mark(index, &tab.path, tab.mode, theme))
         .child(format!("{name}{dirty}"))
         .child(corner(index, tab.pinned, cx))
 }

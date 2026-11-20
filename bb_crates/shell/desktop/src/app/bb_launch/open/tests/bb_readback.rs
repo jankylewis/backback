@@ -17,11 +17,23 @@ fn fixture(name: &str) -> &'static Fixture {
 
 /// Launch with `argument` as the command line does, the menu bar as at launch.
 fn launch_with(cx: &mut TestAppContext, argument: &Path) -> WindowHandle<ExplorerView> {
+    launch_ticked(cx, argument, None)
+}
+
+/// [`launch_with`] with the user's `ticked` languages.
+fn launch_ticked(
+    cx: &mut TestAppContext,
+    argument: &Path,
+    ticked: Option<bb_lang::LangSet>,
+) -> WindowHandle<ExplorerView> {
     cx.update(|cx: &mut App| {
         crate::launch::bind_keys(cx);
-        cx.set_menus(crate::launch::menus(true));
+        cx.set_menus(crate::launch::menus(bb_lang::LangSet::of(
+            &bb_lang::Lang::ALL,
+        )));
     });
-    let start: crate::args::Start = crate::args::start_for(argument.to_path_buf(), false);
+    let mut start: crate::args::Start = crate::args::start_for(argument.to_path_buf(), false);
+    start.ticked = ticked;
     assert!(cx.update(|cx: &mut App| crate::launch::open_workspace(&start, cx)));
     cx.run_until_parked();
     cx.windows()
@@ -109,7 +121,8 @@ fn a_rust_file_argument_opens_its_project_and_starts_its_servers(cx: &mut TestAp
     assert_eq!(opened, root, "the Explorer roots at the project");
     assert_eq!(
         started,
-        vec![Tool::RustAnalyzer, Tool::Pyright, Tool::Cargo]
+        vec![Tool::RustAnalyzer, Tool::Cargo],
+        "no Python unticked"
     );
     assert_eq!(tab, Some(root.join("src/main.rs")));
 }
@@ -118,7 +131,9 @@ fn a_rust_file_argument_opens_its_project_and_starts_its_servers(cx: &mut TestAp
 fn each_tab_shows_its_own_files_language_mark(cx: &mut TestAppContext) {
     let base: tempfile::TempDir = tempfile::tempdir().unwrap();
     let root: PathBuf = fixture("all3").write(base.path()).unwrap();
-    let window: WindowHandle<ExplorerView> = launch_with(cx, &root.join("src/main.rs"));
+    let all: bb_lang::LangSet = bb_lang::LangSet::of(&bb_lang::Lang::ALL);
+    let window: WindowHandle<ExplorerView> =
+        launch_ticked(cx, &root.join("src/main.rs"), Some(all));
     click_row(window, &root.join("tool/main.py"), cx);
     click_row(window, &root.join("notes/README.md"), cx);
     let mut vcx: VisualTestContext = VisualTestContext::from_window(window.into(), cx);

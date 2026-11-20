@@ -161,14 +161,32 @@ fn csharp_only_costs_what_it_did_before_the_picker() {
 }
 
 #[test]
-fn a_folder_with_no_language_starts_with_csharp_ticked_and_others_with_what_they_hold() {
+fn a_folder_with_no_language_starts_with_csharp_ticked_and_others_with_what_they_hold_but_python() {
     assert_eq!(
         bb_lang::default_ticks(LangSet::EMPTY),
         LangSet::of(&[Lang::CSharp])
     );
-    for set in LangSet::non_empty() {
-        assert_eq!(bb_lang::default_ticks(set), set);
+    let python_only: LangSet = LangSet::of(&[Lang::Python]);
+    for set in LangSet::non_empty()
+        .into_iter()
+        .filter(|set: &LangSet| *set != python_only)
+    {
+        let want: LangSet = set.set(Lang::Python, false);
+        assert_eq!(bb_lang::default_ticks(set), want, "{set:?}");
+        assert!(!bb_lang::default_ticks(set).has(Lang::Python), "{set:?}");
     }
+}
+
+#[test]
+fn a_folder_holding_only_python_starts_with_python_ticked() {
+    let python_only: LangSet = LangSet::of(&[Lang::Python]);
+    assert_eq!(bb_lang::default_ticks(python_only), python_only);
+}
+
+#[test]
+fn rust_found_stays_ticked_beside_python() {
+    let found: LangSet = LangSet::of(&[Lang::Rust, Lang::Python]);
+    assert_eq!(bb_lang::default_ticks(found), LangSet::of(&[Lang::Rust]));
 }
 
 #[test]

@@ -15,7 +15,12 @@ fn setup() -> (tempfile::TempDir, PathBuf, QuickOpen) {
         std::fs::write(path, "").unwrap();
     }
     let active: PathBuf = root.join("Specs/Deep/X.cs");
-    let quick: QuickOpen = QuickOpen::find_box(&root, Some(&active), None);
+    let quick: QuickOpen = QuickOpen::find_box(
+        &root,
+        Some(&active),
+        None,
+        bb_lang::LangSet::of(&bb_lang::Lang::ALL),
+    );
     (dir, root, quick)
 }
 
@@ -35,7 +40,12 @@ fn the_find_box_offers_the_workspace_the_project_and_the_folder() {
         .get(2)
         .is_some_and(|p: &String| p.starts_with("Folder · Specs/Deep")));
     assert_eq!(quick.chosen(), None, "an empty query does nothing");
-    let picked: QuickOpen = QuickOpen::find_box(&root, None, Some(&root.join("Specs")));
+    let picked: QuickOpen = QuickOpen::find_box(
+        &root,
+        None,
+        Some(&root.join("Specs")),
+        bb_lang::LangSet::of(&bb_lang::Lang::ALL),
+    );
     assert_eq!(
         labels(&picked).first().map(String::as_str),
         Some("Folder · Specs")
@@ -74,7 +84,12 @@ fn tab_moves_to_in_and_files_and_enter_asks_for_them() {
     assert_eq!(ask.text, "Greet", "the text field kept its text");
     assert_eq!(ask.dir, root.join("Core"));
     assert_eq!(ask.files, "*.cs, !Tests");
-    let picked: QuickOpen = QuickOpen::find_box(&root, None, Some(&root.join("Specs")));
+    let picked: QuickOpen = QuickOpen::find_box(
+        &root,
+        None,
+        Some(&root.join("Specs")),
+        bb_lang::LangSet::of(&bb_lang::Lang::ALL),
+    );
     assert_eq!(
         labels(&picked).first().map(String::as_str),
         Some("Folder · Specs")

@@ -67,14 +67,19 @@ pub enum FileMode {
 }
 
 /// The boxes a folder with no saved choice starts with: the languages it
-/// holds; C# alone when it holds none (an empty or notes folder still
+/// holds but Python, which only a user's tick turns on (headmate ruling,
+/// BBEOD41); a folder holding only Python ticks Python, else nothing there
+/// would work. C# alone when it holds none (an empty or notes folder still
 /// opens, as before the picker). The CLI and the start page share it.
 #[must_use]
 pub fn default_ticks(detected: LangSet) -> LangSet {
+    let python_only: LangSet = LangSet::of(&[Lang::Python]);
     if detected.is_empty() {
         LangSet::of(&[Lang::CSharp])
+    } else if detected == python_only {
+        python_only
     } else {
-        detected
+        detected.set(Lang::Python, false)
     }
 }
 

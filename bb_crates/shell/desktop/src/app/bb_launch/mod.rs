@@ -45,7 +45,7 @@ pub(crate) fn launch() {
         open::register(cx, wanted.no_write());
         crate::settings::install(cx);
         crate::settings::register_zoom(cx);
-        cx.set_menus(menus(false));
+        cx.set_menus(menus(bb_lang::LangSet::EMPTY));
         // BB-FEAT-080: the pixel mascot in the Dock, with no macOS tile.
         if let Err(error) = bb_dock::set_icon(include_bytes!("../../../bb_assets/dock.png")) {
             eprintln!("bb: {error}");
