@@ -37,18 +37,18 @@ pub async fn resolve(target: &Path, deadline: Duration) -> Result<PathBuf, Targe
         Some("csproj") => {
             let project: PathBuf = target.canonicalize()?;
             run(
-                Command::new("dotnet")
+                Command::from(bb_dotnet::no_servers::command())
                     .arg("build")
                     .arg(&project)
                     .arg("-v:q")
                     // No node or compiler server outlives the build, as
                     // Build Solution (run.rs); BBEOD42 found `VBCSCompiler` left.
-                    .args(["-nodeReuse:false", "-p:UseSharedCompilation=false"]),
+                    .args(bb_dotnet::no_servers::FLAGS),
                 deadline,
             )
             .await?;
             let output: std::process::Output = run(
-                Command::new("dotnet")
+                Command::from(bb_dotnet::no_servers::command())
                     .arg("msbuild")
                     .arg(&project)
                     .arg("-getProperty:TargetPath"),

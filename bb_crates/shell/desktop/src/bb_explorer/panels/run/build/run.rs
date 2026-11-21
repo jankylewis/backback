@@ -24,18 +24,14 @@ pub(super) struct Running {
 }
 
 pub(super) fn start(target: &Path) -> Result<Running, String> {
-    let mut command: Command = Command::new("dotnet");
+    let mut command: Command = bb_dotnet::no_servers::command();
     command
         .arg("build")
         .arg(target)
+        .args(["-nologo", "-v:minimal"])
         // No worker nodes or compiler server outlive the build: they would
         // hold the output pipe open.
-        .args([
-            "-nologo",
-            "-v:minimal",
-            "-nodeReuse:false",
-            "-p:UseSharedCompilation=false",
-        ]);
+        .args(bb_dotnet::no_servers::FLAGS);
     spawn(command, "dotnet")
 }
 

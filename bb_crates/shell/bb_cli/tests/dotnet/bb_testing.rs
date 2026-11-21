@@ -18,11 +18,14 @@ fn built() -> &'static Path {
         let _fresh: std::io::Result<()> = std::fs::remove_dir_all(&dir);
         copy_tree(&harness(), &dir);
         for project in [NUNIT, "XunitPlaywright/_XunitPlaywright.csproj"] {
-            let status: std::process::ExitStatus = std::process::Command::new("dotnet")
-                .args(["build", project, "-c", "Debug", "-nologo", "-v", "q"])
-                .current_dir(&dir)
-                .status()
-                .unwrap();
+            let status: std::process::ExitStatus = bb_dotnet::no_servers::run(
+                bb_dotnet::no_servers::command()
+                    .current_dir(&dir)
+                    .args(["build", project, "-c", "Debug", "-nologo", "-v", "q"]),
+            )
+            .unwrap()
+            .output
+            .status;
             assert!(status.success(), "build of {project} failed");
         }
         std::fs::canonicalize(dir).unwrap()
@@ -70,11 +73,14 @@ fn list_leaves_the_built_solution_tree_unchanged() {
     ));
     copy_tree(&harness(), &root);
     for project in [NUNIT, "XunitPlaywright/_XunitPlaywright.csproj"] {
-        let built: std::process::ExitStatus = std::process::Command::new("dotnet")
-            .args(["build", project, "-c", "Debug", "-nologo", "-v", "q"])
-            .current_dir(&root)
-            .status()
-            .unwrap();
+        let built: std::process::ExitStatus = bb_dotnet::no_servers::run(
+            bb_dotnet::no_servers::command()
+                .current_dir(&root)
+                .args(["build", project, "-c", "Debug", "-nologo", "-v", "q"]),
+        )
+        .unwrap()
+        .output
+        .status;
         assert!(built.success(), "build of {project}");
     }
     let marker: PathBuf = root.join("bb-list-marker");
@@ -108,11 +114,14 @@ fn run_puts_runner_output_only_in_temp() {
         std::thread::current().id()
     ));
     copy_tree(&harness(), &root);
-    let built: std::process::ExitStatus = std::process::Command::new("dotnet")
-        .args(["build", NUNIT, "-c", "Debug", "-nologo", "-v", "q"])
-        .current_dir(&root)
-        .status()
-        .unwrap();
+    let built: std::process::ExitStatus = bb_dotnet::no_servers::run(
+        bb_dotnet::no_servers::command()
+            .current_dir(&root)
+            .args(["build", NUNIT, "-c", "Debug", "-nologo", "-v", "q"]),
+    )
+    .unwrap()
+    .output
+    .status;
     assert!(built.success());
     let marker: PathBuf = root.join("bb-run-marker");
     std::fs::write(&marker, "before run").unwrap();

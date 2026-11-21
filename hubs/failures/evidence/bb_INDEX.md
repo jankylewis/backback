@@ -67,6 +67,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-BLD-004 | FIXED | Dock capture of the PR #110 bundle; contact sheet `docs/release/bb_assets/bb_mascot/previews/CONTACT_SHEET.png` |
 | BB-PRC-008 | FIXED | `a_dropped_debug_test_session_leaves_no_test_run` (red with an empty drop); matemaster report 2026-11-18 |
 | BB-PRC-009 | FIXED | `no_orphan_servers` red/green process lists (fleet `evidence/BBEOD42_READY.md`); matemaster report 2026-11-20 |
+| BB-PRC-010 | FIXED | `no_servers` RED/GREEN Roslyn log lines and process lists, mutants (fleet `evidence/BBEOD43_READY.md`) |
 | BB-GAT-020 | FIXED | CI run 44768652825; local slow-build red then green (fleet `evidence/BBEOD42_READY.md`) |
 | BB-BUG-070 | FIXED | Headmate screen recording 2026-11-18 (12 s, not in the repo); `a_double_click_zooms_once_and_only_a_moved_press_drags` |
 | BB-BUG-071 | OBSERVED | Live DAP probes 2026-11-18 (launch, attach, NUnit test host; targets only on statement-start lines); `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |
@@ -85,7 +86,7 @@ Capture next time: the build time of the binary that was read back.
 | BB-ENV-003 | FIXED | Dock readback (`env -i`, launchd PATH, failing shell): `rust_server_status=` missing before, Ready after; BBEOD29 READY evidence |
 | BB-GAT-013 | FIXED | `bb_tools.rs` red with `/private/var/...` paths on first real pyright; green with canonical root; BBEOD29 READY evidence |
 | BB-GAT-014 | FIXED | 3 of 3 live window runs panicked `Detected activity on thread`; 3 of 3 green after; BBEOD29 READY evidence |
-| BB-GAT-008 | FIXED | Again in BBEOD29: `similar_names` (`line` beside `live`) in a new window test; full gate red at clippy only (701 passed); clippy run alone before the rerun |
+| BB-GAT-008 | FIXED | Again in BBEOD29: `similar_names` (`line` beside `live`) in a new window test; full gate red at clippy only (701 passed); clippy run alone before the rerun. Again in BBEOD43: `unwrap_used` in helpers of a new `tests/` file outside `#[cfg(test)]`; gate red at clippy only (783 passed), green after wrapping |
 | BB-GAT-015 | FIXED | PR #118 CI run 44444581357 panic at `settle.rs:93`; local red with 2.5 s scripted start on the request deadline, green after |
 | BB-GAT-016 | OBSERVED | master CI run 44555640505: pyright session 0.019 s, pyright check 0.024 s (hint branch); local 13/13 real with CI PATH; no-pytest venv red with the switch |
 | BB-UIX-017 | FIXED | BBEOD30 RED run: 5 history tests red at bb82de2 logic (Hop { to: None } with no tab; deleted file not skipped); green after; mutations M1-M4, M8, M9 killed; `state/fleet/backback/evidence/BBEOD30_READY.md` (agentfarm) |

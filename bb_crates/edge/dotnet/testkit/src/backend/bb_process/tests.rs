@@ -93,3 +93,37 @@ async fn stop_kills_the_runner_and_its_child() {
             .success());
     }
 }
+
+#[tokio::test]
+async fn a_dotnet_build_through_a_call_compiles_in_its_own_process() {
+    let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+    std::fs::write(
+        dir.path().join("Lib.csproj"),
+        r#"<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>"#,
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join("Code.cs"),
+        "namespace Lib;\npublic static class Code { public static int One() => 1; }\n",
+    )
+    .unwrap();
+    let log: PathBuf = dir.path().join("roslyn.log");
+    let mut call: Call = Call::new("dotnet", dir.path()).args([
+        "build",
+        "Lib.csproj",
+        "-c",
+        "Debug",
+        "-nologo",
+        "-v",
+        "q",
+    ]);
+    call.env
+        .push(("RoslynCommandLineLogFile".into(), log.display().to_string()));
+    call.succeed(Duration::from_secs(300)).await.unwrap();
+    let compiles: String = std::fs::read_to_string(&log).unwrap();
+    assert!(
+        compiles.contains("CompilerServer: tool - using command line tool by design")
+            && !compiles.contains("CompilerServer: server"),
+        "{compiles}"
+    );
+}

@@ -156,13 +156,15 @@ mod tests {
             .join("Sample.dll");
         let stub: PathBuf =
             stub_project(Path::new("/any/where/Sample.csproj"), &assembly, &temp).unwrap();
-        let evaluated: std::process::Output = std::process::Command::new("dotnet")
-            .arg("msbuild")
-            .arg(&stub)
-            .args(["-getProperty:TargetPath", "-nologo"])
-            .current_dir(temp.path())
-            .output()
-            .unwrap();
+        let evaluated: std::process::Output = bb_dotnet::no_servers::run(
+            bb_dotnet::no_servers::command()
+                .arg("msbuild")
+                .arg(&stub)
+                .args(["-getProperty:TargetPath", "-nologo"])
+                .current_dir(temp.path()),
+        )
+        .unwrap()
+        .output;
         assert!(evaluated.status.success(), "{evaluated:?}");
         let printed: String = String::from_utf8(evaluated.stdout).unwrap();
         assert_eq!(printed.trim(), assembly.to_string_lossy());

@@ -42,7 +42,7 @@ async fn start_testhost(root: &std::path::Path) -> (Child, Lines, u32) {
         root.join("bb_crates/shell/desktop/fixtures/_Harness/_NUnitApex/_NUnitApex.csproj");
     let artifacts: PathBuf =
         std::env::temp_dir().join(format!("backback-testhost-{}", std::process::id()));
-    let mut child: Child = Command::new("dotnet")
+    let mut child: Child = Command::from(bb_dotnet::no_servers::command())
         .arg("test")
         .arg(&project)
         .arg("--artifacts-path")

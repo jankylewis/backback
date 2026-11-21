@@ -74,6 +74,9 @@ impl Call {
         let mut cmd: Command = Command::new(&self.program);
         cmd.args(&self.args)
             .current_dir(&self.cwd)
+            // Any MSBuild the tool starts (a build, `dotnet test`, the Apex
+            // CLI) leaves no compiler server or node behind (BBEOD43).
+            .envs(bb_dotnet::no_servers::ENV)
             .envs(self.env.iter().map(|(k, v): &(String, String)| (k, v)))
             .stdin(Stdio::null())
             .process_group(0)

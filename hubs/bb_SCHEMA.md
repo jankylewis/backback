@@ -21,7 +21,7 @@ search); ids, families and layers are backback's own.
 A bug is a symptom a user meets in the app (`BB-BUG-nnn`, global numbers).
 A failure is a mechanism: a cause found in a bug, test, gate, CI run or
 readback (`BB-<FAM>-nnn`). A bug links to its cause with `cause:`.
-`failures/TRIAGE.md` has one row per failure reason and tool gap, `bugs/TRIAGE.md` one per bug: read them first.
+`failures/TRIAGE.md` (failure reasons, tool gaps) and `bugs/TRIAGE.md` (bugs) are the triage entry points: read them first.
 `features/` lists every feature shipped, one row each (`BB-FEAT-nnn`).
 
 ## Layers and families
@@ -46,6 +46,16 @@ Every folder holds one `bb_INDEX.md` (its `bb_` marker) and at most 4 entries
 Shelves: `S01` = ids 001-004, `S02` = 005-008, and so on. Drawers hold the shelves: `D1/` `S01` to `S03`, `D2/` `S04` to `S07`, `D3/` `S08` to `S11`, `D4/` `S12` to `S15`, and so on. Cabinets hold the drawers: `C1/` `D1` to `D4`, `C2/` `D5` to `D8`, and so on, so no folder passes five entries (a bug path is `C<n>/D<n>/S<nn>/`). Bugs are always
 shelved; a family folder or `toolgap/` is shelved once it passes 4 ids.
 Folders are made only when an entry needs them.
+
+## Triage
+
+Each hub's `TRIAGE.md` keeps its path and holds no rows: it lists the shelves
+and the one `grep -rn -F` that searches them all. A row is `| Id | Signature |
+Status | First check |`, sorted by id in its shelf. Failure rows sit by layer
+next to their entries (`failures/failurereason/<LAYER>/TRIAGE.md`; tool gaps
+`lessons/toolgap/TRIAGE.md`); a layer near 100 lines splits by family into
+`<LAYER>/<FAM>/TRIAGE.md`. Bug rows sit by cabinet in `bugs/triage/C<n>.md`
+(ids as `bugfacing/C<n>/`). Every new id gets its row in the PR that adds it.
 
 ## Entry head
 

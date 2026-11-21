@@ -7,3 +7,4 @@ Index of this folder; the hub-level `bb_INDEX.md` has the full table.
 | `ENV/` | folder |
 | `PRC/` | folder |
 | `PRF/` | folder |
+| `TRIAGE.md` | triage rows of this layer (PRC, PRF, ENV): signature and first check |

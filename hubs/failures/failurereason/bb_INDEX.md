@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 87 — FIXED 79, OBSERVED 5, OPEN 1, ACCEPTED 2.
+One file per failure mechanism. This hub owns the id. Entries: 88 — FIXED 80, OBSERVED 5, OPEN 1, ACCEPTED 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -63,6 +63,7 @@ One file per failure mechanism. This hub owns the id. Entries: 87 — FIXED 79, 
 | BB-LSP-008 | A killed server was reported stopped after one second under load | FIXED | yes | yes | none | `APP/LSP/S02/BB_LSP_008_A_KILLED_SERVER_WAS_REPORTED_STOPPED_AFTER_ONE_SECOND_UNDER_LOAD.md` |
 | BB-PRC-008 | A debug-test run outlived its test binary (session thread killed at exit) | FIXED | yes | yes | none | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
 | BB-PRC-009 | A child group outlives an owner that skips its cleanup (SIGKILL, abort, exit) | FIXED | yes | yes | none | `SYS/PRC/S03/BB_PRC_009_A_CHILD_GROUP_OUTLIVES_AN_OWNER_THAT_SKIPS_CLEANUP.md` |
+| BB-PRC-010 | A test fixture's own `dotnet build` left a compiler server (`VBCSCompiler`) | FIXED | yes | yes | none | `SYS/PRC/S03/BB_PRC_010_A_TEST_FIXTURE_BUILD_LEFT_A_COMPILER_SERVER.md` |
 | BB-GAT-008 | A test wildcard arm reached the gate unlinted | FIXED | yes | yes | none | `SHIP/GAT/D1/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | A patched local adapter hid a CI-only branch | FIXED | yes | yes | none | `SHIP/GAT/D1/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
 | BB-GAT-010 | A window test waited with no deadline that could fire | FIXED | yes | yes | none | `SHIP/GAT/D1/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |

@@ -10,5 +10,6 @@ pub mod solution;
 pub mod testing;
 
 pub use bb_project::{Capability, ProjectError, ProjectInfo};
+pub use sdk::bb_no_servers as no_servers;
 pub use sdk::{Sdk, SdkError};
 pub use solution::{ProjectPath, Solution, SolutionError, SolutionFormat, SolutionPath};
