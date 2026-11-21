@@ -9,10 +9,18 @@ fn fixture(root: &Path) -> Result<(), Box<dyn std::error::Error>> {
         r#"<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" /><PackageReference Include="NUnit" Version="4.6.1" /><PackageReference Include="NUnit3TestAdapter" Version="5.0.0" /></ItemGroup></Project>"#,
     )?;
     std::fs::write(root.join("OutcomeSpec.cs"), "using NUnit.Framework;\nnamespace Sample;\npublic class OutcomeSpec {\n[Test] public void Passes() => Assert.Pass();\n[Test] public void Fails() => Assert.Fail(\"failure\");\n}\n")?;
-    let status: ExitStatus = Command::new("dotnet")
-        .args(["build", "Tests.csproj", "-c", "Debug", "-nologo", "-v", "q"])
-        .current_dir(root)
-        .status()?;
+    let status: ExitStatus =
+        bb_dotnet::no_servers::run(bb_dotnet::no_servers::command().current_dir(root).args([
+            "build",
+            "Tests.csproj",
+            "-c",
+            "Debug",
+            "-nologo",
+            "-v",
+            "q",
+        ]))?
+        .output
+        .status;
     assert!(status.success());
     Ok(())
 }

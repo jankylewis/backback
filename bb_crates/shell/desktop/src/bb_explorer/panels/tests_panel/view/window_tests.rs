@@ -15,12 +15,12 @@ fn write_fixture(root: &Path) -> PathBuf {
 
 pub(super) fn fixture(root: &Path) -> PathBuf {
     let project: PathBuf = write_fixture(root);
-    let status: std::process::ExitStatus = std::process::Command::new("dotnet")
-        .args(["build", "Tests.csproj", "-c", "Debug", "-nologo", "-v", "q"])
+    let mut build: std::process::Command = bb_dotnet::no_servers::command();
+    build
         .current_dir(root)
-        .status()
-        .unwrap();
-    assert!(status.success());
+        .args(["build", "Tests.csproj", "-c", "Debug", "-nologo", "-v", "q"]);
+    let ran: bb_dotnet::no_servers::Ran = bb_dotnet::no_servers::run(&mut build).unwrap();
+    assert!(ran.output.status.success(), "{:?}", ran.output);
     project
 }
 

@@ -39,11 +39,14 @@ pub fn built() -> &'static Path {
 pub fn build_copy(name: &str, projects: &[&str]) -> PathBuf {
     let dir: PathBuf = copy(name);
     for project in projects {
-        let status: std::process::ExitStatus = std::process::Command::new("dotnet")
-            .args(["build", project, "-c", "Debug", "-nologo", "-v", "q"])
-            .current_dir(&dir)
-            .status()
-            .unwrap();
+        let status: std::process::ExitStatus = bb_dotnet::no_servers::run(
+            bb_dotnet::no_servers::command()
+                .current_dir(&dir)
+                .args(["build", project, "-c", "Debug", "-nologo", "-v", "q"]),
+        )
+        .unwrap()
+        .output
+        .status;
         assert!(status.success(), "build of {project} failed");
     }
     dir

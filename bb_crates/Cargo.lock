@@ -544,6 +544,7 @@ dependencies = [
 name = "bb-dap"
 version = "0.0.1"
 dependencies = [
+ "bb-dotnet",
  "bb-framing",
  "bb-process",
  "serde",
@@ -568,6 +569,7 @@ name = "bb-dotnet"
 version = "0.0.1"
 dependencies = [
  "roxmltree 0.20.0",
+ "tempfile",
  "thiserror 2.0.21",
  "tokio",
 ]

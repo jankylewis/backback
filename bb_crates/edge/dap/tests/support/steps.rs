@@ -57,7 +57,7 @@ pub async fn launch(mode: &str, condition: Option<&str>) -> (DapSession, Events)
 pub async fn run_direct(mode: &str) -> Option<i32> {
     let status: std::process::ExitStatus = tokio::time::timeout(
         DEADLINE,
-        Command::new("dotnet")
+        Command::from(bb_dotnet::no_servers::command())
             .arg(dll().await)
             .arg(mode)
             .kill_on_drop(true)
@@ -99,7 +99,7 @@ pub struct Target {
 
 impl Target {
     pub async fn start() -> Self {
-        let mut child: Child = Command::new("dotnet")
+        let mut child: Child = Command::from(bb_dotnet::no_servers::command())
             .arg(dll().await)
             .arg("await")
             .stdin(Stdio::piped())

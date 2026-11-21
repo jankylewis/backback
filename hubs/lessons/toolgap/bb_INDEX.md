@@ -1,5 +1,7 @@
 # Toolgap index
 
+Triage rows (signature and first check): `TRIAGE.md`.
+
 | Id | Gap | Status | For | Workaround | Path |
 |---|---|---|---|---|---|
 | BB-TG-001 | netcoredbg has no `runInTerminal`; real exit code unreadable | OBSERVED | none | Label exit codes "adapter-reported, unverified" | `D1/S01/BB_TG_001_NETCOREDBG_NO_RUN_IN_TERMINAL.md` |

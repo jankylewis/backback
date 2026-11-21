@@ -58,6 +58,7 @@
 | BB-PRC-008 | FIXED | A guard stops the session and waits for its thread | `SYS/PRC/S02/BB_PRC_008_A_DEBUG_TEST_RUN_OUTLIVED_ITS_TEST_BINARY.md` |
 | BB-PRC-007 | FIXED | Worker and live window tests drain their server thread before returning | `SYS/PRC/S02/BB_PRC_007_A_ROSLYN_WORKER_TEST_LEFT_A_CHILD_RUNNING.md` |
 | BB-PRC-009 | FIXED | A guard process on a pipe ends every owned group; a launch sweeps dead owners' records | `SYS/PRC/S03/BB_PRC_009_A_CHILD_GROUP_OUTLIVES_AN_OWNER_THAT_SKIPS_CLEANUP.md` |
+| BB-PRC-010 | FIXED | Every `dotnet` from `bb_dotnet::no_servers` (own group, no server, no node); a guard refuses others | `SYS/PRC/S03/BB_PRC_010_A_TEST_FIXTURE_BUILD_LEFT_A_COMPILER_SERVER.md` |
 | BB-GAT-008 | FIXED | List the variants; clippy before the gate | `SHIP/GAT/D1/S02/BB_GAT_008_A_TEST_WILDCARD_ARM_REACHED_THE_GATE_UNLINTED.md` |
 | BB-GAT-009 | FIXED | Ask the adapter; assert the stock refusal and the patched goto | `SHIP/GAT/D1/S03/BB_GAT_009_A_PATCHED_LOCAL_ADAPTER_HID_A_CI_ONLY_BRANCH.md` |
 | BB-GAT-010 | FIXED | Watchdog on every blocking test wait | `SHIP/GAT/D1/S03/BB_GAT_010_A_WINDOW_TEST_WAITED_WITH_NO_DEADLINE_THAT_COULD_FIRE.md` |

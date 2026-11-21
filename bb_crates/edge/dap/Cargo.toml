@@ -7,6 +7,7 @@ license.workspace = true
 description = "Debug Adapter Protocol client types and netcoredbg discovery"
 
 [dependencies]
+bb-dotnet.workspace = true
 bb-process.workspace = true
 bb-framing.workspace = true
 serde.workspace = true

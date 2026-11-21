@@ -27,7 +27,7 @@ pub async fn build(tag: &str) -> Built {
     }
     let output: std::process::Output = tokio::time::timeout(
         Duration::from_secs(120),
-        Command::new("dotnet")
+        Command::from(bb_dotnet::no_servers::command())
             .arg("build")
             .arg(scratch.join("GotoFixture.csproj"))
             .arg("-c")
