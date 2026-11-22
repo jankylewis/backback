@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Start and Quit</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="runtime/lifecycle.html"><main class="wrap">
+
+<span class="tag">07 &middot; START + QUIT</span>
+<h1>Start clean,<br>leave nothing.</h1>
+<p class="lead">backback starts in a fixed order. When it ends, every program it started must end too.</p>
+
+<h2>1 &middot; START, IN ORDER</h2>
+<div class="flow">
+  <div class="rung ok"><span class="k">1 PATH</span><span class="v">Read the PATH from your shell (5 second limit). An app started from the Dock gets a short PATH and cannot find <code>dotnet</code> (BB-BUG-009).</span></div>
+  <div class="rung ok"><span class="k">2 CLEAN</span><span class="v">Look for notes left by an earlier backback that died. Stop the programs it started, but only if they are still the same programs.</span></div>
+  <div class="rung ok"><span class="k">3 GUARD</span><span class="v">Start this backback's guard.</span></div>
+  <div class="rung ok"><span class="k">4 WHAT</span><span class="v">Decide what to open: a project, a folder, or the start page.</span></div>
+  <div class="rung ok"><span class="k">5 LOOK</span><span class="v"><code>bb-detect</code> looks for languages. The file tree loads.</span></div>
+  <div class="rung ok"><span class="k">6 SIGNALS</span><span class="v">Get ready for stop signals from macOS, so they stop the tools too.</span></div>
+  <div class="rung mid"><span class="k">7 WINDOW</span><span class="v">The window opens. Only the ticked languages start their tools.</span></div>
+</div>
+<p class="caption" style="text-align:left">Steps 1-3 run before any other thread starts. That keeps them simple and safe.</p>
+
+<h2>2 &middot; THE LANGUAGE LIST DECIDES WHAT STARTS</h2>
+<div class="dia" role="group" aria-label="Language ticks">
+  <div class="row"><div class="node mate">C# ticked<small>Roslyn starts</small></div><div class="node dead">Rust not ticked<small>nothing starts</small></div><div class="node dead">Python not ticked<small>nothing starts, no marks</small></div></div>
+  <p class="caption">Your choice is saved for each folder. Python is off at first, unless the folder has only Python.</p>
+</div>
+
+<h2>3 &middot; MANY WAYS TO END, ONE RESULT</h2>
+<div class="scroll"><table class="t">
+<tr><th>HOW IT ENDS</th><th>WHO STOPS THE TOOLS</th></tr>
+<tr><td>Cmd+Q</td><td>backback stops every group itself. The guard checks after.</td></tr>
+<tr><td>A stop signal</td><td>backback catches the signal, stops every group, then exits.</td></tr>
+<tr><td>A crash</td><td>backback cannot clean up. macOS closes the guard's pipe, and the guard stops every group.</td></tr>
+<tr><td>Force quit, kill -9</td><td>The same: the guard asks each group to stop, waits 1 second, then forces it.</td></tr>
+<tr><td>The guard dies too</td><td>The next time backback starts, step 2 cleans up.</td></tr>
+</table></div>
+
+<h2>4 &middot; WHAT BACKBACK SAVES ON YOUR MAC</h2>
+<div class="box cyan"><p>In <code>~/Library/Application Support/backback</code>: your Recent list, your language choices, exception breakpoints, and one note for each running backback that lists the programs it started.</p><p>backback sends nothing over the internet. Only <code>dotnet</code> and NuGet go online, to get packages.</p></div>
+</main></body></html>

@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Big Picture</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="design/bb_bigpicture.html"><main class="wrap">
+
+<span class="tag g">02 &middot; BIG PICTURE</span>
+<h1>Three layers,<br>tools below.</h1>
+<p class="lead">The window is on top. Plain logic is in the middle. Below that, other programs do the hard work.</p>
+
+<h2>1 &middot; THE BIG PARTS</h2>
+<div class="dia" role="group" aria-label="backback main parts">
+  <div class="node mm wide" data-more="shell">1 &middot; THE APP<small>the window you see: editor, file tree, panels</small></div>
+  <div class="arrow">&#9660; uses</div>
+  <div class="row">
+    <div class="node" data-more="core">2 &middot; CORE<small>text, colours, languages, files, programs</small></div>
+    <div class="node violet" data-more="edge">3 &middot; EDGE<small>talks to the tools outside</small></div>
+  </div>
+  <div class="arrow">&#9660; messages, commands, a terminal</div>
+  <div class="node mate wide" data-more="tools">4 &middot; TOOLS OUTSIDE<small>Roslyn &middot; netcoredbg &middot; dotnet &middot; rust-analyzer &middot; pyright &middot; your shell</small></div>
+  <p class="caption">The app draws and decides. Core holds the logic. Edge talks to the tools. The tools do the heavy work as their own programs.</p>
+</div>
+<div class="dia" role="group" aria-label="Helper tools for us">
+  <div class="node warn wide" data-more="dev">5 &middot; HELPERS FOR US<small>bb command &middot; rule checker &middot; code map &middot; colours &middot; Dock icon</small></div>
+  <p class="caption">You do not see these when you code. They help us build and check backback.</p>
+</div>
+
+<h2>2 &middot; THE PARTS YOU CANNOT REMOVE</h2>
+<div class="rung ok"><span class="k">TEXT</span><span class="v"><code>bb-text</code> holds your text. Without it there is no editor.</span></div>
+<div class="rung ok"><span class="k">WINDOW</span><span class="v">The <code>backback</code> app draws the window, tabs and panes. Without it you see nothing.</span></div>
+<div class="rung ok"><span class="k">PROGRAMS</span><span class="v"><code>bb-process</code> starts and stops every tool. Without it, tools keep running after you quit.</span></div>
+<div class="rung ok"><span class="k">LSP</span><span class="v"><code>bb-lsp</code> and <code>bb-intel</code> talk to Roslyn. Without them it is only a text editor.</span></div>
+<div class="rung mid"><span class="k">PROJECT</span><span class="v"><code>bb-dotnet</code> and <code>bb-explorer</code> read your <code>.sln</code> and <code>.csproj</code> files and show the file tree.</span></div>
+<div class="rung mid"><span class="k">DEBUG</span><span class="v"><code>bb-dap</code> talks to netcoredbg. Without it you can build but not debug.</span></div>
+
+<h2>3 &middot; ONE RULE BETWEEN LAYERS</h2>
+<div class="box cyan"><p>A part may use a part below it, not a part above it. No two parts use each other.</p><p>One exception: <code>bb-explorer</code> (core) uses <code>bb-dotnet</code> (edge) to read your project. <code>bb-dotnet</code> uses nothing else.</p><p>Core never starts a language tool. Edge never draws on the screen.</p></div>
+
+<script>
+window.MORE = {
+  shell: {title: "1 · The app (crate backback)", body: "<p>The Mac app: 253 files, about 38,700 lines. It is the only part that draws.</p><ul><li><b>app/</b> starts the app. It shows the start page and the language list.</li><li><b>editor/</b> tabs, panes, the text view, keys and mouse.</li><li><b>bb_explorer/</b> the file tree, file actions, and all side panels: Quick Open, Build, Debug, Tests, Terminal, Settings.</li><li><b>intel/</b> one worker per language tool, and the code that shows its answers.</li></ul>"},
+  core: {title: "2 · Core (bb_core)", body: "<p>Plain Rust logic. It does not draw anything.</p><ul><li><b>bb-text</b> holds the text and positions.</li><li><b>bb-syntax</b> colours, folds and the outline.</li><li><b>bb-lang</b> which languages are turned on.</li><li><b>bb-explorer</b>, <b>bb-search</b> the file tree and Find in Files.</li><li><b>bb-process</b> starts, owns and stops other programs.</li></ul>"},
+  edge: {title: "3 · Edge (edge/)", body: "<p>Every part that talks to a program outside backback.</p><ul><li><b>bb-framing</b> puts a length header on each message.</li><li><b>bb-lsp</b> sends and receives LSP messages.</li><li><b>bb-intel</b> suggestions, errors, go to definition, find uses, rename, quick fixes.</li><li><b>bb-dap</b> talks to the debugger.</li><li><b>bb-dotnet</b> finds .NET and reads project files. <b>bb-testkit</b> runs tests.</li><li><b>bb-cargo</b>, <b>bb-python</b> Rust and Python tools.</li></ul>"},
+  tools: {title: "4 · Tools outside", body: "<p>Each one runs as its own program. backback owns them while it runs.</p><ul><li><b>Roslyn</b>, with its helpers BuildHost and MSBuild: it knows C#.</li><li><b>netcoredbg</b>, and the program you debug.</li><li><b>dotnet build</b>, <b>dotnet test</b>, or the Apex CLI.</li><li><b>rust-analyzer</b>, <b>pyright</b>: only when turned on.</li><li><b>your shell</b> in the terminal panel.</li></ul>"},
+  dev: {title: "5 · Helpers for us", body: "<ul><li><b>bb</b> command: checks setup, opens a project, runs tests, all without the window. We use it to prove a feature works.</li><li><b>bb-audit</b>: checks our rules (5 items per folder, short files, clear types). The checks fail if a rule is broken.</li><li><b>bb-kmap</b>: <code>bb map</code> prints a map of the code, so agents read less.</li><li><b>bb-ui</b>: the colours, dark by default. <b>bb-dock</b>: the Dock icon.</li></ul>"}
+};
+</script>
+</main></body></html>

@@ -1,0 +1,72 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Processes and Threads</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="runtime/bb_threads.html"><main class="wrap">
+
+<span class="tag g">05 &middot; PROCESSES + THREADS</span>
+<h1>What runs when<br>a project is open.</h1>
+<p class="lead">backback is one program with a few threads inside. It starts one group of programs for each tool. One small guard watches them all.</p>
+
+<div class="legend"><span style="--sw:var(--amber)">backback</span><span style="--sw:var(--cyan)">thread</span><span style="--sw:var(--green)">program group</span><span style="--sw:var(--rose)">guard</span><span style="--sw:#6b6880">only when you use it</span></div>
+
+<div class="dia" role="group" aria-label="Processes and threads">
+  <div class="proc"><p class="pix">BACKBACK &middot; ONE PROGRAM</p>
+    <div class="lanes">
+      <div class="node mm" data-more="main">main thread<small>keys, text, drawing</small></div>
+      <div class="node" data-more="bg">background helpers<small>file search</small></div>
+      <div class="node" data-more="detect">bb-detect<small>finds languages</small></div>
+      <div class="node" data-more="intel">bb-intel<small>talks to Roslyn</small></div>
+      <div class="node dead" data-more="ra">bb-rust-analyzer<small>if Rust is ticked</small></div>
+      <div class="node dead" data-more="py">bb-pyright<small>if Python is ticked</small></div>
+      <div class="node dead" data-more="debug">bb-debug<small>talks to the debugger</small></div>
+      <div class="node dead" data-more="tests">tests worker<small>runs tests</small></div>
+      <div class="node dead" data-more="build">build reader<small>reads build output</small></div>
+      <div class="node dead" data-more="pty">terminal reader<small>one per terminal</small></div>
+    </div>
+  </div>
+  <div class="arrow">&#9660; messages, commands, a terminal</div>
+  <div class="proc child"><p class="pix">PROGRAM GROUPS &middot; BACKBACK OWNS EACH ONE</p>
+    <div class="lanes">
+      <div class="node mate" data-more="roslyn">Roslyn<small>+ BuildHost + MSBuild</small></div>
+      <div class="node dead" data-more="rachild">rust-analyzer<small>+ its helpers</small></div>
+      <div class="node dead" data-more="pychild">pyright<small>runs on node</small></div>
+      <div class="node dead" data-more="dbg">netcoredbg<small>+ your program</small></div>
+      <div class="node dead" data-more="dbuild">dotnet build / test<small>+ test host</small></div>
+      <div class="node dead" data-more="shell">your shell<small>zsh in the terminal</small></div>
+    </div>
+  </div>
+  <div class="arrow">&#9650; watches</div>
+  <div class="proc guard"><p class="pix">GUARD &middot; ONE FOR EACH BACKBACK</p>
+    <div class="node warn wide" data-more="guard">the guard<small>if backback dies, it stops every group</small></div>
+  </div>
+</div>
+
+<h2>THREE RULES FOR THREADS</h2>
+<div class="rung ok"><span class="k">NO WAIT</span><span class="v">The main thread never waits for a tool. Typing, colours and drawing finish in one frame.</span></div>
+<div class="rung ok"><span class="k">MESSAGES</span><span class="v">The window sends questions to a worker. The worker sends answers back. They share no data, so they never fight over it.</span></div>
+<div class="rung ok"><span class="k">ONE LOCK</span><span class="v">Only one place uses a lock: the list of questions that wait for an answer. Nothing holds that lock while it waits.</span></div>
+
+<script>
+window.MORE = {
+  main: {title: "Main thread", body: "<p>It owns the window. It reads your keys and mouse, changes the text, colours it, and draws the screen. It also picks up the answers from the tools and shows them on the next frame.</p><p>It also starts the terminal shell. A shell started from another thread ran slowly (BB-PRC-002).</p>"},
+  bg: {title: "Background helpers", body: "<p>A few shared threads from GPUI for short jobs, such as finding files for Quick Open. The window keeps drawing while they work.</p>"},
+  detect: {title: "bb-detect", body: "<p>Starts before the window opens. It looks at the folder to find C#, Rust or Python files. So the language list is ready at once.</p>"},
+  intel: {title: "bb-intel (Roslyn worker)", body: "<p>One thread for Roslyn. It starts Roslyn, opens your project, and passes questions and answers. Inside it, one small task writes to Roslyn and one reads from it.</p>"},
+  ra: {title: "bb-rust-analyzer", body: "<p>The same kind of worker, for Rust. It starts only if you tick Rust.</p>"},
+  py: {title: "bb-pyright", body: "<p>The same kind of worker, for Python. It starts only if you tick Python.</p>"},
+  debug: {title: "bb-debug", body: "<p>Starts when you press F5. It builds your program, then starts netcoredbg and passes messages both ways.</p>"},
+  tests: {title: "Tests worker", body: "<p>Starts when you run tests. It runs them, reads the results, and sends them to the Tests panel.</p>"},
+  build: {title: "Build reader", body: "<p>Reads what <code>dotnet build</code> prints, so the window never waits on it.</p>"},
+  pty: {title: "Terminal reader", body: "<p>One for each open terminal. It reads what your shell prints. The panel draws the lines you can see.</p>"},
+  roslyn: {title: "Roslyn group", body: "<p>Roslyn, plus BuildHost (it reads your projects), plus MSBuild helpers. They are all in one group, so backback can stop them together.</p>"},
+  rachild: {title: "rust-analyzer group", body: "<p>rust-analyzer and the helpers it starts, such as cargo.</p>"},
+  pychild: {title: "pyright group", body: "<p>pyright runs on node. It may also start Python.</p>"},
+  dbg: {title: "netcoredbg group", body: "<p>The debugger, and the program you debug. Both stop when you stop debugging.</p>"},
+  dbuild: {title: "Build and test groups", body: "<p><code>dotnet build</code>, or <code>dotnet test</code> and its test host, or the Apex CLI. Special flags stop build helpers from staying alive after the build.</p>"},
+  shell: {title: "Your shell", body: "<p>Your normal shell (for example zsh), in the terminal panel. backback owns it like any other tool.</p>"},
+  guard: {title: "The guard (BBEOD42)", body: "<p>A very small shell script that starts with backback. backback keeps one end of a pipe open to it.</p><p>When backback ends in any way (quit, force quit, crash, kill), macOS closes that pipe. The guard sees this. It asks every group to stop, waits 1 second, then forces them to stop.</p><p>It checks each group's start time first. So it never stops a different program that got the same number.</p>"}
+};
+</script>
+</main></body></html>

@@ -1,0 +1,56 @@
+/* Header: brand left of the centred page menu (same as the AgentFarm storybook). */
+header.top{position:sticky;top:0;z-index:10;display:flow-root;background:var(--bg);padding:12px 0}
+header.top > a.brand{position:absolute;right:calc(100% + 12px);top:50%;transform:translateY(-50%);white-space:nowrap}
+@media (max-width:1120px){header.top > a.brand{position:static;display:inline-block;margin-top:18px;transform:none}}
+nav.box .row{gap:8px;justify-content:flex-start}
+nav.box .tag{text-decoration:none}
+nav.pager{display:flex;justify-content:space-between;gap:12px;font-family:var(--pixel);font-size:10px}
+nav.pager a{text-decoration:none}
+
+/* Clickable diagram nodes open a detail window. */
+.node[data-more]{cursor:pointer;transition:transform .08s steps(2)}
+.node[data-more]:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 rgba(0,0,0,.32)}
+.node[data-more]:focus-visible{outline:3px solid var(--cyan);outline-offset:4px}
+.node[data-more]::after{content:" +";color:var(--dim)}
+.node.violet{border-color:var(--violet);color:var(--violet)}
+.node.wide{min-width:260px}
+.node.thin{padding:10px 12px;min-width:110px}
+
+dialog.more{width:min(660px,calc(100vw - 32px));max-height:min(720px,calc(100vh - 32px));overflow:auto;
+  color:var(--ink);background:var(--panel);border:3px solid var(--cyan);box-shadow:8px 8px 0 rgba(0,0,0,.42);padding:30px 34px 28px}
+dialog.more::backdrop{background:rgba(10,8,22,.78)}
+dialog.more h2{margin-top:6px}
+dialog.more ul{padding-left:20px;max-width:58ch}
+dialog.more li{margin:6px 0}
+dialog.more button.x{position:absolute;top:12px;right:14px;color:var(--bg);background:var(--amber);border:0;
+  padding:4px 9px 7px;font:22px/1 var(--mono);cursor:pointer}
+@media (max-width:620px){dialog.more{padding:28px 20px 22px}}
+
+/* A process box holding its threads. */
+.proc{border:3px dashed var(--amber);padding:16px 14px 10px;margin:8px 0;width:100%}
+.proc > .pix{font-size:10px;color:var(--amber);margin:0 0 10px}
+.proc.child{border-color:var(--green)} .proc.child > .pix{color:var(--green)}
+.proc.guard{border-color:var(--rose)} .proc.guard > .pix{color:var(--rose)}
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+
+/* Legend and small tables. */
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--dim);margin:8px 0 0}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border:3px solid var(--sw,var(--cyan))}
+table.t{border-collapse:collapse;width:100%;font-size:14px;margin:16px 0}
+table.t th{font-family:var(--pixel);font-size:9px;color:var(--cyan);text-align:left;padding:10px 8px;border-bottom:3px solid var(--line)}
+table.t td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t td:first-child{color:var(--amber);white-space:nowrap}
+.scroll{overflow-x:auto}
+
+/* Step-through flows. */
+.flow .rung{display:none}
+.flow .rung.on{display:flex}
+.flow .ctl{display:flex;gap:10px;align-items:center;margin-top:12px;font-family:var(--pixel);font-size:10px}
+.flow .ctl button{font:inherit;color:var(--bg);background:var(--cyan);border:0;padding:8px 12px;cursor:pointer;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.flow .ctl button:disabled{background:var(--line);cursor:default}
+.flow .ctl .count{color:var(--dim)}
+
+/* The minimum-IDE checklist. */
+.must{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0}
+.must .box{margin:0}
+.must h3{margin-top:0}

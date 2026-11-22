@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Flows</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="runtime/flows.html"><main class="wrap">
+
+<span class="tag c">06 &middot; FLOWS</span>
+<h1>Four things you do,<br>step by step.</h1>
+<p class="lead">Press STEP to see the next step. Green steps happen on the main thread. Yellow steps happen on another thread or in another program.</p>
+
+<h2>1 &middot; YOU TYPE ONE KEY</h2>
+<div class="flow">
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">The window gets the key. The text changes at once, even in a very big file.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">tree-sitter updates the colours, only for the lines you can see. This takes microseconds.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">The screen draws. Goal: 8 ms or less from key to screen.</span></div>
+  <div class="rung mid"><span class="k">bb-intel</span><span class="v">After that, backback tells Roslyn "the file changed".</span></div>
+  <div class="rung mid"><span class="k">ROSLYN</span><span class="v">Roslyn checks the code and sends back any errors.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">The window picks up the errors and draws red lines on the next frame.</span></div>
+</div>
+<p class="caption" style="text-align:left">The first three steps never wait. Roslyn can be slow, and typing still feels instant.</p>
+
+<h2>2 &middot; YOU ASK FOR SUGGESTIONS</h2>
+<div class="flow">
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">You press Ctrl+Space. backback changes the cursor position into the form LSP uses (line and column).</span></div>
+  <div class="rung mid"><span class="k">bb-intel</span><span class="v">The question goes to the tool for this file's language. It gets a number and a time limit.</span></div>
+  <div class="rung mid"><span class="k">WRITE</span><span class="v">A small task adds the length header and sends the question to Roslyn.</span></div>
+  <div class="rung mid"><span class="k">READ</span><span class="v">Another task reads the answer. It finds the question with the same number and hands the answer over.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">The list of suggestions shows. If the time limit runs out first, you see a message. The window never freezes.</span></div>
+</div>
+
+<h2>3 &middot; YOU OPEN A PROJECT</h2>
+<div class="flow">
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">backback reads the <code>.sln</code> and project files. The file tree shows at once.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">The language list shows the languages it found. Your last choice for this folder is already ticked.</span></div>
+  <div class="rung mid"><span class="k">THREADS</span><span class="v">One worker starts for each ticked language. Languages that are not ticked start nothing.</span></div>
+  <div class="rung mid"><span class="k">ROSLYN</span><span class="v">Roslyn starts in its own group. It reads your projects and reports how far it is.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">The status changes from loading to ready. Code help is on.</span></div>
+</div>
+
+<h2>4 &middot; YOU PRESS F5</h2>
+<div class="flow">
+  <div class="rung mid"><span class="k">bb-debug</span><span class="v">The <code>bb-debug</code> thread starts. It builds your program with <code>dotnet build</code>.</span></div>
+  <div class="rung mid"><span class="k">bb-dap</span><span class="v">It starts netcoredbg, tells it to run your program, and sends your breakpoints.</span></div>
+  <div class="rung mid"><span class="k">PROGRAM</span><span class="v">Your program runs until it reaches a breakpoint.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">backback hears "stopped". The editor jumps to the line. The panel shows the call stack and values.</span></div>
+  <div class="rung ok"><span class="k">MAIN</span><span class="v">Step, Continue and Set Next Statement go to netcoredbg as messages. Stop ends the whole group.</span></div>
+</div>
+</main></body></html>
