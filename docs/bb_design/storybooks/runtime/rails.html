@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Safety Rails</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="runtime/rails.html"><main class="wrap">
+
+<span class="tag r">08 &middot; SAFETY RAILS</span>
+<h1>Rules that<br>stop bugs.</h1>
+<p class="lead">The compiler, a rule checker and the test run check these rules on every change.</p>
+
+<h2>1 &middot; IN THE CODE</h2>
+<div class="rung ok"><span class="k">POSITIONS</span><span class="v">The two kinds of position have different types. If you mix them up, the code does not build. Only one checked function changes one into the other.</span></div>
+<div class="rung ok"><span class="k">TIME LIMITS</span><span class="v">Every question to a tool, and every command, has a time limit. If a tool dies, every waiting question gets an error. Nothing hangs.</span></div>
+<div class="rung ok"><span class="k">ERRORS</span><span class="v">Each package has its own list of errors. The code never hides a failure, and never crashes on purpose outside tests.</span></div>
+<div class="rung ok"><span class="k">NO UNSAFE</span><span class="v">Unsafe Rust is not allowed. That is why the guard is a small shell script.</span></div>
+<div class="rung ok"><span class="k">FALLBACK</span><span class="v">If Roslyn crashes, backback tells you and offers to restart it. You can still type, and colours still work.</span></div>
+
+<h2>2 &middot; IN THE FILES (bb-audit)</h2>
+<div class="rung mid"><span class="k">5 ITEMS</span><span class="v">No more than 5 items in any folder.</span></div>
+<div class="rung mid"><span class="k">SHORT</span><span class="v">Notes (<code>.md</code>) up to 100 lines. Code files up to 250 lines. A function up to 50 lines. Up to 5 inputs per function.</span></div>
+<div class="rung mid"><span class="k">MARKER</span><span class="v">In each folder, the most important item starts with <code>bb_</code>. Only one item per folder.</span></div>
+<div class="rung mid"><span class="k">TYPES</span><span class="v">Every Rust value says its type in the code, so a reader never has to guess.</span></div>
+
+<h2>3 &middot; BEFORE A CHANGE IS MERGED</h2>
+<div class="dia" role="group" aria-label="Checks before a merge">
+  <div class="row"><div class="node thin">format</div><div class="node thin">lint</div><div class="node thin">tests</div><div class="node thin">licences</div><div class="node thin">rules</div></div>
+  <div class="arrow">&#9660;</div>
+  <div class="node mate wide">all green on our Mac &rarr; all green on GitHub &rarr; merge &rarr; install &rarr; check the installed version</div>
+  <p class="caption">Each fix starts with a test that fails before the fix. Every bug, failure and lesson is written in <code>hubs/</code>, in the same change.</p>
+</div>
+</main></body></html>

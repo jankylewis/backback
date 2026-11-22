@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Minimum IDE</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="design/minimum.html"><main class="wrap">
+
+<span class="tag">04 &middot; MINIMUM IDE</span>
+<h1>What an IDE<br>needs to work.</h1>
+<p class="lead">Build from the bottom up. Each step must work before you start the next one.</p>
+
+<h2>1 &middot; THE STEPS</h2>
+<div class="rung ok"><span class="k">1 EDIT</span><span class="v">A window, the text, keys, and Save. (<code>backback</code>, <code>bb-text</code>) Now you have a text editor.</span></div>
+<div class="rung ok"><span class="k">2 COLOUR</span><span class="v">Colours, folding and an outline, with no other tool. (<code>bb-syntax</code>) Now it looks like code.</span></div>
+<div class="rung ok"><span class="k">3 FIND</span><span class="v">Open a project, see the file tree, find a file, search all files. (<code>bb-dotnet</code>, <code>bb-explorer</code>, <code>bb-search</code>)</span></div>
+<div class="rung mid"><span class="k">4 KNOW</span><span class="v">Ask Roslyn: errors, suggestions, go to definition, rename. (<code>bb-framing</code>, <code>bb-lsp</code>, <code>bb-intel</code>) Now it is an IDE.</span></div>
+<div class="rung mid"><span class="k">5 BUILD</span><span class="v">Run <code>dotnet build</code> and list the problems. (the Build panel)</span></div>
+<div class="rung mid"><span class="k">6 DEBUG</span><span class="v">Ask netcoredbg: breakpoints, step, see values. (<code>bb-dap</code>)</span></div>
+<div class="rung"><span class="k">7 TEST</span><span class="v">The Test Explorer: find, run and debug tests. (<code>bb-testkit</code>)</span></div>
+<div class="rung"><span class="k">8 EXTRAS</span><span class="v">Terminal, Rust, Python, settings, three panes.</span></div>
+<div class="rung bad"><span class="k">UNDER ALL</span><span class="v"><code>bb-process</code> stops every program backback started. You need it from step 4. Without it, old tools keep running and use your Mac's memory.</span></div>
+
+<h2>2 &middot; MUST HAVE, NICE TO HAVE, NEVER</h2>
+<div class="must">
+  <div class="box green"><h3>MUST HAVE</h3><p>Window and editor &middot; text store &middot; colours &middot; project reader &middot; Roslyn link &middot; start and stop programs &middot; Build &middot; Debug.</p></div>
+  <div class="box amber"><h3>NICE TO HAVE</h3><p>Test Explorer &middot; terminal &middot; find by name &middot; three panes &middot; Rust &middot; Python &middot; follow the Mac's dark mode.</p></div>
+  <div class="box rose"><h3>NEVER</h3><p>Our own C# compiler &middot; MSBuild inside backback &middot; Electron &middot; sending your data anywhere &middot; features nobody asked for.</p></div>
+</div>
+
+<h2>3 &middot; WHAT EACH TOOL GIVES YOU</h2>
+<div class="scroll"><table class="t">
+<tr><th>TOOL</th><th>GIVES YOU</th><th>WITHOUT IT</th></tr>
+<tr><td>.NET SDK</td><td>build, run, test. Roslyn and netcoredbg need it too.</td><td>You can open files. Nothing more.</td></tr>
+<tr><td>Roslyn</td><td>errors, suggestions, jumps, rename, quick fixes</td><td>Colours and search still work.</td></tr>
+<tr><td>netcoredbg</td><td>breakpoints, step, values</td><td>No Debug. Build still works.</td></tr>
+<tr><td>Apex CLI</td><td>our own test runner</td><td>Tests run with <code>dotnet test</code>.</td></tr>
+</table></div>
+<p class="caption" style="text-align:left">Run <code>bb doctor</code> to check that dotnet, Roslyn and netcoredbg are installed.</p>
+</main></body></html>

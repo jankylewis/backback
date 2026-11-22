@@ -1,0 +1,109 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Components</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="design/components.html"><main class="wrap">
+
+<span class="tag c">03 &middot; COMPONENTS</span>
+<h1>What is inside<br>each part.</h1>
+<p class="lead">Every package, and the main folders of the app. Click a box to see its job.</p>
+
+<h2>1 &middot; THE APP &middot; shell/desktop</h2>
+<div class="dia" role="group" aria-label="Parts of the app">
+  <div class="node mm wide">backback.app<small>one window for each project or folder</small></div>
+  <div class="arrow">&#9660;</div>
+  <div class="row">
+    <div class="node thin" data-more="app">app/<small>start, language list</small></div>
+    <div class="node thin" data-more="editor">editor/<small>tabs, panes</small></div>
+    <div class="node thin" data-more="explorer">bb_explorer/<small>file tree</small></div>
+    <div class="node thin" data-more="intel">intel/<small>tool workers</small></div>
+  </div>
+  <div class="arrow">&#9660; side panels, inside bb_explorer/</div>
+  <div class="row">
+    <div class="node thin mate" data-more="quick">Quick Open</div>
+    <div class="node thin mate" data-more="build">Build</div>
+    <div class="node thin mate" data-more="debug">Debug</div>
+    <div class="node thin mate" data-more="tests">Tests</div>
+    <div class="node thin mate" data-more="term">Terminal</div>
+    <div class="node thin mate" data-more="settings">Settings</div>
+  </div>
+</div>
+
+<h2>2 &middot; CORE &middot; bb_core</h2>
+<div class="dia" role="group" aria-label="Core packages">
+  <div class="row">
+    <div class="node" data-more="text">bb-text<small>holds text</small></div>
+    <div class="node" data-more="syntax">bb-syntax<small>colours</small></div>
+    <div class="node" data-more="lang">bb-lang<small>which languages</small></div>
+  </div>
+  <div class="arrow"></div>
+  <div class="row">
+    <div class="node" data-more="bbexplorer">bb-explorer<small>file tree</small></div>
+    <div class="node" data-more="search">bb-search<small>Find in Files</small></div>
+    <div class="node warn" data-more="process">bb-process<small>start + stop programs</small></div>
+  </div>
+</div>
+
+<h2>3 &middot; EDGE &middot; edge/</h2>
+<div class="dia" role="group" aria-label="Edge packages">
+  <div class="row">
+    <div class="node violet" data-more="framing">bb-framing<small>message header</small></div>
+    <div class="node violet" data-more="lsp">bb-lsp<small>LSP messages</small></div>
+    <div class="node violet" data-more="bbintel">bb-intel<small>code help</small></div>
+  </div>
+  <div class="arrow"></div>
+  <div class="row">
+    <div class="node violet" data-more="dap">bb-dap<small>debugger</small></div>
+    <div class="node violet" data-more="sdk">bb-dotnet<small>.NET + projects</small></div>
+    <div class="node violet" data-more="testkit">bb-testkit<small>run tests</small></div>
+  </div>
+  <div class="arrow"></div>
+  <div class="row">
+    <div class="node violet" data-more="cargo">bb-cargo<small>Rust tools</small></div>
+    <div class="node violet" data-more="python">bb-python<small>Python tools</small></div>
+  </div>
+</div>
+
+<h2>4 &middot; WHO USES WHOM</h2>
+<pre>
+<b>backback</b> (the app) uses every package below, but not the bb command
+<b>bb-intel</b>   uses bb-lsp, bb-dotnet, bb-cargo, bb-python, bb-text
+<b>bb-lsp</b>     uses bb-framing, bb-dotnet, bb-process
+<b>bb-dap</b>     uses bb-framing, bb-process
+<b>bb-testkit</b> uses bb-dotnet, bb-process
+<b>bb-cargo</b>   uses bb-process, bb-testkit      <b>bb-python</b> uses bb-cargo, bb-testkit
+<b>bb-syntax</b>  uses bb-text, bb-lang          <b>bb-explorer</b> uses bb-dotnet
+<b>bb-text, bb-process, bb-lang, bb-search, bb-framing, bb-dotnet</b> use nothing
+</pre>
+<p class="caption" style="text-align:left">From <code>bb map</code>. The packages that use nothing are the easiest to test.</p>
+
+<script>
+window.MORE = {
+  app: {title: "app/", body: "<ul><li>Starts the app in a fixed order (see 07 · START + QUIT).</li><li>Shows the start page, the Recent list and the language list.</li><li>Follows the Mac's light or dark mode.</li></ul>"},
+  editor: {title: "editor/", body: "<ul><li><b>bb_tabs</b>: tabs, pinned tabs, the tab bar.</li><li><b>view</b>: lines, word wrap, scroll bar, up to three panes side by side.</li><li><b>input</b>: keys, mouse, Cmd-click on a name.</li></ul><p>Your typing changes the text right away. It never waits for a tool.</p>"},
+  explorer: {title: "bb_explorer/", body: "<ul><li><b>bb_rows</b>: the rows, icons and tooltips of the file tree.</li><li><b>files</b>: New, Rename, Delete (to the Trash), Copy, Paste, Open Terminal Here.</li><li><b>panels</b>: all the side panels.</li></ul>"},
+  intel: {title: "intel/", body: "<ul><li><b>bb_worker</b>: one worker thread for each language tool: <code>bb-intel</code> (Roslyn), <code>bb-rust-analyzer</code>, <code>bb-pyright</code>.</li><li><b>glue</b>: sends each question to the right tool. It turns answers into popups, red lines and jumps.</li><li><b>model, view</b>: the Problems list, the suggestion list, the hover box.</li></ul>"},
+  quick: {title: "Quick Open", body: "<p>Find a file or a name by typing part of it. The file search runs in the background, so the window does not freeze.</p>"},
+  build: {title: "Build", body: "<p>Runs <code>dotnet build</code>. It adds flags so no build helper keeps running after the build. A separate thread reads the output.</p>"},
+  debug: {title: "Debug", body: "<p>Breakpoints, step, see values, and Set Next Statement. A <code>bb-debug</code> thread builds your program, then drives netcoredbg.</p>"},
+  tests: {title: "Tests", body: "<p>The Test Explorer: find tests, run them, debug one. A worker thread runs them with the Apex CLI or <code>dotnet test</code> and reads the results.</p>"},
+  term: {title: "Terminal", body: "<p>Your own shell, inside backback. A library from the Alacritty terminal reads the output on its own thread. The panel draws what is on screen.</p><p>The shell is started from the main thread. When we started it from a background thread, macOS ran it slowly (BB-PRC-002).</p>"},
+  settings: {title: "Settings", body: "<p>Your keys and choices, saved in a small file.</p>"},
+  text: {title: "bb-text", body: "<p>Holds your text as a rope, plus the selection and undo.</p><p>It has two kinds of position: <code>CharIdx</code> for the editor and <code>LspPoint</code> for LSP. They count differently. For example, one emoji is 1 character but 2 LSP units. One checked function changes one into the other.</p>"},
+  syntax: {title: "bb-syntax", body: "<p>Uses tree-sitter to colour, fold and outline C#, Rust and Python. It never asks Roslyn. So your code has colour even while Roslyn starts, or after it stops.</p>"},
+  lang: {title: "bb-lang", body: "<p>Finds which languages a folder has. It decides which boxes are ticked at first, and what may start. Python is off unless you tick it, or the folder has only Python. Your choice is saved for each folder.</p>"},
+  bbexplorer: {title: "bb-explorer", body: "<p>The file tree for a project or folder. It reads a folder only when you open it.</p>"},
+  search: {title: "bb-search", body: "<p>Find in Files: plain text or a pattern. It skips files that git ignores.</p>"},
+  process: {title: "bb-process", body: "<p>Every program backback starts goes into its own group. backback writes the group down. When you quit, or backback crashes, every group stops. See 07 · START + QUIT.</p><p>It also reads your shell's PATH once at start, so backback can find <code>dotnet</code>.</p>"},
+  framing: {title: "bb-framing", body: "<p>161 lines. It puts a length header on each message, and reads it back. A broken message is dropped; the link keeps working.</p>"},
+  lsp: {title: "bb-lsp", body: "<p>Sends questions to a language tool and matches each answer to its question. One task writes, one task reads. Every question has a time limit. It also knows how to start Roslyn and open a project.</p>"},
+  bbintel: {title: "bb-intel", body: "<p>Code help: suggestions, hover, errors, go to definition, find uses, rename, quick fixes. The app does not need to know which tool answers: Roslyn, rust-analyzer or pyright.</p>"},
+  dap: {title: "bb-dap", body: "<p>Talks to netcoredbg: start or attach, breakpoints, step, call stack, values, exit code. It also finds netcoredbg on your Mac.</p>"},
+  sdk: {title: "bb-dotnet", body: "<p>Finds .NET on your Mac. It reads <code>.sln</code>, <code>.slnx</code>, <code>.csproj</code> and settings files as plain files. It does not run MSBuild, so it is fast.</p>"},
+  testkit: {title: "bb-testkit", body: "<p>Finds and runs .NET tests with the Apex CLI or <code>dotnet test</code>. It reads the result file. It can also run one test under the debugger. It needs no window.</p>"},
+  cargo: {title: "bb-cargo", body: "<p>Rust: finds rust-analyzer, reads the cargo project, shows build errors, runs tests.</p>"},
+  python: {title: "bb-python", body: "<p>Python: finds pyright and Python, runs checks and pytest. Used only when Python is ticked.</p>"}
+};
+</script>
+</main></body></html>

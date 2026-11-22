@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Words</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="design/words.html"><main class="wrap">
+
+<span class="tag c">01 &middot; WORDS</span>
+<h1>The words.</h1>
+<p class="lead">Each word the other pages use, in one plain line.</p>
+
+<h2>TOOLS OUTSIDE BACKBACK</h2>
+<div class="scroll"><table class="t">
+<tr><th>WORD</th><th>WHAT IT MEANS</th></tr>
+<tr><td>Roslyn</td><td>Microsoft's C# compiler. backback asks it what your code means: errors, suggestions, where a name is used.</td></tr>
+<tr><td>BuildHost</td><td>A helper program Roslyn starts to read your project files.</td></tr>
+<tr><td>netcoredbg</td><td>A free .NET debugger. It stops your program at a line and shows the values.</td></tr>
+<tr><td>dotnet</td><td>The .NET command: <code>dotnet build</code>, <code>dotnet test</code>, <code>dotnet run</code>.</td></tr>
+<tr><td>Apex CLI</td><td>Our own test runner. backback can run tests with it.</td></tr>
+<tr><td>rust-analyzer, pyright</td><td>The same kind of helper as Roslyn, for Rust and for Python. Off unless you turn them on.</td></tr>
+</table></div>
+
+<h2>HOW THEY TALK</h2>
+<div class="scroll"><table class="t">
+<tr><th>WORD</th><th>WHAT IT MEANS</th></tr>
+<tr><td>LSP</td><td>A shared set of messages between an editor and a language helper such as Roslyn. "Give me suggestions here." "Here are the errors."</td></tr>
+<tr><td>DAP</td><td>The same idea for debuggers. "Stop at line 12." "Show me the values."</td></tr>
+<tr><td>pipe</td><td>A one-way channel between two programs. backback writes to the tool's input and reads its output.</td></tr>
+<tr><td>Content-Length</td><td>A small header in front of each message. It says how long the message is.</td></tr>
+<tr><td>TRX</td><td>The result file <code>dotnet test</code> writes. backback reads pass and fail from it.</td></tr>
+</table></div>
+
+<h2>INSIDE BACKBACK</h2>
+<div class="scroll"><table class="t">
+<tr><th>WORD</th><th>WHAT IT MEANS</th></tr>
+<tr><td>crate</td><td>A Rust package. backback is made of 20 of them.</td></tr>
+<tr><td>GPUI</td><td>The library that draws the window, from the Zed editor. It uses the graphics card.</td></tr>
+<tr><td>rope</td><td>A way to store text in small pieces. A change in a big file stays fast.</td></tr>
+<tr><td>tree-sitter</td><td>A fast reader for code that runs inside backback. It gives colours, folding and the outline. It needs no other tool.</td></tr>
+<tr><td>thread</td><td>One line of work inside a program. A program can have many, and they run at the same time.</td></tr>
+<tr><td>process</td><td>A running program. backback is one process; Roslyn is another.</td></tr>
+<tr><td>tokio</td><td>A Rust library for waiting on many things at once without blocking.</td></tr>
+<tr><td>PTY</td><td>A fake terminal device. The terminal panel runs your shell in one.</td></tr>
+<tr><td>owned group</td><td>A group of programs backback started. backback must stop the whole group.</td></tr>
+<tr><td>guard</td><td>A tiny watcher program. If backback dies, it stops everything backback started.</td></tr>
+<tr><td>CharIdx, LspPoint</td><td>Two ways to say where you are in a file. The editor counts characters; LSP counts lines and columns.</td></tr>
+<tr><td>tick</td><td>A language you turned on in the language list. A language that is not ticked starts nothing.</td></tr>
+</table></div>
+</main></body></html>

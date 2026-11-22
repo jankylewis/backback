@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Storybooks</title>
+<link rel="stylesheet" href="assets/bb_style.css"><link rel="stylesheet" href="assets/story.css">
+<script src="assets/story.js" defer></script></head>
+<body data-root="" data-page="bb_index.html"><main class="wrap">
+
+<span class="tag g">STORYBOOKS</span>
+<h1>How backback<br>is built.</h1>
+<p class="lead">backback is a small, fast app for writing C# on a Mac. It is written in Rust. It lets other free tools do the hard work.</p>
+
+<div class="box amber"><p>Read the pages in order. First you see the big parts. Then you see the small parts inside them. At the end you see what runs on your Mac, and the rules that keep it safe.</p>
+<p>Click a box with a <b>+</b> to read more about it.</p></div>
+
+<h2>DESIGN &middot; WHAT IT IS MADE OF</h2>
+<div class="cards">
+  <a class="card" href="design/why.html"><span class="n">00</span><span class="t">WHY</span><span class="d">Why we built it, and why it is small.</span></a>
+  <a class="card" href="design/words.html"><span class="n">01</span><span class="t">WORDS</span><span class="d">The words these pages use, in plain English.</span></a>
+  <a class="card" href="design/bb_bigpicture.html"><span class="n">02</span><span class="t">BIG PICTURE</span><span class="d">The five big parts, and the tools outside.</span></a>
+  <a class="card" href="design/components.html"><span class="n">03</span><span class="t">COMPONENTS</span><span class="d">The small parts inside each big part, and their jobs.</span></a>
+  <a class="card" href="design/minimum.html"><span class="n">04</span><span class="t">MINIMUM IDE</span><span class="d">What you need for an IDE that works, and what is extra.</span></a>
+</div>
+
+<h2>RUNTIME &middot; HOW IT RUNS</h2>
+<div class="cards">
+  <a class="card" href="runtime/bb_threads.html"><span class="n">05</span><span class="t">PROCESSES + THREADS</span><span class="d">What runs on your Mac when a project is open.</span></a>
+  <a class="card" href="runtime/flows.html"><span class="n">06</span><span class="t">FLOWS</span><span class="d">Step by step: you type, you ask for help, you open a project, you press F5.</span></a>
+  <a class="card" href="runtime/lifecycle.html"><span class="n">07</span><span class="t">START + QUIT</span><span class="d">How it starts, and how it leaves nothing behind.</span></a>
+  <a class="card" href="runtime/rails.html"><span class="n">08</span><span class="t">SAFETY RAILS</span><span class="d">The rules that stop bugs before they ship.</span></a>
+</div>
+
+<p class="caption" style="text-align:left">Written from the code on 2026-11-21 (version <code>a9053fd</code>): 20 Rust packages, about 70,000 lines.</p>
+</main></body></html>

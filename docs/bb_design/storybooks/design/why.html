@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>backback Why</title>
+<link rel="stylesheet" href="../assets/bb_style.css"><link rel="stylesheet" href="../assets/story.css">
+<script src="../assets/story.js" defer></script></head>
+<body data-root="../" data-page="design/why.html"><main class="wrap">
+
+<span class="tag r">00 &middot; WHY</span>
+<h1>Why backback.</h1>
+<p class="lead">On a Mac, there is no small, free app for C# anymore.</p>
+
+<h2>1 &middot; THE OLD MAC APPS FOR C# ARE GONE.</h2>
+<div class="box rose"><p>Microsoft stopped Visual Studio for Mac in August 2024. MonoDevelop has not been updated since January 2020.</p><p>The apps that are left are heavy. VS Code runs more than 20 programs at once. Rider is big, and you must pay for it.</p></div>
+
+<h2>2 &middot; THE HARD PARTS ARE ALREADY FREE.</h2>
+<div class="box cyan"><p><b>Roslyn</b> is Microsoft's C# compiler. It can tell an app what your code means. It is free.</p><p><b>netcoredbg</b> is a free debugger for .NET. The <b>dotnet</b> command builds, runs and tests your code.</p><p>So backback does not do these jobs again. It only talks to these tools.</p></div>
+
+<h2>3 &middot; IT IS FAST BECAUSE IT DOES LITTLE.</h2>
+<div class="box amber"><p>backback itself only does four things: it holds your text, draws the window, searches, and starts and stops the other tools. Typing never waits for another tool.</p><p>Our goals, which we measure: ready to type in 0.3 seconds or less. A key shows on screen in 8 ms or less (half of the time). Less than 150 MB of memory when Roslyn is not running.</p></div>
+
+<div class="dia" role="group" aria-label="A small app on top, big tools below">
+  <div class="node mm wide">backback (Rust)<small>text &middot; window &middot; search &middot; start and stop tools</small></div>
+  <div class="arrow">&#9650;&#9660; messages as text</div>
+  <div class="row"><div class="node mate">Roslyn<small>knows C#</small></div><div class="node mate">netcoredbg<small>debugs</small></div><div class="node mate">dotnet<small>builds, runs, tests</small></div></div>
+  <p class="caption">backback is the small part on top. The big tools are below. They run as their own programs.</p>
+</div>
+
+<h2>4 &middot; SMALL ON PURPOSE.</h2>
+<div class="box green"><p>C# comes first. Mac only. Few features. You can also turn on Rust and Python. They start only when you tick them in the language list.</p></div>
+</main></body></html>
