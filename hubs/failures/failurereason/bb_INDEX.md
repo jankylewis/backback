@@ -24,6 +24,7 @@ One file per failure mechanism. This hub owns the id. Entries: 88 — FIXED 80, 
 | BB-CIP-003 | A yanked transitive crate fails `cargo deny` on CI | FIXED | yes | yes | none | `SHIP/CIP/S01/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | A check no runner took was merged over | FIXED | yes | yes | none | `SHIP/CIP/S01/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-CIP-005 | Cleanup ran on an open PR | FIXED | yes | yes | none | `SHIP/CIP/S02/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
+| BB-CIP-006 | A new advisory on url fails cargo deny | OBSERVED | yes | no | none | `SHIP/CIP/S02/BB_CIP_006_A_NEW_ADVISORY_ON_URL_FAILS_CARGO_DENY.md` |
 | BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/D1/S01/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-GAT-002 | A fixture folder shared by parallel test processes | FIXED | yes | yes | none | `SHIP/GAT/D1/S01/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
 | BB-GAT-003 | A fixed sleep was too short on a loaded runner | FIXED | yes | yes | none | `SHIP/GAT/D1/S01/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
