@@ -51,10 +51,18 @@ pub(crate) fn bottom(view: &ExplorerView, cx: &mut Context<ExplorerView>) -> Opt
                 super::one_line(super::TITLE_PX)
                     .px_2()
                     .text_color(color(theme.text_dim))
-                    .child(div().flex_1().child(title))
+                    .child(
+                        div()
+                            .debug_selector(|| "intel-title".to_owned())
+                            .flex_1()
+                            .overflow_hidden()
+                            .text_ellipsis()
+                            .child(title),
+                    )
                     .child(super::close_x("intel-panel-close", theme, cx, close)),
             )
             .child(row_list(view, rows))
+            .on_mouse_down(gpui::MouseButton::Left, cx.listener(take_keys))
             .into_any_element(),
     )
 }
@@ -106,7 +114,11 @@ fn place_row(
         .whitespace_nowrap()
         .px_2()
         .hover(|el: gpui::StyleRefinement| el.bg(color(theme.overlay)))
-        .child(place.preview.trim().to_owned())
+        .child(
+            div()
+                .debug_selector(move || format!("place-text-{index}"))
+                .child(place.preview.trim().to_owned()),
+        )
         .child(
             div()
                 .debug_selector(move || format!("place-path-{index}"))
@@ -171,6 +183,17 @@ pub(crate) fn close(view: &mut ExplorerView, _: &mut Window, _: &mut Context<Exp
     view.intel.rename_preview = None;
     view.intel.references = None;
     view.intel.problems_open = false;
+}
+
+/// A click on the panel gives the keys to the editor, so Esc closes the
+/// panel even after the terminal had them (BB-BUG-096).
+fn take_keys(
+    view: &mut ExplorerView,
+    _: &gpui::MouseDownEvent,
+    window: &mut Window,
+    cx: &mut Context<ExplorerView>,
+) {
+    window.focus(&view.editor_focus, cx);
 }
 
 fn rename_rows(plan: &RenamePreview, root: &Path, theme: Theme) -> (String, Vec<AnyElement>) {
