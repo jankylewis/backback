@@ -35,3 +35,5 @@ One row per failure reason of this layer, by family and id; the entry point is
 | BB-GAT-018 | `the window waited for the walk` on CI; nextest `LEAK` after a real-server test | FIXED | `editor_open_ms` vs the hold cap; does the test `wait_ended`? `ps -o ppid` of BuildHost/servers (1 = orphan) |
 | BB-GAT-019 | `left: ["<pid> .../deps/backback-<hash> --exact ...` (the test's own row) | FIXED | Does the probe match on the command line? nextest puts the test name there; exclude the test's own pid tree |
 | BB-GAT-020 | `servers missing ["sleep 600"]` with `printed true` | FIXED | Does the script end backback on its own timer? Hold it at `wait:go` until `up()` saw every process |
+| BB-GAT-021 | `servers missing ["Microsoft.CodeAnalysis.LanguageServer"]` with `bb_mark up printed true` | OPEN | Did setup observe Roslyn? Capture the C# status, server log and process tree before fixture cleanup |
+| BB-GAT-022 | `test bb_testing::list_leaves_the_built_solution_tree_unchanged ...` stalls | OPEN | Bound the test, capture its `dotnet` stage and process tree |

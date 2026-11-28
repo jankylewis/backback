@@ -69,6 +69,8 @@ Capture next time: the build time of the binary that was read back.
 | BB-PRC-009 | FIXED | `no_orphan_servers` red/green process lists (fleet `evidence/BBEOD42_READY.md`); matemaster report 2026-11-20 |
 | BB-PRC-010 | FIXED | `no_servers` RED/GREEN Roslyn log lines and process lists, mutants (fleet `evidence/BBEOD43_READY.md`) |
 | BB-GAT-020 | FIXED | CI run 44768652825; local slow-build red then green (fleet `evidence/BBEOD42_READY.md`) |
+| BB-GAT-021 | OPEN | PR #133 CI runs 45983707640 (pass, 15.469 s) and 45985075288 (failed setup, 240.440 s); local quit 1/1 and orphan suite 9/9 |
+| BB-GAT-022 | OPEN | PR #133 full local gate 2026-11-28: fmt 0, Clippy 0, then idle .NET list test for over 7 min; interrupted exit 130 |
 | BB-BUG-070 | FIXED | Headmate screen recording 2026-11-18 (12 s, not in the repo); `a_double_click_zooms_once_and_only_a_moved_press_drags` |
 | BB-BUG-071 | OBSERVED | Live DAP probes 2026-11-18 (launch, attach, NUnit test host; targets only on statement-start lines); `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |
 | BB-BUG-072 | FIXED | `a_file_changed_since_the_debug_build_says_so`; `x` = 1 evaluated live in `set_next_moves_up_inside_an_async_spec_and_its_late_local_shows` |
