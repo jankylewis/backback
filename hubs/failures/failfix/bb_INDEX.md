@@ -20,6 +20,7 @@
 | BB-CIP-003 | FIXED | `cargo update -p async-executor` 1.14.0 -> 1.14.1 | `SHIP/CIP/S01/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | FIXED | merge only when every `--json bucket` is `pass`; rerun a no-runner check | `SHIP/CIP/S01/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-CIP-005 | FIXED | Clean up only when the state's value is MERGED; `-d`, no `--force` | `SHIP/CIP/S02/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
+| BB-CIP-006 | OBSERVED | `cargo update -p url --precise 2.5.9` (form_urlencoded 1.2.3 with it) | `SHIP/CIP/S02/BB_CIP_006_A_NEW_ADVISORY_ON_URL_FAILS_CARGO_DENY.md` |
 | BB-GAT-001 | FIXED | Assert the parse contract: extent always, exact tree on valid text, converge after undo | `SHIP/GAT/D1/S01/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-GAT-002 | FIXED | Fixture folder per process (`OwnedTempDir`, `bb-dap-<pid>-<tag>`) | `SHIP/GAT/D1/S01/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
 | BB-GAT-003 | FIXED | `wait:tests` in place of a fixed sleep | `SHIP/GAT/D1/S01/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |

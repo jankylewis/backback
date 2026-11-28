@@ -1,6 +1,6 @@
 # Failurereason index
 
-One file per failure mechanism. This hub owns the id. Entries: 88 — FIXED 80, OBSERVED 5, OPEN 1, ACCEPTED 2.
+One file per failure mechanism. This hub owns the id. Entries: 90 — FIXED 80, OBSERVED 5, OPEN 3, ACCEPTED 2.
 
 | Id | Failure reason | Status | fix | lesson | toolgap | Path |
 |---|---|---|---|---|---|---|
@@ -24,6 +24,7 @@ One file per failure mechanism. This hub owns the id. Entries: 88 — FIXED 80, 
 | BB-CIP-003 | A yanked transitive crate fails `cargo deny` on CI | FIXED | yes | yes | none | `SHIP/CIP/S01/BB_CIP_003_A_YANKED_TRANSITIVE_CRATE_FAILS_CARGO_DENY.md` |
 | BB-CIP-004 | A check no runner took was merged over | FIXED | yes | yes | none | `SHIP/CIP/S01/BB_CIP_004_A_CHECK_NO_RUNNER_TOOK_WAS_MERGED_OVER.md` |
 | BB-CIP-005 | Cleanup ran on an open PR | FIXED | yes | yes | none | `SHIP/CIP/S02/BB_CIP_005_CLEANUP_RAN_ON_AN_OPEN_PR.md` |
+| BB-CIP-006 | A new advisory on url fails cargo deny | OBSERVED | yes | no | none | `SHIP/CIP/S02/BB_CIP_006_A_NEW_ADVISORY_ON_URL_FAILS_CARGO_DENY.md` |
 | BB-GAT-001 | A property test asked more than tree-sitter promises | FIXED | yes | yes | none | `SHIP/GAT/D1/S01/BB_GAT_001_A_PROPERTY_TEST_ASKED_MORE_THAN_TREE_SITTER_PROMISES.md` |
 | BB-GAT-002 | A fixture folder shared by parallel test processes | FIXED | yes | yes | none | `SHIP/GAT/D1/S01/BB_GAT_002_A_FIXTURE_FOLDER_SHARED_BY_PARALLEL_TEST_PROCESSES.md` |
 | BB-GAT-003 | A fixed sleep was too short on a loaded runner | FIXED | yes | yes | none | `SHIP/GAT/D1/S01/BB_GAT_003_A_FIXED_SLEEP_WAS_TOO_SHORT_ON_A_LOADED_RUNNER.md` |
@@ -93,5 +94,7 @@ One file per failure mechanism. This hub owns the id. Entries: 88 — FIXED 80, 
 | BB-GAT-018 | A timed walk hold and a kept server link failed under CI load | FIXED | yes | yes | none | `SHIP/GAT/D2/S05/BB_GAT_018_A_TIMED_WALK_HOLD_AND_A_KEPT_SERVER_LINK_FAILED_UNDER_CI_LOAD.md` |
 | BB-GAT-019 | A test probe matched its own command line | FIXED | yes | no | none | `SHIP/GAT/D2/S05/BB_GAT_019_A_TEST_PROBE_MATCHED_ITS_OWN_COMMAND_LINE.md` |
 | BB-GAT-020 | A kill test acted on a timer before its processes existed | FIXED | yes | no | none | `SHIP/GAT/D2/S05/BB_GAT_020_A_KILL_TEST_ACTED_ON_A_TIMER_BEFORE_ITS_PROCESSES_EXISTED.md` |
+| BB-GAT-021 | A quit test waited for a missing Roslyn process | OPEN | no | no | none | `SHIP/GAT/D2/S06/BB_GAT_021_A_QUIT_TEST_WAITED_FOR_A_MISSING_ROSLYN_PROCESS.md` |
+| BB-GAT-022 | A full gate stalled in a .NET list test | OPEN | no | no | none | `SHIP/GAT/D2/S06/BB_GAT_022_A_FULL_GATE_STALLED_IN_A_DOTNET_LIST_TEST.md` |
 | BB-PRF-008 | The Rust and Python grammars grew the binary by a tenth | ACCEPTED | no | yes | none | `SYS/PRF/S02/BB_PRF_008_THE_RUST_AND_PYTHON_GRAMMARS_GREW_THE_BINARY_BY_A_TENTH.md` |
 | BB-PRF-009 | A first open of a many-folder tree still waits for the walk | FIXED | yes | yes | none | `SYS/PRF/S03/BB_PRF_009_A_FIRST_OPEN_OF_A_MANY_FOLDER_TREE_STILL_WAITS_FOR_THE_WALK.md` |

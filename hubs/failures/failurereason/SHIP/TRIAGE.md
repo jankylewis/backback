@@ -14,6 +14,7 @@ One row per failure reason of this layer, by family and id; the entry point is
 | BB-CIP-003 | `error[yanked]: detected yanked crate` | FIXED | Ask crates.io for the version list; `cargo update -p <crate>` |
 | BB-CIP-004 | `not acquired by Runner of type hosted` | FIXED | Rerun it; merge only when every `--json bucket` is `pass` |
 | BB-CIP-005 | `OPEN` then the worktree is gone | FIXED | Is cleanup gated on the state value MERGED? |
+| BB-CIP-006 | `RUSTSEC-2026-0592` (url 2.5.8) in the Dependency audit | OBSERVED | `cargo deny check advisories`; `cargo update -p <crate> --precise <fixed>` |
 | BB-GAT-001 | `incremental_parse_equals_a_fresh_parse ... FAILED` | FIXED | Is the text broken? Then only the extent must match |
 | BB-GAT-002 | `fixture build failed` ... `being used by another process` | FIXED | Do parallel test processes share a fixture folder? Use `OwnedTempDir` |
 | BB-GAT-003 | `discovered=0 loading=1` in a native window test | FIXED | Does the test sleep a fixed time? Use `wait:tests` |
@@ -34,3 +35,5 @@ One row per failure reason of this layer, by family and id; the entry point is
 | BB-GAT-018 | `the window waited for the walk` on CI; nextest `LEAK` after a real-server test | FIXED | `editor_open_ms` vs the hold cap; does the test `wait_ended`? `ps -o ppid` of BuildHost/servers (1 = orphan) |
 | BB-GAT-019 | `left: ["<pid> .../deps/backback-<hash> --exact ...` (the test's own row) | FIXED | Does the probe match on the command line? nextest puts the test name there; exclude the test's own pid tree |
 | BB-GAT-020 | `servers missing ["sleep 600"]` with `printed true` | FIXED | Does the script end backback on its own timer? Hold it at `wait:go` until `up()` saw every process |
+| BB-GAT-021 | `servers missing ["Microsoft.CodeAnalysis.LanguageServer"]` with `bb_mark up printed true` | OPEN | Did setup observe Roslyn? Capture the C# status, server log and process tree before fixture cleanup |
+| BB-GAT-022 | `test bb_testing::list_leaves_the_built_solution_tree_unchanged ...` stalls | OPEN | Bound the test, capture its `dotnet` stage and process tree |
